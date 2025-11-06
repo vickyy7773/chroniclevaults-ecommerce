@@ -1,11 +1,14 @@
 import axios from 'axios';
 
-// Get API URL - HARD-CODED TO FIX PORT ISSUE
-const API_URL = 'http://localhost:5000/api';
+// Get API URL - Production vs Development
+const API_URL = import.meta.env.PROD
+  ? 'https://chroniclevaults.com/api'
+  : 'http://localhost:5000/api';
+
 console.log('🔧 API Configuration:', {
-  VITE_API_URL: 'HARD-CODED',
-  API_URL: API_URL,
-  MODE: import.meta.env.MODE
+  MODE: import.meta.env.MODE,
+  PROD: import.meta.env.PROD,
+  API_URL: API_URL
 });
 
 // Create axios instance
