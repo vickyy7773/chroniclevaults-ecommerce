@@ -129,7 +129,9 @@ const Authentication = ({ setUser }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          name: formData.name,
           email: formData.email,
+          password: formData.password,
           otp: otp
         })
       });
