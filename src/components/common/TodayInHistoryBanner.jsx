@@ -1,0 +1,93 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Calendar } from 'lucide-react';
+import { bannerService } from '../../services';
+
+const TodayInHistoryBanner = () => {
+  const [banner, setBanner] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchActiveBanner();
+  }, []);
+
+  const fetchActiveBanner = async () => {
+    try {
+      setLoading(true);
+      const response = await bannerService.getActiveBanner();
+      const bannerData = response?.data?.data || response?.data;
+
+      if (bannerData) {
+        setBanner(bannerData);
+      }
+    } catch (error) {
+      console.error('Error fetching active banner:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Don't render if no banner or still loading
+  if (loading || !banner) {
+    return null;
+  }
+
+  return (
+    <div className="bg-white py-8">
+      <div className="max-w-[1400px] mx-auto px-8 lg:px-12">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-5">
+          <Calendar className="w-7 h-7 text-amber-600" />
+          <h2 className="text-3xl md:text-4xl font-light text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
+            {banner.heading || 'Today in History'}
+          </h2>
+        </div>
+
+        {/* Banner Card - Image Left (1/3), Content Right (2/3) */}
+        <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+          <div className="grid md:grid-cols-3 gap-0">
+
+            {/* Left: Image (1/3 width) */}
+            <div className="relative h-48 md:h-72 overflow-hidden group">
+              <img
+                src={banner.imageUrl}
+                alt={banner.title || 'Today in History'}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+
+            {/* Right: Text Content (2/3 width) */}
+            <div className="md:col-span-2 p-8 flex flex-col justify-between bg-cream-50">
+
+              {/* Title and Description (Center) */}
+              <div>
+                <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                  {banner.title || 'The Legacy of Ancient Indian Coins'}
+                </h3>
+
+                <p className="text-gray-600 leading-relaxed">
+                  {banner.description || 'Step back in time to explore India\'s remarkable numismatic heritage. From the punch-marked coins of the Mauryan Empire to the gold Dinars of the Gupta period, each piece tells a story of kingdoms, trade routes, and cultural evolution. These ancient treasures are not just currency—they are windows into our glorious past.'}
+                </p>
+              </div>
+
+              {/* Read More Button (Bottom Right Corner) */}
+              <div className="flex justify-end mt-6">
+                <Link
+                  to="/blog"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg"
+                >
+                  Explore Full Story
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TodayInHistoryBanner;

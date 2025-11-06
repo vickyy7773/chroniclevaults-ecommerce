@@ -1,0 +1,194 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50;
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  /* Premium Button Styles */
+  .btn-primary {
+    @apply bg-slate-900 text-white font-medium px-6 py-2.5 rounded-lg
+           hover:bg-slate-800 transition-all duration-200
+           shadow-sm hover:shadow;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-slate-900 font-medium px-6 py-2.5 rounded-lg
+           border border-slate-300 hover:bg-slate-50
+           transition-all duration-200 shadow-sm;
+  }
+
+  /* Premium Card Styles */
+  .card-modern {
+    @apply bg-white rounded-lg shadow-sm
+           hover:shadow-md transition-all duration-200
+           border border-slate-200;
+  }
+
+  .card-premium {
+    @apply bg-white rounded-lg
+           shadow-sm hover:shadow-md transition-all duration-200
+           border border-slate-200;
+  }
+
+  /* Glass Effect */
+  .glass-effect {
+    @apply bg-white/90 backdrop-blur-sm border border-slate-200 shadow-sm;
+  }
+
+  /* Input Styles */
+  .input-modern {
+    @apply bg-white border border-slate-300 rounded-lg px-4 py-2.5
+           focus:border-slate-900 focus:ring-1 focus:ring-slate-900
+           transition-all duration-200 outline-none;
+  }
+
+  /* Simple Text */
+  .text-gradient {
+    @apply text-slate-900 font-semibold;
+  }
+}
+
+@layer utilities {
+  /* Smooth Scroll */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+  }
+
+  /* Hover Lift Effect */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-1;
+  }
+
+  /* Shimmer Effect for Loading */
+  .shimmer {
+    background: linear-gradient(90deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,0.5) 50%,
+      rgba(255,255,255,0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  /* Pulse Glow */
+  .pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+}
+
+/* Custom Animations */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Modal Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Selection Color */
+::selection {
+  background: #1e293b;
+  color: white;
+}
+
+::-moz-selection {
+  background: #1e293b;
+  color: white;
+}
+
+/* Single Scroll Animation - Faster */
+@keyframes scroll-single {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-scroll-single {
+  animation: scroll-single 20s linear infinite;
+}
+
+.animate-scroll-single:hover {
+  animation-play-state: paused;
+}
