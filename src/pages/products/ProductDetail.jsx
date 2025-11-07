@@ -566,7 +566,8 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                     // Handle array format: [{key: 'Year', value: '1909'}]
                     product.specifications.map((spec, index) => (
                       <div key={index} className="flex gap-3 border-b pb-3">
-                        <span className="font-semibold text-gray-900 min-w-fit">{spec.key}:</span>
+                        <span className="font-semibold text-gray-900 min-w-fit">{spec.key}</span>
+                        <span className="text-gray-400">|</span>
                         <span className="text-gray-700 flex-1">{spec.value}</span>
                       </div>
                     ))
@@ -574,7 +575,8 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                     // Handle object format: {Year: '1909'}
                     Object.entries(product.specifications).map(([key, value]) => (
                       <div key={key} className="flex gap-3 border-b pb-3">
-                        <span className="font-semibold text-gray-900 min-w-fit">{key}:</span>
+                        <span className="font-semibold text-gray-900 min-w-fit">{key}</span>
+                        <span className="text-gray-400">|</span>
                         <span className="text-gray-700 flex-1">{value}</span>
                       </div>
                     ))
