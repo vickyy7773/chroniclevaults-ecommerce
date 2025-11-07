@@ -380,7 +380,7 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 bg-green-500 rounded-full"></span>
                     <span className="text-green-600 font-semibold">
-                      In Stock - Only {product.inStock} left!
+                      In Stock
                     </span>
                   </div>
                 ) : (
@@ -633,7 +633,11 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                         <span className="text-sm text-gray-400 line-through">₹{relatedProduct.originalPrice.toLocaleString()}</span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 mt-2">Stock: {relatedProduct.inStock || 0}</p>
+                    {relatedProduct.inStock > 0 ? (
+                      <p className="text-sm text-green-600 mt-2 font-semibold">In Stock</p>
+                    ) : (
+                      <p className="text-sm text-red-600 mt-2 font-semibold">Out of Stock</p>
+                    )}
                   </div>
                 </div>
               ))}
