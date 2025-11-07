@@ -392,7 +392,7 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
               </div>
 
               {/* Numista Rarity Index */}
-              {product.numistaRarityIndex && (
+              {product.numistaRarityIndex > 0 && (
                 <div className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-xl border-2 border-amber-300 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-bold text-amber-900">📊 Numista Rarity Index</span>
@@ -436,10 +436,6 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                       <Plus size={20} />
                     </button>
                   </div>
-                  {(() => {
-                    console.log('Product sold value:', product.sold, 'Type:', typeof product.sold);
-                    return null;
-                  })()}
                   {product.sold && product.sold > 0 && (
                     <span className="text-gray-600">({product.sold} sold)</span>
                   )}
