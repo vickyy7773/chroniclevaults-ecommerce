@@ -84,7 +84,8 @@ const productSchema = new mongoose.Schema({
   rarity: {
     type: String,
     required: [true, 'Please provide product rarity'],
-    enum: ['Common', 'Uncommon', 'Rare', 'Very Rare', 'Extremely Rare']
+    trim: true
+    // Enum removed - values managed via FilterOptions in database
   },
   condition: {
     type: String,
