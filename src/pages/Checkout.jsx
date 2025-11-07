@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, ShoppingBag, MapPin, CreditCard, Package, ChevronRight, ChevronLeft, Edit2, X, Plus } from 'lucide-react';
 import { orderService, authService } from '../services';
+import paymentService from '../services/paymentService';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -46,9 +47,19 @@ const Checkout = () => {
 
   const [errors, setErrors] = useState({});
 
-  // Fetch saved addresses on component mount
+  // Fetch saved addresses and load Razorpay script on component mount
   useEffect(() => {
     fetchSavedAddresses();
+
+    // Load Razorpay script
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
   }, []);
 
   const fetchSavedAddresses = async () => {

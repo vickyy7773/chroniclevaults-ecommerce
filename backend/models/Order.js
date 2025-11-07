@@ -66,13 +66,16 @@ const orderSchema = new mongoose.Schema({
   paymentMethod: {
     type: String,
     required: true,
-    enum: ['COD', 'Card', 'UPI', 'NetBanking']
+    enum: ['COD', 'Card', 'UPI', 'NetBanking', 'Razorpay']
   },
   paymentResult: {
     id: String,
     status: String,
     updateTime: String,
-    emailAddress: String
+    emailAddress: String,
+    razorpay_order_id: String,
+    razorpay_payment_id: String,
+    razorpay_signature: String
   },
   itemsPrice: {
     type: Number,

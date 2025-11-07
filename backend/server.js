@@ -22,6 +22,7 @@ import sliderRoutes from "./routes/sliders.js";
 import pagePostersRoutes from "./routes/pagePosters.js";
 import bannerRoutes from "./routes/banners.js";
 import filterOptionRoutes from "./routes/filterOptionRoutes.js";
+import paymentRoutes from "./routes/payments.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -112,6 +113,7 @@ app.use("/api/sliders", sliderRoutes);
 app.use("/api/page-posters", pagePostersRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/filter-options", filterOptionRoutes);
+app.use("/api/payments", paymentRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;

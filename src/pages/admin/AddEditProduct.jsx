@@ -58,6 +58,16 @@ const AddEditProduct = () => {
     'Proof'
   ];
 
+  const rarities = [
+    'Common',
+    'Uncommon',
+    'Scarce',
+    'Rare',
+    'Very Rare',
+    'Extremely Rare',
+    'Unique'
+  ];
+
   useEffect(() => {
     fetchCategories();
     if (isEditMode) {
