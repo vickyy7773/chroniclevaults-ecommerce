@@ -559,13 +559,13 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
             )}
 
             {activeTab === 'specifications' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-gray-300 gap-4 md:gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {product.specifications &&
                  (Array.isArray(product.specifications) ? product.specifications.length > 0 : Object.keys(product.specifications).length > 0) ? (
                   Array.isArray(product.specifications) ? (
                     // Handle array format: [{key: 'Year', value: '1909'}]
                     product.specifications.map((spec, index) => (
-                      <div key={index} className="flex gap-3 border-b pb-3 md:px-4 first:md:pl-0">
+                      <div key={index} className="flex gap-3 border-b pb-3">
                         <span className="font-semibold text-gray-900 min-w-fit">{spec.key}:</span>
                         <span className="text-gray-700 flex-1">{spec.value}</span>
                       </div>
@@ -573,7 +573,7 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                   ) : (
                     // Handle object format: {Year: '1909'}
                     Object.entries(product.specifications).map(([key, value]) => (
-                      <div key={key} className="flex gap-3 border-b pb-3 md:px-4 first:md:pl-0">
+                      <div key={key} className="flex gap-3 border-b pb-3">
                         <span className="font-semibold text-gray-900 min-w-fit">{key}:</span>
                         <span className="text-gray-700 flex-1">{value}</span>
                       </div>
