@@ -436,7 +436,7 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                       <Plus size={20} />
                     </button>
                   </div>
-                  {(product.sold || 0) > 0 && (
+                  {product.sold > 0 && (
                     <span className="text-gray-600">({product.sold} sold)</span>
                   )}
                 </div>
