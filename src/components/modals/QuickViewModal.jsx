@@ -172,15 +172,10 @@ const QuickViewModal = ({
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-sm text-gray-600">Stock: </span>
-                  <span className={`font-medium ${product.inStock <= 3 ? 'text-orange-600' : 'text-green-600'}`}>
-                    {product.inStock} available
+                  <span className="font-medium text-green-600">
+                    In Stock
                   </span>
                 </div>
-                {product.inStock <= 3 && (
-                  <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-bold">
-                    Low Stock!
-                  </span>
-                )}
               </div>
 
               <div className="flex space-x-4">
