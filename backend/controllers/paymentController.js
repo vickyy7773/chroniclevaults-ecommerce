@@ -7,6 +7,13 @@ import Order from '../models/Order.js';
 // @access  Private
 export const createRazorpayOrder = async (req, res) => {
   try {
+    if (!razorpayInstance) {
+      return res.status(503).json({
+        success: false,
+        message: 'Razorpay payment gateway is not configured'
+      });
+    }
+
     const { amount, currency = 'INR', receipt } = req.body;
 
     if (!amount || amount <= 0) {
