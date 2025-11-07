@@ -61,7 +61,7 @@ const TodayInHistoryBanner = () => {
 
               {/* Title and Description (Center) */}
               <div>
-                <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">
                   {banner.title || 'The Legacy of Ancient Indian Coins'}
                 </h3>
 
