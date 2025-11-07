@@ -43,6 +43,8 @@ const AddEditProduct = () => {
   const [uploading, setUploading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
+  const [denominations, setDenominations] = useState([]);
+  const [metals, setMetals] = useState([]);
 
   const conditions = [
     'Poor',
@@ -70,6 +72,7 @@ const AddEditProduct = () => {
 
   useEffect(() => {
     fetchCategories();
+    fetchFilterOptions();
     if (isEditMode) {
       fetchProduct();
     }
@@ -98,6 +101,22 @@ const AddEditProduct = () => {
       }
     } catch (error) {
       console.error('Failed to fetch categories:', error);
+    }
+  };
+
+  const fetchFilterOptions = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/filter-options`);
+      const data = await response.json();
+      if (data.success && data.data) {
+        setDenominations(data.data.denomination || []);
+        setMetals(data.data.metal || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch filter options:', error);
+      // Fallback to default values
+      setDenominations(['1 Pice', '1/2 Pice', '1 Anna', '2 Annas', '4 Annas', '8 Annas', '1 Rupee', '2 Rupees', '5 Rupees', '10 Rupees']);
+      setMetals(['Gold', 'Silver', 'Copper', 'Bronze', 'Nickel', 'Brass']);
     }
   };
 
