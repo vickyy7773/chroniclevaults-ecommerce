@@ -6,7 +6,7 @@ import { logActivity } from '../middleware/activityLogger.js';
 // @access  Public
 export const getProducts = async (req, res) => {
   try {
-    const { category, search, sort, page = 1, limit = 12 } = req.query;
+    const { category, search, sort, page, limit } = req.query;
 
     // Build query
     let query = { active: true };
@@ -41,22 +41,26 @@ export const getProducts = async (req, res) => {
         sortOption = { createdAt: -1 };
     }
 
-    // Pagination
-    const skip = (page - 1) * limit;
+    // Build query with optional pagination
+    let productQuery = Product.find(query).sort(sortOption);
 
-    const products = await Product.find(query)
-      .sort(sortOption)
-      .limit(parseInt(limit))
-      .skip(skip);
+    // Only apply pagination if limit is provided
+    if (limit) {
+      const pageNum = parseInt(page) || 1;
+      const limitNum = parseInt(limit);
+      const skip = (pageNum - 1) * limitNum;
+      productQuery = productQuery.limit(limitNum).skip(skip);
+    }
 
+    const products = await productQuery;
     const total = await Product.countDocuments(query);
 
     res.status(200).json({
       success: true,
       count: products.length,
       total,
-      page: parseInt(page),
-      pages: Math.ceil(total / limit),
+      page: limit ? parseInt(page) || 1 : 1,
+      pages: limit ? Math.ceil(total / parseInt(limit)) : 1,
       data: products
     });
   } catch (error) {
