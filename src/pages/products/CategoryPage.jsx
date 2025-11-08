@@ -385,7 +385,7 @@ const CategoryPage = ({ addToCart = () => {}, addToWishlist = () => {}, isInWish
                         </div>
                       )}
                       <div className="flex items-baseline gap-1.5 mb-2.5">
-                        <span className="text-xl font-semibold text-slate-900">₹{product.price.toFixed(2)}</span>
+                        <span className="text-xl font-semibold text-amber-600">₹{product.price.toFixed(2)}</span>
                         {product.originalPrice > product.price && (
                           <span className="text-xs text-slate-500 line-through">₹{product.originalPrice.toFixed(2)}</span>
                         )}
