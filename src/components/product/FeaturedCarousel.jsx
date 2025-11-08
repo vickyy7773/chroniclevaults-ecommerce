@@ -56,28 +56,28 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
         </div>
 
         {/* Horizontal Scroll Container */}
-        <div className="relative">
-          {/* Navigation Arrows - Centered Vertically */}
+        <div className="relative px-2">
+          {/* Navigation Arrows - Centered Vertically with Better Design */}
           <button
             onClick={() => scroll('left')}
-            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full border border-gray-300 bg-white hover:border-amber-600 hover:bg-amber-50 transition-all duration-300 group shadow-lg -translate-x-4"
+            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110 -translate-x-6"
             aria-label="Scroll left"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-600 group-hover:text-amber-600" />
+            <ChevronLeft className="w-6 h-6 text-white" />
           </button>
           <button
             onClick={() => scroll('right')}
-            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full border border-gray-300 bg-white hover:border-amber-600 hover:bg-amber-50 transition-all duration-300 group shadow-lg translate-x-4"
+            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110 translate-x-6"
             aria-label="Scroll right"
           >
-            <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-amber-600" />
+            <ChevronRight className="w-6 h-6 text-white" />
           </button>
 
           <div
             ref={scrollContainerRef}
-            className="overflow-x-auto scroll-smooth scrollbar-hide pb-2"
+            className="overflow-x-auto scroll-smooth scrollbar-hide pb-4 px-1"
           >
-            <div className="flex gap-6" style={{ width: 'max-content' }}>
+            <div className="flex gap-6 pr-6" style={{ width: 'max-content' }}>
               {featuredCoins.map((coin, index) => (
                 <Link
                   key={coin._id}
