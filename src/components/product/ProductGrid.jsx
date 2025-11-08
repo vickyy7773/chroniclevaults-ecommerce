@@ -85,7 +85,7 @@ const ProductGrid = ({
             <div className="p-4">
               <h3 className="font-medium text-base mb-2 text-slate-900 line-clamp-2 min-h-[2.5rem]">{coin.name}</h3>
               <div className="flex items-baseline gap-1.5 mb-2.5">
-                <span className="text-xl font-semibold text-slate-900">₹{coin.price.toFixed(2)}</span>
+                <span className="text-xl font-semibold text-amber-600">₹{coin.price.toFixed(2)}</span>
                 {coin.originalPrice > coin.price && (
                   <span className="text-xs text-slate-500 line-through">₹{coin.originalPrice.toFixed(2)}</span>
                 )}

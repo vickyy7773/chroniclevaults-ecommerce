@@ -138,7 +138,7 @@ const FeaturedCarousel = ({ featuredCoins, addToCart }) => {
 
                     {/* Price */}
                     <div className="flex items-baseline gap-1.5 mb-2.5">
-                      <span className="text-xl font-semibold text-slate-900">₹{coin.price.toFixed(2)}</span>
+                      <span className="text-xl font-semibold text-amber-600">₹{coin.price.toFixed(2)}</span>
                       {coin.originalPrice > coin.price && (
                         <span className="text-xs text-slate-500 line-through">₹{coin.originalPrice.toFixed(2)}</span>
                       )}
