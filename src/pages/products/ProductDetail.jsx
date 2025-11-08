@@ -418,27 +418,22 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
               {/* Quantity Selector */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Quantity</label>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center border-2 border-gray-300 rounded-lg">
-                    <button
-                      onClick={() => handleQuantityChange(-1)}
-                      disabled={quantity <= 1}
-                      className="p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Minus size={20} />
-                    </button>
-                    <span className="px-6 py-2 text-lg font-bold border-x-2 border-gray-300">{quantity}</span>
-                    <button
-                      onClick={() => handleQuantityChange(1)}
-                      disabled={quantity >= (product.inStock || 1)}
-                      className="p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Plus size={20} />
-                    </button>
-                  </div>
-                  {product.sold && product.sold > 0 && (
-                    <span className="text-gray-600">({product.sold} sold)</span>
-                  )}
+                <div className="flex items-center border-2 border-gray-300 rounded-lg">
+                  <button
+                    onClick={() => handleQuantityChange(-1)}
+                    disabled={quantity <= 1}
+                    className="p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Minus size={20} />
+                  </button>
+                  <span className="px-6 py-2 text-lg font-bold border-x-2 border-gray-300">{quantity}</span>
+                  <button
+                    onClick={() => handleQuantityChange(1)}
+                    disabled={quantity >= (product.inStock || 1)}
+                    className="p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Plus size={20} />
+                  </button>
                 </div>
               </div>
 
