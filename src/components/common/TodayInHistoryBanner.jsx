@@ -17,11 +17,13 @@ const TodayInHistoryBanner = () => {
       const response = await blogService.getPublishedBlogs();
       const blogsData = response?.data?.data || response?.data || [];
 
-      // Get the most recent published blog
-      if (blogsData && blogsData.length > 0) {
-        // Blogs are usually sorted by createdAt in descending order from backend
-        // If not, we can sort them here
-        const sortedBlogs = blogsData.sort((a, b) => {
+      // Filter blogs that should be shown in history section
+      const historyBlogs = blogsData.filter(blog => blog.showInHistory === true);
+
+      // Get the most recent published blog with showInHistory enabled
+      if (historyBlogs && historyBlogs.length > 0) {
+        // Sort by createdAt in descending order
+        const sortedBlogs = historyBlogs.sort((a, b) => {
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
         setLatestBlog(sortedBlogs[0]);

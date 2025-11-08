@@ -18,7 +18,8 @@ const BlogManagement = () => {
     author: '',
     readTime: '',
     image: '',
-    status: 'draft'
+    status: 'draft',
+    showInHistory: false
   });
 
   useEffect(() => {
@@ -103,7 +104,8 @@ const BlogManagement = () => {
       author: blog.author || '',
       readTime: blog.readTime || '',
       image: blog.image || '',
-      status: blog.status || 'draft'
+      status: blog.status || 'draft',
+      showInHistory: blog.showInHistory || false
     });
     setImagePreview(blog.image);
     setShowModal(true);
@@ -118,7 +120,8 @@ const BlogManagement = () => {
       author: '',
       readTime: '',
       image: '',
-      status: 'draft'
+      status: 'draft',
+      showInHistory: false
     });
     setImagePreview(null);
     setShowModal(true);
@@ -174,7 +177,8 @@ const BlogManagement = () => {
             author: '',
             readTime: '',
             image: '',
-            status: 'draft'
+            status: 'draft',
+            showInHistory: false
           });
           setImagePreview(null);
         } else {
@@ -201,7 +205,8 @@ const BlogManagement = () => {
             author: '',
             readTime: '',
             image: '',
-            status: 'draft'
+            status: 'draft',
+            showInHistory: false
           });
           setImagePreview(null);
         } else {
@@ -573,6 +578,26 @@ const BlogManagement = () => {
                       <option value="draft">Draft</option>
                       <option value="published">Published</option>
                     </select>
+                  </div>
+
+                  {/* Show in Today In History */}
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800 rounded-xl p-6">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.showInHistory}
+                        onChange={(e) => setFormData({ ...formData, showInHistory: e.target.checked })}
+                        className="w-5 h-5 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 dark:focus:ring-amber-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+                      />
+                      <div>
+                        <span className="text-sm font-bold text-gray-900 dark:text-white">
+                          Show in "Today In History" section
+                        </span>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          This blog will appear on the homepage in the "Today In History" banner
+                        </p>
+                      </div>
+                    </label>
                   </div>
                 </div>
 

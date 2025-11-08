@@ -34,6 +34,10 @@ const blogSchema = new mongoose.Schema({
     enum: ['draft', 'published'],
     default: 'draft'
   },
+  showInHistory: {
+    type: Boolean,
+    default: false
+  },
   views: {
     type: Number,
     default: 0
