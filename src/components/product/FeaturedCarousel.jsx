@@ -77,7 +77,7 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
             ref={scrollContainerRef}
             className="overflow-x-auto scroll-smooth scrollbar-hide pb-4 overflow-hidden"
           >
-            <div className="flex gap-5 px-2" style={{ width: 'max-content' }}>
+            <div className="flex gap-5 pl-4 pr-2" style={{ width: 'max-content' }}>
               {featuredCoins.map((coin, index) => (
                 <Link
                   key={coin._id}
