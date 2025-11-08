@@ -64,14 +64,14 @@ const TodayInHistoryBanner = () => {
 
         {/* Blog Card - Image Left (1/3), Content Right (2/3) */}
         <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="grid md:grid-cols-3 gap-0">
+          <div className="grid md:grid-cols-3 gap-0 items-stretch">
 
             {/* Left: Image (1/3 width) */}
-            <div className="relative h-48 md:h-72 overflow-hidden group">
+            <div className="relative h-64 md:h-full overflow-hidden group">
               <img
                 src={latestBlog.image}
                 alt={latestBlog.title}
-                className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
               />
             </div>
 
