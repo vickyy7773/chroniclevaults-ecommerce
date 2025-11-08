@@ -87,7 +87,7 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
                 >
                   {/* Image Section */}
                   <div
-                    className="relative overflow-hidden cursor-pointer h-48"
+                    className="relative overflow-hidden cursor-pointer h-64"
                     onMouseMove={(e) => {
                       e.preventDefault();
                       handleMouseMove(e, coin, index);
@@ -98,9 +98,9 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
                     <img
                       src={coin.images[0]}
                       alt={coin.name}
-                      className="w-full h-full object-cover transition-all duration-100 ease-out"
+                      className="w-full h-full object-contain transition-all duration-100 ease-out"
                       style={hoveredCoin?._id === coin._id ? {
-                        transform: `scale(2.5) translate(${(0.5 - (mousePos.x / 345)) * 100}%, ${(0.5 - (mousePos.y / 192)) * 100}%)`,
+                        transform: `scale(2.5) translate(${(0.5 - (mousePos.x / 345)) * 100}%, ${(0.5 - (mousePos.y / 256)) * 100}%)`,
                       } : {}}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
