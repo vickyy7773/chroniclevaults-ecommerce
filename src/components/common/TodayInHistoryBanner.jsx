@@ -1,34 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar } from 'lucide-react';
-import { bannerService } from '../../services';
+import { blogService } from '../../services';
 
 const TodayInHistoryBanner = () => {
-  const [banner, setBanner] = useState(null);
+  const [latestBlog, setLatestBlog] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchActiveBanner();
+    fetchLatestBlog();
   }, []);
 
-  const fetchActiveBanner = async () => {
+  const fetchLatestBlog = async () => {
     try {
       setLoading(true);
-      const response = await bannerService.getActiveBanner();
-      const bannerData = response?.data?.data || response?.data;
+      const response = await blogService.getPublishedBlogs();
+      const blogsData = response?.data?.data || response?.data || [];
 
-      if (bannerData) {
-        setBanner(bannerData);
+      // Get the most recent published blog
+      if (blogsData && blogsData.length > 0) {
+        // Blogs are usually sorted by createdAt in descending order from backend
+        // If not, we can sort them here
+        const sortedBlogs = blogsData.sort((a, b) => {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        setLatestBlog(sortedBlogs[0]);
       }
     } catch (error) {
-      console.error('Error fetching active banner:', error);
+      console.error('Error fetching latest blog:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Don't render if no banner or still loading
-  if (loading || !banner) {
+  // Don't render if no blog or still loading
+  if (loading || !latestBlog) {
     return null;
   }
 
@@ -39,19 +45,19 @@ const TodayInHistoryBanner = () => {
         <div className="flex items-center gap-3 mb-5">
           <Calendar className="w-7 h-7 text-amber-600" />
           <h2 className="text-3xl md:text-4xl font-light text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
-            {banner.heading || 'Today in History'}
+            Today in History
           </h2>
         </div>
 
-        {/* Banner Card - Image Left (1/3), Content Right (2/3) */}
+        {/* Blog Card - Image Left (1/3), Content Right (2/3) */}
         <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="grid md:grid-cols-3 gap-0">
 
             {/* Left: Image (1/3 width) */}
             <div className="relative h-48 md:h-72 overflow-hidden group">
               <img
-                src={banner.imageUrl}
-                alt={banner.title || 'Today in History'}
+                src={latestBlog.image}
+                alt={latestBlog.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
             </div>
@@ -62,11 +68,11 @@ const TodayInHistoryBanner = () => {
               {/* Title and Description (Center) */}
               <div>
                 <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">
-                  {banner.title || 'The Legacy of Ancient Indian Coins'}
+                  {latestBlog.title}
                 </h3>
 
                 <p className="text-gray-600 leading-relaxed">
-                  {banner.description || 'Step back in time to explore India\'s remarkable numismatic heritage. From the punch-marked coins of the Mauryan Empire to the gold Dinars of the Gupta period, each piece tells a story of kingdoms, trade routes, and cultural evolution. These ancient treasures are not just currency—they are windows into our glorious past.'}
+                  {latestBlog.excerpt}
                 </p>
               </div>
 
