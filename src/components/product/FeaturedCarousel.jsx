@@ -34,7 +34,7 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
 
   const scroll = (direction) => {
     if (scrollContainerRef.current) {
-      const scrollAmount = 355; // Card width (350px) + gap (20px = 5 in gap-5)
+      const scrollAmount = 350; // Card width (345px) + gap (20px = 5 in gap-5)
       scrollContainerRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -44,9 +44,9 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
 
   return (
     <section className="py-16 bg-gradient-to-b from-white to-gray-50">
-      <div className="max-w-[1600px] mx-auto px-4 lg:px-8">
+      <div className="max-w-[1550px] mx-auto px-6 lg:px-10">
         {/* Section Header */}
-        <div className="flex items-center mb-10 px-4">
+        <div className="flex items-center mb-10 px-2">
           <div className="flex items-center space-x-3">
             <Sparkles className="w-8 h-8 text-amber-600" />
             <h3 className="text-4xl font-light text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
@@ -75,15 +75,15 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
 
           <div
             ref={scrollContainerRef}
-            className="overflow-x-auto scroll-smooth scrollbar-hide pb-4"
+            className="overflow-x-auto scroll-smooth scrollbar-hide pb-4 overflow-hidden"
           >
-            <div className="flex gap-5 px-4" style={{ width: 'max-content' }}>
+            <div className="flex gap-5 px-2" style={{ width: 'max-content' }}>
               {featuredCoins.map((coin, index) => (
                 <Link
                   key={coin._id}
                   to={getProductUrl(coin)}
                   className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group block"
-                  style={{ width: '350px', flexShrink: 0 }}
+                  style={{ width: '345px', flexShrink: 0 }}
                 >
                   {/* Image Section */}
                   <div
@@ -100,7 +100,7 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
                       alt={coin.name}
                       className="w-full h-full object-cover transition-all duration-100 ease-out"
                       style={hoveredCoin?._id === coin._id ? {
-                        transform: `scale(2.5) translate(${(0.5 - (mousePos.x / 350)) * 100}%, ${(0.5 - (mousePos.y / 192)) * 100}%)`,
+                        transform: `scale(2.5) translate(${(0.5 - (mousePos.x / 345)) * 100}%, ${(0.5 - (mousePos.y / 192)) * 100}%)`,
                       } : {}}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
