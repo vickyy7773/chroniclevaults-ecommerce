@@ -418,7 +418,7 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
               {/* Quantity Selector */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Quantity</label>
-                <div className="flex items-center border-2 border-gray-300 rounded-lg">
+                <div className="inline-flex items-center border-2 border-gray-300 rounded-lg">
                   <button
                     onClick={() => handleQuantityChange(-1)}
                     disabled={quantity <= 1}
@@ -426,7 +426,7 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                   >
                     <Minus size={20} />
                   </button>
-                  <span className="px-6 py-2 text-lg font-bold border-x-2 border-gray-300">{quantity}</span>
+                  <span className="px-6 py-2 text-lg font-bold border-x-2 border-gray-300 min-w-[60px] text-center">{quantity}</span>
                   <button
                     onClick={() => handleQuantityChange(1)}
                     disabled={quantity >= (product.inStock || 1)}
