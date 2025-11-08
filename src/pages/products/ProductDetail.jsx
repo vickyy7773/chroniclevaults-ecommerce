@@ -283,10 +283,10 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                 </>
               )}
 
-              {/* Discount Badge */}
-              {product.discount > 0 && (
-                <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                  {product.discount}% OFF
+              {/* Rarity Badge */}
+              {product.rarity && (
+                <div className="absolute top-4 left-4 bg-slate-900/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium">
+                  {product.rarity}
                 </div>
               )}
 
