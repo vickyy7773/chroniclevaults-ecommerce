@@ -332,7 +332,7 @@ const CategoryPage = ({ addToCart = () => {}, addToWishlist = () => {}, isInWish
                     className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer"
                   >
                     <div
-                      className="relative overflow-hidden h-48"
+                      className="relative overflow-hidden h-64"
                       onMouseMove={(e) => handleMouseMove(e, product, index)}
                       onMouseEnter={() => setHoveredProduct(product)}
                       onMouseLeave={() => setHoveredProduct(null)}
