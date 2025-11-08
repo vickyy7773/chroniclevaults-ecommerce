@@ -137,7 +137,8 @@ const VintageCoinStore = ({
     setShowQuickView(true);
   };
 
-  const featuredCoins = coins.filter(coin => coin.featured && (coin.inStock || 0) > 0);
+  // Show all active products that are in stock (not just featured ones)
+  const featuredCoins = coins.filter(coin => (coin.inStock || 0) > 0);
   const saleCoins = coins.filter(coin => coin.onSale && (coin.inStock || 0) > 0);
 
   return (
