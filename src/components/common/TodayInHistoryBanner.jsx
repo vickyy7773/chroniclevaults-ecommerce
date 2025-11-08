@@ -17,16 +17,27 @@ const TodayInHistoryBanner = () => {
       const response = await blogService.getPublishedBlogs();
       const blogsData = response?.data?.data || response?.data || [];
 
-      // Filter blogs that should be shown in history section
-      const historyBlogs = blogsData.filter(blog => blog.showInHistory === true);
+      if (blogsData && blogsData.length > 0) {
+        // First, try to get blogs with showInHistory enabled
+        const historyBlogs = blogsData.filter(blog => blog.showInHistory === true);
 
-      // Get the most recent published blog with showInHistory enabled
-      if (historyBlogs && historyBlogs.length > 0) {
-        // Sort by createdAt in descending order
-        const sortedBlogs = historyBlogs.sort((a, b) => {
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        });
-        setLatestBlog(sortedBlogs[0]);
+        let selectedBlog;
+
+        if (historyBlogs && historyBlogs.length > 0) {
+          // If there are blogs with showInHistory, use the most recent one
+          const sortedHistoryBlogs = historyBlogs.sort((a, b) => {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          });
+          selectedBlog = sortedHistoryBlogs[0];
+        } else {
+          // Fallback: If no blog has showInHistory enabled, show the latest published blog
+          const sortedBlogs = blogsData.sort((a, b) => {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          });
+          selectedBlog = sortedBlogs[0];
+        }
+
+        setLatestBlog(selectedBlog);
       }
     } catch (error) {
       console.error('Error fetching latest blog:', error);
