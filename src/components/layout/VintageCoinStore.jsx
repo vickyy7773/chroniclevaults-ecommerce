@@ -151,7 +151,7 @@ const VintageCoinStore = ({
       <TodayInHistoryBanner />
 
       {featuredCoins.length > 0 && (
-        <FeaturedCarousel featuredCoins={featuredCoins} addToCart={addToCart} />
+        <FeaturedCarousel featuredCoins={featuredCoins} addToCart={addToCart} openQuickView={openQuickView} />
       )}
 
       {/* Chronicle Vaults Section */}

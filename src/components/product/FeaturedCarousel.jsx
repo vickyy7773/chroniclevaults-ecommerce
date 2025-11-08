@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Sparkles, ChevronLeft, ChevronRight, Eye, Heart, ShoppingCart } from 'lucide-react';
 import { getProductUrl } from '../../utils/productUrl';
 
-const FeaturedCarousel = ({ featuredCoins, addToCart }) => {
+const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
   const scrollContainerRef = useRef(null);
   const [hoveredCoin, setHoveredCoin] = React.useState(null);
   const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
@@ -120,9 +120,17 @@ const FeaturedCarousel = ({ featuredCoins, addToCart }) => {
                     </div>
 
                     {/* Quick View Button */}
-                    <div className="absolute bottom-2 right-2 bg-white/80 backdrop-blur-sm text-slate-900 p-2 rounded-full shadow-lg transition-all duration-300 opacity-0 group-hover:opacity-100">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openQuickView(coin);
+                      }}
+                      className="absolute bottom-2 right-2 bg-white/80 backdrop-blur-sm text-slate-900 p-2 rounded-full shadow-lg transition-all duration-300 opacity-0 group-hover:opacity-100 hover:bg-white hover:scale-110"
+                      aria-label="Quick view"
+                    >
                       <Eye className="w-4 h-4" />
-                    </div>
+                    </button>
                   </div>
 
                   {/* Content Section */}
