@@ -47,7 +47,7 @@ const AboutUs = () => {
             <img
               src={posterImage}
               alt="Chronicle Vaults"
-              className="rounded-lg w-full max-w-lg object-cover"
+              className="w-full object-contain"
             />
           </div>
         </div>
