@@ -340,7 +340,7 @@ const CategoryPage = ({ addToCart = () => {}, addToWishlist = () => {}, isInWish
                       <img
                         src={product.images?.[0] || product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover transition-all duration-100 ease-out"
+                        className="w-full h-full object-contain transition-all duration-100 ease-out"
                         style={hoveredProduct?._id === product._id ? {
                           transform: `scale(2.5) translate(${(0.5 - (mousePos.x / 300)) * 100}%, ${(0.5 - (mousePos.y / 192)) * 100}%)`,
                         } : {}}
