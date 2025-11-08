@@ -43,11 +43,11 @@ const AboutUs = () => {
               Join us as we continue to preserve history, one coin at a time.
             </p>
           </div>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center h-full">
             <img
               src={posterImage}
               alt="Chronicle Vaults"
-              className="rounded-lg w-full max-w-md object-cover"
+              className="rounded-lg w-full max-w-lg object-cover"
             />
           </div>
         </div>
