@@ -1,5 +1,6 @@
 import React from 'react';
 import { Award, Shield, Users, Heart } from 'lucide-react';
+import posterImage from '../../assets/poster.png';
 
 const AboutUs = () => {
   return (
@@ -35,8 +36,8 @@ const AboutUs = () => {
           </div>
           <div className="relative">
             <img
-              src="https://images.unsplash.com/photo-1605792657660-596af9009e82?w=600"
-              alt="Rare coins collection"
+              src={posterImage}
+              alt="Chronicle Vaults"
               className="rounded-lg shadow-xl"
             />
           </div>
