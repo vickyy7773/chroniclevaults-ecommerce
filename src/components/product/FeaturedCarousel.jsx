@@ -158,7 +158,7 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
                         Year: <span className="font-medium text-slate-900">{coin.year}</span> • <span className="font-medium text-slate-900">{coin.condition}</span>
                       </p>
                       <p className="text-xs text-slate-600">
-                        Stock: <span className={`font-medium ${coin.inStock <= 5 ? 'text-red-600' : 'text-green-600'}`}>{coin.inStock} available</span>
+                        <span className="font-medium text-green-600">In Stock</span>
                       </p>
                     </div>
 
