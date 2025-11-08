@@ -1,5 +1,5 @@
 import React from 'react';
-import { Truck, Package, Clock, CreditCard, Shield } from 'lucide-react';
+import { Truck, Clock, CreditCard, Shield } from 'lucide-react';
 
 const ShippingPolicy = () => {
   return (
@@ -34,34 +34,6 @@ const ShippingPolicy = () => {
               <p className="text-gray-700 leading-relaxed text-lg">
                 The products are generally <strong>dispatched within 48 hours</strong> of the order being received.
               </p>
-            </div>
-          </section>
-
-          {/* Shipping Charges */}
-          <section className="mb-12">
-            <div className="flex items-center mb-6">
-              <Package className="w-10 h-10 text-amber-600 mr-4" />
-              <h2 className="text-3xl font-light text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
-                Shipping Charges
-              </h2>
-            </div>
-            <div className="space-y-4">
-              <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
-                <p className="text-gray-700 leading-relaxed mb-3">
-                  We charge <strong>flat shipping charge per order</strong> irrespective of the order size and value.
-                </p>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                  <p className="text-green-800 font-semibold text-lg">
-                    ✓ FREE shipping on all prepaid orders above ₹499
-                  </p>
-                  <p className="text-green-700 text-sm mt-1">(except J&K and North-east territories)</p>
-                </div>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <p className="text-amber-900">
-                    On orders upto ₹499, we charge <strong>₹65</strong>
-                  </p>
-                </div>
-              </div>
             </div>
           </section>
 
@@ -114,29 +86,19 @@ const ShippingPolicy = () => {
               </h2>
             </div>
 
-            <div className="space-y-6">
-              {/* Online Payment */}
-              <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-4">Online Payment</h3>
-                <p className="text-gray-700 leading-relaxed mb-4">
-                  Online payment can be done using:
-                </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-700">Credit Card</div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-700">Credit Card (EMI)</div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-700">Debit Card</div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-700">Payment Wallets</div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-700">Bank Transfer</div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-700">UPI</div>
-                </div>
-              </div>
-
-              {/* Cash on Delivery */}
-              <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
-                <h3 className="text-2xl font-semibold text-red-900 mb-3">Cash on Delivery</h3>
-                <p className="text-red-800 font-semibold">
-                  ✗ We do not accept Cash on Delivery Orders.
-                </p>
+            {/* Online Payment */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Online Payment</h3>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                Online payment can be done using:
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-700">Credit Card</div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-700">Credit Card (EMI)</div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-700">Debit Card</div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-700">Payment Wallets</div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-700">Bank Transfer</div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center text-gray-700">UPI</div>
               </div>
             </div>
           </section>
