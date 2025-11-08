@@ -25,20 +25,29 @@ const AboutUs = () => {
               Our Story
             </h2>
             <p className="text-gray-700 mb-4 leading-relaxed">
-              Chronicle Vaults was founded with a simple mission: to make rare and historical collectibles accessible to enthusiasts and collectors worldwide. What started as a small shop has grown into one of the most trusted names in numismatics and collectibles.
+              For over sixteen years, we have been at the heart of the numismatic community, dedicated to the study, collection, and preservation of coins, banknotes, and medals from around the world.
             </p>
             <p className="text-gray-700 mb-4 leading-relaxed">
-              For over 25 years, we've been helping collectors discover pieces of history, from ancient coins to modern rarities. Each item in our collection is carefully authenticated and graded by our team of experts.
+              Our passion for history and craftsmanship has made us a trusted source for collectors, investors, and enthusiasts alike.
+            </p>
+            <p className="text-gray-700 mb-4 leading-relaxed">
+              Founded in 2009 - Urhistory, began as a small venture driven by a deep fascination with the stories behind every coin. Today, we proudly offering authentic collectibles, expert appraisals, and educational resources that bring the rich heritage of numismatics to life.
+            </p>
+            <p className="text-gray-700 mb-4 leading-relaxed">
+              Our team of seasoned experts combines decades of market insight with a commitment to integrity and authenticity. Whether you're a seasoned collector searching for rare treasures or a newcomer beginning your numismatic journey, we provide personalized guidance and a carefully curated selection to meet your needs.
+            </p>
+            <p className="text-gray-700 mb-4 leading-relaxed">
+              At Chronicle Vaults - A Brand Of Urhistory, we believe every coin tells a story — of nations, art, and human achievement.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              We believe that every coin, stamp, and medal tells a story. Our passion is sharing these stories with collectors around the world.
+              Join us as we continue to preserve history, one coin at a time.
             </p>
           </div>
           <div className="relative">
             <img
               src={posterImage}
               alt="Chronicle Vaults"
-              className="rounded-lg shadow-xl"
+              className="rounded-lg"
             />
           </div>
         </div>
