@@ -12,7 +12,7 @@ const AboutUs = () => {
             About Chronicle Vaults
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl leading-relaxed">
-            Preserving history through rare coins, stamps, medals, and collectibles since 1995.
+            Preserving history through rare coins, stamps, medals, and collectibles since 2009.
           </p>
         </div>
       </div>
@@ -43,11 +43,11 @@ const AboutUs = () => {
               Join us as we continue to preserve history, one coin at a time.
             </p>
           </div>
-          <div className="relative">
+          <div className="flex items-center justify-center">
             <img
               src={posterImage}
               alt="Chronicle Vaults"
-              className="rounded-lg"
+              className="rounded-lg w-full max-w-md object-cover"
             />
           </div>
         </div>
