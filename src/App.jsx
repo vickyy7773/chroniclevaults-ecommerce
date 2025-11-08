@@ -60,26 +60,13 @@ import AdminActivities from './pages/admin/AdminActivities';
 const AppContent = () => {
   const location = useLocation();
 
-  // Info and policy pages that don't need shopping features (cart, wishlist, search)
-  const infoPages = [
-    '/about-us',
-    '/faq',
-    '/contact-us',
-    '/blog',
-    '/buying-with-us',
-    '/privacy-policy',
-    '/terms-conditions',
-    '/shipping-policy',
-    '/cancellation-refund'
-  ];
-
   const hideHeaderFooter = location.pathname === '/authentication' ||
                           location.pathname === '/checkout' ||
                           location.pathname === '/profile' ||
                           location.pathname.startsWith('/admin');
 
-  // Check if we should hide shopping features (search, cart, wishlist)
-  const hideShoppingFeatures = infoPages.includes(location.pathname);
+  // Show shopping features (search, cart, wishlist) on all pages
+  const hideShoppingFeatures = false;
 
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState(() => {
