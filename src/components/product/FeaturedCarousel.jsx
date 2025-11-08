@@ -34,7 +34,7 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
 
   const scroll = (direction) => {
     if (scrollContainerRef.current) {
-      const scrollAmount = 360; // Card width (340px) + gap (20px)
+      const scrollAmount = 355; // Card width (350px) + gap (20px = 5 in gap-5)
       scrollContainerRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -44,9 +44,9 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
 
   return (
     <section className="py-16 bg-gradient-to-b from-white to-gray-50">
-      <div className="max-w-[1500px] mx-auto px-8 lg:px-12">
+      <div className="max-w-[1600px] mx-auto px-4 lg:px-8">
         {/* Section Header */}
-        <div className="flex items-center mb-10">
+        <div className="flex items-center mb-10 px-4">
           <div className="flex items-center space-x-3">
             <Sparkles className="w-8 h-8 text-amber-600" />
             <h3 className="text-4xl font-light text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
@@ -56,18 +56,18 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
         </div>
 
         {/* Horizontal Scroll Container */}
-        <div className="relative px-2">
+        <div className="relative">
           {/* Navigation Arrows - Centered Vertically with Better Design */}
           <button
             onClick={() => scroll('left')}
-            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110 -translate-x-6"
+            className="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110 -translate-x-5"
             aria-label="Scroll left"
           >
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
           <button
             onClick={() => scroll('right')}
-            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110 translate-x-6"
+            className="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110 translate-x-5"
             aria-label="Scroll right"
           >
             <ChevronRight className="w-6 h-6 text-white" />
@@ -75,15 +75,15 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
 
           <div
             ref={scrollContainerRef}
-            className="overflow-x-auto scroll-smooth scrollbar-hide pb-4 px-1"
+            className="overflow-x-auto scroll-smooth scrollbar-hide pb-4"
           >
-            <div className="flex gap-6 pr-6" style={{ width: 'max-content' }}>
+            <div className="flex gap-5 px-4" style={{ width: 'max-content' }}>
               {featuredCoins.map((coin, index) => (
                 <Link
                   key={coin._id}
                   to={getProductUrl(coin)}
                   className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group block"
-                  style={{ width: '340px', flexShrink: 0 }}
+                  style={{ width: '350px', flexShrink: 0 }}
                 >
                   {/* Image Section */}
                   <div
@@ -100,7 +100,7 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
                       alt={coin.name}
                       className="w-full h-full object-cover transition-all duration-100 ease-out"
                       style={hoveredCoin?._id === coin._id ? {
-                        transform: `scale(2.5) translate(${(0.5 - (mousePos.x / 340)) * 100}%, ${(0.5 - (mousePos.y / 192)) * 100}%)`,
+                        transform: `scale(2.5) translate(${(0.5 - (mousePos.x / 350)) * 100}%, ${(0.5 - (mousePos.y / 192)) * 100}%)`,
                       } : {}}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
