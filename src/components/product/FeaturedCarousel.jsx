@@ -44,9 +44,9 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
 
   return (
     <section className="py-16 bg-gradient-to-b from-white to-gray-50">
-      <div className="max-w-[1550px] mx-auto px-6 lg:px-10">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
         {/* Section Header */}
-        <div className="flex items-center mb-10 px-2">
+        <div className="flex items-center mb-10 max-w-[1600px] mx-auto">
           <div className="flex items-center space-x-3">
             <Sparkles className="w-8 h-8 text-amber-600" />
             <h3 className="text-4xl font-light text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
@@ -56,18 +56,18 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
         </div>
 
         {/* Horizontal Scroll Container */}
-        <div className="relative">
+        <div className="relative max-w-[1600px] mx-auto">
           {/* Navigation Arrows - Centered Vertically with Better Design */}
           <button
             onClick={() => scroll('left')}
-            className="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110 -translate-x-5"
+            className="hidden xl:flex absolute -left-6 top-1/2 -translate-y-1/2 z-10 p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110"
             aria-label="Scroll left"
           >
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
           <button
             onClick={() => scroll('right')}
-            className="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110 translate-x-5"
+            className="hidden xl:flex absolute -right-6 top-1/2 -translate-y-1/2 z-10 p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110"
             aria-label="Scroll right"
           >
             <ChevronRight className="w-6 h-6 text-white" />
@@ -75,15 +75,20 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
 
           <div
             ref={scrollContainerRef}
-            className="overflow-x-auto scroll-smooth scrollbar-hide pb-4 overflow-hidden"
+            className="overflow-x-auto scroll-smooth scrollbar-hide pb-4"
           >
-            <div className="flex gap-5 pl-4 pr-2" style={{ width: 'max-content' }}>
+            <div className="flex gap-5 px-2" style={{ width: 'max-content' }}>
               {featuredCoins.map((coin, index) => (
                 <Link
                   key={coin._id}
                   to={getProductUrl(coin)}
                   className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group block"
-                  style={{ width: '345px', flexShrink: 0 }}
+                  style={{
+                    width: 'calc((100vw - 8rem) / 4 - 1.25rem)',
+                    minWidth: '280px',
+                    maxWidth: '360px',
+                    flexShrink: 0
+                  }}
                 >
                   {/* Image Section */}
                   <div
