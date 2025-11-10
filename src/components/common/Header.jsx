@@ -139,7 +139,7 @@ const Header = ({
         <div className={`hidden lg:block border-b border-neutral-300/30 bg-white/20 transition-all duration-300 ${
           scrolled ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-20 opacity-100'
         }`}>
-          <div className="container mx-auto px-4">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between py-2 text-xs gap-8">
               <div className="flex-1 overflow-hidden max-w-3xl">
                 <div className="flex items-center space-x-2 text-red-600">
@@ -182,7 +182,7 @@ const Header = ({
         </div>
 
         {/* Main Header - Hidden on scroll */}
-        <div className={`container mx-auto px-4 transition-all duration-300 ${
+        <div className={`w-full px-4 sm:px-6 lg:px-8 transition-all duration-300 ${
           scrolled ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-40 opacity-100'
         }`}>
           <div className="py-0">
@@ -331,7 +331,7 @@ const Header = ({
         </div>
 
         {/* Desktop Navigation - Always visible */}
-        <div className="container mx-auto px-4">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <nav className="hidden lg:block py-3 border-t border-neutral-300/30 bg-white/10">
             <div className="flex items-center justify-between">
               <div className="flex space-x-6 xl:space-x-8">
