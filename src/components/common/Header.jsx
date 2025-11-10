@@ -139,8 +139,8 @@ const Header = ({
         <div className={`hidden lg:block border-b border-neutral-300/30 bg-white/20 transition-all duration-300 ${
           scrolled ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-20 opacity-100'
         }`}>
-          <div className="w-full">
-            <div className="flex items-center justify-between py-2 text-xs">
+          <div className="w-full px-3 lg:px-4">
+            <div className="max-w-[1400px] mx-auto flex items-center justify-between py-2 text-xs">
               <div className="flex-1 overflow-hidden max-w-3xl">
                 <div className="flex items-center space-x-2 text-red-600">
                   <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-600" />
@@ -185,8 +185,8 @@ const Header = ({
         <div className={`w-full transition-all duration-300 ${
           scrolled ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-40 opacity-100'
         }`}>
-          <div className="w-full py-2">
-            <div className="flex items-center justify-between">
+          <div className="w-full py-2 px-3 lg:px-4">
+            <div className="max-w-[1400px] mx-auto flex items-center justify-between">
               {/* Left: Menu + Logo */}
               <div className="flex items-center space-x-2 md:space-x-4">
                 <button
@@ -314,7 +314,8 @@ const Header = ({
 
           {/* Mobile Search Bar - Hidden on info pages */}
           {!hideShoppingFeatures && showMobileSearch && (
-            <div className="lg:hidden pb-3 animate-slideDown w-full">
+            <div className="lg:hidden pb-3 animate-slideDown w-full px-3 lg:px-4">
+              <div className="max-w-[1400px] mx-auto">
                 <form onSubmit={handleSearch} className="relative">
                 <Search className="absolute left-3 top-3 w-5 h-5 text-neutral-600" />
                 <input
@@ -326,14 +327,15 @@ const Header = ({
                   autoFocus
                 />
               </form>
+              </div>
             </div>
           )}
         </div>
 
         {/* Desktop Navigation - Always visible */}
         <div className="w-full">
-          <nav className="hidden lg:block py-3 border-t border-neutral-300/30 bg-white/10">
-            <div className="w-full flex items-center justify-between">
+          <nav className="hidden lg:block py-3 border-t border-neutral-300/30 bg-white/10 px-3 lg:px-4">
+            <div className="max-w-[1400px] mx-auto flex items-center justify-between">
               <div className="flex space-x-6 xl:space-x-8">
                 {navigationLinks.map((link) => (
                   <div key={link.to} className="relative group">
