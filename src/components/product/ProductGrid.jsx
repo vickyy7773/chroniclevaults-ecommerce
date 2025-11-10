@@ -82,24 +82,24 @@ const ProductGrid = ({
               </button>
             </div>
 
-            <div className="p-2 md:p-2.5 lg:p-3 xl:p-4">
-              <h3 className="font-medium text-[10px] md:text-xs lg:text-sm xl:text-base mb-1 md:mb-1.5 lg:mb-2 text-slate-900 line-clamp-2 min-h-[1.2rem] md:min-h-[1.5rem] lg:min-h-[2rem] xl:min-h-[2.5rem]">{coin.name}</h3>
-              <div className="flex items-baseline gap-0.5 md:gap-1 lg:gap-1.5 mb-1 md:mb-1.5 lg:mb-2">
-                <span className="text-sm md:text-base lg:text-lg xl:text-xl font-semibold text-amber-600">₹{coin.price.toFixed(2)}</span>
+            <div className="p-2 md:p-3 lg:p-4">
+              <h3 className="font-medium text-[10px] md:text-sm lg:text-base mb-1 md:mb-2 text-slate-900 line-clamp-2 min-h-[1.2rem] md:min-h-[2rem] lg:min-h-[2.5rem]">{coin.name}</h3>
+              <div className="flex items-baseline gap-0.5 md:gap-1.5 mb-1 md:mb-2.5">
+                <span className="text-sm md:text-lg lg:text-xl font-semibold text-amber-600">₹{coin.price.toFixed(2)}</span>
                 {coin.originalPrice > coin.price && (
-                  <span className="text-[8px] md:text-[9px] lg:text-[10px] xl:text-xs text-slate-500 line-through">₹{coin.originalPrice.toFixed(2)}</span>
+                  <span className="text-[8px] md:text-xs text-slate-500 line-through">₹{coin.originalPrice.toFixed(2)}</span>
                 )}
               </div>
-              <div className="border-t border-slate-100 pt-0.5 md:pt-1 lg:pt-1.5 xl:pt-2 mb-1 md:mb-1.5 lg:mb-2 xl:mb-3">
-                <div className="flex items-center justify-between mb-0.5">
-                  <p className="text-[8px] md:text-[9px] lg:text-[10px] xl:text-xs text-slate-600">
+              <div className="border-t border-slate-100 pt-0.5 md:pt-2 mb-1 md:mb-3">
+                <div className="flex items-center justify-between mb-0.5 md:mb-1">
+                  <p className="text-[8px] md:text-xs text-slate-600">
                     Year: <span className="font-medium text-slate-900">{coin.year}</span>
                   </p>
-                  <span className="text-[8px] md:text-[9px] lg:text-[10px] xl:text-xs font-medium text-amber-700 bg-amber-50 px-1 md:px-1.5 lg:px-2 py-0.5 rounded-full border border-amber-200">
+                  <span className="text-[8px] md:text-xs font-medium text-amber-700 bg-amber-50 px-1 md:px-2 py-0.5 rounded-full border border-amber-200">
                     {coin.condition}
                   </span>
                 </div>
-                <p className="text-[8px] md:text-[9px] lg:text-[10px] xl:text-xs text-slate-600 mb-0.5">Stock: <span className={`font-medium ${coin.inStock <= 5 ? 'text-red-600' : 'text-green-600'}`}>{coin.inStock} available</span></p>
+                <p className="text-[8px] md:text-xs text-slate-600 mb-0.5 md:mb-1">Stock: <span className={`font-medium ${coin.inStock <= 5 ? 'text-red-600' : 'text-green-600'}`}>{coin.inStock} available</span></p>
                 {(() => {
                   console.log('🔍 Checking Numista for:', coin.name, 'Value:', coin.numistaRarityIndex, 'Type:', typeof coin.numistaRarityIndex);
                   return null;
@@ -119,12 +119,12 @@ const ProductGrid = ({
                   </div>
                 )}
               </div>
-              <div className="flex gap-1 md:gap-1.5 lg:gap-2">
+              <div className="flex gap-1 md:gap-2">
                 <button
                   onClick={() => addToCart(coin)}
-                  className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-0.5 md:py-1 lg:py-1.5 xl:py-2 px-1 md:px-1.5 lg:px-2 xl:px-3 rounded font-normal text-[8px] md:text-[9px] lg:text-[10px] xl:text-xs transition-all flex items-center justify-center gap-0.5 md:gap-1 shadow-sm hover:shadow-md"
+                  className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-0.5 md:py-2 px-1 md:px-3 rounded-md md:rounded-lg font-normal text-[7px] md:text-sm transition-all flex items-center justify-center gap-0.5 md:gap-1.5 shadow-sm hover:shadow-md"
                 >
-                  <ShoppingCart className="w-2 h-2 md:w-2.5 md:h-2.5 lg:w-3 lg:h-3 xl:w-3.5 xl:h-3.5" />
+                  <ShoppingCart className="w-2 h-2 md:w-3.5 md:h-3.5" />
                   <span className="hidden sm:inline">Add to Cart</span>
                   <span className="sm:hidden">Add</span>
                 </button>
@@ -134,9 +134,9 @@ const ProductGrid = ({
                     console.log('Before click - isInWishlist:', isInWishlist(coin._id || coin.id));
                     addToWishlist(coin);
                   }}
-                  className={`${isInWishlist(coin._id || coin.id) ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'} py-0.5 md:py-1 lg:py-1.5 xl:py-2 px-1 md:px-1.5 lg:px-2 xl:px-3 rounded transition-all shadow-sm hover:shadow-md`}
+                  className={`${isInWishlist(coin._id || coin.id) ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'} py-0.5 md:py-2 px-1 md:px-3 rounded-md md:rounded-lg transition-all shadow-sm hover:shadow-md`}
                 >
-                  <Heart className={`w-2 h-2 md:w-2.5 md:h-2.5 lg:w-3 lg:h-3 xl:w-3.5 xl:h-3.5 ${isInWishlist(coin._id || coin.id) ? 'fill-current' : ''}`} />
+                  <Heart className={`w-2 h-2 md:w-4 md:h-4 ${isInWishlist(coin._id || coin.id) ? 'fill-current' : ''}`} />
                 </button>
               </div>
             </div>
