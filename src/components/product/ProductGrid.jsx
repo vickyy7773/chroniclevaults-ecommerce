@@ -46,11 +46,11 @@ const ProductGrid = ({
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 mb-8">
         {coins.map((coin, index) => (
           <div key={coin._id || coin.id} className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group">
             <div
-              className="relative overflow-hidden cursor-pointer h-48"
+              className="relative overflow-hidden cursor-pointer h-40 sm:h-44 md:h-48"
               onMouseMove={(e) => handleMouseMove(e, coin, index)}
               onMouseEnter={() => setHoveredCoin(coin)}
               onMouseLeave={() => setHoveredCoin(null)}
@@ -66,11 +66,11 @@ const ProductGrid = ({
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
 
               {coin.onSale && (
-                <div className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg">
+                <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-[10px] md:text-xs font-medium shadow-lg">
                   SALE
                 </div>
               )}
-              <div className="absolute top-2 left-2 bg-slate-900/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-normal">
+              <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 bg-slate-900/90 backdrop-blur-sm text-white px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-[10px] md:text-xs font-normal">
                 {coin.rarity}
               </div>
               <button
@@ -82,24 +82,24 @@ const ProductGrid = ({
               </button>
             </div>
 
-            <div className="p-4">
-              <h3 className="font-medium text-base mb-2 text-slate-900 line-clamp-2 min-h-[2.5rem]">{coin.name}</h3>
-              <div className="flex items-baseline gap-1.5 mb-2.5">
-                <span className="text-xl font-semibold text-amber-600">₹{coin.price.toFixed(2)}</span>
+            <div className="p-2.5 md:p-3 lg:p-4">
+              <h3 className="font-medium text-xs md:text-sm lg:text-base mb-1.5 md:mb-2 text-slate-900 line-clamp-2 min-h-[1.5rem] md:min-h-[2rem] lg:min-h-[2.5rem]">{coin.name}</h3>
+              <div className="flex items-baseline gap-1 md:gap-1.5 mb-1.5 md:mb-2 lg:mb-2.5">
+                <span className="text-base md:text-lg lg:text-xl font-semibold text-amber-600">₹{coin.price.toFixed(2)}</span>
                 {coin.originalPrice > coin.price && (
-                  <span className="text-xs text-slate-500 line-through">₹{coin.originalPrice.toFixed(2)}</span>
+                  <span className="text-[9px] md:text-[10px] lg:text-xs text-slate-500 line-through">₹{coin.originalPrice.toFixed(2)}</span>
                 )}
               </div>
-              <div className="border-t border-slate-100 pt-2 mb-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs text-slate-600">
+              <div className="border-t border-slate-100 pt-1 md:pt-1.5 lg:pt-2 mb-1.5 md:mb-2 lg:mb-3">
+                <div className="flex items-center justify-between mb-0.5 md:mb-1">
+                  <p className="text-[9px] md:text-[10px] lg:text-xs text-slate-600">
                     Year: <span className="font-medium text-slate-900">{coin.year}</span>
                   </p>
-                  <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                  <span className="text-[9px] md:text-[10px] lg:text-xs font-medium text-amber-700 bg-amber-50 px-1.5 md:px-2 py-0.5 rounded-full border border-amber-200">
                     {coin.condition}
                   </span>
                 </div>
-                <p className="text-xs text-slate-600 mb-1">Stock: <span className={`font-medium ${coin.inStock <= 5 ? 'text-red-600' : 'text-green-600'}`}>{coin.inStock} available</span></p>
+                <p className="text-[9px] md:text-[10px] lg:text-xs text-slate-600 mb-0.5 md:mb-1">Stock: <span className={`font-medium ${coin.inStock <= 5 ? 'text-red-600' : 'text-green-600'}`}>{coin.inStock} available</span></p>
                 {(() => {
                   console.log('🔍 Checking Numista for:', coin.name, 'Value:', coin.numistaRarityIndex, 'Type:', typeof coin.numistaRarityIndex);
                   return null;
@@ -119,13 +119,14 @@ const ProductGrid = ({
                   </div>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 md:gap-2">
                 <button
                   onClick={() => addToCart(coin)}
-                  className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-2 px-3 rounded-lg font-normal text-sm transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
+                  className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-1.5 md:py-2 px-2 md:px-3 rounded-lg font-normal text-[10px] md:text-xs lg:text-sm transition-all flex items-center justify-center gap-1 md:gap-1.5 shadow-sm hover:shadow-md"
                 >
-                  <ShoppingCart className="w-3.5 h-3.5" />
-                  Add to Cart
+                  <ShoppingCart className="w-2.5 h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5" />
+                  <span className="hidden sm:inline">Add to Cart</span>
+                  <span className="sm:hidden">Add</span>
                 </button>
                 <button
                   onClick={() => {
@@ -133,9 +134,9 @@ const ProductGrid = ({
                     console.log('Before click - isInWishlist:', isInWishlist(coin._id || coin.id));
                     addToWishlist(coin);
                   }}
-                  className={`${isInWishlist(coin._id || coin.id) ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'} py-2 px-3 rounded-lg transition-all shadow-sm hover:shadow-md`}
+                  className={`${isInWishlist(coin._id || coin.id) ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'} py-1.5 md:py-2 px-2 md:px-3 rounded-lg transition-all shadow-sm hover:shadow-md`}
                 >
-                  <Heart className={`w-4 h-4 ${isInWishlist(coin._id || coin.id) ? 'fill-current' : ''}`} />
+                  <Heart className={`w-3 h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 ${isInWishlist(coin._id || coin.id) ? 'fill-current' : ''}`} />
                 </button>
               </div>
             </div>
