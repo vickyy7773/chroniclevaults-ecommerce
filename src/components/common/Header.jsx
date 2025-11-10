@@ -141,7 +141,7 @@ const Header = ({
         }`}>
           <div className="w-full">
             <div className="flex items-center justify-between py-2 text-xs">
-              <div className="flex-1 overflow-hidden max-w-3xl ml-3">
+              <div className="flex-1 overflow-hidden max-w-3xl ml-5">
                 <div className="flex items-center space-x-2 text-red-600">
                   <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-600" />
                   <span className="text-red-600 font-bold flex-shrink-0">Statutory Warning:</span>
@@ -152,7 +152,7 @@ const Header = ({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center space-x-6 flex-shrink-0 pl-8 mr-3">
+              <div className="flex items-center space-x-6 flex-shrink-0 pl-8 mr-5">
                 <div className="flex items-center space-x-2 text-neutral-800 font-semibold">
                   <FaWhatsapp className="w-3 h-3" />
                   <a href="https://wa.me/918460849878" target="_blank" rel="noopener noreferrer" className="hover:text-accent-600">+918460849878</a>
@@ -188,7 +188,7 @@ const Header = ({
           <div className="w-full py-2">
             <div className="flex items-center justify-between">
               {/* Left: Menu + Logo */}
-              <div className="flex items-center space-x-2 md:space-x-4 ml-3">
+              <div className="flex items-center space-x-2 md:space-x-4 ml-5">
                 <button
                   onClick={() => setShowMobileMenu(!showMobileMenu)}
                   className="lg:hidden text-neutral-900 hover:text-accent-600 p-2 -ml-2 hover:bg-primary-100 rounded-xl transition-all hover:scale-110"
@@ -203,7 +203,7 @@ const Header = ({
               </div>
 
               {/* Right: Actions */}
-              <div className="flex items-center space-x-2 md:space-x-4 lg:space-x-5 mr-3">
+              <div className="flex items-center space-x-2 md:space-x-4 lg:space-x-5 mr-5">
                 {/* Mobile Search Toggle - Hidden on info pages and home page */}
                 {!hideShoppingFeatures && !isHomePage && (
                   <button
@@ -315,7 +315,7 @@ const Header = ({
           {/* Mobile Search Bar - Hidden on info pages */}
           {!hideShoppingFeatures && showMobileSearch && (
             <div className="lg:hidden pb-3 animate-slideDown w-full">
-              <div className="mx-3">
+              <div className="mx-5">
                 <form onSubmit={handleSearch} className="relative">
                 <Search className="absolute left-3 top-3 w-5 h-5 text-neutral-600" />
                 <input
@@ -336,7 +336,7 @@ const Header = ({
         <div className="w-full">
           <nav className="hidden lg:block py-3 border-t border-neutral-300/30 bg-white/10">
             <div className="flex items-center justify-between">
-              <div className="flex space-x-6 xl:space-x-8 ml-3">
+              <div className="flex space-x-6 xl:space-x-8 ml-5">
                 {navigationLinks.map((link) => (
                   <div key={link.to} className="relative group">
                     <Link
@@ -380,7 +380,7 @@ const Header = ({
               {comparisonCount > 0 && (
                 <button
                   onClick={onComparisonClick}
-                  className="btn-primary flex items-center space-x-2 px-5 py-2.5 text-sm mr-3"
+                  className="btn-primary flex items-center space-x-2 px-5 py-2.5 text-sm mr-5"
                 >
                   <Eye className="w-4 h-4" />
                   <span>Compare ({comparisonCount})</span>
