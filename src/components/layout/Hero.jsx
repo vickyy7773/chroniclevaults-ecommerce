@@ -151,7 +151,7 @@ const Hero = () => {
   // Show loading state
   if (loading) {
     return (
-      <div className="relative w-full bg-gray-100 flex items-center justify-center" style={{ minHeight: '200px' }}>
+      <div className="relative w-full bg-gray-100 flex items-center justify-center h-64 md:h-80 lg:h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading slides...</p>
@@ -162,24 +162,26 @@ const Hero = () => {
 
   return (
     <div
-      className="relative w-full"
+      className="relative w-full overflow-hidden h-64 md:h-80 lg:h-[400px]"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
       {/* Slider Container - Fade/Blink Effect */}
-      <div className="relative w-full">
+      <div className="relative w-full h-full">
         {slides.map((slide, index) => (
           <div
             key={slide.id}
-            className={`${index === currentSlide ? 'block' : 'hidden'} w-full`}
+            className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
+              index === currentSlide ? 'opacity-100' : 'opacity-0'
+            }`}
           >
             {/* Background Image */}
-            <div className="relative w-full bg-gray-50" style={{ maxHeight: '450px' }}>
+            <div className="relative w-full h-full">
               <img
                 src={slide.image}
                 alt={slide.title}
-                className="w-full h-auto block max-h-[450px] object-contain"
+                className="w-full h-full object-contain"
               />
             </div>
 
