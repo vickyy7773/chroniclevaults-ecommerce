@@ -156,7 +156,7 @@ const Hero = () => {
         style={{
           aspectRatio: '16/6',
           maxHeight: '600px',
-          minHeight: '250px'
+          minHeight: '150px'
         }}
       >
         <div className="text-center">
@@ -176,7 +176,7 @@ const Hero = () => {
       style={{
         aspectRatio: '16/6',
         maxHeight: '600px',
-        minHeight: '250px'
+        minHeight: '150px'
       }}
     >
       {/* Slider Container - Fade/Blink Effect */}
