@@ -185,10 +185,10 @@ const Header = ({
         <div className={`w-full transition-all duration-300 ${
           scrolled ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-40 opacity-100'
         }`}>
-          <div className="py-4 px-6 lg:px-8 xl:px-12">
-            <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-4 md:gap-8">
+          <div className="py-3 px-6 lg:px-8 xl:px-12">
+            <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-3 md:gap-6">
               {/* Left: Menu + Logo */}
-              <div className="flex items-center space-x-3 md:space-x-6">
+              <div className="flex items-center space-x-2 md:space-x-4">
                 <button
                   onClick={() => setShowMobileMenu(!showMobileMenu)}
                   className="lg:hidden text-neutral-900 hover:text-accent-600 p-2 -ml-2 hover:bg-primary-100 rounded-xl transition-all hover:scale-110"
@@ -203,7 +203,7 @@ const Header = ({
               </div>
 
               {/* Right: Actions */}
-              <div className="flex items-center space-x-3 md:space-x-5 lg:space-x-6">
+              <div className="flex items-center space-x-2 md:space-x-4 lg:space-x-5">
                 {/* Mobile Search Toggle - Hidden on info pages and home page */}
                 {!hideShoppingFeatures && !isHomePage && (
                   <button
@@ -230,7 +230,7 @@ const Header = ({
                 )}
 
                 {/* Desktop Actions */}
-                <div className="hidden md:flex items-center space-x-3 lg:space-x-5">
+                <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
                   {user ? (
                     // Logged in user dropdown
                     <div className="relative group">
@@ -334,9 +334,9 @@ const Header = ({
 
         {/* Desktop Navigation - Always visible */}
         <div className="w-full">
-          <nav className="hidden lg:block py-4 border-t border-neutral-300/30 bg-white/10 px-6 lg:px-8 xl:px-12">
-            <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-8">
-              <div className="flex space-x-8 xl:space-x-10">
+          <nav className="hidden lg:block py-3 border-t border-neutral-300/30 bg-white/10 px-6 lg:px-8 xl:px-12">
+            <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-6">
+              <div className="flex space-x-6 xl:space-x-8">
                 {navigationLinks.map((link) => (
                   <div key={link.to} className="relative group">
                     <Link
