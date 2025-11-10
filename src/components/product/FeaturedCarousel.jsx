@@ -92,7 +92,7 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
                 >
                   {/* Image Section */}
                   <div
-                    className="relative overflow-hidden cursor-pointer h-64"
+                    className="relative overflow-hidden cursor-pointer h-44 sm:h-52 md:h-56 lg:h-64"
                     onMouseMove={(e) => {
                       e.preventDefault();
                       handleMouseMove(e, coin, index);
@@ -112,13 +112,13 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
 
                     {/* Sale Badge */}
                     {coin.onSale && (
-                      <div className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg">
+                      <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-[10px] md:text-xs font-medium shadow-lg">
                         SALE
                       </div>
                     )}
 
                     {/* Rarity Badge */}
-                    <div className="absolute top-2 left-2 bg-slate-900/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-normal">
+                    <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 bg-slate-900/90 backdrop-blur-sm text-white px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-[10px] md:text-xs font-normal">
                       {coin.rarity}
                     </div>
 
@@ -137,45 +137,45 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
                   </div>
 
                   {/* Content Section */}
-                  <div className="p-3 md:p-4">
+                  <div className="p-2.5 md:p-3 lg:p-4">
                     {/* Product Code */}
                     {coin.productCode && (
-                      <p className="text-[10px] md:text-xs text-slate-500 mb-1 font-medium">Code: {coin.productCode}</p>
+                      <p className="text-[9px] md:text-[10px] lg:text-xs text-slate-500 mb-0.5 md:mb-1 font-medium">Code: {coin.productCode}</p>
                     )}
 
-                    <h3 className="font-medium text-sm md:text-base mb-2 md:mb-2.5 text-slate-900 line-clamp-2 min-h-[2rem] md:min-h-[2.5rem] group-hover:text-amber-600 transition-colors">
+                    <h3 className="font-medium text-xs md:text-sm lg:text-base mb-1.5 md:mb-2 text-slate-900 line-clamp-2 min-h-[1.5rem] md:min-h-[2rem] lg:min-h-[2.5rem] group-hover:text-amber-600 transition-colors">
                       {coin.name}
                     </h3>
 
                     {/* Price */}
-                    <div className="flex items-baseline gap-1 md:gap-1.5 mb-2 md:mb-2.5">
-                      <span className="text-lg md:text-xl font-semibold text-amber-600">₹{coin.price.toFixed(2)}</span>
+                    <div className="flex items-baseline gap-1 mb-1.5 md:mb-2">
+                      <span className="text-base md:text-lg lg:text-xl font-semibold text-amber-600">₹{coin.price.toFixed(2)}</span>
                       {coin.originalPrice > coin.price && (
-                        <span className="text-[10px] md:text-xs text-slate-500 line-through">₹{coin.originalPrice.toFixed(2)}</span>
+                        <span className="text-[9px] md:text-[10px] lg:text-xs text-slate-500 line-through">₹{coin.originalPrice.toFixed(2)}</span>
                       )}
                     </div>
 
                     {/* Details */}
-                    <div className="border-t border-slate-100 pt-1.5 md:pt-2 mb-2 md:mb-3">
-                      <p className="text-[10px] md:text-xs text-slate-600 mb-1">
+                    <div className="border-t border-slate-100 pt-1 md:pt-1.5 lg:pt-2 mb-1.5 md:mb-2 lg:mb-3">
+                      <p className="text-[9px] md:text-[10px] lg:text-xs text-slate-600 mb-0.5 md:mb-1">
                         Year: <span className="font-medium text-slate-900">{coin.year}</span> • <span className="font-medium text-slate-900">{coin.condition}</span>
                       </p>
-                      <p className="text-[10px] md:text-xs text-slate-600">
+                      <p className="text-[9px] md:text-[10px] lg:text-xs text-slate-600">
                         <span className="font-medium text-green-600">In Stock</span>
                       </p>
                     </div>
 
                     {/* Buttons */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-1.5 md:gap-2">
                       <button
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           addToCart(coin);
                         }}
-                        className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-1.5 md:py-2 px-2 md:px-3 rounded-lg font-normal text-xs md:text-sm transition-all flex items-center justify-center gap-1 md:gap-1.5 shadow-sm hover:shadow-md"
+                        className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-1.5 md:py-2 px-2 md:px-3 rounded-lg font-normal text-[10px] md:text-xs lg:text-sm transition-all flex items-center justify-center gap-1 md:gap-1.5 shadow-sm hover:shadow-md"
                       >
-                        <ShoppingCart className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                        <ShoppingCart className="w-2.5 h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5" />
                         <span className="hidden sm:inline">Add to Cart</span>
                         <span className="sm:hidden">Add</span>
                       </button>
