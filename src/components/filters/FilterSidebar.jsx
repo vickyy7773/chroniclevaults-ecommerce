@@ -396,7 +396,7 @@ const FilterSidebar = ({
     <>
       {/* Desktop Sidebar */}
       <div className="hidden lg:block w-64 flex-shrink-0">
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5 sticky top-24">
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5 sticky top-0 max-h-screen overflow-y-auto">
           <FilterContent />
         </div>
       </div>

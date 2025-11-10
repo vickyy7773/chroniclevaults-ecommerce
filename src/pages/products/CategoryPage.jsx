@@ -332,7 +332,7 @@ const CategoryPage = ({ addToCart = () => {}, addToWishlist = () => {}, isInWish
                     className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer"
                   >
                     <div
-                      className="relative overflow-hidden h-48 md:h-64"
+                      className="relative overflow-hidden h-64 md:h-64"
                       onMouseMove={(e) => handleMouseMove(e, product, index)}
                       onMouseEnter={() => setHoveredProduct(product)}
                       onMouseLeave={() => setHoveredProduct(null)}
@@ -367,58 +367,57 @@ const CategoryPage = ({ addToCart = () => {}, addToWishlist = () => {}, isInWish
                         <Eye className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                     </div>
-                    <div className="p-2.5 md:p-4">
+                    <div className="p-3 md:p-4">
                       {/* Product Code */}
                       {product.productCode && (
-                        <p className="text-[9px] md:text-xs text-slate-500 mb-0.5 md:mb-1 font-medium">Code: {product.productCode}</p>
+                        <p className="text-[10px] md:text-xs text-slate-500 mb-1 font-medium">Code: {product.productCode}</p>
                       )}
 
-                      <h3 className="font-medium text-xs md:text-base mb-1 md:mb-1.5 text-slate-900 line-clamp-2 min-h-[2rem] md:min-h-[2.5rem]">{product.name}</h3>
+                      <h3 className="font-medium text-sm md:text-base mb-1.5 text-slate-900 line-clamp-2 min-h-[2.5rem]">{product.name}</h3>
                       {product.rating && (
-                        <div className="flex items-center gap-1 md:gap-1.5 mb-1 md:mb-2">
+                        <div className="flex items-center gap-1.5 mb-2">
                           <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`w-2.5 h-2.5 md:w-3.5 md:h-3.5 ${i < Math.floor(product.rating) ? 'text-amber-400 fill-amber-400' : 'text-slate-300'}`} />
+                              <Star key={i} className={`w-3 h-3 md:w-3.5 md:h-3.5 ${i < Math.floor(product.rating) ? 'text-amber-400 fill-amber-400' : 'text-slate-300'}`} />
                             ))}
                           </div>
-                          <span className="text-[9px] md:text-xs text-slate-600 font-normal">({product.rating})</span>
+                          <span className="text-[10px] md:text-xs text-slate-600 font-normal">({product.rating})</span>
                         </div>
                       )}
-                      <div className="flex items-baseline gap-1 md:gap-1.5 mb-1.5 md:mb-2.5">
-                        <span className="text-sm md:text-xl font-semibold text-amber-600">₹{product.price.toFixed(2)}</span>
+                      <div className="flex items-baseline gap-1.5 mb-2.5">
+                        <span className="text-base md:text-xl font-semibold text-amber-600">₹{product.price.toFixed(2)}</span>
                         {product.originalPrice > product.price && (
-                          <span className="text-[9px] md:text-xs text-slate-500 line-through">₹{product.originalPrice.toFixed(2)}</span>
+                          <span className="text-[10px] md:text-xs text-slate-500 line-through">₹{product.originalPrice.toFixed(2)}</span>
                         )}
                       </div>
                       {(product.year || product.condition) && (
-                        <div className="border-t border-slate-100 pt-1 md:pt-2 mb-1.5 md:mb-3">
-                          <p className="text-[9px] md:text-xs text-slate-600">
+                        <div className="border-t border-slate-100 pt-2 mb-3">
+                          <p className="text-[10px] md:text-xs text-slate-600">
                             {product.year && <span>Year: <span className="font-medium text-slate-900">{product.year}</span></span>}
                             {product.year && product.condition && <span> • </span>}
                             {product.condition && <span className="font-medium text-slate-900">{product.condition}</span>}
                           </p>
                         </div>
                       )}
-                      <div className="flex gap-1.5 md:gap-2">
+                      <div className="flex gap-2">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             addToCart(product);
                           }}
-                          className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-1.5 md:py-2 px-2 md:px-3 rounded-lg font-normal text-[10px] md:text-sm transition-all flex items-center justify-center gap-1 md:gap-1.5 shadow-sm hover:shadow-md"
+                          className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-2 px-3 rounded-lg font-normal text-xs md:text-sm transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
                         >
-                          <ShoppingCart className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                          <span className="hidden sm:inline">Add to Cart</span>
-                          <span className="sm:hidden">Add</span>
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          <span>Add to Cart</span>
                         </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             addToWishlist(product);
                           }}
-                          className={`${isInWishlist(product._id || product.id) ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'} py-1.5 md:py-2 px-2 md:px-3 rounded-lg transition-all shadow-sm hover:shadow-md`}
+                          className={`${isInWishlist(product._id || product.id) ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'} py-2 px-3 rounded-lg transition-all shadow-sm hover:shadow-md`}
                         >
-                          <Heart className={`w-3 h-3 md:w-4 md:h-4 ${isInWishlist(product._id || product.id) ? 'fill-current' : ''}`} />
+                          <Heart className={`w-4 h-4 ${isInWishlist(product._id || product.id) ? 'fill-current' : ''}`} />
                         </button>
                       </div>
                     </div>
