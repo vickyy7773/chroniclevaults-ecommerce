@@ -54,7 +54,7 @@ const CategoryGrid = () => {
     <div className="py-20 bg-white">
       {/* Container with proper margins */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
           {categories.map((category) => (
             <Link
               key={category.id}
@@ -85,7 +85,7 @@ const CategoryGrid = () => {
               {/* Content - Bottom Overlay */}
               <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-t from-black/80 to-transparent">
                 {/* Title */}
-                <h3 className="text-sm sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl font-light text-white mb-1 sm:mb-2 md:mb-3 tracking-wide"
+                <h3 className="text-xs sm:text-sm md:text-base lg:text-xl xl:text-2xl font-light text-white mb-1 sm:mb-2 md:mb-3 tracking-wide"
                     style={{
                       fontFamily: 'Georgia, serif',
                       letterSpacing: '0.05em'
@@ -97,7 +97,7 @@ const CategoryGrid = () => {
                 <div className="w-6 sm:w-8 md:w-12 h-px bg-white/60 mb-2 sm:mb-3 md:mb-4 group-hover:w-12 sm:group-hover:w-16 md:group-hover:w-20 transition-all duration-500"></div>
 
                 {/* Shop Link - Minimal */}
-                <div className="flex items-center text-white text-[10px] sm:text-xs md:text-sm font-light tracking-widest uppercase opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="flex items-center text-white text-[8px] sm:text-[9px] md:text-[10px] lg:text-xs font-light tracking-widest uppercase opacity-80 group-hover:opacity-100 transition-opacity duration-300">
                   <span className="mr-1 sm:mr-2">Explore</span>
                   <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </div>
