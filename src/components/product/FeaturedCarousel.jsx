@@ -77,12 +77,18 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
             ref={scrollContainerRef}
             className="overflow-x-auto scroll-smooth scrollbar-hide pb-4"
           >
-            <div className="flex gap-3 md:gap-4 lg:gap-5 px-2" style={{ width: 'max-content' }}>
+            <div className="flex gap-4 px-2" style={{ width: 'max-content' }}>
               {featuredCoins.map((coin, index) => (
                 <Link
                   key={coin._id}
                   to={getProductUrl(coin)}
-                  className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group block w-[92vw] sm:w-[75vw] md:w-[48vw] lg:w-[31vw] xl:w-[24vw] 2xl:w-[20vw] flex-shrink-0"
+                  className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group block"
+                  style={{
+                    width: '280px',
+                    minWidth: '280px',
+                    maxWidth: '320px',
+                    flexShrink: 0
+                  }}
                 >
                   {/* Image Section */}
                   <div
