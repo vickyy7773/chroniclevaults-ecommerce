@@ -1,14 +1,14 @@
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
+# Enable Rewrite Engine
+RewriteEngine On
+RewriteBase /
 
-  # Don't rewrite files or directories
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
+# Don't rewrite files or directories that exist
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-l
 
-  # Rewrite everything else to index.html to allow client-side routing
-  RewriteRule ^ index.html [L]
-</IfModule>
+# Rewrite everything else to index.html to allow client-side routing
+RewriteRule . /index.html [L]
 
 # Disable directory browsing
 Options -Indexes
