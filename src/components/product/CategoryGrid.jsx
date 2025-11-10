@@ -39,7 +39,7 @@ const CategoryGrid = () => {
 
   if (loading) {
     return (
-      <div className="py-8 sm:py-12 md:py-16 lg:py-20 bg-white">
+      <div className="py-6 sm:py-8 md:py-10 lg:py-12 bg-white">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
@@ -51,7 +51,7 @@ const CategoryGrid = () => {
   }
 
   return (
-    <div className="py-8 sm:py-12 md:py-16 lg:py-20 bg-white">
+    <div className="py-6 sm:py-8 md:py-10 lg:py-12 bg-white">
       {/* Container with proper margins */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
