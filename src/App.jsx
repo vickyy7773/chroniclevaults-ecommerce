@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/common/Header';
 import ScrollToTop from './components/common/ScrollToTop';
 import VintageCoinStore from './components/layout/VintageCoinStore';
@@ -359,6 +359,7 @@ const AppContent = () => {
 
           {/* Admin Routes - All wrapped in AdminLayout */}
           <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="page-posters" element={<PagePosters />} />
             <Route path="products" element={<ProductManagement />} />
