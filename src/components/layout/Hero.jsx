@@ -151,7 +151,7 @@ const Hero = () => {
   // Show loading state
   if (loading) {
     return (
-      <div className="relative w-full bg-gray-100 flex items-center justify-center" style={{ height: '400px', maxHeight: '500px' }}>
+      <div className="relative w-full bg-gray-100 flex items-center justify-center h-48 sm:h-56 md:h-72 lg:h-80 xl:h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading slides...</p>
@@ -162,14 +162,10 @@ const Hero = () => {
 
   return (
     <div
-      className="relative w-full overflow-hidden"
+      className="relative w-full overflow-hidden h-48 sm:h-56 md:h-72 lg:h-80 xl:h-96"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      style={{
-        height: '400px',
-        maxHeight: '500px'
-      }}
     >
       {/* Slider Container - Fade/Blink Effect */}
       <div className="relative w-full h-full">
