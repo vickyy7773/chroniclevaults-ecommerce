@@ -10,8 +10,9 @@ router.post('/single', upload.single('image'), (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    // Return the full URL including backend domain
-    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    // Return the full URL including backend domain (force HTTPS for production)
+    const protocol = req.get('host').includes('chroniclevaults.com') ? 'https' : req.protocol;
+    const imageUrl = `${protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     res.status(200).json({
       message: 'Image uploaded successfully',
       imageUrl: imageUrl,
@@ -29,9 +30,10 @@ router.post('/multiple', upload.array('images', 5), (req, res) => {
       return res.status(400).json({ message: 'No files uploaded' });
     }
 
-    // Return array of full URLs including backend domain
+    // Return array of full URLs including backend domain (force HTTPS for production)
+    const protocol = req.get('host').includes('chroniclevaults.com') ? 'https' : req.protocol;
     const imageUrls = req.files.map(file =>
-      `${req.protocol}://${req.get('host')}/uploads/${file.filename}`
+      `${protocol}://${req.get('host')}/uploads/${file.filename}`
     );
     res.status(200).json({
       message: 'Images uploaded successfully',
@@ -50,8 +52,9 @@ router.post('/video', uploadVideo.single('video'), (req, res) => {
       return res.status(400).json({ message: 'No video file uploaded' });
     }
 
-    // Return the full URL including backend domain
-    const videoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    // Return the full URL including backend domain (force HTTPS for production)
+    const protocol = req.get('host').includes('chroniclevaults.com') ? 'https' : req.protocol;
+    const videoUrl = `${protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     res.status(200).json({
       message: 'Video uploaded successfully',
       videoUrl: videoUrl,

@@ -298,8 +298,9 @@ export const updateCategoryBannerImage = async (req, res) => {
       });
     }
 
-    // Create full image URL
-    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    // Create full image URL (force HTTPS for production)
+    const protocol = req.get('host').includes('chroniclevaults.com') ? 'https' : req.protocol;
+    const imageUrl = `${protocol}://${req.get('host')}/uploads/${req.file.filename}`;
 
     // Update category with new banner image
     category.bannerImage = imageUrl;
@@ -340,8 +341,9 @@ export const updateCategoryCardImage = async (req, res) => {
       });
     }
 
-    // Create full image URL
-    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    // Create full image URL (force HTTPS for production)
+    const protocol = req.get('host').includes('chroniclevaults.com') ? 'https' : req.protocol;
+    const imageUrl = `${protocol}://${req.get('host')}/uploads/${req.file.filename}`;
 
     // Update category with new card image
     category.cardImage = imageUrl;
