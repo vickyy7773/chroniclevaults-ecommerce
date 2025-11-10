@@ -175,12 +175,11 @@ const Hero = () => {
             className={`${index === currentSlide ? 'block' : 'hidden'} w-full`}
           >
             {/* Background Image */}
-            <div className="relative w-full">
+            <div className="relative w-full overflow-hidden" style={{ maxHeight: 'none' }}>
               <img
                 src={slide.image}
                 alt={slide.title}
-                className="w-full h-auto block"
-                style={{ display: 'block', width: '100%', height: 'auto' }}
+                className="w-full h-auto block lg:max-h-[450px] lg:w-full lg:object-cover"
               />
             </div>
 
