@@ -166,7 +166,10 @@ const Hero = () => {
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      style={{ maxHeight: '500px' }}
+      style={{
+        height: '400px',
+        maxHeight: '500px'
+      }}
     >
       {/* Slider Container - Fade/Blink Effect */}
       <div className="relative w-full h-full">
