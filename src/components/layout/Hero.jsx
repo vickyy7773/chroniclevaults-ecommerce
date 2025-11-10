@@ -151,7 +151,7 @@ const Hero = () => {
   // Show loading state
   if (loading) {
     return (
-      <div className="relative w-full bg-gray-100 flex items-center justify-center h-48 sm:h-64 md:h-80 lg:h-96 xl:h-[450px] 2xl:h-[500px]">
+      <div className="relative w-full bg-gray-100 flex items-center justify-center" style={{ minHeight: '300px' }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading slides...</p>
@@ -162,29 +162,32 @@ const Hero = () => {
 
   return (
     <div
-      className="relative w-full overflow-hidden h-48 sm:h-64 md:h-80 lg:h-96 xl:h-[450px] 2xl:h-[500px]"
+      className="relative w-full"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
       {/* Slider Container - Fade/Blink Effect */}
-      <div className="relative w-full h-full">
+      <div className="relative w-full">
         {slides.map((slide, index) => (
           <div
             key={slide.id}
-            className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
-              index === currentSlide ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`${index === currentSlide ? 'block' : 'hidden'} w-full transition-opacity duration-1000 ease-in-out`}
           >
             {/* Background Image */}
-            <div className="relative w-full h-full">
+            <div className="relative w-full">
               <img
                 src={slide.image}
                 alt={slide.title}
-                className="w-full h-full object-cover object-center"
+                className="w-full h-auto block"
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  height: 'auto'
+                }}
               />
               {/* Dark overlay for better text readability on mobile */}
-              <div className="absolute inset-0 bg-black/20 md:bg-black/10"></div>
+              <div className="absolute inset-0 bg-black/20 md:bg-black/10 pointer-events-none"></div>
             </div>
 
           </div>
