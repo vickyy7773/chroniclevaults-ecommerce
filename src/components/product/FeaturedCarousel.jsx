@@ -43,13 +43,13 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
   };
 
   return (
-    <section className="py-16 bg-gradient-to-b from-white to-gray-50">
-      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12">
+    <section className="py-8 md:py-12 lg:py-16 bg-gradient-to-b from-white to-gray-50">
+      <div className="w-full mx-auto px-4 lg:px-6 xl:px-8">
         {/* Section Header */}
-        <div className="flex items-center mb-10 max-w-[1600px] mx-auto">
-          <div className="flex items-center space-x-3">
-            <Sparkles className="w-8 h-8 text-amber-600" />
-            <h3 className="text-4xl font-light text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
+        <div className="flex items-center mb-6 md:mb-8 lg:mb-10 max-w-[1600px] mx-auto">
+          <div className="flex items-center gap-2 md:gap-3">
+            <Sparkles className="w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-amber-600" />
+            <h3 className="text-lg md:text-2xl lg:text-3xl xl:text-4xl font-light text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
               Recently Added Items
             </h3>
           </div>
@@ -137,30 +137,30 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
                   </div>
 
                   {/* Content Section */}
-                  <div className="p-4">
+                  <div className="p-3 md:p-4">
                     {/* Product Code */}
                     {coin.productCode && (
-                      <p className="text-xs text-slate-500 mb-1 font-medium">Code: {coin.productCode}</p>
+                      <p className="text-[10px] md:text-xs text-slate-500 mb-1 font-medium">Code: {coin.productCode}</p>
                     )}
 
-                    <h3 className="font-medium text-base mb-2.5 text-slate-900 line-clamp-2 min-h-[2.5rem] group-hover:text-amber-600 transition-colors">
+                    <h3 className="font-medium text-sm md:text-base mb-2 md:mb-2.5 text-slate-900 line-clamp-2 min-h-[2rem] md:min-h-[2.5rem] group-hover:text-amber-600 transition-colors">
                       {coin.name}
                     </h3>
 
                     {/* Price */}
-                    <div className="flex items-baseline gap-1.5 mb-2.5">
-                      <span className="text-xl font-semibold text-amber-600">₹{coin.price.toFixed(2)}</span>
+                    <div className="flex items-baseline gap-1 md:gap-1.5 mb-2 md:mb-2.5">
+                      <span className="text-lg md:text-xl font-semibold text-amber-600">₹{coin.price.toFixed(2)}</span>
                       {coin.originalPrice > coin.price && (
-                        <span className="text-xs text-slate-500 line-through">₹{coin.originalPrice.toFixed(2)}</span>
+                        <span className="text-[10px] md:text-xs text-slate-500 line-through">₹{coin.originalPrice.toFixed(2)}</span>
                       )}
                     </div>
 
                     {/* Details */}
-                    <div className="border-t border-slate-100 pt-2 mb-3">
-                      <p className="text-xs text-slate-600 mb-1">
+                    <div className="border-t border-slate-100 pt-1.5 md:pt-2 mb-2 md:mb-3">
+                      <p className="text-[10px] md:text-xs text-slate-600 mb-1">
                         Year: <span className="font-medium text-slate-900">{coin.year}</span> • <span className="font-medium text-slate-900">{coin.condition}</span>
                       </p>
-                      <p className="text-xs text-slate-600">
+                      <p className="text-[10px] md:text-xs text-slate-600">
                         <span className="font-medium text-green-600">In Stock</span>
                       </p>
                     </div>
@@ -173,10 +173,11 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
                           e.stopPropagation();
                           addToCart(coin);
                         }}
-                        className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-2 px-3 rounded-lg font-normal text-sm transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
+                        className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-1.5 md:py-2 px-2 md:px-3 rounded-lg font-normal text-xs md:text-sm transition-all flex items-center justify-center gap-1 md:gap-1.5 shadow-sm hover:shadow-md"
                       >
-                        <ShoppingCart className="w-3.5 h-3.5" />
-                        Add to Cart
+                        <ShoppingCart className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                        <span className="hidden sm:inline">Add to Cart</span>
+                        <span className="sm:hidden">Add</span>
                       </button>
                     </div>
                   </div>
