@@ -62,20 +62,20 @@ const TodayInHistoryBanner = () => {
           </h2>
         </div>
 
-        {/* Blog Card - Image Left (1/3), Content Right (2/3) */}
+        {/* Blog Card - Image Top on Mobile, Left on Desktop */}
         <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="grid md:grid-cols-3 gap-0 items-stretch">
+          <div className="flex flex-col md:grid md:grid-cols-3 gap-0 items-stretch">
 
-            {/* Left: Image (1/3 width) */}
-            <div className="relative h-40 sm:h-48 md:h-full overflow-hidden group bg-gray-100">
+            {/* Image - Full width on mobile, 1/3 on desktop */}
+            <div className="relative h-48 sm:h-56 md:h-full overflow-hidden group bg-gray-100">
               <img
                 src={latestBlog.image}
                 alt={latestBlog.title}
-                className="absolute inset-0 w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover md:object-contain object-center group-hover:scale-105 transition-transform duration-500"
               />
             </div>
 
-            {/* Right: Text Content (2/3 width) */}
+            {/* Text Content - Full width on mobile, 2/3 on desktop */}
             <div className="md:col-span-2 p-3 md:p-5 lg:p-6 xl:p-8 flex flex-col justify-between bg-cream-50">
 
               {/* Title and Description (Center) */}
