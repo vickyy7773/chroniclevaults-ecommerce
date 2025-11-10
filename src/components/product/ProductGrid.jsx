@@ -46,11 +46,11 @@ const ProductGrid = ({
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-5 mb-6 md:mb-8">
         {coins.map((coin, index) => (
           <div key={coin._id || coin.id} className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group">
             <div
-              className="relative overflow-hidden cursor-pointer h-40 sm:h-44 md:h-48"
+              className="relative overflow-hidden cursor-pointer h-36 sm:h-40 md:h-44 lg:h-48"
               onMouseMove={(e) => handleMouseMove(e, coin, index)}
               onMouseEnter={() => setHoveredCoin(coin)}
               onMouseLeave={() => setHoveredCoin(null)}
@@ -82,16 +82,16 @@ const ProductGrid = ({
               </button>
             </div>
 
-            <div className="p-2 md:p-3 lg:p-4">
-              <h3 className="font-medium text-[10px] md:text-sm lg:text-base mb-1 md:mb-2 text-slate-900 line-clamp-2 min-h-[1.2rem] md:min-h-[2rem] lg:min-h-[2.5rem]">{coin.name}</h3>
-              <div className="flex items-baseline gap-0.5 md:gap-1.5 mb-1 md:mb-2.5">
+            <div className="p-1.5 md:p-3 lg:p-4">
+              <h3 className="font-medium text-[10px] md:text-sm lg:text-base mb-0.5 md:mb-2 text-slate-900 line-clamp-2 min-h-[1.2rem] md:min-h-[2rem] lg:min-h-[2.5rem]">{coin.name}</h3>
+              <div className="flex items-baseline gap-0.5 md:gap-1.5 mb-0.5 md:mb-2.5">
                 <span className="text-sm md:text-lg lg:text-xl font-semibold text-amber-600">₹{coin.price.toFixed(2)}</span>
                 {coin.originalPrice > coin.price && (
                   <span className="text-[8px] md:text-xs text-slate-500 line-through">₹{coin.originalPrice.toFixed(2)}</span>
                 )}
               </div>
-              <div className="border-t border-slate-100 pt-0.5 md:pt-2 mb-1 md:mb-3">
-                <div className="flex items-center justify-between mb-0.5 md:mb-1">
+              <div className="border-t border-slate-100 pt-0.5 md:pt-2 mb-0.5 md:mb-3">
+                <div className="flex items-center justify-between mb-0.5">
                   <p className="text-[8px] md:text-xs text-slate-600">
                     Year: <span className="font-medium text-slate-900">{coin.year}</span>
                   </p>
@@ -99,7 +99,7 @@ const ProductGrid = ({
                     {coin.condition}
                   </span>
                 </div>
-                <p className="text-[8px] md:text-xs text-slate-600 mb-0.5 md:mb-1">Stock: <span className={`font-medium ${coin.inStock <= 5 ? 'text-red-600' : 'text-green-600'}`}>{coin.inStock} available</span></p>
+                <p className="text-[8px] md:text-xs text-slate-600 mb-0.5">Stock: <span className={`font-medium ${coin.inStock <= 5 ? 'text-red-600' : 'text-green-600'}`}>{coin.inStock} available</span></p>
                 {(() => {
                   console.log('🔍 Checking Numista for:', coin.name, 'Value:', coin.numistaRarityIndex, 'Type:', typeof coin.numistaRarityIndex);
                   return null;
