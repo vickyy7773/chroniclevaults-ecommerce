@@ -57,38 +57,32 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
 
         {/* Horizontal Scroll Container */}
         <div className="relative max-w-[1600px] mx-auto">
-          {/* Navigation Arrows - Centered Vertically with Better Design */}
+          {/* Navigation Arrows - Visible on all screens */}
           <button
             onClick={() => scroll('left')}
-            className="hidden xl:flex absolute -left-6 top-1/2 -translate-y-1/2 z-10 p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110"
+            className="absolute left-0 md:left-2 lg:-left-6 top-1/2 -translate-y-1/2 z-10 p-2 md:p-3 lg:p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110"
             aria-label="Scroll left"
           >
-            <ChevronLeft className="w-6 h-6 text-white" />
+            <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 text-white" />
           </button>
           <button
             onClick={() => scroll('right')}
-            className="hidden xl:flex absolute -right-6 top-1/2 -translate-y-1/2 z-10 p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110"
+            className="absolute right-0 md:right-2 lg:-right-6 top-1/2 -translate-y-1/2 z-10 p-2 md:p-3 lg:p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110"
             aria-label="Scroll right"
           >
-            <ChevronRight className="w-6 h-6 text-white" />
+            <ChevronRight className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 text-white" />
           </button>
 
           <div
             ref={scrollContainerRef}
             className="overflow-x-auto scroll-smooth scrollbar-hide pb-4"
           >
-            <div className="flex gap-5 px-2" style={{ width: 'max-content' }}>
+            <div className="flex gap-3 md:gap-4 lg:gap-5 px-2" style={{ width: 'max-content' }}>
               {featuredCoins.map((coin, index) => (
                 <Link
                   key={coin._id}
                   to={getProductUrl(coin)}
-                  className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group block"
-                  style={{
-                    width: 'calc((100vw - 8rem) / 4 - 1.25rem)',
-                    minWidth: '280px',
-                    maxWidth: '360px',
-                    flexShrink: 0
-                  }}
+                  className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group block w-[85vw] sm:w-[70vw] md:w-[45vw] lg:w-[30vw] xl:w-[23vw] 2xl:w-[20vw] flex-shrink-0"
                 >
                   {/* Image Section */}
                   <div
