@@ -151,14 +151,7 @@ const Hero = () => {
   // Show loading state
   if (loading) {
     return (
-      <div
-        className="relative w-full bg-gray-100 flex items-center justify-center"
-        style={{
-          aspectRatio: '16/6',
-          maxHeight: '600px',
-          minHeight: '150px'
-        }}
-      >
+      <div className="relative w-full bg-gray-100 flex items-center justify-center h-48 sm:h-64 md:h-80 lg:h-96 xl:h-[450px] 2xl:h-[500px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading slides...</p>
@@ -169,15 +162,10 @@ const Hero = () => {
 
   return (
     <div
-      className="relative w-full overflow-hidden"
+      className="relative w-full overflow-hidden h-48 sm:h-64 md:h-80 lg:h-96 xl:h-[450px] 2xl:h-[500px]"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      style={{
-        aspectRatio: '16/6',
-        maxHeight: '600px',
-        minHeight: '150px'
-      }}
     >
       {/* Slider Container - Fade/Blink Effect */}
       <div className="relative w-full h-full">
@@ -194,7 +182,6 @@ const Hero = () => {
                 src={slide.image}
                 alt={slide.title}
                 className="w-full h-full object-cover object-center"
-                style={{ objectFit: 'cover' }}
               />
               {/* Dark overlay for better text readability on mobile */}
               <div className="absolute inset-0 bg-black/20 md:bg-black/10"></div>
