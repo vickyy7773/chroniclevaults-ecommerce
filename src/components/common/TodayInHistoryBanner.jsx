@@ -52,12 +52,12 @@ const TodayInHistoryBanner = () => {
   }
 
   return (
-    <div className="bg-white py-6 md:py-8">
+    <div className="bg-white py-4 md:py-6 lg:py-8">
       <div className="max-w-[1400px] mx-auto px-4 lg:px-6 xl:px-8">
         {/* Header */}
-        <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-5">
-          <Calendar className="w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-amber-600" />
-          <h2 className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-light text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
+        <div className="flex items-center gap-1.5 md:gap-2 lg:gap-3 mb-3 md:mb-4 lg:mb-5">
+          <Calendar className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 text-amber-600" />
+          <h2 className="text-base md:text-xl lg:text-2xl xl:text-3xl font-light text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
             Today in History
           </h2>
         </div>
@@ -67,7 +67,7 @@ const TodayInHistoryBanner = () => {
           <div className="grid md:grid-cols-3 gap-0 items-stretch">
 
             {/* Left: Image (1/3 width) */}
-            <div className="relative h-64 md:h-full overflow-hidden group">
+            <div className="relative h-40 sm:h-48 md:h-full overflow-hidden group">
               <img
                 src={latestBlog.image}
                 alt={latestBlog.title}
@@ -76,27 +76,28 @@ const TodayInHistoryBanner = () => {
             </div>
 
             {/* Right: Text Content (2/3 width) */}
-            <div className="md:col-span-2 p-4 md:p-6 lg:p-8 flex flex-col justify-between bg-cream-50">
+            <div className="md:col-span-2 p-3 md:p-5 lg:p-6 xl:p-8 flex flex-col justify-between bg-cream-50">
 
               {/* Title and Description (Center) */}
               <div>
-                <h3 className="text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-gray-900 mb-2 md:mb-3 lg:mb-4">
+                <h3 className="text-sm md:text-base lg:text-lg xl:text-xl font-bold text-gray-900 mb-1.5 md:mb-2 lg:mb-3">
                   {latestBlog.title}
                 </h3>
 
-                <p className="text-sm md:text-base text-gray-600 leading-relaxed">
+                <p className="text-xs md:text-sm lg:text-base text-gray-600 leading-relaxed line-clamp-2 md:line-clamp-3">
                   {latestBlog.excerpt}
                 </p>
               </div>
 
               {/* Read More Button (Bottom Right Corner) */}
-              <div className="flex justify-end mt-4 md:mt-5 lg:mt-6">
+              <div className="flex justify-end mt-3 md:mt-4 lg:mt-5">
                 <Link
                   to="/blog"
-                  className="inline-flex items-center justify-center gap-2 px-4 md:px-5 lg:px-6 py-2 md:py-2.5 lg:py-3 bg-amber-600 hover:bg-amber-700 text-white text-sm md:text-base font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg"
+                  className="inline-flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 lg:px-5 xl:px-6 py-1.5 md:py-2 lg:py-2.5 xl:py-3 bg-amber-600 hover:bg-amber-700 text-white text-xs md:text-sm lg:text-base font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg"
                 >
-                  Explore Full Story
-                  <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="hidden sm:inline">Explore Full Story</span>
+                  <span className="sm:hidden">Read More</span>
+                  <svg className="w-3 h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </Link>
