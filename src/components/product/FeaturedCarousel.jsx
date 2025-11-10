@@ -82,7 +82,7 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
                 <Link
                   key={coin._id}
                   to={getProductUrl(coin)}
-                  className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group block w-[85vw] sm:w-[70vw] md:w-[45vw] lg:w-[30vw] xl:w-[23vw] 2xl:w-[20vw] flex-shrink-0"
+                  className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group block w-[92vw] sm:w-[75vw] md:w-[48vw] lg:w-[31vw] xl:w-[24vw] 2xl:w-[20vw] flex-shrink-0"
                 >
                   {/* Image Section */}
                   <div
