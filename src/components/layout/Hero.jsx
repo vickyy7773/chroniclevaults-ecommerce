@@ -186,8 +186,6 @@ const Hero = () => {
                   height: 'auto'
                 }}
               />
-              {/* Dark overlay for better text readability on mobile */}
-              <div className="absolute inset-0 bg-black/20 md:bg-black/10 pointer-events-none"></div>
             </div>
 
           </div>
