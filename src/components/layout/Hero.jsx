@@ -177,11 +177,11 @@ const Hero = () => {
             }`}
           >
             {/* Background Image */}
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full bg-gray-100">
               <img
                 src={slide.image}
                 alt={slide.title}
-                className="w-full h-full object-cover object-center"
+                className="w-full h-full object-contain object-center"
               />
             </div>
 
