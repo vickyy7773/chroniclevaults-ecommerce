@@ -162,7 +162,7 @@ const Hero = () => {
 
   return (
     <div
-      className="relative w-full overflow-hidden h-48 sm:h-56 md:h-72 lg:h-80 xl:h-96"
+      className="relative w-screen -mx-4 sm:-mx-6 lg:-mx-8 2xl:-mx-12 overflow-hidden h-48 sm:h-56 md:h-72 lg:h-80 xl:h-96"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -177,11 +177,11 @@ const Hero = () => {
             }`}
           >
             {/* Background Image */}
-            <div className="relative w-full h-full bg-gray-100">
+            <div className="relative w-full h-full">
               <img
                 src={slide.image}
                 alt={slide.title}
-                className="w-full h-full object-contain object-center"
+                className="w-full h-full object-cover object-center"
               />
             </div>
 
