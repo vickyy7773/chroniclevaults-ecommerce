@@ -122,9 +122,9 @@ const ProductGrid = ({
               <div className="flex gap-1 md:gap-1.5 lg:gap-2">
                 <button
                   onClick={() => addToCart(coin)}
-                  className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-1 md:py-1.5 lg:py-2 px-1.5 md:px-2 lg:px-3 rounded-lg font-normal text-[9px] md:text-[10px] lg:text-xs xl:text-sm transition-all flex items-center justify-center gap-0.5 md:gap-1 lg:gap-1.5 shadow-sm hover:shadow-md"
+                  className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-0.5 md:py-1 lg:py-1.5 xl:py-2 px-1 md:px-1.5 lg:px-2 xl:px-3 rounded font-normal text-[8px] md:text-[9px] lg:text-[10px] xl:text-xs transition-all flex items-center justify-center gap-0.5 md:gap-1 shadow-sm hover:shadow-md"
                 >
-                  <ShoppingCart className="w-2.5 h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5" />
+                  <ShoppingCart className="w-2 h-2 md:w-2.5 md:h-2.5 lg:w-3 lg:h-3 xl:w-3.5 xl:h-3.5" />
                   <span className="hidden sm:inline">Add to Cart</span>
                   <span className="sm:hidden">Add</span>
                 </button>
@@ -134,9 +134,9 @@ const ProductGrid = ({
                     console.log('Before click - isInWishlist:', isInWishlist(coin._id || coin.id));
                     addToWishlist(coin);
                   }}
-                  className={`${isInWishlist(coin._id || coin.id) ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'} py-1 md:py-1.5 lg:py-2 px-1.5 md:px-2 lg:px-3 rounded-lg transition-all shadow-sm hover:shadow-md`}
+                  className={`${isInWishlist(coin._id || coin.id) ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'} py-0.5 md:py-1 lg:py-1.5 xl:py-2 px-1 md:px-1.5 lg:px-2 xl:px-3 rounded transition-all shadow-sm hover:shadow-md`}
                 >
-                  <Heart className={`w-2.5 h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5 xl:w-4 xl:h-4 ${isInWishlist(coin._id || coin.id) ? 'fill-current' : ''}`} />
+                  <Heart className={`w-2 h-2 md:w-2.5 md:h-2.5 lg:w-3 lg:h-3 xl:w-3.5 xl:h-3.5 ${isInWishlist(coin._id || coin.id) ? 'fill-current' : ''}`} />
                 </button>
               </div>
             </div>
