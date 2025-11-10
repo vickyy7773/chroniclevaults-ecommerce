@@ -151,7 +151,14 @@ const Hero = () => {
   // Show loading state
   if (loading) {
     return (
-      <div className="relative w-full bg-gray-100 flex items-center justify-center" style={{ minHeight: '300px' }}>
+      <div
+        className="relative w-full bg-gray-100 flex items-center justify-center"
+        style={{
+          aspectRatio: '16/6',
+          maxHeight: '600px',
+          minHeight: '250px'
+        }}
+      >
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading slides...</p>
@@ -166,20 +173,28 @@ const Hero = () => {
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
+      style={{
+        aspectRatio: '16/6',
+        maxHeight: '600px',
+        minHeight: '250px'
+      }}
     >
       {/* Slider Container - Fade/Blink Effect */}
-      <div className="relative w-full">
+      <div className="relative w-full h-full">
         {slides.map((slide, index) => (
           <div
             key={slide.id}
-            className={`${index === currentSlide ? 'block' : 'hidden'} w-full transition-opacity duration-1000 ease-in-out`}
+            className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
+              index === currentSlide ? 'opacity-100' : 'opacity-0'
+            }`}
           >
             {/* Background Image */}
-            <div className="relative w-full">
+            <div className="relative w-full h-full">
               <img
                 src={slide.image}
                 alt={slide.title}
-                className="w-full h-auto object-contain"
+                className="w-full h-full object-cover object-center"
+                style={{ objectFit: 'cover' }}
               />
               {/* Dark overlay for better text readability on mobile */}
               <div className="absolute inset-0 bg-black/20 md:bg-black/10"></div>
