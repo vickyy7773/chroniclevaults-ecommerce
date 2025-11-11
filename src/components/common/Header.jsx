@@ -137,23 +137,23 @@ const Header = ({
     <>
       <header className={`bg-primary-200/95 backdrop-blur-sm sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'shadow-strong' : 'shadow-soft'}`}>
         {/* Top Info Bar - Hidden on mobile and on scroll */}
-        <div className={`hidden lg:block border-b border-neutral-300/30 bg-white/20 transition-all duration-300 ${
+        <div className={`block border-b border-neutral-300/30 bg-white/20 transition-all duration-300 ${
           scrolled ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-20 opacity-100'
         }`}>
           <div className="w-full">
-            <div className="flex items-center justify-between py-2 text-xs">
-              <div className="flex-1 overflow-hidden max-w-3xl ml-5">
-                <div className="flex items-center space-x-2 text-red-600">
-                  <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-600" />
-                  <span className="text-red-600 font-bold flex-shrink-0">Statutory Warning:</span>
-                  <div className="overflow-hidden relative">
-                    <div className="animate-scroll-single whitespace-nowrap font-semibold text-red-600">
+            <div className="flex flex-col lg:flex-row items-center justify-between py-2 text-xs gap-2 lg:gap-0">
+              <div className="flex-1 overflow-hidden w-full lg:max-w-3xl px-3 lg:ml-5">
+                <div className="flex items-center space-x-1.5 lg:space-x-2 text-red-600">
+                  <AlertTriangle className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0 text-red-600" />
+                  <span className="text-red-600 font-bold flex-shrink-0 text-[10px] lg:text-xs">Statutory Warning:</span>
+                  <div className="overflow-hidden relative flex-1">
+                    <div className="animate-scroll-single whitespace-nowrap font-semibold text-red-600 text-[10px] lg:text-xs">
                       <span className="inline-block">Antiques over 100 years old cannot be taken out of India without the permission of the Director General, Archaeological Survey of India, Janpath, New Delhi 110011.</span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center space-x-6 flex-shrink-0 pl-8 mr-5">
+              <div className="hidden lg:flex items-center space-x-6 flex-shrink-0 pl-8 mr-5">
                 <div className="flex items-center space-x-2 text-neutral-800 font-semibold">
                   <FaWhatsapp className="w-3 h-3" />
                   <a href="https://wa.me/918460849878" target="_blank" rel="noopener noreferrer" className="hover:text-accent-600">+918460849878</a>
