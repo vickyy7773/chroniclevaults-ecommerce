@@ -47,6 +47,16 @@ const Checkout = () => {
 
   const [errors, setErrors] = useState({});
 
+  // Check if user is logged in - redirect if not
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // User not logged in, redirect to home page
+      console.log('🚫 User not logged in, redirecting to home...');
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
+
   // Fetch saved addresses and load Razorpay script on component mount
   useEffect(() => {
     fetchSavedAddresses();
