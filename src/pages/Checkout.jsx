@@ -185,7 +185,7 @@ const Checkout = () => {
   // Calculate average GST percentage for display
   const averageGST = cartItems.length > 0 ? priceBreakdown.totalGST / cartItems.length : 0;
 
-  const shipping = subtotal > 1000 ? 0 : 50;
+  const shipping = 0; // Free delivery for all orders
   const total = subtotal + shipping + tax;
   const discount = 0;
 
@@ -1087,13 +1087,12 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {shipping > 0 && (
-                  <div className="mt-4 p-3 bg-amber-50 rounded-lg">
-                    <p className="text-xs text-amber-800">
-                      💡 Add ₹{(1000 - subtotal).toFixed(2)} more to get FREE delivery
-                    </p>
-                  </div>
-                )}
+                {/* Free Delivery Message */}
+                <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-xs text-green-800 font-medium">
+                    🎉 Congratulations! You have FREE delivery on this order
+                  </p>
+                </div>
               </div>
             </div>
           </div>
