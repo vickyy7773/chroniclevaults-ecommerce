@@ -445,7 +445,9 @@ const Checkout = () => {
       const token = localStorage.getItem('token');
       if (!token) {
         alert('Please login first to place an order');
-        navigate('/authentication');
+        navigate('/authentication', {
+          state: { from: '/checkout', cartItems: cartItems }
+        });
         return;
       }
 

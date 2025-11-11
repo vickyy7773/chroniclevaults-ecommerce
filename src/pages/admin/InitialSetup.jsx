@@ -133,7 +133,7 @@ const InitialSetup = () => {
                 onClick={() => {
                   localStorage.removeItem('token');
                   localStorage.removeItem('user');
-                  navigate('/login');
+                  navigate('/authentication');
                 }}
                 className="flex-1 px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-semibold"
               >
@@ -288,7 +288,7 @@ const InitialSetup = () => {
             <p className="text-sm text-gray-600">
               Already have an account?{' '}
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/authentication')}
                 className="text-amber-600 hover:text-amber-700 font-semibold"
               >
                 Login here

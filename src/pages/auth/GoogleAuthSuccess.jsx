@@ -21,10 +21,10 @@ const GoogleAuthSuccess = () => {
         window.location.href = '/';
       } catch (error) {
         console.error('Error parsing user data:', error);
-        navigate('/login?error=invalid_data');
+        navigate('/authentication?error=invalid_data');
       }
     } else {
-      navigate('/login?error=missing_data');
+      navigate('/authentication?error=missing_data');
     }
   }, [searchParams, navigate]);
 

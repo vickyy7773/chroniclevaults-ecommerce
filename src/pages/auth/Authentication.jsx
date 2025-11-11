@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
 import posterImage from '../../assets/poster.jpg';
 import { API_BASE_URL } from '../../constants/api';
@@ -7,6 +7,7 @@ import CenterNotification from '../../components/common/CenterNotification';
 
 const Authentication = ({ setUser }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -162,7 +163,14 @@ const Authentication = ({ setUser }) => {
         setShowNotification(true);
 
         setTimeout(() => {
-          navigate('/');
+          // Check if user came from checkout
+          if (location.state?.from === '/checkout' && location.state?.cartItems) {
+            navigate('/checkout', {
+              state: { cartItems: location.state.cartItems }
+            });
+          } else {
+            navigate('/');
+          }
         }, 3000);
       } else {
         setErrors({ ...errors, otp: data.message || 'Invalid OTP. Please try again.' });
@@ -231,8 +239,14 @@ const Authentication = ({ setUser }) => {
           console.log('Legacy Role:', data.data.legacyRole);
 
           setTimeout(() => {
-            // Redirect based on role
-            if (data.data.isAdmin || data.data.isSuperAdmin || data.data.legacyRole === 'admin' || data.data.legacyRole === 'superadmin') {
+            // Check if user came from checkout
+            if (location.state?.from === '/checkout' && location.state?.cartItems) {
+              console.log('Redirecting back to checkout with cart items...');
+              navigate('/checkout', {
+                state: { cartItems: location.state.cartItems }
+              });
+            } else if (data.data.isAdmin || data.data.isSuperAdmin || data.data.legacyRole === 'admin' || data.data.legacyRole === 'superadmin') {
+              // Redirect based on role
               console.log('Redirecting to admin dashboard...');
               navigate('/admin/dashboard');
             } else {
