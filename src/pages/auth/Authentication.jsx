@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
 import posterImage from '../../assets/poster.png';
 import { API_BASE_URL } from '../../constants/api';
@@ -484,13 +484,13 @@ const Authentication = ({ setUser }) => {
                   <input type="checkbox" required className="mr-2 mt-1 w-4 h-4 rounded accent-accent-500" />
                   <span className="text-sm text-neutral-700 font-semibold">
                     I agree to the{' '}
-                    <a href="#" className="text-accent-600 hover:text-accent-700 font-bold underline">
+                    <Link to="/terms-conditions" target="_blank" className="text-accent-600 hover:text-accent-700 font-bold underline">
                       Terms of Service
-                    </a>{' '}
+                    </Link>{' '}
                     and{' '}
-                    <a href="#" className="text-accent-600 hover:text-accent-700 font-bold underline">
+                    <Link to="/privacy-policy" target="_blank" className="text-accent-600 hover:text-accent-700 font-bold underline">
                       Privacy Policy
-                    </a>
+                    </Link>
                   </span>
                 </label>
               </div>
