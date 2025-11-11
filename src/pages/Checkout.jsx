@@ -36,7 +36,7 @@ const Checkout = () => {
     pincode: '',
 
     // Payment Method
-    paymentMethod: 'cod',
+    paymentMethod: 'razorpay',
 
     // Card Details (if card payment selected)
     cardNumber: '',
@@ -325,15 +325,8 @@ const Checkout = () => {
     }
 
     if (step === 3) {
-      // Payment validation
-      if (formData.paymentMethod === 'card') {
-        if (!formData.cardNumber.trim()) newErrors.cardNumber = 'Card number is required';
-        else if (!/^[0-9]{16}$/.test(formData.cardNumber.replace(/\s/g, ''))) newErrors.cardNumber = 'Invalid card';
-        if (!formData.cardName.trim()) newErrors.cardName = 'Card holder name is required';
-        if (!formData.expiryDate.trim()) newErrors.expiryDate = 'Expiry date is required';
-        if (!formData.cvv.trim()) newErrors.cvv = 'CVV is required';
-        else if (!/^[0-9]{3,4}$/.test(formData.cvv)) newErrors.cvv = 'Invalid CVV';
-      }
+      // Payment validation - Razorpay doesn't need any validation here
+      // Payment will be handled by Razorpay checkout modal
     }
 
     setErrors(newErrors);
@@ -358,6 +351,92 @@ const Checkout = () => {
     if (updatedCart.length === 0) {
       alert('Your cart is empty! Redirecting to home page.');
       navigate('/');
+    }
+  };
+
+  const handleRazorpayPayment = async (orderId, orderAmount) => {
+    try {
+      console.log('💳 Initiating Razorpay payment for order:', orderId);
+
+      // Create Razorpay order
+      const razorpayOrderResponse = await paymentService.createRazorpayOrder(orderAmount);
+
+      if (!razorpayOrderResponse.success) {
+        throw new Error('Failed to create payment order');
+      }
+
+      const { orderId: razorpayOrderId, keyId } = razorpayOrderResponse.data;
+
+      // Razorpay payment options
+      const options = {
+        key: keyId,
+        amount: orderAmount * 100, // amount in paise
+        currency: 'INR',
+        name: 'Chronicle Vaults',
+        description: 'Purchase of Vintage Collectibles',
+        order_id: razorpayOrderId,
+        handler: async function (response) {
+          try {
+            console.log('✅ Payment successful:', response);
+
+            // Verify payment on backend
+            const verifyResponse = await paymentService.verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderId: orderId
+            });
+
+            if (verifyResponse.success) {
+              console.log('✅ Payment verified successfully');
+              setOrderId(orderId);
+              setOrderPlaced(true);
+              localStorage.removeItem('cart');
+            } else {
+              alert('Payment verification failed. Please contact support.');
+            }
+          } catch (error) {
+            console.error('❌ Payment verification error:', error);
+            alert('Payment verification failed. Please contact support with your payment ID.');
+          }
+        },
+        prefill: {
+          name: formData.fullName,
+          email: formData.email,
+          contact: formData.phone
+        },
+        notes: {
+          address: formData.address,
+          city: formData.city,
+          state: formData.state
+        },
+        theme: {
+          color: '#F59E0B' // amber-500
+        },
+        modal: {
+          ondismiss: function() {
+            console.log('⚠️ Payment cancelled by user');
+            alert('Payment cancelled. Your order has been created but payment is pending.');
+          }
+        }
+      };
+
+      // Open Razorpay checkout
+      const razorpay = new window.Razorpay(options);
+
+      razorpay.on('payment.failed', async function (response) {
+        console.error('❌ Payment failed:', response.error);
+
+        // Record payment failure
+        await paymentService.handlePaymentFailure(orderId, response.error);
+
+        alert(`Payment failed: ${response.error.description}\nPlease try again or choose a different payment method.`);
+      });
+
+      razorpay.open();
+    } catch (error) {
+      console.error('❌ Razorpay payment error:', error);
+      alert('Failed to initiate payment. Please try again.');
     }
   };
 
@@ -423,7 +502,7 @@ const Checkout = () => {
           zipCode: formData.pincode,
           country: 'India'
         },
-        paymentMethod: formData.paymentMethod === 'cod' ? 'COD' : 'Card',
+        paymentMethod: 'Razorpay',
         itemsPrice: subtotal,
         taxPrice: tax,
         shippingPrice: shipping,
@@ -437,10 +516,11 @@ const Checkout = () => {
       console.log('📬 Response received:', response);
 
       if (response && response.data && response.data.success) {
-        setOrderId(response.data.data._id);
-        setOrderPlaced(true);
-        localStorage.removeItem('cart');
+        const createdOrderId = response.data.data._id;
         console.log('✅ Order created successfully:', response.data.data);
+
+        // Always initiate Razorpay payment
+        await handleRazorpayPayment(createdOrderId, total);
       } else {
         const errorMsg = response?.data?.message || response?.message || 'Unknown error occurred';
         console.error('❌ Order failed:', errorMsg);
@@ -488,9 +568,7 @@ const Checkout = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Payment Method</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formData.paymentMethod === 'cod' ? 'COD' : 'Card'}
-                </p>
+                <p className="text-lg font-semibold text-gray-900">Razorpay</p>
               </div>
             </div>
           </div>
@@ -827,79 +905,59 @@ const Checkout = () => {
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-xl font-bold mb-6 flex items-center">
                   <CreditCard className="w-6 h-6 text-amber-600 mr-2" />
-                  Payment Options
+                  Payment Method
                 </h2>
 
-                <div className="space-y-3">
-                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    formData.paymentMethod === 'cod' ? 'border-amber-500 bg-amber-50' : 'border-gray-200'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="cod"
-                      checked={formData.paymentMethod === 'cod'}
-                      onChange={handleInputChange}
-                      className="w-4 h-4 text-amber-600 focus:ring-amber-500"
-                    />
-                    <span className="ml-3 font-medium">Cash on Delivery</span>
-                  </label>
+                {/* Razorpay - Only Payment Option */}
+                <div className="p-6 border-2 border-amber-500 bg-amber-50 rounded-lg">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <CreditCard className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900 text-lg">Razorpay Payment Gateway</h3>
+                        <p className="text-sm text-gray-600">Secure Online Payment</p>
+                      </div>
+                    </div>
+                    <span className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-full font-semibold">
+                      SECURED
+                    </span>
+                  </div>
 
-                  <label className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    formData.paymentMethod === 'card' ? 'border-amber-500 bg-amber-50' : 'border-gray-200'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="card"
-                      checked={formData.paymentMethod === 'card'}
-                      onChange={handleInputChange}
-                      className="w-4 h-4 text-amber-600 focus:ring-amber-500"
-                    />
-                    <span className="ml-3 font-medium">Credit / Debit Card</span>
-                  </label>
-                </div>
-
-                {formData.paymentMethod === 'card' && (
-                  <div className="mt-6 space-y-4 border-t pt-6">
-                    <input
-                      type="text"
-                      name="cardNumber"
-                      placeholder="Card Number"
-                      value={formData.cardNumber}
-                      onChange={handleInputChange}
-                      maxLength="16"
-                      className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    />
-                    <input
-                      type="text"
-                      name="cardName"
-                      placeholder="Name on Card"
-                      value={formData.cardName}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <input
-                        type="text"
-                        name="expiryDate"
-                        placeholder="MM/YY"
-                        value={formData.expiryDate}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
-                      <input
-                        type="text"
-                        name="cvv"
-                        placeholder="CVV"
-                        value={formData.cvv}
-                        onChange={handleInputChange}
-                        maxLength="4"
-                        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
+                  <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
+                    <h4 className="font-semibold text-gray-900 mb-3 text-sm">Available Payment Methods:</h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600">✓</span>
+                        <span className="text-gray-700">UPI (GPay, PhonePe, Paytm)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600">✓</span>
+                        <span className="text-gray-700">Credit & Debit Cards</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600">✓</span>
+                        <span className="text-gray-700">Net Banking</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600">✓</span>
+                        <span className="text-gray-700">Digital Wallets</span>
+                      </div>
                     </div>
                   </div>
-                )}
+
+                  <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-600">
+                    <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                    </svg>
+                    <span>256-bit SSL Encrypted | PCI DSS Compliant</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 text-center text-xs text-gray-500">
+                  By proceeding, you agree to complete the payment securely through Razorpay
+                </div>
               </div>
             )}
 
@@ -934,9 +992,7 @@ const Checkout = () => {
                         <Edit2 className="w-4 h-4 mr-1" /> Edit
                       </button>
                     </div>
-                    <p className="text-sm text-gray-600">
-                      {formData.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Card Payment'}
-                    </p>
+                    <p className="text-sm text-gray-600">Razorpay - Secure Online Payment</p>
                   </div>
 
                   {/* Order Items */}
