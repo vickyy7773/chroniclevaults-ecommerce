@@ -15,22 +15,22 @@ const Toast = ({ message, isVisible, onClose, type = 'success' }) => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed top-20 right-4 z-50 animate-slideInRight">
-      <div className={`flex items-center gap-3 px-6 py-4 rounded-lg shadow-2xl border-2 ${
+    <div className="fixed top-20 left-1/2 -translate-x-1/2 sm:left-auto sm:right-4 sm:translate-x-0 z-[9999] animate-slideInRight max-w-[90vw] sm:max-w-md">
+      <div className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-lg shadow-2xl border-2 ${
         type === 'success'
           ? 'bg-green-50 border-green-500 text-green-900'
           : 'bg-red-50 border-red-500 text-red-900'
       }`}>
         {type === 'success' && (
-          <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
+          <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0" />
         )}
-        <p className="font-semibold text-sm">{message}</p>
+        <p className="font-semibold text-xs sm:text-sm flex-1">{message}</p>
         <button
           onClick={onClose}
-          className="ml-2 hover:opacity-70 transition-opacity"
+          className="ml-1 sm:ml-2 hover:opacity-70 transition-opacity flex-shrink-0"
           aria-label="Close notification"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
 
