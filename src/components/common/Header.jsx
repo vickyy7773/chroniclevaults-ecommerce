@@ -421,14 +421,6 @@ const Header = ({
                 </button>
               </div>
 
-              {/* Free Shipping Banner */}
-              <div className="mb-4 p-3 bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-md">
-                <div className="flex items-center justify-center space-x-2 text-white">
-                  <Truck className="w-5 h-5" />
-                  <span className="font-bold text-sm">FREE SHIPPING ON ALL ORDERS!</span>
-                </div>
-              </div>
-
               {/* Mobile User Actions */}
               <div className="mb-6 space-y-2">
                 {user ? (
@@ -596,9 +588,9 @@ const Header = ({
 
               {/* Mobile Info Badges */}
               <div className="mt-6 space-y-2">
-                <div className="flex items-center space-x-2 p-3 bg-white rounded-lg text-charcoal-900 text-sm border border-cream-200 shadow-sm">
-                  <Truck className="w-4 h-4 text-charcoal-700" />
-                  <span>Free shipping over ₹100</span>
+                <div className="flex items-center space-x-2 p-3 bg-gradient-to-r from-green-500 to-green-600 rounded-lg text-white text-sm shadow-md">
+                  <Truck className="w-4 h-4 text-white" />
+                  <span className="font-bold">FREE SHIPPING ON ALL ORDERS!</span>
                 </div>
                 <div className="flex items-center space-x-2 p-3 bg-white rounded-lg text-charcoal-900 text-sm border border-cream-200 shadow-sm">
                   <BadgeCheck className="w-4 h-4" />
