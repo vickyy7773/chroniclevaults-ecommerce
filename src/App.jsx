@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/common/Header';
 import ScrollToTop from './components/common/ScrollToTop';
@@ -7,47 +7,59 @@ import CartSidebar from './components/cart/CartSidebar';
 import WishlistSidebar from './components/cart/WishlistSidebar';
 import Footer from './components/common/Footer';
 import Toast from './components/common/Toast';
-import Authentication from './pages/auth/Authentication';
-import GoogleAuthSuccess from './pages/auth/GoogleAuthSuccess';
-import GoogleAuthError from './pages/auth/GoogleAuthError';
-import CategoryPage from './pages/products/CategoryPage';
-import Accessories from './pages/products/Accessories';
-import ProductDetail from './pages/products/ProductDetail';
-import Checkout from './pages/Checkout';
-import Profile from './pages/Profile';
+
+// Lazy load pages for code splitting
+const Authentication = lazy(() => import('./pages/auth/Authentication'));
+const GoogleAuthSuccess = lazy(() => import('./pages/auth/GoogleAuthSuccess'));
+const GoogleAuthError = lazy(() => import('./pages/auth/GoogleAuthError'));
+const CategoryPage = lazy(() => import('./pages/products/CategoryPage'));
+const Accessories = lazy(() => import('./pages/products/Accessories'));
+const ProductDetail = lazy(() => import('./pages/products/ProductDetail'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const Profile = lazy(() => import('./pages/Profile'));
 
 // Info Pages
-import AboutUs from './pages/info/AboutUs';
-import FAQ from './pages/info/FAQ';
-import ContactUs from './pages/info/ContactUs';
-import Blog from './pages/Blog';
+const AboutUs = lazy(() => import('./pages/info/AboutUs'));
+const FAQ = lazy(() => import('./pages/info/FAQ'));
+const ContactUs = lazy(() => import('./pages/info/ContactUs'));
+const Blog = lazy(() => import('./pages/Blog'));
 
 // Customer Pages
-import BuyingWithUs from './pages/customer/BuyingWithUs';
+const BuyingWithUs = lazy(() => import('./pages/customer/BuyingWithUs'));
 
 // Policy Pages
-import PrivacyPolicy from './pages/policies/PrivacyPolicy';
-import TermsConditions from './pages/policies/TermsConditions';
-import ShippingPolicy from './pages/policies/ShippingPolicy';
-import CancellationRefund from './pages/policies/CancellationRefund';
+const PrivacyPolicy = lazy(() => import('./pages/policies/PrivacyPolicy'));
+const TermsConditions = lazy(() => import('./pages/policies/TermsConditions'));
+const ShippingPolicy = lazy(() => import('./pages/policies/ShippingPolicy'));
+const CancellationRefund = lazy(() => import('./pages/policies/CancellationRefund'));
 
 // Admin Pages
-import AdminLayout from './components/layout/AdminLayout';
-import Dashboard from './pages/admin/Dashboard';
-import ProductManagement from './pages/admin/ProductManagement';
-import AddEditProduct from './pages/admin/AddEditProduct';
-import OrderManagement from './pages/admin/OrderManagement';
-import UserManagement from './pages/admin/UserManagement';
-import Settings from './pages/admin/Settings';
-import CategoryManagement from './pages/admin/CategoryManagement';
-import AddEditCategory from './pages/admin/AddEditCategory';
-import ReviewManagement from './pages/admin/ReviewManagement';
-import CustomerManagement from './pages/admin/CustomerManagement';
-import SliderManagement from './pages/admin/SliderManagement';
-import BannerManagement from './pages/admin/BannerManagement';
-import CouponManagement from './pages/admin/CouponManagement';
-import FilterOptionsManagement from './pages/admin/FilterOptionsManagement';
-import BlogManagement from './pages/admin/BlogManagement';
+const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
+const ProductManagement = lazy(() => import('./pages/admin/ProductManagement'));
+const AddEditProduct = lazy(() => import('./pages/admin/AddEditProduct'));
+const OrderManagement = lazy(() => import('./pages/admin/OrderManagement'));
+const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
+const Settings = lazy(() => import('./pages/admin/Settings'));
+const CategoryManagement = lazy(() => import('./pages/admin/CategoryManagement'));
+const AddEditCategory = lazy(() => import('./pages/admin/AddEditCategory'));
+const ReviewManagement = lazy(() => import('./pages/admin/ReviewManagement'));
+const CustomerManagement = lazy(() => import('./pages/admin/CustomerManagement'));
+const SliderManagement = lazy(() => import('./pages/admin/SliderManagement'));
+const BannerManagement = lazy(() => import('./pages/admin/BannerManagement'));
+const CouponManagement = lazy(() => import('./pages/admin/CouponManagement'));
+const FilterOptionsManagement = lazy(() => import('./pages/admin/FilterOptionsManagement'));
+const BlogManagement = lazy(() => import('./pages/admin/BlogManagement'));
+
+// Loading component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="text-center">
+      <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+      <p className="mt-4 text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
 import ProfileManagement from './pages/admin/ProfileManagement';
 import RoleManagement from './pages/admin/RoleManagement';
 import AdminManagement from './pages/admin/AdminManagement';
@@ -276,120 +288,122 @@ const AppContent = () => {
           />
         )}
 
-        <Routes>
-          <Route path="/" element={
-            <VintageCoinStore
-              cart={cart}
-              wishlist={wishlist}
-              addToCart={addToCart}
-              removeFromCart={removeFromCart}
-              updateQuantity={updateQuantity}
-              addToWishlist={addToWishlist}
-              isInWishlist={isInWishlist}
-              addToComparison={addToComparison}
-              removeFromComparison={removeFromComparison}
-              comparisonCoins={comparisonCoins}
-              showCart={showCart}
-              setShowCart={setShowCart}
-              showAuthModal={showAuthModal}
-              setShowAuthModal={setShowAuthModal}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-            />
-          } />
-          {/* New hierarchical product URL */}
-          <Route path="/:category/:subcategory/:productSlug" element={
-            <ProductDetail
-              addToCart={addToCart}
-              addToWishlist={addToWishlist}
-              isInWishlist={isInWishlist}
-            />
-          } />
-          {/* Old product URL for backward compatibility */}
-          <Route path="/product/:id" element={
-            <ProductDetail
-              addToCart={addToCart}
-              addToWishlist={addToWishlist}
-              isInWishlist={isInWishlist}
-            />
-          } />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/profile" element={<Profile user={user} onLogout={handleLogout} />} />
-          <Route path="/invoice/:orderId" element={<InvoicePreview />} />
-          {/* Dynamic Category Pages - Any category from database */}
-          <Route path="/category/:categoryName" element={
-            <CategoryPage
-              addToCart={addToCart}
-              addToWishlist={addToWishlist}
-              isInWishlist={isInWishlist}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-            />
-          } />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={
+              <VintageCoinStore
+                cart={cart}
+                wishlist={wishlist}
+                addToCart={addToCart}
+                removeFromCart={removeFromCart}
+                updateQuantity={updateQuantity}
+                addToWishlist={addToWishlist}
+                isInWishlist={isInWishlist}
+                addToComparison={addToComparison}
+                removeFromComparison={removeFromComparison}
+                comparisonCoins={comparisonCoins}
+                showCart={showCart}
+                setShowCart={setShowCart}
+                showAuthModal={showAuthModal}
+                setShowAuthModal={setShowAuthModal}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+              />
+            } />
+            {/* New hierarchical product URL */}
+            <Route path="/:category/:subcategory/:productSlug" element={
+              <ProductDetail
+                addToCart={addToCart}
+                addToWishlist={addToWishlist}
+                isInWishlist={isInWishlist}
+              />
+            } />
+            {/* Old product URL for backward compatibility */}
+            <Route path="/product/:id" element={
+              <ProductDetail
+                addToCart={addToCart}
+                addToWishlist={addToWishlist}
+                isInWishlist={isInWishlist}
+              />
+            } />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/profile" element={<Profile user={user} onLogout={handleLogout} />} />
+            <Route path="/invoice/:orderId" element={<InvoicePreview />} />
+            {/* Dynamic Category Pages - Any category from database */}
+            <Route path="/category/:categoryName" element={
+              <CategoryPage
+                addToCart={addToCart}
+                addToWishlist={addToWishlist}
+                isInWishlist={isInWishlist}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+              />
+            } />
 
-          {/* Keep Accessories as reference (can be removed later) */}
-          <Route path="/accessories" element={
-            <Accessories
-              addToCart={addToCart}
-              addToWishlist={addToWishlist}
-              isInWishlist={isInWishlist}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-            />
-          } />
-          <Route path="/authentication" element={<Authentication setUser={setUser} />} />
-          <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
-          <Route path="/auth/google/error" element={<GoogleAuthError />} />
-          <Route path="/setup-admin" element={<InitialSetup />} />
+            {/* Keep Accessories as reference (can be removed later) */}
+            <Route path="/accessories" element={
+              <Accessories
+                addToCart={addToCart}
+                addToWishlist={addToWishlist}
+                isInWishlist={isInWishlist}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+              />
+            } />
+            <Route path="/authentication" element={<Authentication setUser={setUser} />} />
+            <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
+            <Route path="/auth/google/error" element={<GoogleAuthError />} />
+            <Route path="/setup-admin" element={<InitialSetup />} />
 
-          {/* Info Pages */}
-          <Route path="/about-us" element={<AboutUs />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/contact-us" element={<ContactUs />} />
-          <Route path="/blog" element={<Blog />} />
+            {/* Info Pages */}
+            <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/contact-us" element={<ContactUs />} />
+            <Route path="/blog" element={<Blog />} />
 
-          {/* Customer Pages */}
-          <Route path="/buying-with-us" element={<BuyingWithUs />} />
+            {/* Customer Pages */}
+            <Route path="/buying-with-us" element={<BuyingWithUs />} />
 
-          {/* Policy Pages */}
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-conditions" element={<TermsConditions />} />
-          <Route path="/shipping-policy" element={<ShippingPolicy />} />
-          <Route path="/cancellation-refund" element={<CancellationRefund />} />
+            {/* Policy Pages */}
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-conditions" element={<TermsConditions />} />
+            <Route path="/shipping-policy" element={<ShippingPolicy />} />
+            <Route path="/cancellation-refund" element={<CancellationRefund />} />
 
-          {/* Admin Routes - All wrapped in AdminLayout */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="page-posters" element={<PagePosters />} />
-            <Route path="products" element={<ProductManagement />} />
-            <Route path="products/add" element={<AddEditProduct />} />
-            <Route path="products/edit/:id" element={<AddEditProduct />} />
-            <Route path="orders" element={<OrderManagement />} />
-            <Route path="orders/new" element={<OrderManagement />} />
-            <Route path="orders/history" element={<OrderManagement />} />
-            <Route path="users" element={<UserManagement />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="categories" element={<CategoryManagement />} />
-            <Route path="categories/add" element={<AddEditCategory />} />
-            <Route path="categories/edit/:id" element={<AddEditCategory />} />
-            <Route path="filter-options" element={<FilterOptionsManagement />} />
-            <Route path="reviews" element={<ReviewManagement />} />
-            <Route path="customers" element={<CustomerManagement />} />
-            <Route path="sliders" element={<SliderManagement />} />
-            <Route path="banners" element={<BannerManagement />} />
-            <Route path="coupons" element={<CouponManagement />} />
-            <Route path="blog" element={<BlogManagement />} />
-            <Route path="blog/add" element={<BlogManagement />} />
-            <Route path="blog/edit/:id" element={<BlogManagement />} />
-            <Route path="profile" element={<ProfileManagement />} />
-            <Route path="users-roles" element={<UserRoleManagement />} />
-            {/* Keep old routes for backward compatibility */}
-            <Route path="roles" element={<UserRoleManagement />} />
-            <Route path="admins" element={<UserRoleManagement />} />
-            <Route path="admin-activities" element={<AdminActivities />} />
-          </Route>
-        </Routes>
+            {/* Admin Routes - All wrapped in AdminLayout */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="page-posters" element={<PagePosters />} />
+              <Route path="products" element={<ProductManagement />} />
+              <Route path="products/add" element={<AddEditProduct />} />
+              <Route path="products/edit/:id" element={<AddEditProduct />} />
+              <Route path="orders" element={<OrderManagement />} />
+              <Route path="orders/new" element={<OrderManagement />} />
+              <Route path="orders/history" element={<OrderManagement />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="categories" element={<CategoryManagement />} />
+              <Route path="categories/add" element={<AddEditCategory />} />
+              <Route path="categories/edit/:id" element={<AddEditCategory />} />
+              <Route path="filter-options" element={<FilterOptionsManagement />} />
+              <Route path="reviews" element={<ReviewManagement />} />
+              <Route path="customers" element={<CustomerManagement />} />
+              <Route path="sliders" element={<SliderManagement />} />
+              <Route path="banners" element={<BannerManagement />} />
+              <Route path="coupons" element={<CouponManagement />} />
+              <Route path="blog" element={<BlogManagement />} />
+              <Route path="blog/add" element={<BlogManagement />} />
+              <Route path="blog/edit/:id" element={<BlogManagement />} />
+              <Route path="profile" element={<ProfileManagement />} />
+              <Route path="users-roles" element={<UserRoleManagement />} />
+              {/* Keep old routes for backward compatibility */}
+              <Route path="roles" element={<UserRoleManagement />} />
+              <Route path="admins" element={<UserRoleManagement />} />
+              <Route path="admin-activities" element={<AdminActivities />} />
+            </Route>
+          </Routes>
+        </Suspense>
 
       {!hideHeaderFooter && <Footer />}
 

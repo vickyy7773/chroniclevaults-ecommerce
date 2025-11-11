@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
-import posterImage from '../../assets/poster.png';
+import posterImage from '../../assets/poster.jpg';
 import { API_BASE_URL } from '../../constants/api';
 import CenterNotification from '../../components/common/CenterNotification';
 

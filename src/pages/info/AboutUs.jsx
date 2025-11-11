@@ -1,6 +1,6 @@
 import React from 'react';
 import { Award, Shield, Users, Heart } from 'lucide-react';
-import posterImage from '../../assets/poster.png';
+import posterImage from '../../assets/poster.jpg';
 
 const AboutUs = () => {
   return (

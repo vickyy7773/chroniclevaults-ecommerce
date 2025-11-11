@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { productService } from '../../services';
 import { Award, BadgeCheck, Users, Heart, ChevronRight } from 'lucide-react';
-import posterImage from '../../assets/poster.png';
+import posterImage from '../../assets/poster.jpg';
 
 // Header is now handled by the parent App component
 import Hero from './Hero';

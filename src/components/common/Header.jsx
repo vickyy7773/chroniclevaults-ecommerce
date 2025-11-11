@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { FaWhatsapp, FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter } from 'react-icons/fa';
 import logoImage from '../../assets/fixed logo.png';
-import posterImage from '../../assets/poster.png';
+import posterImage from '../../assets/poster.jpg';
 import { API_BASE_URL } from '../../constants/api';
 
 const Header = ({
