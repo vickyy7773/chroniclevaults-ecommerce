@@ -1,4 +1,4 @@
-import razorpayInstance from '../config/razorpay.js';
+import getRazorpayInstance from '../config/razorpay.js';
 import crypto from 'crypto';
 import Order from '../models/Order.js';
 
@@ -7,6 +7,8 @@ import Order from '../models/Order.js';
 // @access  Private
 export const createRazorpayOrder = async (req, res) => {
   try {
+    const razorpayInstance = getRazorpayInstance();
+
     if (!razorpayInstance) {
       return res.status(503).json({
         success: false,
