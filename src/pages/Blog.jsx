@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Calendar, User, ArrowRight, Clock, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import { blogService } from '../services';
 
 const Blog = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedPosts, setExpandedPosts] = useState([]);
   const [blogPosts, setBlogPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const postsPerPage = 5;
+  const blogRefs = useRef({});
 
   useEffect(() => {
     fetchBlogs();
@@ -61,6 +63,45 @@ const Blog = () => {
       setLoading(false);
     }
   };
+
+  // Auto-expand blog post if coming from "Today in History" banner
+  useEffect(() => {
+    if (location.state?.expandBlogId && blogPosts.length > 0) {
+      const blogId = location.state.expandBlogId;
+
+      // Find the blog in the list
+      const blogIndex = blogPosts.findIndex(blog => blog.id === blogId);
+
+      if (blogIndex !== -1) {
+        // Calculate which page the blog is on
+        const pageNumber = Math.floor(blogIndex / postsPerPage) + 1;
+
+        // Set the current page
+        if (pageNumber !== currentPage) {
+          setCurrentPage(pageNumber);
+        }
+
+        // Expand the blog post
+        setExpandedPosts([blogId]);
+
+        // Increment view count
+        blogService.getBlogById(blogId).catch(err => console.error('Error incrementing view:', err));
+
+        // Scroll to the blog post after a short delay
+        setTimeout(() => {
+          if (blogRefs.current[blogId]) {
+            blogRefs.current[blogId].scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }
+        }, 300);
+      }
+
+      // Clear the state to prevent auto-expansion on subsequent visits
+      window.history.replaceState({}, document.title);
+    }
+  }, [blogPosts, location.state]);
 
   const toggleExpand = async (postId) => {
     // If expanding (not collapsing), increment views
@@ -211,6 +252,7 @@ const Blog = () => {
           {currentPosts.map((post, index) => (
             <div
               key={post.id}
+              ref={(el) => (blogRefs.current[post.id] = el)}
               className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200 hover:border-amber-400 hover:shadow-2xl transition-all group"
             >
               <div className={`grid ${expandedPosts.includes(post.id) ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-0 transition-all duration-500`}>

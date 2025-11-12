@@ -93,6 +93,7 @@ const TodayInHistoryBanner = () => {
               <div className="flex justify-end mt-3 md:mt-4 lg:mt-5">
                 <Link
                   to="/blog"
+                  state={{ expandBlogId: latestBlog._id }}
                   className="inline-flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 lg:px-5 xl:px-6 py-1.5 md:py-2 lg:py-2.5 xl:py-3 bg-amber-600 hover:bg-amber-700 text-white text-xs md:text-sm lg:text-base font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg"
                 >
                   <span className="hidden sm:inline">Explore Full Story</span>
