@@ -47,7 +47,7 @@ const ShippingPolicy = () => {
             </div>
             <div className="bg-gray-50 rounded-lg p-8">
               <p className="text-gray-700 leading-relaxed mb-4">
-                <a href="https://chroniclevaults.com" className="text-amber-600 hover:text-amber-700 font-semibold">Chronicle vaults</a> uses the most reliable courier agencies like <strong>Nimbus Post, Bluedart, Ship Rocket</strong> etc. to ship its products.
+                <a href="https://chroniclevaults.com" className="text-amber-600 hover:text-amber-700 font-semibold">Chronicle vaults</a> uses the most reliable courier agencies like <strong>India Post and other reliable courier partners</strong> to ship its products.
               </p>
               <p className="text-gray-700 leading-relaxed mb-4">
                 Your order will be shipped to you <strong>fully insured</strong> till it reaches you. In transit loss is insured and thus you will get full refund of amount by Chronicle vaults.
