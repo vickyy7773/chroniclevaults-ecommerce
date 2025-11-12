@@ -112,7 +112,11 @@ const Authentication = ({ setUser }) => {
       if (data.success) {
         setOtpSent(true);
         setShowOtpInput(true);
-        alert(`OTP sent to ${formData.email}! Check your email.`);
+        // Show success notification instead of alert
+        setNotificationMessage(`OTP sent to ${formData.email}! Check your inbox and spam folder.`);
+        setNotificationType('success');
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 5000);
       } else {
         setErrors({ ...errors, email: data.message || 'Failed to send OTP' });
       }
@@ -181,8 +185,22 @@ const Authentication = ({ setUser }) => {
     }
   };
 
+  const handleOtpKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (otp.length === 6) {
+        verifyOtp();
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // If OTP screen is showing, don't submit form
+    if (showOtpInput) {
+      return;
+    }
 
     // Validate form
     if (!validateForm()) {
@@ -448,9 +466,11 @@ const Authentication = ({ setUser }) => {
                         setErrors({ ...errors, otp: '' });
                       }
                     }}
+                    onKeyPress={handleOtpKeyPress}
                     className={`input-modern w-full pl-10 pr-4 ${errors.otp ? 'border-red-500 focus:border-red-500' : ''}`}
                     placeholder="Enter 6-digit OTP"
                     maxLength="6"
+                    autoComplete="off"
                   />
                 </div>
                 {errors.otp && (
