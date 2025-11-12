@@ -72,7 +72,7 @@ const ShippingPolicy = () => {
               <p className="text-gray-900 text-xl font-semibold mb-2">
                 <a href="https://chroniclevaults.com" className="text-amber-600 hover:text-amber-700">Chronicle vaults</a> ships to
               </p>
-              <p className="text-4xl font-bold text-amber-600 mb-2">10,000+ pin-codes</p>
+              <p className="text-4xl font-bold text-amber-600 mb-2">19000+ Pincodes</p>
               <p className="text-gray-700 text-lg">and locations Across India</p>
             </div>
           </section>
