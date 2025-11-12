@@ -112,9 +112,17 @@ const BuyingWithUs = () => {
           </div>
           <div className="border border-gray-200 rounded-lg p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Condition Grading</h3>
-            <p className="text-gray-700">
+            <p className="text-gray-700 mb-4">
               We use industry-standard grading scales. Check item descriptions for detailed condition reports and high-resolution images.
             </p>
+            <div className="p-4 bg-red-50 rounded-lg border border-red-300">
+              <div className="flex items-start">
+                <Shield className="w-5 h-5 text-red-600 mr-3 mt-1 flex-shrink-0" />
+                <p className="text-red-900 text-sm font-medium">
+                  <strong>Note:</strong> Every item should be on chargeable basis if requested by buyer.
+                </p>
+              </div>
+            </div>
           </div>
           <div className="border border-gray-200 rounded-lg p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Market Value</h3>
