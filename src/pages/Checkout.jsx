@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, ShoppingBag, MapPin, CreditCard, Package, ChevronRight, ChevronLeft, Edit2, X, Plus } from 'lucide-react';
-import { orderService, authService } from '../services';
+import { orderService, authService, userSyncService } from '../services';
 import paymentService from '../services/paymentService';
 
 const Checkout = () => {
@@ -413,6 +413,36 @@ const Checkout = () => {
               console.log('✅ Payment verified successfully');
               setOrderId(orderId);
               setOrderPlaced(true);
+
+              // Remove purchased items from wishlist
+              try {
+                const purchasedProductIds = cartItems.map(item => item._id || item.id);
+                console.log('🗑️ Removing purchased items from wishlist:', purchasedProductIds);
+
+                // Remove from backend wishlist
+                for (const productId of purchasedProductIds) {
+                  await userSyncService.removeFromWishlist(productId).catch(() => {
+                    // Ignore errors if item wasn't in wishlist
+                  });
+                }
+
+                // Update localStorage wishlist
+                const savedWishlist = localStorage.getItem('wishlist');
+                if (savedWishlist) {
+                  const wishlist = JSON.parse(savedWishlist);
+                  const updatedWishlist = wishlist.filter(item => {
+                    const itemId = item._id || item.id;
+                    return !purchasedProductIds.includes(itemId);
+                  });
+                  localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+                  console.log('✅ Wishlist updated after purchase');
+                }
+              } catch (error) {
+                console.error('❌ Error updating wishlist:', error);
+                // Don't block order completion if wishlist update fails
+              }
+
+              // Clear cart
               localStorage.removeItem('cart');
             } else {
               alert('Payment verification failed. Please contact support.');

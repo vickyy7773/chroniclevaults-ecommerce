@@ -81,7 +81,10 @@ const AppContent = () => {
   // Show shopping features (search, cart, wishlist) on all pages
   const hideShoppingFeatures = false;
 
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem('cart');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
   const [wishlist, setWishlist] = useState(() => {
     const savedWishlist = localStorage.getItem('wishlist');
     return savedWishlist ? JSON.parse(savedWishlist) : [];
@@ -119,6 +122,11 @@ const AppContent = () => {
     }
   }, [user]);
 
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }, [cart]);
+
   // Save wishlist to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('wishlist', JSON.stringify(wishlist));
@@ -131,20 +139,45 @@ const AppContent = () => {
         try {
           console.log('🔄 Syncing cart and wishlist with backend...');
 
-          // Get current localStorage data
+          // First, fetch current data from backend
+          const [cartResponse, wishlistResponse] = await Promise.all([
+            userSyncService.getCart().catch(() => ({ success: false, cart: [] })),
+            userSyncService.getWishlist().catch(() => ({ success: false, wishlist: [] }))
+          ]);
+
+          // Get local data
           const localCart = cart;
           const localWishlist = wishlist;
 
-          // Sync with backend
-          const result = await userSyncService.syncCartAndWishlist(localCart, localWishlist);
+          // Only sync if local data exists (user added items while logged out)
+          if (localCart.length > 0 || localWishlist.length > 0) {
+            console.log('📤 Syncing local data to backend...');
+            const result = await userSyncService.syncCartAndWishlist(localCart, localWishlist);
 
-          if (result.success) {
-            console.log('✅ Cart and wishlist synced successfully');
+            if (result.success) {
+              console.log('✅ Local data synced to backend');
 
-            // Update state with merged data from backend
-            if (result.cart) {
-              // Convert backend cart format to frontend format
-              const formattedCart = result.cart.map(item => ({
+              // Update state with merged data from backend
+              if (result.cart) {
+                const formattedCart = result.cart.map(item => ({
+                  ...item.product,
+                  quantity: item.quantity
+                }));
+                setCart(formattedCart);
+                localStorage.setItem('cart', JSON.stringify(formattedCart));
+              }
+
+              if (result.wishlist) {
+                setWishlist(result.wishlist);
+                localStorage.setItem('wishlist', JSON.stringify(result.wishlist));
+              }
+            }
+          } else {
+            // No local data, just load from backend
+            console.log('📥 Loading data from backend...');
+
+            if (cartResponse.success && cartResponse.cart) {
+              const formattedCart = cartResponse.cart.map(item => ({
                 ...item.product,
                 quantity: item.quantity
               }));
@@ -152,10 +185,12 @@ const AppContent = () => {
               localStorage.setItem('cart', JSON.stringify(formattedCart));
             }
 
-            if (result.wishlist) {
-              setWishlist(result.wishlist);
-              localStorage.setItem('wishlist', JSON.stringify(result.wishlist));
+            if (wishlistResponse.success && wishlistResponse.wishlist) {
+              setWishlist(wishlistResponse.wishlist);
+              localStorage.setItem('wishlist', JSON.stringify(wishlistResponse.wishlist));
             }
+
+            console.log('✅ Data loaded from backend');
           }
         } catch (error) {
           console.error('❌ Error syncing with backend:', error);
