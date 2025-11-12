@@ -7,6 +7,7 @@ import CartSidebar from './components/cart/CartSidebar';
 import WishlistSidebar from './components/cart/WishlistSidebar';
 import Footer from './components/common/Footer';
 import Toast from './components/common/Toast';
+import { userSyncService } from './services';
 
 // Lazy load pages for code splitting
 const Authentication = lazy(() => import('./pages/auth/Authentication'));
@@ -123,6 +124,49 @@ const AppContent = () => {
     localStorage.setItem('wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
+  // Sync cart and wishlist with backend when user logs in
+  useEffect(() => {
+    const syncWithBackend = async () => {
+      if (user && user._id) {
+        try {
+          console.log('🔄 Syncing cart and wishlist with backend...');
+
+          // Get current localStorage data
+          const localCart = cart;
+          const localWishlist = wishlist;
+
+          // Sync with backend
+          const result = await userSyncService.syncCartAndWishlist(localCart, localWishlist);
+
+          if (result.success) {
+            console.log('✅ Cart and wishlist synced successfully');
+
+            // Update state with merged data from backend
+            if (result.cart) {
+              // Convert backend cart format to frontend format
+              const formattedCart = result.cart.map(item => ({
+                ...item.product,
+                quantity: item.quantity
+              }));
+              setCart(formattedCart);
+              localStorage.setItem('cart', JSON.stringify(formattedCart));
+            }
+
+            if (result.wishlist) {
+              setWishlist(result.wishlist);
+              localStorage.setItem('wishlist', JSON.stringify(result.wishlist));
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error syncing with backend:', error);
+          // Continue with localStorage data if backend sync fails
+        }
+      }
+    };
+
+    syncWithBackend();
+  }, [user?._id]); // Only run when user ID changes (login/logout)
+
   // Logout function
   const handleLogout = () => {
     console.log('🚪 Logging out - Clearing all data...');
@@ -164,11 +208,11 @@ const AppContent = () => {
   const totalSavings = cart.reduce((total, item) => total + ((item.originalPrice - item.price) * item.quantity), 0);
 
   // Cart functions
-  const addToCart = (coin) => {
-    setCart(prev => {
-      // Get product ID - MongoDB products use _id
-      const productId = coin._id || coin.id;
+  const addToCart = async (coin) => {
+    const productId = coin._id || coin.id;
 
+    // Update local state first
+    setCart(prev => {
       const existing = prev.find(item => {
         const itemId = item._id || item.id;
         return itemId === productId;
@@ -188,16 +232,35 @@ const AppContent = () => {
       setShowToast(true);
       return [...prev, { ...coin, quantity: 1 }];
     });
+
+    // Sync with backend if user is logged in
+    if (user && user._id) {
+      try {
+        await userSyncService.addToCart(productId, 1);
+      } catch (error) {
+        console.error('Error syncing cart with backend:', error);
+      }
+    }
   };
 
-  const removeFromCart = (coinId) => {
+  const removeFromCart = async (coinId) => {
+    // Update local state first
     setCart(prev => prev.filter(item => {
       const itemId = item._id || item.id;
       return itemId !== coinId;
     }));
+
+    // Sync with backend if user is logged in
+    if (user && user._id) {
+      try {
+        await userSyncService.removeFromCart(coinId);
+      } catch (error) {
+        console.error('Error syncing cart with backend:', error);
+      }
+    }
   };
 
-  const updateQuantity = (coinId, newQuantity) => {
+  const updateQuantity = async (coinId, newQuantity) => {
     if (newQuantity <= 0) {
       removeFromCart(coinId);
       return;
@@ -205,6 +268,7 @@ const AppContent = () => {
     const coin = cart.find(c => (c._id || c.id) === coinId);
     const maxQuantity = coin ? coin.inStock : 1;
 
+    // Update local state first
     setCart(prev =>
       prev.map(item => {
         const itemId = item._id || item.id;
@@ -213,22 +277,49 @@ const AppContent = () => {
           : item;
       })
     );
+
+    // Sync with backend if user is logged in
+    if (user && user._id) {
+      try {
+        await userSyncService.updateCartItem(coinId, Math.min(newQuantity, maxQuantity));
+      } catch (error) {
+        console.error('Error syncing cart with backend:', error);
+      }
+    }
   };
 
   // Wishlist functions
-  const addToWishlist = (coin) => {
+  const addToWishlist = async (coin) => {
     const coinId = coin._id || coin.id;
+    let isAdding = false;
+
+    // Update local state first
     setWishlist(prev => {
       const existing = prev.find(item => (item._id || item.id) === coinId);
       if (existing) {
         setToastMessage(`${coin.name} removed from wishlist!`);
         setShowToast(true);
+        isAdding = false;
         return prev.filter(item => (item._id || item.id) !== coinId);
       }
       setToastMessage(`${coin.name} added to wishlist!`);
       setShowToast(true);
+      isAdding = true;
       return [...prev, coin];
     });
+
+    // Sync with backend if user is logged in
+    if (user && user._id) {
+      try {
+        if (isAdding) {
+          await userSyncService.addToWishlist(coinId);
+        } else {
+          await userSyncService.removeFromWishlist(coinId);
+        }
+      } catch (error) {
+        console.error('Error syncing wishlist with backend:', error);
+      }
+    }
   };
 
   const isInWishlist = (coinId) => wishlist.some(item => (item._id || item.id) === coinId);

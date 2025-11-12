@@ -23,6 +23,7 @@ import pagePostersRoutes from "./routes/pagePosters.js";
 import bannerRoutes from "./routes/banners.js";
 import filterOptionRoutes from "./routes/filterOptionRoutes.js";
 import paymentRoutes from "./routes/payments.js";
+import userCartRoutes from "./routes/userCart.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -114,6 +115,7 @@ app.use("/api/page-posters", pagePostersRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/filter-options", filterOptionRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/user", userCartRoutes);
 
 // Import email transporter close function
 import { closeTransporter } from './config/email.js';
