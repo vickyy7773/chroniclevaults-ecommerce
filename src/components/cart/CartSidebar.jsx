@@ -23,6 +23,25 @@ const CartSidebar = ({
       return;
     }
 
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+
+    if (!token || !user) {
+      // User not logged in - redirect to authentication page
+      console.log('🚫 User not logged in, redirecting to authentication...');
+      setShowCart(false);
+      navigate('/authentication', {
+        state: {
+          from: '/checkout',
+          cartItems: cart
+        }
+      });
+      return;
+    }
+
+    // User is logged in - proceed to checkout
+    console.log('✅ User logged in, proceeding to checkout');
     setShowCart(false);
     navigate('/checkout', {
       state: {
