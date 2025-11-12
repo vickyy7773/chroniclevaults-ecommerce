@@ -243,7 +243,7 @@ const Blog = () => {
             Chronicle Vaults Blog
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover stories, insights, and expert tips about vintage coin collecting
+            Discover stories, insights, and expert tips about Collection Building and Knowledge gaining about History through Numismatics, Paintings, artifacts etc.
           </p>
         </div>
 
