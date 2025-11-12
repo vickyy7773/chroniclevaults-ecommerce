@@ -7,6 +7,7 @@ import {
   updateProfile,
   updatePassword,
   googleCallback,
+  facebookCallback,
   getAddresses,
   addAddress,
   updateAddress,
@@ -62,6 +63,21 @@ router.get('/google/callback',
     session: false
   }),
   googleCallback
+);
+
+// Facebook OAuth routes
+router.get('/facebook',
+  passport.authenticate('facebook', {
+    scope: ['email', 'public_profile']
+  })
+);
+
+router.get('/facebook/callback',
+  passport.authenticate('facebook', {
+    failureRedirect: process.env.FRONTEND_URL + '/authentication',
+    session: false
+  }),
+  facebookCallback
 );
 
 export default router;

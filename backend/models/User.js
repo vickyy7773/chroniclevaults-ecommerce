@@ -35,6 +35,11 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true // Allow null values
   },
+  facebookId: {
+    type: String,
+    unique: true,
+    sparse: true // Allow null values
+  },
   avatar: {
     type: String
   },

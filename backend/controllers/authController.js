@@ -263,6 +263,29 @@ export const googleCallback = async (req, res) => {
   }
 };
 
+// @desc    Facebook OAuth callback
+// @route   GET /api/auth/facebook/callback
+// @access  Public
+export const facebookCallback = async (req, res) => {
+  try {
+    // Generate token for the authenticated user
+    const token = generateToken(req.user._id);
+
+    // Redirect to frontend with token
+    const frontendURL = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.redirect(`${frontendURL}/auth/facebook/success?token=${token}&user=${encodeURIComponent(JSON.stringify({
+      _id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      avatar: req.user.avatar,
+      role: req.user.role
+    }))}`);
+  } catch (error) {
+    const frontendURL = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.redirect(`${frontendURL}/auth/facebook/error?message=${encodeURIComponent(error.message)}`);
+  }
+};
+
 // @desc    Get user saved addresses
 // @route   GET /api/auth/addresses
 // @access  Private

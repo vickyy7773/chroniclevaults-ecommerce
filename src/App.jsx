@@ -13,6 +13,8 @@ import { userSyncService } from './services';
 const Authentication = lazy(() => import('./pages/auth/Authentication'));
 const GoogleAuthSuccess = lazy(() => import('./pages/auth/GoogleAuthSuccess'));
 const GoogleAuthError = lazy(() => import('./pages/auth/GoogleAuthError'));
+const FacebookAuthSuccess = lazy(() => import('./pages/auth/FacebookAuthSuccess'));
+const FacebookAuthError = lazy(() => import('./pages/auth/FacebookAuthError'));
 const CategoryPage = lazy(() => import('./pages/products/CategoryPage'));
 const Accessories = lazy(() => import('./pages/products/Accessories'));
 const ProductDetail = lazy(() => import('./pages/products/ProductDetail'));
@@ -506,6 +508,8 @@ const AppContent = () => {
             <Route path="/authentication" element={<Authentication setUser={setUser} />} />
             <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
             <Route path="/auth/google/error" element={<GoogleAuthError />} />
+            <Route path="/auth/facebook/success" element={<FacebookAuthSuccess />} />
+            <Route path="/auth/facebook/error" element={<FacebookAuthError />} />
             <Route path="/setup-admin" element={<InitialSetup />} />
 
             {/* Info Pages */}
