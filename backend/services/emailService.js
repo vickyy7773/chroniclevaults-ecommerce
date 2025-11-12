@@ -17,11 +17,17 @@ const generateOTP = () => {
 // Send OTP Email
 export const sendOTPEmail = async (email, purpose = 'signup') => {
   try {
+    console.log(`📧 Starting OTP email process for: ${email}, purpose: ${purpose}`);
+
     // Delete any existing OTPs for this email and purpose
-    await OTP.deleteMany({ email, purpose });
+    const deleted = await OTP.deleteMany({ email, purpose });
+    if (deleted.deletedCount > 0) {
+      console.log(`🗑️ Deleted ${deleted.deletedCount} existing OTP(s) for ${email}`);
+    }
 
     // Generate new OTP
     const otp = generateOTP();
+    console.log(`🔢 Generated OTP for ${email}`);
 
     // Save OTP to database
     const otpDoc = await OTP.create({
@@ -30,8 +36,10 @@ export const sendOTPEmail = async (email, purpose = 'signup') => {
       purpose,
       expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
     });
+    console.log(`💾 OTP saved to database for ${email}, expires at ${otpDoc.expiresAt}`);
 
-    // Send email
+    // Send email with retry logic already built into sendEmail function
+    console.log(`📤 Sending OTP email to ${email}...`);
     const result = await sendEmail({
       email,
       subject: `Your OTP for ${purpose === 'signup' ? 'Sign Up' : 'Password Reset'} - ${otp}`,
@@ -39,19 +47,22 @@ export const sendOTPEmail = async (email, purpose = 'signup') => {
     });
 
     if (result.success) {
+      console.log(`✅ OTP email sent successfully to ${email}`);
       return {
         success: true,
-        message: 'OTP sent successfully',
+        message: 'OTP sent successfully to your email. Please check your inbox and spam folder.',
         expiresAt: otpDoc.expiresAt
       };
     } else {
       // If email failed, delete the OTP
+      console.error(`❌ Email sending failed for ${email}, deleting OTP from database`);
       await OTP.findByIdAndDelete(otpDoc._id);
-      throw new Error('Failed to send OTP email');
+      throw new Error(`Failed to send OTP email: ${result.error || 'Unknown error'}`);
     }
   } catch (error) {
-    console.error('Send OTP Error:', error);
-    throw error;
+    console.error('❌ Send OTP Error:', error.message);
+    console.error('Error stack:', error.stack);
+    throw new Error(`Failed to send OTP: ${error.message}`);
   }
 };
 

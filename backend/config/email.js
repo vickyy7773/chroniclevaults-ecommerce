@@ -1,7 +1,13 @@
 import nodemailer from 'nodemailer';
 
-// Create transporter
+// Create a single transporter instance with connection pooling
+let transporter = null;
+
 const createTransporter = () => {
+  if (transporter) {
+    return transporter;
+  }
+
   const config = {
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.EMAIL_PORT) || 587,
@@ -10,44 +16,115 @@ const createTransporter = () => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD
     },
+    pool: true, // Use connection pool
+    maxConnections: 5, // Maximum simultaneous connections
+    maxMessages: 100, // Maximum messages per connection
+    rateDelta: 1000, // Time window for rate limiting (1 second)
+    rateLimit: 5, // Max 5 messages per rateDelta
     tls: {
-      rejectUnauthorized: false, // Accept self-signed certificates
+      rejectUnauthorized: false,
       minVersion: 'TLSv1.2'
     },
-    debug: true, // Enable debug output
-    logger: true // Log to console
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 5000, // 5 seconds
+    socketTimeout: 15000, // 15 seconds
+    debug: false, // Disable verbose debug in production
+    logger: false // Disable logging in production
   };
 
-  console.log('📧 Email Transport Config:', {
+  console.log('📧 Creating Email Transporter:', {
     host: config.host,
     port: config.port,
     secure: config.secure,
-    user: config.auth.user
+    user: config.auth.user,
+    pooling: config.pool
   });
 
-  return nodemailer.createTransport(config);
+  transporter = nodemailer.createTransport(config);
+
+  // Verify connection on startup
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('❌ Email transporter verification failed:', error);
+      transporter = null; // Reset to retry on next send
+    } else {
+      console.log('✅ Email transporter ready to send emails');
+    }
+  });
+
+  return transporter;
 };
 
-// Send email function
+// Retry logic wrapper
+const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      console.log(`⚠️ Attempt ${attempt}/${maxRetries} failed:`, error.message);
+
+      if (attempt === maxRetries) {
+        throw error;
+      }
+
+      // Exponential backoff: wait longer between retries
+      const waitTime = delay * Math.pow(2, attempt - 1);
+      console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+
+      // Reset transporter on connection errors
+      if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
+        console.log('🔄 Resetting email transporter...');
+        transporter = null;
+      }
+    }
+  }
+};
+
+// Send email function with retry logic
 export const sendEmail = async (options) => {
   try {
-    const transporter = createTransporter();
+    console.log(`📤 Attempting to send email to: ${options.email}`);
 
-    const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME || 'E-Commerce'} <${process.env.EMAIL_USER}>`,
-      to: options.email,
-      subject: options.subject,
-      html: options.html,
-      text: options.text
-    };
+    const result = await retryOperation(async () => {
+      const emailTransporter = createTransporter();
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent:', info.messageId);
-    return { success: true, messageId: info.messageId };
+      if (!emailTransporter) {
+        throw new Error('Failed to create email transporter');
+      }
+
+      const mailOptions = {
+        from: `${process.env.EMAIL_FROM_NAME || 'Chronicle Vaults'} <${process.env.EMAIL_USER}>`,
+        to: options.email,
+        subject: options.subject,
+        html: options.html,
+        text: options.text
+      };
+
+      const info = await emailTransporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully:', info.messageId);
+      return { success: true, messageId: info.messageId };
+    });
+
+    return result;
   } catch (error) {
-    console.error('❌ Email error:', error);
+    console.error('❌ Failed to send email after all retries:', error.message);
+    console.error('Error details:', {
+      code: error.code,
+      command: error.command,
+      response: error.response
+    });
     return { success: false, error: error.message };
   }
 };
 
-export default { sendEmail };
+// Graceful shutdown - close transporter
+export const closeTransporter = async () => {
+  if (transporter) {
+    console.log('📧 Closing email transporter...');
+    transporter.close();
+    transporter = null;
+  }
+};
+
+export default { sendEmail, closeTransporter };
