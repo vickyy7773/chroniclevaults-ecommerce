@@ -28,12 +28,18 @@ const createTransporter = () => {
     logger: false // Disable logging in production
   };
 
-  // Only add auth if credentials are provided (skip for localhost without auth)
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+  // Only add auth if BOTH credentials are provided AND not empty
+  const emailUser = process.env.EMAIL_USER?.trim();
+  const emailPass = process.env.EMAIL_PASSWORD?.trim();
+
+  if (emailUser && emailPass) {
     config.auth = {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD
+      user: emailUser,
+      pass: emailPass
     };
+    console.log('🔐 SMTP authentication enabled');
+  } else {
+    console.log('📧 SMTP without authentication (localhost mode)');
   }
 
   console.log('📧 Creating Email Transporter:', {
