@@ -135,7 +135,27 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
   };
 
   const handleBuyNow = () => {
-    // Navigate to checkout with product details
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+
+    if (!token || !user) {
+      // User not logged in - redirect to authentication page
+      console.log('🚫 User not logged in, redirecting to authentication...');
+      navigate('/authentication', {
+        state: {
+          from: window.location.pathname,
+          cartItems: [{
+            ...product,
+            quantity: quantity
+          }]
+        }
+      });
+      return;
+    }
+
+    // User is logged in - navigate to checkout with product details
+    console.log('✅ User logged in, proceeding to checkout');
     navigate('/checkout', {
       state: {
         cartItems: [{
