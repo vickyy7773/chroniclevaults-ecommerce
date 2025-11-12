@@ -98,9 +98,17 @@ const BuyingWithUs = () => {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="border border-gray-200 rounded-lg p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Authentication</h3>
-            <p className="text-gray-700">
+            <p className="text-gray-700 mb-4">
               Every item comes with a certificate of authenticity. Rare items include professional grading from recognized services (PCGS, NGC, PMG).
             </p>
+            <div className="p-4 bg-red-50 rounded-lg border border-red-300">
+              <div className="flex items-start">
+                <Shield className="w-5 h-5 text-red-600 mr-3 mt-1 flex-shrink-0" />
+                <p className="text-red-900 text-sm font-medium">
+                  <strong>Note:</strong> Professional grading and certification services are available on a chargeable basis if requested by the buyer.
+                </p>
+              </div>
+            </div>
           </div>
           <div className="border border-gray-200 rounded-lg p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Condition Grading</h3>
