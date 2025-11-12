@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Heart, ShoppingCart, Minus, Plus, Truck, Shield, RefreshCw, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
+import { Heart, ShoppingCart, Minus, Plus, Truck, Shield, RefreshCw, ChevronLeft, ChevronRight, Share2, Facebook, Twitter, Linkedin, MessageCircle, Copy, Check, X } from 'lucide-react';
 import { API_BASE_URL } from '../../constants/api';
 import { getProductUrl } from '../../utils/productUrl';
 
@@ -17,6 +17,8 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
   const [mediaItems, setMediaItems] = useState([]); // Images + Video combined
   const [showZoom, setShowZoom] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     fetchProductDetails();
@@ -159,6 +161,70 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
     setZoomPosition({ x, y });
   };
 
+  // Sharing Functions
+  const getShareUrl = () => {
+    return window.location.href;
+  };
+
+  const getShareText = () => {
+    return `Check out this amazing ${product?.name || 'product'} at Chronicle Vaults!`;
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product?.name || 'Product',
+          text: getShareText(),
+          url: getShareUrl(),
+        });
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error('Error sharing:', error);
+        }
+      }
+    } else {
+      setShowShareModal(true);
+    }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(getShareUrl());
+    setLinkCopied(true);
+    setTimeout(() => {
+      setLinkCopied(false);
+    }, 2000);
+  };
+
+  const shareOnFacebook = () => {
+    const url = encodeURIComponent(getShareUrl());
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=400');
+  };
+
+  const shareOnTwitter = () => {
+    const url = encodeURIComponent(getShareUrl());
+    const text = encodeURIComponent(getShareText());
+    window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank', 'width=600,height=400');
+  };
+
+  const shareOnLinkedIn = () => {
+    const url = encodeURIComponent(getShareUrl());
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank', 'width=600,height=400');
+  };
+
+  const shareOnWhatsApp = () => {
+    const url = encodeURIComponent(getShareUrl());
+    const text = encodeURIComponent(getShareText());
+    window.open(`https://wa.me/?text=${text}%20${url}`, '_blank');
+  };
+
+  const shareOnPinterest = () => {
+    const url = encodeURIComponent(getShareUrl());
+    const media = encodeURIComponent(product?.images?.[0] || '');
+    const description = encodeURIComponent(product?.name || 'Product');
+    window.open(`https://pinterest.com/pin/create/button/?url=${url}&media=${media}&description=${description}`, '_blank', 'width=600,height=400');
+  };
+
 
   if (loading) {
     return (
@@ -291,9 +357,106 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
               )}
 
               {/* Share Button */}
-              <button className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors">
-                <Share2 size={20} />
-              </button>
+              <div className="absolute top-4 right-4">
+                <button
+                  onClick={handleNativeShare}
+                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                >
+                  <Share2 size={20} />
+                </button>
+
+                {/* Share Modal */}
+                {showShareModal && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowShareModal(false)}>
+                    <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xl font-bold text-gray-900">Share Product</h3>
+                        <button
+                          onClick={() => setShowShareModal(false)}
+                          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+
+                      <p className="text-gray-600 mb-6">Share this product with your friends</p>
+
+                      {/* Social Media Buttons */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <button
+                          onClick={shareOnFacebook}
+                          className="flex items-center gap-3 p-3 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+                        >
+                          <Facebook size={20} fill="currentColor" />
+                          <span className="font-semibold">Facebook</span>
+                        </button>
+
+                        <button
+                          onClick={shareOnTwitter}
+                          className="flex items-center gap-3 p-3 border-2 border-sky-500 text-sky-500 rounded-lg hover:bg-sky-50 transition-colors"
+                        >
+                          <Twitter size={20} fill="currentColor" />
+                          <span className="font-semibold">Twitter</span>
+                        </button>
+
+                        <button
+                          onClick={shareOnWhatsApp}
+                          className="flex items-center gap-3 p-3 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors"
+                        >
+                          <MessageCircle size={20} />
+                          <span className="font-semibold">WhatsApp</span>
+                        </button>
+
+                        <button
+                          onClick={shareOnLinkedIn}
+                          className="flex items-center gap-3 p-3 border-2 border-blue-700 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors"
+                        >
+                          <Linkedin size={20} fill="currentColor" />
+                          <span className="font-semibold">LinkedIn</span>
+                        </button>
+                      </div>
+
+                      {/* Pinterest Button - Full Width */}
+                      <button
+                        onClick={shareOnPinterest}
+                        className="w-full flex items-center justify-center gap-3 p-3 mb-4 border-2 border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
+                        </svg>
+                        <span className="font-semibold">Pinterest</span>
+                      </button>
+
+                      {/* Copy Link */}
+                      <div className="border-t pt-4">
+                        <p className="text-sm text-gray-600 mb-2">Or copy link</p>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={getShareUrl()}
+                            readOnly
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm"
+                          />
+                          <button
+                            onClick={handleCopyLink}
+                            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                              linkCopied
+                                ? 'bg-green-600 text-white'
+                                : 'bg-amber-600 text-white hover:bg-amber-700'
+                            }`}
+                          >
+                            {linkCopied ? (
+                              <Check size={20} />
+                            ) : (
+                              <Copy size={20} />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Thumbnail Gallery (Images + Video) */}
