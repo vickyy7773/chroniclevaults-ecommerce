@@ -125,10 +125,26 @@ const AppContent = () => {
 
   // Logout function
   const handleLogout = () => {
+    // Clear all user data and states
     setUser(null);
+    setCart([]);
+    setWishlist([]);
+    setComparisonCoins([]);
+
+    // Clear all localStorage items
     localStorage.removeItem('user');
-    setToastMessage('Logged out successfully!');
+    localStorage.removeItem('token');
+    localStorage.removeItem('wishlist');
+
+    // Clear any sessionStorage
+    sessionStorage.clear();
+
+    // Show logout message
+    setToastMessage('Logged out successfully! All data cleared.');
     setShowToast(true);
+
+    // Redirect to home page
+    window.location.href = '/';
   };
 
   // Calculate cart totals

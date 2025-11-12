@@ -39,8 +39,20 @@ export const authService = {
       console.error('Logout API error:', error);
       // Continue with logout even if API fails
     } finally {
+      // Clear all localStorage items
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('wishlist');
+
+      // Clear all sessionStorage
+      sessionStorage.clear();
+
+      // Clear all cookies
+      document.cookie.split(";").forEach((c) => {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
     }
   },
 
