@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Sparkles, ChevronLeft, ChevronRight, Eye, Heart, ShoppingCart } from 'lucide-react';
 import { getProductUrl } from '../../utils/productUrl';
 
-const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
+const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView, addToWishlist, isInWishlist }) => {
   const scrollContainerRef = useRef(null);
   const [hoveredCoin, setHoveredCoin] = React.useState(null);
   const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
@@ -178,6 +178,21 @@ const FeaturedCarousel = ({ featuredCoins, addToCart, openQuickView }) => {
                         <ShoppingCart className="w-2.5 h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5" />
                         <span className="hidden sm:inline">Add to Cart</span>
                         <span className="sm:hidden">Add</span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          addToWishlist(coin);
+                        }}
+                        className={`p-1.5 md:p-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
+                          isInWishlist(coin._id)
+                            ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                        aria-label="Add to wishlist"
+                      >
+                        <Heart className={`w-3 h-3 md:w-4 md:h-4 ${isInWishlist(coin._id) ? 'fill-current' : ''}`} />
                       </button>
                     </div>
                   </div>
