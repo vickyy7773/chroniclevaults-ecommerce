@@ -12,10 +12,6 @@ const createTransporter = () => {
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.EMAIL_PORT) || 587,
     secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD
-    },
     pool: true, // Use connection pool
     maxConnections: 5, // Maximum simultaneous connections
     maxMessages: 100, // Maximum messages per connection
@@ -32,11 +28,20 @@ const createTransporter = () => {
     logger: false // Disable logging in production
   };
 
+  // Only add auth if credentials are provided (skip for localhost without auth)
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+    config.auth = {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD
+    };
+  }
+
   console.log('📧 Creating Email Transporter:', {
     host: config.host,
     port: config.port,
     secure: config.secure,
-    user: config.auth.user,
+    auth: config.auth ? 'enabled' : 'disabled (localhost)',
+    user: config.auth?.user || 'none',
     pooling: config.pool
   });
 
