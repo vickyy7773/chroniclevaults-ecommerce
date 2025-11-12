@@ -36,7 +36,7 @@ const FAQ = () => {
         },
         {
           question: 'How long does it take to get a refund?',
-          answer: 'Once we receive and inspect your return, refunds are processed within 5-7 business days. The time it takes for the refund to appear in your account depends on your payment method: Credit/Debit cards take 5-7 days, PayPal takes 3-5 days, and bank transfers take 7-10 days.'
+          answer: 'Once we receive and inspect your return, refunds are processed within 5-7 business days. The time it takes for the refund to appear in your account depends on your payment method: Credit/Debit cards take 5-7 days, UPI/Wallets take 3-5 days, and bank transfers take 7-10 days.'
         },
         {
           question: 'Do I have to pay for return shipping?',
@@ -78,7 +78,7 @@ const FAQ = () => {
         },
         {
           question: 'What payment methods do you accept?',
-          answer: 'We accept all major credit cards (Visa, MasterCard, American Express, Discover), PayPal, Apple Pay, Google Pay, and bank transfers for large orders. All payments are processed securely with 256-bit SSL encryption.'
+          answer: 'We accept all Indian standard payment methods including Credit/Debit Cards (Visa, Mastercard, RuPay), UPI (Google Pay, PhonePe, Paytm), Net Banking (all major Indian banks), and Digital Wallets. All payments are processed securely with 256-bit SSL encryption through Razorpay payment gateway.'
         },
         {
           question: 'Is it safe to use my credit card on your site?',

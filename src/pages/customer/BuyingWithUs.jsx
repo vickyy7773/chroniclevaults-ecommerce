@@ -59,23 +59,23 @@ const BuyingWithUs = () => {
             Payment Methods
           </h2>
           <div className="bg-white rounded-lg p-8 shadow-md">
-            <p className="text-gray-700 mb-6">We accept the following payment methods:</p>
+            <p className="text-gray-700 mb-6">We accept all Indian standard payment methods:</p>
             <ul className="space-y-3 text-gray-700">
               <li className="flex items-center">
                 <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                Visa, Mastercard, American Express, Discover
+                Credit Cards / Debit Cards (Visa, Mastercard, RuPay)
               </li>
               <li className="flex items-center">
                 <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                PayPal
+                UPI (Google Pay, PhonePe, Paytm, etc.)
               </li>
               <li className="flex items-center">
                 <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                Wire Transfer (for high-value purchases)
+                Net Banking (All major Indian banks)
               </li>
               <li className="flex items-center">
                 <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                Cryptocurrency (Bitcoin, Ethereum)
+                Wallets (Paytm, PhonePe, Amazon Pay)
               </li>
             </ul>
             <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
