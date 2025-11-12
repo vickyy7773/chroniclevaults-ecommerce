@@ -47,18 +47,30 @@ const Checkout = () => {
 
   const [errors, setErrors] = useState({});
 
-  // Check if user is logged in - redirect if not
+  // Check if user is logged in IMMEDIATELY - redirect if not (before any data loading)
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      // User not logged in, redirect to home page
+    const user = localStorage.getItem('user');
+
+    console.log('🔐 Checkout Auth Check - Token:', !!token, 'User:', !!user);
+
+    if (!token || !user) {
+      // User not logged in, redirect to home page immediately
       console.log('🚫 User not logged in, redirecting to home...');
       navigate('/', { replace: true });
+      return;
     }
   }, [navigate]);
 
   // Fetch saved addresses and load Razorpay script on component mount
   useEffect(() => {
+    // Double check authentication before fetching data
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.log('🚫 No token found, skipping data fetch');
+      return;
+    }
+
     fetchSavedAddresses();
 
     // Load Razorpay script
@@ -801,6 +813,7 @@ const Checkout = () => {
                       placeholder="Full Name *"
                       value={formData.fullName}
                       onChange={handleInputChange}
+                      autoComplete="off"
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                         errors.fullName ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -815,6 +828,7 @@ const Checkout = () => {
                       placeholder="Email *"
                       value={formData.email}
                       onChange={handleInputChange}
+                      autoComplete="off"
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                         errors.email ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -840,6 +854,7 @@ const Checkout = () => {
                           placeholder="10 digit mobile number"
                           value={formData.phone}
                           onChange={handleInputChange}
+                          autoComplete="off"
                           className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                             errors.phone ? 'border-red-500' : 'border-gray-300'
                           }`}
@@ -856,6 +871,7 @@ const Checkout = () => {
                       placeholder="Address (House No, Building, Street) *"
                       value={formData.address}
                       onChange={handleInputChange}
+                      autoComplete="off"
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                         errors.address ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -871,6 +887,7 @@ const Checkout = () => {
                         placeholder="City / District *"
                         value={formData.city}
                         onChange={handleInputChange}
+                        autoComplete="off"
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                           errors.city ? 'border-red-500' : 'border-gray-300'
                         }`}
@@ -885,6 +902,7 @@ const Checkout = () => {
                         placeholder="State *"
                         value={formData.state}
                         onChange={handleInputChange}
+                        autoComplete="off"
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                           errors.state ? 'border-red-500' : 'border-gray-300'
                         }`}
@@ -900,6 +918,7 @@ const Checkout = () => {
                       placeholder="Pincode *"
                       value={formData.pincode}
                       onChange={handleInputChange}
+                      autoComplete="off"
                       className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 ${
                         errors.pincode ? 'border-red-500' : 'border-gray-300'
                       }`}

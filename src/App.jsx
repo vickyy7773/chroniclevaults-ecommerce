@@ -125,6 +125,8 @@ const AppContent = () => {
 
   // Logout function
   const handleLogout = () => {
+    console.log('🚪 Logging out - Clearing all data...');
+
     // Clear all user data and states
     setUser(null);
     setCart([]);
@@ -132,19 +134,28 @@ const AppContent = () => {
     setComparisonCoins([]);
 
     // Clear all localStorage items
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('wishlist');
+    localStorage.clear(); // Clear everything instead of removing items one by one
 
     // Clear any sessionStorage
     sessionStorage.clear();
+
+    // Clear all cookies
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+
+    console.log('✅ All data cleared. Redirecting to home...');
 
     // Show logout message
     setToastMessage('Logged out successfully! All data cleared.');
     setShowToast(true);
 
-    // Redirect to home page
-    window.location.href = '/';
+    // Small delay to ensure storage is cleared before redirect
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 100);
   };
 
   // Calculate cart totals
