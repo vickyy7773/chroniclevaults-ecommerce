@@ -148,7 +148,7 @@ const BuyingWithUs = () => {
               Need Help?
             </h2>
             <p className="text-gray-700 mb-6 max-w-2xl mx-auto">
-              Our expert team is here to assist you with any questions about your purchase. Contact us via phone, email, or live chat.
+              Our expert team is here to assist you with any questions about your purchase. Contact us via phone or email.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="/contact-us" className="inline-block bg-gray-900 hover:bg-amber-600 text-white px-8 py-3 rounded-lg font-semibold transition-all">
