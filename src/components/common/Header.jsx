@@ -140,8 +140,8 @@ const Header = ({
         <div className={`block border-b border-neutral-300/30 bg-white/20 transition-all duration-300 ${
           scrolled ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-20 opacity-100'
         }`}>
-          <div className="w-full">
-            <div className="flex flex-col lg:flex-row items-center justify-between py-2 text-xs gap-2 lg:gap-0">
+          <div className="w-full px-4 lg:px-6 xl:px-8">
+            <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row items-center justify-between py-2 text-xs gap-2 lg:gap-0">
               <div className="flex-1 overflow-hidden w-full lg:max-w-3xl px-3 lg:ml-5">
                 <div className="flex items-center space-x-1.5 lg:space-x-2 text-red-600">
                   <AlertTriangle className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0 text-red-600" />
@@ -186,10 +186,10 @@ const Header = ({
         <div className={`w-full transition-all duration-300 ${
           scrolled ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-40 opacity-100'
         }`}>
-          <div className="w-full py-2">
-            <div className="flex items-center justify-between">
+          <div className="w-full py-3 px-4 lg:px-6 xl:px-8">
+            <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-3 md:gap-6">
               {/* Left: Menu + Logo */}
-              <div className="flex items-center space-x-2 md:space-x-4 ml-5">
+              <div className="flex items-center space-x-2 md:space-x-4">
                 <button
                   onClick={() => setShowMobileMenu(!showMobileMenu)}
                   className="lg:hidden text-neutral-900 hover:text-accent-600 p-2 -ml-2 hover:bg-primary-100 rounded-xl transition-all hover:scale-110"
@@ -204,7 +204,7 @@ const Header = ({
               </div>
 
               {/* Right: Actions */}
-              <div className="flex items-center space-x-2 md:space-x-4 lg:space-x-5 mr-5">
+              <div className="flex items-center space-x-2 md:space-x-4 lg:space-x-5">
                 {/* Mobile Search Toggle - Hidden on info pages and home page */}
                 {!hideShoppingFeatures && !isHomePage && (
                   <button
@@ -335,9 +335,9 @@ const Header = ({
 
         {/* Desktop Navigation - Always visible */}
         <div className="w-full">
-          <nav className="hidden lg:block py-3 border-t border-neutral-300/30 bg-white/10">
-            <div className="flex items-center justify-between">
-              <div className="flex space-x-6 xl:space-x-8 ml-5">
+          <nav className="hidden lg:block py-3 border-t border-neutral-300/30 bg-white/10 px-4 lg:px-6 xl:px-8">
+            <div className="max-w-[1400px] mx-auto flex items-center justify-between gap-6">
+              <div className="flex space-x-6 xl:space-x-8">
                 {navigationLinks.map((link) => (
                   <div key={link.to} className="relative group">
                     <Link
