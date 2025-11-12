@@ -46,7 +46,7 @@ const BuyingWithUs = () => {
             </div>
             <h3 className="text-2xl font-semibold text-gray-900 mb-4">3. Fast Delivery</h3>
             <p className="text-gray-700">
-              Your items are carefully packaged and shipped with tracking. Free shipping on orders over ₹100.
+              Your items are carefully packaged and shipped with tracking.
             </p>
           </div>
         </div>
