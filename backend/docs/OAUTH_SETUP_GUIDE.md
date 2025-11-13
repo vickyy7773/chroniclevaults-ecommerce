@@ -2,9 +2,25 @@
 
 This guide will help you set up Google and Facebook OAuth login for chroniclevaults.com
 
+## Quick Reference
+
+### Google OAuth (✅ LIVE)
+- Status: **Working on production**
+- Client ID: `586885513812-vi86jm2qaf780gu96vdiadda6j3a1tio.apps.googleusercontent.com`
+- Callback URL: `https://chroniclevaults.com/api/auth/google/callback`
+- Console: https://console.cloud.google.com/apis/credentials
+
+### Facebook OAuth (⚠️ Pending Setup)
+- Status: **Code ready, needs credentials**
+- Callback URL: `https://chroniclevaults.com/api/auth/facebook/callback`
+- Console: https://developers.facebook.com/apps/
+- Location in .env: Lines 38-58
+- **Action Required**: Add `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` to .env
+
 ## Prerequisites
 - Access to server .env file at: `/home/chroniclevaults.com/app/backend/.env`
-- PM2 restart access
+- PM2 restart access: `pm2 restart chroniclevaults-api`
+- Server IP: `72.60.202.163`
 
 ---
 
@@ -171,12 +187,21 @@ Look for: `✅ Facebook OAuth enabled`
 
 ## Current Status
 
-As of deployment, OAuth login is:
-- ✅ **Fully implemented** (frontend + backend)
-- ⚠️  **Credentials not configured** (need to add to .env)
-- 🔴 **Currently disabled** (waiting for credentials)
+**Last Updated:** November 13, 2025
 
-Once credentials are added and server restarted, OAuth login will work immediately!
+### Google OAuth:
+- ✅ **Fully implemented** (frontend + backend)
+- ✅ **Credentials configured** in production .env
+- ✅ **LIVE and WORKING** on https://chroniclevaults.com
+- ✅ Production OAuth enabled successfully!
+
+### Facebook OAuth:
+- ✅ **Fully implemented** (frontend + backend code ready)
+- ⚠️  **Credentials not configured** (placeholders in .env)
+- 🔴 **Currently disabled** (waiting for Facebook App credentials)
+- 📝 **Ready to go**: Just add credentials to .env and restart server!
+
+Once Facebook credentials are added to .env and server is restarted, Facebook OAuth will work immediately!
 
 ---
 
