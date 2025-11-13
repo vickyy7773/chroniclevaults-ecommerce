@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Calendar, User, ArrowRight, Clock, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import { blogService } from '../services';
@@ -7,11 +7,9 @@ const Blog = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentPage, setCurrentPage] = useState(1);
-  const [expandedPosts, setExpandedPosts] = useState([]);
   const [blogPosts, setBlogPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const postsPerPage = 5;
-  const blogRefs = useRef({});
 
   useEffect(() => {
     fetchBlogs();
@@ -64,62 +62,18 @@ const Blog = () => {
     }
   };
 
-  // Auto-expand blog post if coming from "Today in History" banner
+  // Auto-navigate to blog detail if coming from "Today in History" banner
   useEffect(() => {
-    if (location.state?.expandBlogId && blogPosts.length > 0) {
+    if (location.state?.expandBlogId) {
       const blogId = location.state.expandBlogId;
-
-      // Find the blog in the list
-      const blogIndex = blogPosts.findIndex(blog => blog.id === blogId);
-
-      if (blogIndex !== -1) {
-        // Calculate which page the blog is on
-        const pageNumber = Math.floor(blogIndex / postsPerPage) + 1;
-
-        // Set the current page
-        if (pageNumber !== currentPage) {
-          setCurrentPage(pageNumber);
-        }
-
-        // Expand the blog post
-        setExpandedPosts([blogId]);
-
-        // Increment view count
-        blogService.getBlogById(blogId).catch(err => console.error('Error incrementing view:', err));
-
-        // Scroll to the blog post after a short delay
-        setTimeout(() => {
-          if (blogRefs.current[blogId]) {
-            blogRefs.current[blogId].scrollIntoView({
-              behavior: 'smooth',
-              block: 'start'
-            });
-          }
-        }, 300);
-      }
-
-      // Clear the state to prevent auto-expansion on subsequent visits
-      window.history.replaceState({}, document.title);
+      // Navigate to the blog detail page
+      navigate(`/blog/${blogId}`, { replace: true });
     }
-  }, [blogPosts, location.state]);
+  }, [location.state, navigate]);
 
-  const toggleExpand = async (postId) => {
-    // If expanding (not collapsing), increment views
-    if (!expandedPosts.includes(postId)) {
-      try {
-        // Fetch blog by ID to increment views
-        await blogService.getBlogById(postId);
-        console.log('View counted for blog:', postId);
-      } catch (error) {
-        console.error('Error incrementing view:', error);
-      }
-    }
-
-    setExpandedPosts(prev =>
-      prev.includes(postId)
-        ? prev.filter(id => id !== postId)
-        : [...prev, postId]
-    );
+  const handleReadMore = (postId) => {
+    // Navigate to individual blog page
+    navigate(`/blog/${postId}`);
   };
 
   // Sample/Fallback blog posts
@@ -252,12 +206,11 @@ const Blog = () => {
           {currentPosts.map((post, index) => (
             <div
               key={post.id}
-              ref={(el) => (blogRefs.current[post.id] = el)}
               className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200 hover:border-amber-400 hover:shadow-2xl transition-all group"
             >
-              <div className={`grid ${expandedPosts.includes(post.id) ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} gap-0 transition-all duration-500`}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
                 {/* Image Side */}
-                <div className={`relative overflow-hidden ${expandedPosts.includes(post.id) ? 'h-80' : 'h-64 md:h-auto'}`}>
+                <div className="relative overflow-hidden h-64 md:h-auto">
                   <img
                     src={post.image}
                     alt={post.title}
@@ -266,7 +219,7 @@ const Blog = () => {
                 </div>
 
                 {/* Content Side */}
-                <div className={`p-8 flex flex-col ${expandedPosts.includes(post.id) ? '' : 'justify-center'}`}>
+                <div className="p-8 flex flex-col justify-center">
                   <div className="flex items-center gap-3 mb-3 text-sm text-gray-600">
                     <div className="flex items-center gap-1">
                       <Calendar size={16} className="text-amber-600" />
@@ -284,13 +237,7 @@ const Blog = () => {
                   </h2>
 
                   <div className="text-gray-600 mb-6 leading-relaxed">
-                    {expandedPosts.includes(post.id) ? (
-                      <div className="whitespace-pre-line">
-                        {post.fullContent}
-                      </div>
-                    ) : (
-                      <p className="line-clamp-3">{post.excerpt}</p>
-                    )}
+                    <p className="line-clamp-3">{post.excerpt}</p>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -303,10 +250,10 @@ const Blog = () => {
                       </div>
                     </div>
                     <button
-                      onClick={() => toggleExpand(post.id)}
+                      onClick={() => handleReadMore(post.id)}
                       className="flex items-center gap-2 bg-amber-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-amber-700 transition-all shadow-md hover:scale-105"
                     >
-                      {expandedPosts.includes(post.id) ? 'Read Less' : 'Read More'}
+                      Read More
                       <ArrowRight size={18} />
                     </button>
                   </div>

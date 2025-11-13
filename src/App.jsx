@@ -26,6 +26,7 @@ const AboutUs = lazy(() => import('./pages/info/AboutUs'));
 const FAQ = lazy(() => import('./pages/info/FAQ'));
 const ContactUs = lazy(() => import('./pages/info/ContactUs'));
 const Blog = lazy(() => import('./pages/Blog'));
+const BlogDetail = lazy(() => import('./pages/BlogDetail'));
 
 // Customer Pages
 const BuyingWithUs = lazy(() => import('./pages/customer/BuyingWithUs'));
@@ -517,6 +518,7 @@ const AppContent = () => {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/contact-us" element={<ContactUs />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:id" element={<BlogDetail />} />
 
             {/* Customer Pages */}
             <Route path="/buying-with-us" element={<BuyingWithUs />} />
