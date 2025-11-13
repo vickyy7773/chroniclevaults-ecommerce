@@ -71,7 +71,7 @@ const TodayInHistoryBanner = () => {
               <img
                 src={latestBlog.image}
                 alt={latestBlog.title}
-                className="w-full h-auto md:absolute md:inset-0 md:w-full md:h-full md:object-contain object-center group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-auto md:absolute md:inset-0 md:w-full md:h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
               />
             </div>
 
