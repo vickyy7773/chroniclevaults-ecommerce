@@ -46,8 +46,7 @@ const AddEditProduct = () => {
   const [denominations, setDenominations] = useState([]);
   const [metals, setMetals] = useState([]);
   const [rarities, setRarities] = useState([]);
-
-  const conditions = [
+  const [conditions, setConditions] = useState([
     'Poor',
     'Fair',
     'Good',
@@ -59,7 +58,7 @@ const AddEditProduct = () => {
     'Uncirculated',
     'Mint State',
     'Proof'
-  ];
+  ]);
 
   useEffect(() => {
     fetchCategories();
@@ -103,6 +102,10 @@ const AddEditProduct = () => {
         setDenominations(data.data.denomination || []);
         setMetals(data.data.metal || []);
         setRarities(data.data.rarity || []);
+        setConditions(data.data.condition || [
+          'Poor', 'Fair', 'Good', 'Very Good', 'Fine', 'Very Fine',
+          'Extremely Fine', 'About Uncirculated', 'Uncirculated', 'Mint State', 'Proof'
+        ]);
       }
     } catch (error) {
       console.error('Failed to fetch filter options:', error);
@@ -110,6 +113,7 @@ const AddEditProduct = () => {
       setDenominations(['1 Pice', '1/2 Pice', '1 Anna', '2 Annas', '4 Annas', '8 Annas', '1 Rupee', '2 Rupees', '5 Rupees', '10 Rupees']);
       setMetals(['Gold', 'Silver', 'Copper', 'Bronze', 'Nickel', 'Brass']);
       setRarities(['Common', 'Uncommon', 'Rare', 'Very Rare', 'Extremely Rare']);
+      setConditions(['Poor', 'Fair', 'Good', 'Very Good', 'Fine', 'Very Fine', 'Extremely Fine', 'About Uncirculated', 'Uncirculated', 'Mint State', 'Proof']);
     }
   };
 
