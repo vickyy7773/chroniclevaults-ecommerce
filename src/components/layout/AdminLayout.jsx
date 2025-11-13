@@ -22,6 +22,7 @@ import {
   Activity
 } from 'lucide-react';
 import usePermissions from '../../hooks/usePermissions';
+import posterImage from '../../assets/poster.jpg';
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -233,12 +234,26 @@ const AdminLayout = () => {
           {/* Logo */}
           <div className="h-20 flex items-center justify-between px-5 border-b border-gray-200 dark:border-gray-800">
             {sidebarOpen && (
-              <div>
-                <h1 className="text-2xl font-black text-gray-900 dark:text-white">
-                  Vintage<span className="text-accent-600">Coin</span>
-                </h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Admin Dashboard</p>
+              <div className="flex items-center gap-3">
+                <img
+                  src={posterImage}
+                  alt="Chronicle Vaults Logo"
+                  className="w-10 h-10 rounded-lg object-cover"
+                />
+                <div>
+                  <h1 className="text-xl font-black text-gray-900 dark:text-white">
+                    Chronicle <span className="text-accent-600">Vaults</span>
+                  </h1>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Admin Dashboard</p>
+                </div>
               </div>
+            )}
+            {!sidebarOpen && (
+              <img
+                src={posterImage}
+                alt="Chronicle Vaults Logo"
+                className="w-10 h-10 rounded-lg object-cover mx-auto"
+              />
             )}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -408,7 +423,7 @@ const AdminLayout = () => {
                     {user?.name || 'Admin User'}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {user?.email || 'admin@vintagecoin.com'}
+                    {user?.email || 'admin@chroniclevaults.com'}
                   </p>
                   {user?.role?.displayName && (
                     <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">

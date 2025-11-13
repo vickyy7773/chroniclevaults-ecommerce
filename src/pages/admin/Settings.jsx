@@ -4,8 +4,8 @@ import { Save, Store, Bell, Lock, Palette, Globe } from 'lucide-react';
 const Settings = () => {
   const [settings, setSettings] = useState({
     // Store Settings
-    storeName: 'VintageCoin Store',
-    storeEmail: 'admin@vintagecoin.com',
+    storeName: 'Chronicle Vaults',
+    storeEmail: 'admin@chroniclevaults.com',
     storePhone: '+91 9876543210',
     storeAddress: '123 Coin Street, Mumbai, India',
 
