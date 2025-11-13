@@ -133,11 +133,11 @@ const BlogDetail = () => {
         {/* Main Content */}
         <article className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200">
           {/* Hero Image */}
-          <div className="relative h-96 overflow-hidden">
+          <div className="relative w-full bg-gray-900">
             <img
               src={blog.image}
               alt={blog.title}
-              className="w-full h-full object-cover"
+              className="w-full h-auto max-h-[500px] object-contain"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
