@@ -67,11 +67,11 @@ const TodayInHistoryBanner = () => {
           <div className="flex flex-col md:grid md:grid-cols-3 gap-0 items-stretch">
 
             {/* Image - Full width on mobile, 1/3 on desktop */}
-            <div className="relative w-full md:h-full overflow-hidden group bg-gray-100">
+            <div className="relative w-full h-48 md:h-auto overflow-hidden group bg-white flex items-center justify-center">
               <img
                 src={latestBlog.image}
                 alt={latestBlog.title}
-                className="w-full h-auto md:absolute md:inset-0 md:w-full md:h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-contain object-center group-hover:scale-105 transition-transform duration-500"
               />
             </div>
 
