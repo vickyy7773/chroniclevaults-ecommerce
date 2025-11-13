@@ -164,20 +164,13 @@ const BlogDetail = () => {
 
           {/* Content */}
           <div className="p-8 md:p-12">
-            {/* Excerpt */}
-            <div className="text-xl text-gray-700 font-semibold mb-8 pb-8 border-b-2 border-gray-200 leading-relaxed">
-              {blog.excerpt}
-            </div>
-
-            {/* Full Content */}
-            <div className="prose prose-lg max-w-none">
-              <div className="text-gray-800 leading-relaxed whitespace-pre-line">
-                {blog.fullContent}
+            {/* Excerpt and Share Button */}
+            <div className="mb-8 pb-8 border-b-2 border-gray-200">
+              <div className="text-xl text-gray-700 font-semibold mb-6 leading-relaxed">
+                {blog.excerpt}
               </div>
-            </div>
 
-            {/* Share Button */}
-            <div className="mt-12 pt-8 border-t-2 border-gray-200">
+              {/* Share Button */}
               <button
                 onClick={handleShare}
                 className="flex items-center gap-2 bg-amber-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-amber-700 transition-all shadow-md hover:scale-105"
@@ -185,6 +178,13 @@ const BlogDetail = () => {
                 <Share2 size={20} />
                 Share this article
               </button>
+            </div>
+
+            {/* Full Content */}
+            <div className="prose prose-lg max-w-none">
+              <div className="text-gray-800 leading-relaxed whitespace-pre-line">
+                {blog.fullContent}
+              </div>
             </div>
           </div>
         </article>
