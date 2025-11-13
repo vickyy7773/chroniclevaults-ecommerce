@@ -238,26 +238,19 @@ const AdminLayout = () => {
                 <img
                   src={posterImage}
                   alt="Chronicle Vaults Logo"
-                  className="w-10 h-10 rounded-lg object-cover"
+                  className="w-9 h-9 rounded-lg object-cover"
                 />
                 <div>
-                  <h1 className="text-xl font-black text-gray-900 dark:text-white">
+                  <h1 className="text-base font-bold text-gray-900 dark:text-white">
                     Chronicle <span className="text-accent-600">Vaults</span>
                   </h1>
                   <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Admin Dashboard</p>
                 </div>
               </div>
             )}
-            {!sidebarOpen && (
-              <img
-                src={posterImage}
-                alt="Chronicle Vaults Logo"
-                className="w-10 h-10 rounded-lg object-cover mx-auto"
-              />
-            )}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className={`p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${!sidebarOpen ? 'mx-auto' : ''}`}
             >
               {sidebarOpen ? (
                 <X size={20} className="text-gray-600 dark:text-gray-400" />
