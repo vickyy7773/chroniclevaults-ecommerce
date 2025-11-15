@@ -319,10 +319,20 @@ const CustomerManagement = () => {
                           <Mail size={14} className="text-accent-500" />
                           {customer.email}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 font-medium">
-                          <Phone size={14} className="text-primary-500" />
-                          {customer.phone || 'Not provided'}
-                        </div>
+                        {customer.phone ? (
+                          <a
+                            href={`tel:${customer.phone}`}
+                            className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 font-medium hover:text-primary-700 dark:hover:text-primary-300 transition-colors hover:underline"
+                          >
+                            <Phone size={14} className="text-primary-500" />
+                            {customer.phone}
+                          </a>
+                        ) : (
+                          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
+                            <Phone size={14} className="text-gray-400" />
+                            Not provided
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -432,7 +442,16 @@ const CustomerManagement = () => {
                         <Phone size={14} className="text-primary-500" />
                         Phone
                       </p>
-                      <p className="text-gray-900 dark:text-white font-semibold">{selectedCustomer.phone || 'Not provided'}</p>
+                      {selectedCustomer.phone ? (
+                        <a
+                          href={`tel:${selectedCustomer.phone}`}
+                          className="text-primary-600 dark:text-primary-400 font-semibold hover:text-primary-700 dark:hover:text-primary-300 transition-colors hover:underline"
+                        >
+                          {selectedCustomer.phone}
+                        </a>
+                      ) : (
+                        <p className="text-gray-500 dark:text-gray-400 font-semibold">Not provided</p>
+                      )}
                     </div>
                     <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                       <p className="text-xs font-black text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">Total Orders</p>
