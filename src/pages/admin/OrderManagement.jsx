@@ -71,6 +71,7 @@ const OrderManagement = () => {
           ...order,
           customerName: order.user?.name || 'Unknown',
           customerEmail: order.user?.email || 'N/A',
+          customerPhone: order.user?.phone || 'N/A',
           items: order.orderItems?.length || 0,
           orderNumber: order.orderNumber || `ORD-${order._id?.slice(-6).toUpperCase()}`
         }));
@@ -529,6 +530,10 @@ const OrderManagement = () => {
                         <span className="ml-2 font-semibold text-gray-900 dark:text-white">{selectedOrder.customerName}</span>
                       </div>
                       <div>
+                        <span className="text-gray-600 dark:text-gray-400">Phone:</span>
+                        <span className="ml-2 font-semibold text-gray-900 dark:text-white">{selectedOrder.customerPhone}</span>
+                      </div>
+                      <div>
                         <span className="text-gray-600 dark:text-gray-400">Email:</span>
                         <span className="ml-2 font-semibold text-gray-900 dark:text-white">{selectedOrder.customerEmail}</span>
                       </div>
@@ -600,6 +605,44 @@ const OrderManagement = () => {
                   {selectedOrder.shippingAddress?.country && (
                     <p className="text-gray-600 dark:text-gray-400">{selectedOrder.shippingAddress.country}</p>
                   )}
+                </div>
+
+                {/* Courier Copy Section */}
+                <div className="bg-gradient-to-br from-green-50 to-teal-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-4 border-2 border-green-300 dark:border-gray-700">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                      <Package size={18} className="text-green-600" />
+                      Courier Details (Copy & Paste)
+                    </h3>
+                    <button
+                      onClick={() => {
+                        const courierText = `Order: ${selectedOrder.orderNumber}\nName: ${selectedOrder.customerName}\nPhone: ${selectedOrder.customerPhone}\nAddress: ${selectedOrder.shippingAddress?.street || selectedOrder.shippingAddress || 'N/A'}\n${selectedOrder.shippingAddress?.city ? `${selectedOrder.shippingAddress.city}, ${selectedOrder.shippingAddress.state} ${selectedOrder.shippingAddress.zipCode}` : ''}\n${selectedOrder.shippingAddress?.country || ''}`;
+                        navigator.clipboard.writeText(courierText);
+                        alert('Courier details copied to clipboard!');
+                      }}
+                      className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Copy All
+                    </button>
+                  </div>
+                  <div className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-green-200 dark:border-gray-700 font-mono text-sm">
+                    <p className="text-gray-900 dark:text-white"><span className="font-bold text-green-600">Order:</span> {selectedOrder.orderNumber}</p>
+                    <p className="text-gray-900 dark:text-white mt-1"><span className="font-bold text-green-600">Name:</span> {selectedOrder.customerName}</p>
+                    <p className="text-gray-900 dark:text-white mt-1"><span className="font-bold text-green-600">Phone:</span> {selectedOrder.customerPhone}</p>
+                    <p className="text-gray-900 dark:text-white mt-2"><span className="font-bold text-green-600">Address:</span></p>
+                    <p className="text-gray-900 dark:text-white pl-4">{selectedOrder.shippingAddress?.street || selectedOrder.shippingAddress || 'N/A'}</p>
+                    {selectedOrder.shippingAddress?.city && (
+                      <p className="text-gray-900 dark:text-white pl-4">
+                        {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.zipCode}
+                      </p>
+                    )}
+                    {selectedOrder.shippingAddress?.country && (
+                      <p className="text-gray-900 dark:text-white pl-4">{selectedOrder.shippingAddress.country}</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Tracking Information */}
