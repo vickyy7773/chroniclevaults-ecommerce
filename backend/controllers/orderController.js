@@ -73,7 +73,7 @@ export const createOrder = async (req, res) => {
 // @access  Private
 export const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).populate('user', 'name email');
+    const order = await Order.findById(req.params.id).populate('user', 'name email phone');
 
     if (!order) {
       return res.status(404).json({
@@ -167,7 +167,7 @@ export const getMyOrders = async (req, res) => {
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find({})
-      .populate('user', 'name email')
+      .populate('user', 'name email phone')
       .sort({ createdAt: -1 });
 
     // Initialize statusHistory for orders that don't have it
