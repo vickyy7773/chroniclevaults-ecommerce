@@ -20,6 +20,9 @@ const Authentication = ({ setUser }) => {
   });
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationType, setNotificationType] = useState('welcome');
@@ -107,72 +110,124 @@ const Authentication = ({ setUser }) => {
   };
 
 
+  const sendOtp = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email,
+          password: formData.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setOtpSent(true);
+        setShowOtpInput(true);
+        setNotificationMessage(`OTP sent to ${formData.email}! Check your inbox and spam folder.`);
+        setNotificationType('success');
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 5000);
+      } else {
+        setErrors({ ...errors, email: data.message || 'Failed to send OTP' });
+      }
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      setErrors({ ...errors, email: 'Failed to send OTP. Please try again.' });
+    }
+  };
+
+  const verifyOtp = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-otp-register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email,
+          password: formData.password,
+          otp: otp
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setShowOtpInput(false);
+        setSubmitted(true);
+
+        // Store user data
+        const userData = {
+          name: data.data.name,
+          email: data.data.email,
+          phone: data.data.phone,
+          role: data.data.role
+        };
+
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('token', data.data.token);
+
+        if (setUser) {
+          setUser(userData);
+        }
+
+        // Show welcome notification
+        setNotificationMessage('Welcome to Chronicle Vaults!');
+        setNotificationType('welcome');
+        setShowNotification(true);
+
+        setTimeout(() => {
+          if (location.state?.from === '/checkout' && location.state?.cartItems) {
+            navigate('/checkout', {
+              state: { cartItems: location.state.cartItems }
+            });
+          } else {
+            navigate('/');
+          }
+        }, 3000);
+      } else {
+        setErrors({ ...errors, otp: data.message || 'Invalid OTP. Please try again.' });
+      }
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      setErrors({ ...errors, otp: 'Failed to verify OTP. Please try again.' });
+    }
+  };
+
+  const handleOtpKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (otp.length === 6) {
+        verifyOtp();
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // If OTP screen is showing, don't submit form
+    if (showOtpInput) {
+      return;
+    }
 
     // Validate form
     if (!validateForm()) {
       return;
     }
 
-    // For signup, directly register user without OTP
+    // For signup, send OTP to email
     if (!isLogin) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/auth/register`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            phone: formData.phone,
-            email: formData.email,
-            password: formData.password
-          })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          setSubmitted(true);
-
-          // Store user data
-          const userData = {
-            name: data.data.name,
-            email: data.data.email,
-            phone: data.data.phone,
-            role: data.data.role
-          };
-
-          localStorage.setItem('user', JSON.stringify(userData));
-          localStorage.setItem('token', data.data.token);
-
-          if (setUser) {
-            setUser(userData);
-          }
-
-          // Show welcome notification
-          setNotificationMessage('Welcome to Chronicle Vaults!');
-          setNotificationType('welcome');
-          setShowNotification(true);
-
-          setTimeout(() => {
-            // Check if user came from checkout
-            if (location.state?.from === '/checkout' && location.state?.cartItems) {
-              navigate('/checkout', {
-                state: { cartItems: location.state.cartItems }
-              });
-            } else {
-              navigate('/');
-            }
-          }, 3000);
-        } else {
-          setErrors({ ...errors, email: data.message || 'Registration failed' });
-        }
-      } catch (error) {
-        console.error('Registration error:', error);
-        setErrors({ ...errors, email: 'Registration failed. Please try again.' });
-      }
+      sendOtp();
     } else {
       // For login, call backend API
       try {
@@ -310,7 +365,7 @@ const Authentication = ({ setUser }) => {
 
           <form onSubmit={handleSubmit}>
             {/* Name Field - Only for Sign Up */}
-            {!isLogin && (
+            {!isLogin && !showOtpInput && (
               <div className="mb-4">
                 <label className="block text-neutral-900 font-bold mb-2">Full Name</label>
                 <div className="relative">
@@ -331,7 +386,7 @@ const Authentication = ({ setUser }) => {
             )}
 
             {/* Phone Field - Only for Sign Up */}
-            {!isLogin && (
+            {!isLogin && !showOtpInput && (
               <div className="mb-4">
                 <label className="block text-neutral-900 font-bold mb-2">Mobile Number</label>
                 <div className="relative">
@@ -353,52 +408,56 @@ const Authentication = ({ setUser }) => {
             )}
 
             {/* Email Field */}
-            <div className="mb-4">
-              <label className="block text-neutral-900 font-bold mb-2">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 w-5 h-5 text-neutral-600" />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`input-modern w-full pl-10 pr-4 ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
-                  placeholder="your.email@example.com"
-                />
+            {!showOtpInput && (
+              <div className="mb-4">
+                <label className="block text-neutral-900 font-bold mb-2">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 w-5 h-5 text-neutral-600" />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={`input-modern w-full pl-10 pr-4 ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
+                    placeholder="your.email@example.com"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-red-600 text-sm mt-1 font-semibold">{errors.email}</p>
+                )}
               </div>
-              {errors.email && (
-                <p className="text-red-600 text-sm mt-1 font-semibold">{errors.email}</p>
-              )}
-            </div>
+            )}
 
             {/* Password Field */}
-            <div className="mb-4">
-              <label className="block text-neutral-900 font-bold mb-2">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 w-5 h-5 text-neutral-600" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`input-modern w-full pl-10 pr-12 ${errors.password ? 'border-red-500 focus:border-red-500' : ''}`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-neutral-600 hover:text-accent-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+            {!showOtpInput && (
+              <div className="mb-4">
+                <label className="block text-neutral-900 font-bold mb-2">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 w-5 h-5 text-neutral-600" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={`input-modern w-full pl-10 pr-12 ${errors.password ? 'border-red-500 focus:border-red-500' : ''}`}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-neutral-600 hover:text-accent-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-red-600 text-sm mt-1 font-semibold">{errors.password}</p>
+                )}
               </div>
-              {errors.password && (
-                <p className="text-red-600 text-sm mt-1 font-semibold">{errors.password}</p>
-              )}
-            </div>
+            )}
 
             {/* Confirm Password - Only for Sign Up */}
-            {!isLogin && (
+            {!isLogin && !showOtpInput && (
               <div className="mb-4">
                 <label className="block text-neutral-900 font-bold mb-2">Confirm Password</label>
                 <div className="relative">
@@ -425,6 +484,60 @@ const Authentication = ({ setUser }) => {
               </div>
             )}
 
+            {/* OTP Input - Only for Sign Up after form submission */}
+            {!isLogin && showOtpInput && (
+              <div className="mb-4">
+                <div className="bg-blue-50 border-2 border-blue-400 rounded-xl p-4 mb-4">
+                  <p className="text-blue-900 font-bold mb-1">Email Verification Required</p>
+                  <p className="text-blue-700 text-sm">
+                    A 6-digit OTP has been sent to <strong>{formData.email}</strong>
+                  </p>
+                </div>
+                <label className="block text-neutral-900 font-bold mb-2">Enter OTP</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 w-5 h-5 text-neutral-600" />
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setOtp(value);
+                      if (errors.otp) {
+                        setErrors({ ...errors, otp: '' });
+                      }
+                    }}
+                    onKeyPress={handleOtpKeyPress}
+                    className={`input-modern w-full pl-10 pr-4 ${errors.otp ? 'border-red-500 focus:border-red-500' : ''}`}
+                    placeholder="Enter 6-digit OTP"
+                    maxLength="6"
+                    autoComplete="off"
+                  />
+                </div>
+                {errors.otp && (
+                  <p className="text-red-600 text-sm mt-1 font-semibold">{errors.otp}</p>
+                )}
+                {otpSent && (
+                  <p className="text-green-600 text-sm mt-1 font-semibold">
+                    OTP sent to {formData.email}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={verifyOtp}
+                  className="btn-primary w-full mt-4 py-3 px-6 rounded-xl font-bold"
+                >
+                  Verify OTP
+                </button>
+                <button
+                  type="button"
+                  onClick={sendOtp}
+                  className="btn-secondary w-full mt-2 py-2 px-6 rounded-xl font-semibold text-sm"
+                >
+                  Resend OTP
+                </button>
+              </div>
+            )}
+
             {/* Remember Me & Forgot Password - Only for Login */}
             {isLogin && (
               <div className="flex items-center justify-between mb-6">
@@ -439,7 +552,7 @@ const Authentication = ({ setUser }) => {
             )}
 
             {/* Terms - Only for Sign Up */}
-            {!isLogin && (
+            {!isLogin && !showOtpInput && (
               <div className="mb-6">
                 <label className="flex items-start">
                   <input type="checkbox" required className="mr-2 mt-1 w-4 h-4 rounded accent-accent-500" />
@@ -457,13 +570,15 @@ const Authentication = ({ setUser }) => {
               </div>
             )}
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="btn-primary w-full py-3.5 px-6 rounded-xl font-bold text-lg"
-            >
-              {isLogin ? 'Sign In' : 'Create Account'}
-            </button>
+            {/* Submit Button - Hide when OTP screen is showing */}
+            {!showOtpInput && (
+              <button
+                type="submit"
+                className="btn-primary w-full py-3.5 px-6 rounded-xl font-bold text-lg"
+              >
+                {isLogin ? 'Sign In' : 'Create Account'}
+              </button>
+            )}
           </form>
 
           {/* Divider */}
