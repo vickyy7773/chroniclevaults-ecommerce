@@ -1,10 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BadgeCheck, Shield, Mail, MapPin, Clock, Award } from 'lucide-react';
+import { BadgeCheck, Shield, Mail, MapPin, Clock, Award, Eye } from 'lucide-react';
 import { FaWhatsapp, FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter } from 'react-icons/fa';
 import logoImage from '../../assets/fixed logo.png';
 
 const Footer = () => {
+  const [visitorCount, setVisitorCount] = useState(0);
+
+  useEffect(() => {
+    // Get current visitor count from localStorage
+    const currentCount = parseInt(localStorage.getItem('visitorCount') || '1000', 10);
+
+    // Check if this is a new session
+    const lastVisit = sessionStorage.getItem('hasVisited');
+
+    if (!lastVisit) {
+      // New session - increment counter
+      const newCount = currentCount + 1;
+      localStorage.setItem('visitorCount', newCount.toString());
+      sessionStorage.setItem('hasVisited', 'true');
+      setVisitorCount(newCount);
+    } else {
+      // Returning visitor in same session
+      setVisitorCount(currentCount);
+    }
+  }, []);
+
   return (
     <footer className="bg-[#EBDEC0] border-t-2 md:border-t-4 border-accent-500 shadow-strong">
       <div className="container mx-auto px-3 md:px-4 py-4 md:py-8">
@@ -89,6 +110,14 @@ const Footer = () => {
             <p className="text-neutral-800 text-[9px] md:text-xs font-semibold">
               © 2025 CHRONICLE VAULTS. All rights reserved.
             </p>
+
+            {/* Visitor Counter - Center */}
+            <div className="flex items-center space-x-1 md:space-x-2 text-[9px] md:text-xs text-neutral-800 bg-gradient-to-r from-amber-100 to-orange-100 px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-bold border border-amber-300">
+              <Eye className="w-3 h-3 md:w-4 md:h-4 text-amber-600" />
+              <span className="text-amber-900">Visitors:</span>
+              <span className="text-amber-700 font-black">{visitorCount.toLocaleString()}</span>
+            </div>
+
             <div className="flex items-center space-x-2 md:space-x-4">
               <div className="flex items-center space-x-1 md:space-x-2 text-[9px] md:text-xs text-neutral-800 bg-white/50 px-1.5 md:px-2.5 py-1 md:py-1.5 rounded-lg font-medium">
                 <Shield className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-accent-600" />
