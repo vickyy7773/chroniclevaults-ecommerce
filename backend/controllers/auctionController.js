@@ -93,14 +93,24 @@ export const createAuction = async (req, res) => {
       endTime
     } = req.body;
 
-    // Validate product exists (if productId is provided)
+    // Validate product exists (if productId is provided and valid)
     let product = null;
-    if (productId) {
-      product = await Product.findById(productId);
-      if (!product) {
-        return res.status(404).json({
+    // Check if productId is provided and is a valid ObjectId
+    const isValidProductId = productId && productId.trim() !== '' && productId.length === 24;
+
+    if (isValidProductId) {
+      try {
+        product = await Product.findById(productId);
+        if (!product) {
+          return res.status(404).json({
+            success: false,
+            message: 'Product not found'
+          });
+        }
+      } catch (error) {
+        return res.status(400).json({
           success: false,
-          message: 'Product not found'
+          message: 'Invalid Product ID format'
         });
       }
     }
@@ -124,7 +134,7 @@ export const createAuction = async (req, res) => {
     ];
 
     const auction = new Auction({
-      product: productId || null,
+      product: isValidProductId ? productId : null,
       title,
       description,
       image: image || (product ? product.images[0] : null),
