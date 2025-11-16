@@ -3,6 +3,7 @@ import upload, { uploadVideo } from '../middleware/upload.js';
 import imageCompression from '../middleware/imageCompression.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -78,6 +79,56 @@ router.post('/video', uploadVideo.single('video'), (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error uploading video', error: error.message });
+  }
+});
+
+// Base64 image upload (for auction images)
+router.post('/base64', async (req, res) => {
+  try {
+    const { image } = req.body;
+
+    if (!image) {
+      return res.status(400).json({ message: 'No image data provided' });
+    }
+
+    // Extract base64 data
+    const matches = image.match(/^data:image\/([a-zA-Z]*);base64,([^\"]*)$/);
+
+    if (!matches || matches.length !== 3) {
+      return res.status(400).json({ message: 'Invalid base64 image format' });
+    }
+
+    const imageType = matches[1]; // png, jpeg, etc.
+    const base64Data = matches[2];
+
+    // Generate unique filename
+    const filename = `img-${Date.now()}-${Math.round(Math.random() * 1E9)}.${imageType}`;
+    const uploadsDir = path.join(__dirname, '..', 'uploads');
+    const filePath = path.join(uploadsDir, filename);
+
+    // Ensure uploads directory exists
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    // Write base64 data to file
+    fs.writeFileSync(filePath, base64Data, 'base64');
+
+    // Compress the image
+    await imageCompression.compressImage(filePath, { quality: 85 });
+
+    // Return the full URL
+    const protocol = req.get('host').includes('chroniclevaults.com') ? 'https' : req.protocol;
+    const imageUrl = `${protocol}://${req.get('host')}/uploads/${filename}`;
+
+    res.status(200).json({
+      message: 'Image uploaded and optimized successfully',
+      imageUrl: imageUrl,
+      filename: filename
+    });
+  } catch (error) {
+    console.error('Base64 upload error:', error);
+    res.status(500).json({ message: 'Error uploading image', error: error.message });
   }
 });
 

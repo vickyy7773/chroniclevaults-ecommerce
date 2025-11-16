@@ -4,7 +4,7 @@ const auctionSchema = new mongoose.Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Product',
-    required: true
+    required: false // Made optional - auctions can be standalone
   },
   title: {
     type: String,

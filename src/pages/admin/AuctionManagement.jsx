@@ -19,6 +19,8 @@ const AuctionManagement = () => {
     startTime: '',
     endTime: ''
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
     fetchAuctions();
@@ -46,17 +48,49 @@ const AuctionManagement = () => {
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+        setFormData(prev => ({
+          ...prev,
+          image: reader.result // Base64 for upload
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      let submitData = { ...formData };
+
+      // If image is base64, upload it first
+      if (formData.image && formData.image.startsWith('data:image/')) {
+        try {
+          const uploadResponse = await api.post('/upload/base64', { image: formData.image });
+          submitData.image = uploadResponse.data.imageUrl;
+        } catch (uploadError) {
+          console.error('Image upload error:', uploadError);
+          toast.error('Failed to upload image');
+          return;
+        }
+      }
+
       if (selectedAuction) {
         // Update existing auction
-        await api.put(`/auctions/${selectedAuction._id}`, formData);
+        await api.put(`/auctions/${selectedAuction._id}`, submitData);
         toast.success('Auction updated successfully');
       } else {
         // Create new auction
-        await api.post('/auctions', formData);
+        await api.post('/auctions', submitData);
         toast.success('Auction created successfully');
       }
 
@@ -81,6 +115,7 @@ const AuctionManagement = () => {
       startTime: new Date(auction.startTime).toISOString().slice(0, 16),
       endTime: new Date(auction.endTime).toISOString().slice(0, 16)
     });
+    setImagePreview(auction.image); // Show existing image
     setShowModal(true);
   };
 
@@ -110,6 +145,8 @@ const AuctionManagement = () => {
       startTime: '',
       endTime: ''
     });
+    setImageFile(null);
+    setImagePreview('');
     setSelectedAuction(null);
   };
 
@@ -292,16 +329,15 @@ const AuctionManagement = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Product ID
+                      Product ID (Optional)
                     </label>
                     <input
                       type="text"
                       name="productId"
                       value={formData.productId}
                       onChange={handleInputChange}
-                      required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                      placeholder="Enter product ID"
+                      placeholder="Enter product ID (optional - leave empty for standalone auction)"
                     />
                   </div>
 
@@ -337,16 +373,26 @@ const AuctionManagement = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Image URL
+                      Upload Image
                     </label>
                     <input
-                      type="text"
-                      name="image"
-                      value={formData.image}
-                      onChange={handleInputChange}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                      placeholder="Image URL (optional, will use product image)"
                     />
+                    {imagePreview && (
+                      <div className="mt-2">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-full h-48 object-cover rounded-lg border border-gray-300"
+                        />
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Upload auction image (required if no product linked)
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">

@@ -93,12 +93,23 @@ export const createAuction = async (req, res) => {
       endTime
     } = req.body;
 
-    // Validate product exists
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({
+    // Validate product exists (if productId is provided)
+    let product = null;
+    if (productId) {
+      product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: 'Product not found'
+        });
+      }
+    }
+
+    // Image is required if no product is linked
+    if (!image && !product) {
+      return res.status(400).json({
         success: false,
-        message: 'Product not found'
+        message: 'Image is required for standalone auctions'
       });
     }
 
@@ -113,10 +124,10 @@ export const createAuction = async (req, res) => {
     ];
 
     const auction = new Auction({
-      product: productId,
+      product: productId || null,
       title,
       description,
-      image: image || product.images[0],
+      image: image || (product ? product.images[0] : null),
       startingPrice,
       currentBid: startingPrice,
       reservePrice,
