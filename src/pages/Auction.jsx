@@ -3,12 +3,24 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Gavel, Clock, TrendingUp, Users, AlertCircle, CheckCircle, History } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
-import { useAuth } from '../context/AuthContext';
 
 const AuctionPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+
+  // Get user from localStorage
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error('Error loading user:', error);
+      }
+    }
+  }, []);
   const [auction, setAuction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bidAmount, setBidAmount] = useState('');
