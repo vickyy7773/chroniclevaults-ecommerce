@@ -1,0 +1,427 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Gavel, Clock, TrendingUp, Users, AlertCircle, CheckCircle, History } from 'lucide-react';
+import { toast } from 'react-toastify';
+import api from '../utils/api';
+import { useAuth } from '../context/AuthContext';
+
+const AuctionPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [auction, setAuction] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [bidAmount, setBidAmount] = useState('');
+  const [submittingBid, setSubmittingBid] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState('');
+
+  useEffect(() => {
+    if (id) {
+      fetchAuction();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (auction && auction.status === 'Active') {
+      const timer = setInterval(() => {
+        updateTimeRemaining();
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [auction]);
+
+  const fetchAuction = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/auctions/${id}`);
+      setAuction(response.data.data);
+
+      // Set suggested bid amount
+      const currentIncrement = getCurrentIncrement(response.data.data);
+      const suggestedBid = response.data.data.currentBid + currentIncrement;
+      setBidAmount(suggestedBid.toString());
+    } catch (error) {
+      console.error('Fetch auction error:', error);
+      toast.error('Failed to load auction');
+      navigate('/auctions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCurrentIncrement = (auctionData) => {
+    const currentBid = auctionData.currentBid;
+    const slabs = auctionData.incrementSlabs || [];
+
+    for (let slab of slabs) {
+      if (currentBid >= slab.minPrice && currentBid < slab.maxPrice) {
+        return slab.increment;
+      }
+    }
+
+    return slabs[slabs.length - 1]?.increment || 50;
+  };
+
+  const updateTimeRemaining = () => {
+    if (!auction) return;
+
+    const now = new Date();
+    const endTime = new Date(auction.endTime);
+    const diff = endTime - now;
+
+    if (diff <= 0) {
+      setTimeRemaining('Auction Ended');
+      // Refresh auction data to get updated status
+      fetchAuction();
+      return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    let timeStr = '';
+    if (days > 0) timeStr += `${days}d `;
+    timeStr += `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    setTimeRemaining(timeStr);
+  };
+
+  const handlePlaceBid = async (e) => {
+    e.preventDefault();
+
+    if (!user) {
+      toast.error('Please login to place a bid');
+      navigate('/login');
+      return;
+    }
+
+    const amount = parseInt(bidAmount);
+
+    // Validate bid amount
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid bid amount');
+      return;
+    }
+
+    if (amount % 50 !== 0) {
+      toast.error('Bid amount must be divisible by 50');
+      return;
+    }
+
+    const currentIncrement = getCurrentIncrement(auction);
+    const minBid = auction.currentBid + currentIncrement;
+
+    if (amount < minBid) {
+      toast.error(`Minimum bid is ₹${minBid.toLocaleString()}`);
+      return;
+    }
+
+    try {
+      setSubmittingBid(true);
+      const response = await api.post(`/auctions/${auction._id}/bid`, { amount });
+
+      toast.success('Bid placed successfully!');
+
+      // Update auction with new bid
+      setAuction(response.data.data.auction);
+
+      // Set next suggested bid
+      const newIncrement = getCurrentIncrement(response.data.data.auction);
+      const nextSuggestedBid = response.data.data.auction.currentBid + newIncrement;
+      setBidAmount(nextSuggestedBid.toString());
+    } catch (error) {
+      console.error('Place bid error:', error);
+      toast.error(error.response?.data?.message || 'Failed to place bid');
+    } finally {
+      setSubmittingBid(false);
+    }
+  };
+
+  const isUserWinning = () => {
+    if (!user || !auction || auction.bids.length === 0) return false;
+    const lastBid = auction.bids[auction.bids.length - 1];
+    return lastBid.user._id === user._id;
+  };
+
+  const getUserBidCount = () => {
+    if (!user || !auction) return 0;
+    return auction.bids.filter(bid => bid.user._id === user._id).length;
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-accent-600"></div>
+      </div>
+    );
+  }
+
+  if (!auction) {
+    return (
+      <div className="container mx-auto px-4 py-12 text-center">
+        <h2 className="text-2xl font-bold text-gray-900">Auction not found</h2>
+      </div>
+    );
+  }
+
+  const currentIncrement = getCurrentIncrement(auction);
+  const minBid = auction.currentBid + currentIncrement;
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column - Auction Image & Details */}
+        <div className="lg:col-span-2">
+          {/* Auction Image */}
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+            <div className="relative h-96 bg-gray-200">
+              {auction.image ? (
+                <img
+                  src={auction.image}
+                  alt={auction.title}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Gavel className="w-24 h-24 text-gray-400" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Auction Information */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">{auction.title}</h1>
+            <p className="text-gray-600 mb-6">{auction.description}</p>
+
+            {/* Auction Timeline */}
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center text-sm text-gray-600">
+                <Clock className="w-4 h-4 mr-2" />
+                <span>Start: {formatDate(auction.startTime)}</span>
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <Clock className="w-4 h-4 mr-2" />
+                <span>End: {formatDate(auction.endTime)}</span>
+              </div>
+            </div>
+
+            {/* Bid History */}
+            <div className="border-t pt-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <History className="w-5 h-5 mr-2" />
+                Bid History ({auction.bids.length})
+              </h3>
+
+              {auction.bids.length === 0 ? (
+                <p className="text-gray-500 text-center py-6">No bids yet. Be the first to bid!</p>
+              ) : (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {[...auction.bids].reverse().map((bid, index) => (
+                    <div
+                      key={index}
+                      className={`flex justify-between items-center p-3 rounded-lg ${
+                        index === 0 ? 'bg-green-50 border border-green-200' : 'bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          index === 0 ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-700'
+                        }`}>
+                          {index === 0 ? <TrendingUp className="w-4 h-4" /> : <Users className="w-4 h-4" />}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {bid.user.name}
+                            {bid.isReserveBidder && (
+                              <span className="ml-2 text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">
+                                Reserve
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(bid.timestamp).toLocaleString('en-IN')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-bold ${index === 0 ? 'text-green-600 text-lg' : 'text-gray-900'}`}>
+                          ₹{bid.amount.toLocaleString()}
+                        </p>
+                        {index === 0 && (
+                          <p className="text-xs text-green-600 font-semibold">Highest Bid</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Bidding Section */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow-lg p-6 sticky top-4">
+            {/* Status Badge */}
+            <div className={`text-center py-2 px-4 rounded-lg mb-4 font-bold ${
+              auction.status === 'Active'
+                ? 'bg-green-100 text-green-800'
+                : auction.status === 'Upcoming'
+                ? 'bg-blue-100 text-blue-800'
+                : 'bg-gray-100 text-gray-800'
+            }`}>
+              {auction.status}
+            </div>
+
+            {/* Time Remaining */}
+            {auction.status === 'Active' && (
+              <div className="bg-gradient-to-r from-orange-100 to-amber-100 rounded-lg p-4 mb-6">
+                <p className="text-sm text-gray-700 mb-1">Time Remaining</p>
+                <p className="text-2xl font-bold text-orange-800">{timeRemaining}</p>
+              </div>
+            )}
+
+            {/* Current Bid Info */}
+            <div className="space-y-4 mb-6">
+              <div>
+                <p className="text-sm text-gray-600">Current Bid</p>
+                <p className="text-3xl font-bold text-accent-600">
+                  ₹{auction.currentBid.toLocaleString()}
+                </p>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Starting Price:</span>
+                <span className="font-semibold">₹{auction.startingPrice.toLocaleString()}</span>
+              </div>
+
+              {auction.reservePrice && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Reserve Price:</span>
+                  <span className="font-semibold text-orange-600">₹{auction.reservePrice.toLocaleString()}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Next Minimum Bid:</span>
+                <span className="font-semibold text-green-600">₹{minBid.toLocaleString()}</span>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Bid Increment:</span>
+                <span className="font-semibold">₹{currentIncrement.toLocaleString()}</span>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600 flex items-center">
+                  <Users className="w-4 h-4 mr-1" />
+                  Total Bids:
+                </span>
+                <span className="font-semibold">{auction.totalBids || 0}</span>
+              </div>
+
+              {user && getUserBidCount() > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Your Bids:</span>
+                  <span className="font-semibold">{getUserBidCount()}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Winning Status */}
+            {user && isUserWinning() && auction.status === 'Active' && (
+              <div className="bg-green-100 border border-green-300 rounded-lg p-3 mb-4">
+                <p className="text-green-800 font-semibold text-sm flex items-center">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  You are currently winning!
+                </p>
+              </div>
+            )}
+
+            {/* Bid Form */}
+            {auction.status === 'Active' ? (
+              <form onSubmit={handlePlaceBid} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Your Bid Amount (₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={bidAmount}
+                    onChange={(e) => setBidAmount(e.target.value)}
+                    min={minBid}
+                    step="50"
+                    required
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 text-lg font-semibold"
+                    placeholder={minBid.toString()}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Must be divisible by 50 and at least ₹{minBid.toLocaleString()}
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submittingBid}
+                  className="w-full bg-accent-600 hover:bg-accent-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                >
+                  {submittingBid ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Placing Bid...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Gavel className="w-5 h-5" />
+                      <span>Place Bid</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs text-blue-800 flex items-start">
+                    <AlertCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
+                    <span>
+                      All bids are final. Make sure to review your bid amount before submitting.
+                    </span>
+                  </p>
+                </div>
+              </form>
+            ) : auction.status === 'Upcoming' ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                <p className="text-blue-800 font-semibold">Auction hasn't started yet</p>
+                <p className="text-sm text-blue-600 mt-1">Check back at the start time</p>
+              </div>
+            ) : (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                <p className="text-gray-800 font-semibold">Auction has ended</p>
+                {auction.winner && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    Winner: {auction.winner.name}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AuctionPage;

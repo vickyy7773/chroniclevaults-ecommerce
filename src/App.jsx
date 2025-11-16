@@ -54,6 +54,11 @@ const BannerManagement = lazy(() => import('./pages/admin/BannerManagement'));
 const CouponManagement = lazy(() => import('./pages/admin/CouponManagement'));
 const FilterOptionsManagement = lazy(() => import('./pages/admin/FilterOptionsManagement'));
 const BlogManagement = lazy(() => import('./pages/admin/BlogManagement'));
+const AuctionManagement = lazy(() => import('./pages/admin/AuctionManagement'));
+
+// Auction Pages
+const Auctions = lazy(() => import('./pages/Auctions'));
+const Auction = lazy(() => import('./pages/Auction'));
 
 // Loading component
 const PageLoader = () => (
@@ -523,6 +528,10 @@ const AppContent = () => {
             {/* Customer Pages */}
             <Route path="/buying-with-us" element={<BuyingWithUs />} />
 
+            {/* Auction Pages */}
+            <Route path="/auctions" element={<Auctions />} />
+            <Route path="/auction/:id" element={<Auction />} />
+
             {/* Policy Pages */}
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-conditions" element={<TermsConditions />} />
@@ -554,6 +563,7 @@ const AppContent = () => {
               <Route path="blog" element={<BlogManagement />} />
               <Route path="blog/add" element={<BlogManagement />} />
               <Route path="blog/edit/:id" element={<BlogManagement />} />
+              <Route path="auctions" element={<AuctionManagement />} />
               <Route path="profile" element={<ProfileManagement />} />
               <Route path="users-roles" element={<UserRoleManagement />} />
               {/* Keep old routes for backward compatibility */}

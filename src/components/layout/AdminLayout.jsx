@@ -19,7 +19,8 @@ import {
   Shield,
   UserCog,
   Filter,
-  Activity
+  Activity,
+  Gavel
 } from 'lucide-react';
 import usePermissions from '../../hooks/usePermissions';
 import posterImage from '../../assets/poster.jpg';
@@ -119,6 +120,13 @@ const AdminLayout = () => {
         { path: '/admin/blog', label: 'All Posts' },
         { path: '/admin/blog/add', label: 'Add Post', requiresCreate: true }
       ]
+    },
+    {
+      path: '/admin/auctions',
+      icon: Gavel,
+      label: 'Auctions',
+      color: 'from-orange-500 to-red-500',
+      resource: 'products' // Tied to products permission
     },
     {
       path: '/admin/profile',
