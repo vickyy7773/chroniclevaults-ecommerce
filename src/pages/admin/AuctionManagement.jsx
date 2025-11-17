@@ -16,15 +16,27 @@ const AuctionManagement = () => {
     image: '',
     startingPrice: '',
     reservePrice: '',
+    reserveBidder: '',
     startTime: '',
     endTime: ''
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [customers, setCustomers] = useState([]);
 
   useEffect(() => {
     fetchAuctions();
+    fetchCustomers();
   }, [viewMode]);
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await api.get('/admin/customers');
+      setCustomers(response.data.data || []);
+    } catch (error) {
+      console.error('Fetch customers error:', error);
+    }
+  };
 
   const fetchAuctions = async () => {
     try {
@@ -146,6 +158,7 @@ const AuctionManagement = () => {
       image: auction.image,
       startingPrice: auction.startingPrice,
       reservePrice: auction.reservePrice || '',
+      reserveBidder: auction.reserveBidder?._id || '',
       startTime: formatDateTimeLocal(startTimeIST),
       endTime: formatDateTimeLocal(endTimeIST)
     });
@@ -176,6 +189,7 @@ const AuctionManagement = () => {
       image: '',
       startingPrice: '',
       reservePrice: '',
+      reserveBidder: '',
       startTime: '',
       endTime: ''
     });
@@ -320,6 +334,15 @@ const AuctionManagement = () => {
                   </div>
                 </div>
 
+                {auction.reserveBidder && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-2 mb-2">
+                    <p className="text-xs text-orange-800 font-semibold flex items-center">
+                      <User className="w-3 h-3 mr-1" />
+                      Reserve Bidder: {auction.reserveBidder.name}
+                    </p>
+                  </div>
+                )}
+
                 {auction.winner && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-2 mb-3">
                     <p className="text-xs text-green-800 font-semibold flex items-center">
@@ -463,6 +486,28 @@ const AuctionManagement = () => {
                         placeholder="Optional"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Reserve Bidder (Optional)
+                    </label>
+                    <select
+                      name="reserveBidder"
+                      value={formData.reserveBidder}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                    >
+                      <option value="">No Reserve Bidder</option>
+                      {customers.map(customer => (
+                        <option key={customer._id} value={customer._id}>
+                          {customer.name} ({customer.email})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Reserve bidder will automatically bid if price is below reserve price
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
