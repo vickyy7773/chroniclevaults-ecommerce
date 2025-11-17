@@ -538,9 +538,9 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
 
               {/* Price and Stamp */}
               <div className="mb-4 sm:mb-6">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center justify-between gap-4">
                   {/* Price Section */}
-                  <div>
+                  <div className="flex-1">
                     <div className="flex items-baseline gap-2 sm:gap-4 mb-2 flex-wrap">
                       <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-600">
                         ₹{(product.price || 0).toLocaleString()}
@@ -562,11 +562,11 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                   </div>
 
                   {/* Stamp Image */}
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 self-start">
                     <img
                       src={stampImage}
                       alt="Authenticity Stamp"
-                      className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 object-contain opacity-90 hover:opacity-100 transition-opacity"
+                      className="w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 object-contain opacity-90 hover:opacity-100 transition-opacity"
                     />
                   </div>
                 </div>
