@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Minus, Plus, Truck, Shield, RefreshCw, ChevronLeft, ChevronRight, Share2, Facebook, Twitter, Linkedin, MessageCircle, Copy, Check, X } from 'lucide-react';
 import { API_BASE_URL } from '../../constants/api';
 import { getProductUrl } from '../../utils/productUrl';
+import stampImage from '../../assets/stamp.png';
 
 const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
   const { id, category, subcategory, productSlug } = useParams();
@@ -678,6 +679,15 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                     <p className="text-[10px] sm:text-xs text-gray-600 leading-tight">Guaranteed if Found<br className="hidden sm:inline" /><span className="sm:hidden"> </span>Forgery / Fake</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Stamp Image - Responsive */}
+              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t flex justify-center">
+                <img
+                  src={stampImage}
+                  alt="Authenticity Stamp"
+                  className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain opacity-90 hover:opacity-100 transition-opacity"
+                />
               </div>
             </div>
           </div>
