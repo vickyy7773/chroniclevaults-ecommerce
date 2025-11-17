@@ -621,6 +621,15 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                 </div>
               </div>
 
+              {/* Stamp Image - Responsive */}
+              <div className="mb-4 sm:mb-6 flex justify-center">
+                <img
+                  src={stampImage}
+                  alt="Authenticity Stamp"
+                  className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 object-contain opacity-90 hover:opacity-100 transition-opacity"
+                />
+              </div>
+
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6">
                 <button
@@ -679,15 +688,6 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                     <p className="text-[10px] sm:text-xs text-gray-600 leading-tight">Guaranteed if Found<br className="hidden sm:inline" /><span className="sm:hidden"> </span>Forgery / Fake</p>
                   </div>
                 </div>
-              </div>
-
-              {/* Stamp Image - Responsive */}
-              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t flex justify-center">
-                <img
-                  src={stampImage}
-                  alt="Authenticity Stamp"
-                  className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain opacity-90 hover:opacity-100 transition-opacity"
-                />
               </div>
             </div>
           </div>
