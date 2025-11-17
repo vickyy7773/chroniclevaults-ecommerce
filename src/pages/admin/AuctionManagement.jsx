@@ -72,6 +72,25 @@ const AuctionManagement = () => {
     try {
       let submitData = { ...formData };
 
+      // Convert datetime-local values to ISO strings
+      // datetime-local format: "2025-11-18T21:37" (no timezone - browser interprets as local)
+      if (submitData.startTime) {
+        const startDate = new Date(submitData.startTime);
+        console.log('Start Time Input:', submitData.startTime);
+        console.log('Start Time Date Object:', startDate);
+        console.log('Start Time ISO:', startDate.toISOString());
+        submitData.startTime = startDate.toISOString();
+      }
+      if (submitData.endTime) {
+        const endDate = new Date(submitData.endTime);
+        console.log('End Time Input:', submitData.endTime);
+        console.log('End Time Date Object:', endDate);
+        console.log('End Time ISO:', endDate.toISOString());
+        submitData.endTime = endDate.toISOString();
+      }
+
+      console.log('Submitting auction data:', submitData);
+
       // If image is base64, upload it first
       if (formData.image && formData.image.startsWith('data:image/')) {
         try {
@@ -448,9 +467,27 @@ const AuctionManagement = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Start Date & Time
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Start Date & Time
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const now = new Date();
+                            const year = now.getFullYear();
+                            const month = String(now.getMonth() + 1).padStart(2, '0');
+                            const day = String(now.getDate()).padStart(2, '0');
+                            const hours = String(now.getHours()).padStart(2, '0');
+                            const minutes = String(now.getMinutes()).padStart(2, '0');
+                            const currentDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+                            setFormData(prev => ({ ...prev, startTime: currentDateTime }));
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          Use Now
+                        </button>
+                      </div>
                       <input
                         type="datetime-local"
                         name="startTime"
@@ -465,9 +502,28 @@ const AuctionManagement = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        End Date & Time
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-sm font-medium text-gray-700">
+                          End Date & Time
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const now = new Date();
+                            now.setDate(now.getDate() + 2); // Default: 2 days from now
+                            const year = now.getFullYear();
+                            const month = String(now.getMonth() + 1).padStart(2, '0');
+                            const day = String(now.getDate()).padStart(2, '0');
+                            const hours = String(now.getHours()).padStart(2, '0');
+                            const minutes = String(now.getMinutes()).padStart(2, '0');
+                            const futureDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+                            setFormData(prev => ({ ...prev, endTime: futureDateTime }));
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800"
+                        >
+                          +2 Days
+                        </button>
+                      </div>
                       <input
                         type="datetime-local"
                         name="endTime"
