@@ -270,7 +270,7 @@ export const deleteAuction = async (req, res) => {
 // @access  Protected
 export const placeBid = async (req, res) => {
   try {
-    const { amount } = req.body;
+    const { amount, maxBid } = req.body;
     const userId = req.user._id;
 
     const auction = await Auction.findById(req.params.id);
@@ -301,6 +301,14 @@ export const placeBid = async (req, res) => {
       });
     }
 
+    // If maxBid provided, validate it's >= amount
+    if (maxBid && maxBid < amount) {
+      return res.status(400).json({
+        success: false,
+        message: 'Maximum bid must be greater than or equal to current bid'
+      });
+    }
+
     // Check if user is the reserve bidder
     const isReserveBidder = auction.reserveBidder &&
                            auction.reserveBidder.toString() === userId.toString();
@@ -309,7 +317,9 @@ export const placeBid = async (req, res) => {
     auction.bids.push({
       user: userId,
       amount,
-      isReserveBidder
+      maxBid: maxBid || null,
+      isReserveBidder,
+      isAutoBid: false
     });
 
     // Update current bid and total bids
@@ -317,6 +327,42 @@ export const placeBid = async (req, res) => {
     auction.totalBids = auction.bids.length;
 
     await auction.save();
+
+    // AUTO-BIDDING LOGIC: Check if there's a previous max bidder who can outbid this
+    const previousBids = auction.bids.slice(0, -1); // All bids except the one just placed
+    for (let i = previousBids.length - 1; i >= 0; i--) {
+      const previousBid = previousBids[i];
+
+      // Skip if no maxBid set or if it's the same user
+      if (!previousBid.maxBid || previousBid.user.toString() === userId.toString()) {
+        continue;
+      }
+
+      // If previous bidder's maxBid can beat current bid
+      if (previousBid.maxBid > auction.currentBid) {
+        const increment = auction.getCurrentIncrement();
+        const autoBidAmount = Math.min(
+          auction.currentBid + increment,
+          previousBid.maxBid
+        );
+
+        // Place auto-bid
+        auction.bids.push({
+          user: previousBid.user,
+          amount: autoBidAmount,
+          maxBid: previousBid.maxBid,
+          isReserveBidder: auction.reserveBidder &&
+                          auction.reserveBidder.toString() === previousBid.user.toString(),
+          isAutoBid: true
+        });
+
+        auction.currentBid = autoBidAmount;
+        auction.totalBids = auction.bids.length;
+
+        await auction.save();
+        break; // Only one auto-bid per manual bid
+      }
+    }
 
     // Populate the latest bid user info
     await auction.populate('bids.user', 'name email');
@@ -326,7 +372,8 @@ export const placeBid = async (req, res) => {
       message: 'Bid placed successfully',
       data: {
         auction,
-        latestBid: auction.bids[auction.bids.length - 1]
+        latestBid: auction.bids[auction.bids.length - 1],
+        autoBidTriggered: auction.bids[auction.bids.length - 1].isAutoBid
       }
     });
   } catch (error) {

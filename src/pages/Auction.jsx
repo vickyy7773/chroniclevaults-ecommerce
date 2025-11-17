@@ -24,6 +24,7 @@ const AuctionPage = () => {
   const [auction, setAuction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bidAmount, setBidAmount] = useState('');
+  const [maxBidAmount, setMaxBidAmount] = useState('');
   const [submittingBid, setSubmittingBid] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState('');
 
@@ -111,6 +112,7 @@ const AuctionPage = () => {
     }
 
     const amount = parseInt(bidAmount);
+    const maxBid = maxBidAmount ? parseInt(maxBidAmount) : null;
 
     // Validate bid amount
     if (isNaN(amount) || amount <= 0) {
@@ -120,6 +122,17 @@ const AuctionPage = () => {
 
     if (amount % 50 !== 0) {
       toast.error('Bid amount must be divisible by 50');
+      return;
+    }
+
+    // Validate max bid if provided
+    if (maxBid && maxBid < amount) {
+      toast.error('Maximum bid must be greater than or equal to your bid');
+      return;
+    }
+
+    if (maxBid && maxBid % 50 !== 0) {
+      toast.error('Maximum bid must be divisible by 50');
       return;
     }
 
@@ -133,9 +146,16 @@ const AuctionPage = () => {
 
     try {
       setSubmittingBid(true);
-      const response = await api.post(`/auctions/${auction._id}/bid`, { amount });
+      const response = await api.post(`/auctions/${auction._id}/bid`, { amount, maxBid });
 
-      toast.success('Bid placed successfully!');
+      // Check if auto-bid was triggered
+      if (response.data.autoBidTriggered) {
+        toast.success('Bid placed! Another bidder\'s max bid was triggered.');
+      } else if (maxBid) {
+        toast.success(`Bid placed with max bid of ₹${maxBid.toLocaleString()}!`);
+      } else {
+        toast.success('Bid placed successfully!');
+      }
 
       // Update auction with new bid
       setAuction(response.data.data.auction);
@@ -144,6 +164,7 @@ const AuctionPage = () => {
       const newIncrement = getCurrentIncrement(response.data.data.auction);
       const nextSuggestedBid = response.data.data.auction.currentBid + newIncrement;
       setBidAmount(nextSuggestedBid.toString());
+      setMaxBidAmount(''); // Clear max bid after placing bid
     } catch (error) {
       console.error('Place bid error:', error);
       toast.error(error.response?.data?.message || 'Failed to place bid');
@@ -384,6 +405,24 @@ const AuctionPage = () => {
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Must be divisible by 50 and at least ₹{minBid.toLocaleString()}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Maximum Bid (Optional) (₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={maxBidAmount}
+                    onChange={(e) => setMaxBidAmount(e.target.value)}
+                    min={bidAmount || minBid}
+                    step="50"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 text-lg font-semibold"
+                    placeholder="Enter your maximum bid"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    <strong>Auto-bidding:</strong> System will automatically bid on your behalf up to this amount
                   </p>
                 </div>
 

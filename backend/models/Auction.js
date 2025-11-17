@@ -71,6 +71,10 @@ const auctionSchema = new mongoose.Schema({
       type: Number,
       required: true
     },
+    maxBid: {
+      type: Number,
+      default: null // User's maximum autobid amount
+    },
     timestamp: {
       type: Date,
       default: Date.now
@@ -78,6 +82,10 @@ const auctionSchema = new mongoose.Schema({
     isReserveBidder: {
       type: Boolean,
       default: false
+    },
+    isAutoBid: {
+      type: Boolean,
+      default: false // True if this bid was placed automatically
     }
   }],
   reserveBidder: {
