@@ -105,6 +105,21 @@ const AuctionManagement = () => {
 
   const handleEdit = (auction) => {
     setSelectedAuction(auction);
+
+    // Convert UTC time to IST for display
+    const startTimeIST = new Date(auction.startTime);
+    const endTimeIST = new Date(auction.endTime);
+
+    // Format for datetime-local input (YYYY-MM-DDTHH:mm)
+    const formatDateTimeLocal = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
     setFormData({
       productId: auction.product?._id || '',
       title: auction.title,
@@ -112,8 +127,8 @@ const AuctionManagement = () => {
       image: auction.image,
       startingPrice: auction.startingPrice,
       reservePrice: auction.reservePrice || '',
-      startTime: new Date(auction.startTime).toISOString().slice(0, 16),
-      endTime: new Date(auction.endTime).toISOString().slice(0, 16)
+      startTime: formatDateTimeLocal(startTimeIST),
+      endTime: formatDateTimeLocal(endTimeIST)
     });
     setImagePreview(auction.image); // Show existing image
     setShowModal(true);
@@ -172,7 +187,8 @@ const AuctionManagement = () => {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
+      timeZone: 'Asia/Kolkata'
     });
   };
 
@@ -433,7 +449,7 @@ const AuctionManagement = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Start Time
+                        Start Date & Time
                       </label>
                       <input
                         type="datetime-local"
@@ -443,11 +459,14 @@ const AuctionManagement = () => {
                         required
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Use 24-hour format (e.g., 21:30 for 9:30 PM)
+                      </p>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        End Time
+                        End Date & Time
                       </label>
                       <input
                         type="datetime-local"
@@ -457,6 +476,18 @@ const AuctionManagement = () => {
                         required
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Use 24-hour format (e.g., 21:30 for 9:30 PM)
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Time Conversion Helper */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-blue-900 mb-2">⏰ 24-Hour Format Guide:</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-blue-800">
+                      <div>12:00 AM = 00:00 | 1:00 AM = 01:00 | 6:00 AM = 06:00</div>
+                      <div>12:00 PM = 12:00 | 6:00 PM = 18:00 | 9:00 PM = 21:00</div>
                     </div>
                   </div>
                 </div>
