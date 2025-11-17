@@ -536,10 +536,12 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
               {/* Product Name */}
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">{product.name}</h1>
 
-              {/* Price Section */}
-              <div className="mb-4 sm:mb-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
+              {/* Price, Stock, Quantity and Stamp in 50-50 Grid */}
+              <div className="grid grid-cols-2 gap-4 mb-4 sm:mb-6">
+                {/* Left Column: Price, Stock, Quantity */}
+                <div className="space-y-4">
+                  {/* Price */}
+                  <div>
                     <div className="flex items-baseline gap-2 sm:gap-4 mb-2 flex-wrap">
                       <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-600">
                         ₹{(product.price || 0).toLocaleString()}
@@ -560,32 +562,52 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                     )}
                   </div>
 
-                  {/* Stamp Image */}
-                  <div className="flex-shrink-0">
-                    <img
-                      src={stampImage}
-                      alt="Authenticity Stamp"
-                      className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain opacity-90 hover:opacity-100 transition-opacity"
-                    />
+                  {/* Stock Status */}
+                  <div>
+                    {(product.inStock || 0) > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 sm:w-3 h-2.5 sm:h-3 bg-green-500 rounded-full"></span>
+                        <span className="text-sm sm:text-base text-green-600 font-semibold">In Stock</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 sm:w-3 h-2.5 sm:h-3 bg-red-500 rounded-full"></span>
+                        <span className="text-sm sm:text-base text-red-600 font-semibold">Out of Stock</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quantity Selector */}
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Quantity</label>
+                    <div className="inline-flex items-center border-2 border-gray-300 rounded-lg">
+                      <button
+                        onClick={() => handleQuantityChange(-1)}
+                        disabled={quantity <= 1}
+                        className="p-2 sm:p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Minus size={18} className="sm:w-5 sm:h-5" />
+                      </button>
+                      <span className="px-4 sm:px-6 py-1.5 sm:py-2 text-base sm:text-lg font-bold border-x-2 border-gray-300 min-w-[50px] sm:min-w-[60px] text-center">{quantity}</span>
+                      <button
+                        onClick={() => handleQuantityChange(1)}
+                        disabled={quantity >= (product.inStock || 1)}
+                        className="p-2 sm:p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Plus size={18} className="sm:w-5 sm:h-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Stock Status */}
-              <div className="mb-4 sm:mb-6">
-                {(product.inStock || 0) > 0 ? (
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 sm:w-3 h-2.5 sm:h-3 bg-green-500 rounded-full"></span>
-                    <span className="text-sm sm:text-base text-green-600 font-semibold">
-                      In Stock
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 sm:w-3 h-2.5 sm:h-3 bg-red-500 rounded-full"></span>
-                    <span className="text-sm sm:text-base text-red-600 font-semibold">Out of Stock</span>
-                  </div>
-                )}
+                {/* Right Column: Stamp Image */}
+                <div className="flex items-center justify-center">
+                  <img
+                    src={stampImage}
+                    alt="Authenticity Stamp"
+                    className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 object-contain opacity-90 hover:opacity-100 transition-opacity"
+                  />
+                </div>
               </div>
 
               {/* Numista Rarity Index */}
@@ -611,28 +633,6 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                   </div>
                 </div>
               )}
-
-              {/* Quantity Selector */}
-              <div className="mb-4 sm:mb-6">
-                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Quantity</label>
-                <div className="inline-flex items-center border-2 border-gray-300 rounded-lg">
-                  <button
-                    onClick={() => handleQuantityChange(-1)}
-                    disabled={quantity <= 1}
-                    className="p-2 sm:p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Minus size={18} className="sm:w-5 sm:h-5" />
-                  </button>
-                  <span className="px-4 sm:px-6 py-1.5 sm:py-2 text-base sm:text-lg font-bold border-x-2 border-gray-300 min-w-[50px] sm:min-w-[60px] text-center">{quantity}</span>
-                  <button
-                    onClick={() => handleQuantityChange(1)}
-                    disabled={quantity >= (product.inStock || 1)}
-                    className="p-2 sm:p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Plus size={18} className="sm:w-5 sm:h-5" />
-                  </button>
-                </div>
-              </div>
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6">
