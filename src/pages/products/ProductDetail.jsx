@@ -536,26 +536,40 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
               {/* Product Name */}
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">{product.name}</h1>
 
-              {/* Price */}
+              {/* Price and Stamp */}
               <div className="mb-4 sm:mb-6">
-                <div className="flex items-baseline gap-2 sm:gap-4 mb-2 flex-wrap">
-                  <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-600">
-                    ₹{(product.price || 0).toLocaleString()}
-                  </span>
-                  {product.originalPrice && product.originalPrice > product.price && (
-                    <span className="text-lg sm:text-xl lg:text-2xl text-gray-400 line-through">
-                      ₹{product.originalPrice.toLocaleString()}
-                    </span>
-                  )}
+                <div className="flex items-start justify-between gap-4">
+                  {/* Price Section */}
+                  <div>
+                    <div className="flex items-baseline gap-2 sm:gap-4 mb-2 flex-wrap">
+                      <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-600">
+                        ₹{(product.price || 0).toLocaleString()}
+                      </span>
+                      {product.originalPrice && product.originalPrice > product.price && (
+                        <span className="text-lg sm:text-xl lg:text-2xl text-gray-400 line-through">
+                          ₹{product.originalPrice.toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs sm:text-sm text-gray-600 mb-1.5 sm:mb-2">
+                      (Inclusive of all Taxes and Shipping)
+                    </p>
+                    {product.originalPrice && product.originalPrice > product.price && product.discount > 0 && (
+                      <p className="text-sm sm:text-base text-green-600 font-semibold">
+                        You Save: ₹{(product.originalPrice - product.price).toLocaleString()} ({product.discount}%)
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Stamp Image */}
+                  <div className="flex-shrink-0">
+                    <img
+                      src={stampImage}
+                      alt="Authenticity Stamp"
+                      className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 object-contain opacity-90 hover:opacity-100 transition-opacity"
+                    />
+                  </div>
                 </div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-1.5 sm:mb-2">
-                  (Inclusive of all Taxes and Shipping)
-                </p>
-                {product.originalPrice && product.originalPrice > product.price && product.discount > 0 && (
-                  <p className="text-sm sm:text-base text-green-600 font-semibold">
-                    You Save: ₹{(product.originalPrice - product.price).toLocaleString()} ({product.discount}%)
-                  </p>
-                )}
               </div>
 
               {/* Stock Status */}
@@ -619,15 +633,6 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                     <Plus size={18} className="sm:w-5 sm:h-5" />
                   </button>
                 </div>
-              </div>
-
-              {/* Stamp Image - Responsive */}
-              <div className="mb-4 sm:mb-6 flex justify-center">
-                <img
-                  src={stampImage}
-                  alt="Authenticity Stamp"
-                  className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 object-contain opacity-90 hover:opacity-100 transition-opacity"
-                />
               </div>
 
               {/* Action Buttons */}
