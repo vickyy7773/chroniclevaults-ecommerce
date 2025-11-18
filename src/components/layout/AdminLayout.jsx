@@ -129,6 +129,14 @@ const AdminLayout = () => {
       resource: 'products' // Tied to products permission
     },
     {
+      path: '/admin/auction-registrations',
+      icon: Shield,
+      label: 'Auction Registrations',
+      color: 'from-blue-500 to-indigo-600',
+      resource: 'users', // Admin needs user management permission
+      superAdminOnly: false
+    },
+    {
       path: '/admin/profile',
       icon: Users,
       label: 'Profile',
