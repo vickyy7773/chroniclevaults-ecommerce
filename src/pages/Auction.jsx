@@ -266,6 +266,11 @@ const AuctionPage = () => {
     return lastBid.user._id === user._id;
   };
 
+  const isUserReserveBidder = () => {
+    if (!user || !auction) return false;
+    return auction.reserveBidder && auction.reserveBidder === user._id;
+  };
+
   const getUserBidCount = () => {
     if (!user || !auction) return 0;
     return auction.bids.filter(bid => bid.user._id === user._id).length;
@@ -478,6 +483,12 @@ const AuctionPage = () => {
                         <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />
                         You are currently winning!
                       </p>
+                      {isUserReserveBidder() && auction.highestReserveBid && (
+                        <p className="text-orange-700 text-xs mt-1 flex items-center">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          Your reserve bid: ₹{auction.highestReserveBid.toLocaleString()}
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <div className="bg-red-100 border border-red-300 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
@@ -485,6 +496,12 @@ const AuctionPage = () => {
                         <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
                         You are outbid! Place a higher bid to win.
                       </p>
+                      {isUserReserveBidder() && auction.highestReserveBid && (
+                        <p className="text-orange-700 text-xs mt-1 flex items-center">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          Your reserve bid active: ₹{auction.highestReserveBid.toLocaleString()}
+                        </p>
+                      )}
                     </div>
                   )}
                 </>
