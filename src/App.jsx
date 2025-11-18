@@ -9,7 +9,7 @@ import CartSidebar from './components/cart/CartSidebar';
 import WishlistSidebar from './components/cart/WishlistSidebar';
 import Footer from './components/common/Footer';
 import Toast from './components/common/Toast';
-import { userSyncService } from './services';
+import { userSyncService, authService } from './services';
 
 // Lazy load pages for code splitting
 const Authentication = lazy(() => import('./pages/auth/Authentication'));
@@ -114,15 +114,44 @@ const AppContent = () => {
 
   // Load user from localStorage on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Error loading user from localStorage:', error);
-        localStorage.removeItem('user');
+    const loadUser = async () => {
+      const savedUser = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+
+      if (savedUser && token) {
+        try {
+          const parsedUser = JSON.parse(savedUser);
+
+          // Check if _id is missing - fetch fresh user data from backend
+          if (!parsedUser._id) {
+            console.log('⚠️ User _id missing, fetching fresh data from backend...');
+            try {
+              const response = await authService.getCurrentUser();
+              if (response.success && response.data) {
+                console.log('✅ Fresh user data loaded:', response.data._id);
+                setUser(response.data);
+                localStorage.setItem('user', JSON.stringify(response.data));
+                return;
+              }
+            } catch (error) {
+              console.error('Error fetching fresh user data:', error);
+              // If fetch fails, clear invalid data
+              localStorage.removeItem('user');
+              localStorage.removeItem('token');
+              return;
+            }
+          }
+
+          // User has _id, use cached data
+          setUser(parsedUser);
+        } catch (error) {
+          console.error('Error loading user from localStorage:', error);
+          localStorage.removeItem('user');
+        }
       }
-    }
+    };
+
+    loadUser();
   }, []);
 
   // Save user to localStorage whenever it changes
