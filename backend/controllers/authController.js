@@ -151,13 +151,16 @@ export const login = async (req, res) => {
 // @access  Private
 export const getMe = async (req, res) => {
   try {
+    console.log('🔍 /auth/me - req.user._id:', req.user._id);
     const user = await User.findById(req.user._id).populate('role', 'name displayName permissions');
+    console.log('👤 /auth/me - Found user:', user ? user._id : 'null');
 
     res.status(200).json({
       success: true,
       data: user
     });
   } catch (error) {
+    console.error('❌ /auth/me error:', error.message);
     res.status(500).json({
       success: false,
       message: error.message
