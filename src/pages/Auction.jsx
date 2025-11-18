@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Gavel, Clock, TrendingUp, Users, AlertCircle, CheckCircle, History } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
+import { io } from 'socket.io-client';
 
 const AuctionPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const socketRef = useRef(null);
 
   // Get user from localStorage
   const [user, setUser] = useState(null);
@@ -27,6 +29,63 @@ const AuctionPage = () => {
   const [maxBidAmount, setMaxBidAmount] = useState('');
   const [submittingBid, setSubmittingBid] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState('');
+
+  // Socket.io connection setup
+  useEffect(() => {
+    // Connect to Socket.io server (use BACKEND_URL without /api)
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    socketRef.current = io(backendUrl, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5
+    });
+
+    socketRef.current.on('connect', () => {
+      console.log('✅ Connected to Socket.io server');
+      if (id) {
+        socketRef.current.emit('join-auction', id);
+      }
+    });
+
+    socketRef.current.on('disconnect', () => {
+      console.log('❌ Disconnected from Socket.io server');
+    });
+
+    socketRef.current.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
+
+    // Listen for real-time bid updates
+    socketRef.current.on('bid-placed', (data) => {
+      console.log('🔴 LIVE BID UPDATE:', data);
+
+      // Update auction data with new bid
+      setAuction(data.auction);
+
+      // Update suggested bid amount
+      const currentIncrement = getCurrentIncrement(data.auction);
+      const suggestedBid = data.auction.currentBid + currentIncrement;
+      setBidAmount(suggestedBid.toString());
+
+      // Show notification for new bid
+      if (data.autoBidTriggered) {
+        toast.info(`Auto-bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
+      } else {
+        toast.info(`New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`);
+      }
+    });
+
+    // Cleanup on unmount
+    return () => {
+      if (socketRef.current) {
+        if (id) {
+          socketRef.current.emit('leave-auction', id);
+        }
+        socketRef.current.disconnect();
+      }
+    };
+  }, [id]);
 
   useEffect(() => {
     if (id) {

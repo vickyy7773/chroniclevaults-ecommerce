@@ -6,6 +6,8 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
 import passport from "./config/passport.js";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 // Import routes
 import productRoutes from "./routes/products.js";
@@ -127,12 +129,47 @@ app.use("/api/auction-registration", auctionRegistrationRoutes);
 // Import email transporter close function
 import { closeTransporter } from './config/email.js';
 
+// Create HTTP server and Socket.io instance
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: true, // Allow all origins in development
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+  }
+});
+
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log('👤 User connected:', socket.id);
+
+  // Join auction room
+  socket.on('join-auction', (auctionId) => {
+    socket.join(`auction-${auctionId}`);
+    console.log(`👤 User ${socket.id} joined auction room: ${auctionId}`);
+  });
+
+  // Leave auction room
+  socket.on('leave-auction', (auctionId) => {
+    socket.leave(`auction-${auctionId}`);
+    console.log(`👤 User ${socket.id} left auction room: ${auctionId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('👋 User disconnected:', socket.id);
+  });
+});
+
+// Make io accessible to controllers
+app.set('io', io);
+
 // Start server
 const PORT = process.env.PORT || 5000;
 const HOST = '0.0.0.0'; // Listen on all network interfaces
-const server = app.listen(PORT, HOST, () => {
+const server = httpServer.listen(PORT, HOST, () => {
   console.log(`🚀 Server is running on http://${HOST}:${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+  console.log('🔌 Socket.io enabled for real-time updates');
 });
 
 // Graceful shutdown handling
@@ -144,6 +181,11 @@ const gracefulShutdown = async (signal) => {
     console.log('🔌 HTTP server closed');
 
     try {
+      // Close Socket.io connections
+      io.close(() => {
+        console.log('🔌 Socket.io server closed');
+      });
+
       // Close email transporter
       await closeTransporter();
 

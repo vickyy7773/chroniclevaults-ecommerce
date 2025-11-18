@@ -367,6 +367,17 @@ export const placeBid = async (req, res) => {
     // Populate the latest bid user info
     await auction.populate('bids.user', 'name email');
 
+    // Get Socket.io instance and emit real-time update
+    const io = req.app.get('io');
+    if (io) {
+      // Emit to all users in this auction room
+      io.to(`auction-${auction._id}`).emit('bid-placed', {
+        auction,
+        latestBid: auction.bids[auction.bids.length - 1],
+        autoBidTriggered: auction.bids[auction.bids.length - 1].isAutoBid
+      });
+    }
+
     res.json({
       success: true,
       message: 'Bid placed successfully',
