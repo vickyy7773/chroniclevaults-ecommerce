@@ -165,12 +165,16 @@ const Authentication = ({ setUser }) => {
         setShowOtpInput(false);
         setSubmitted(true);
 
-        // Store user data
+        // Store user data (IMPORTANT: include _id for proper authentication)
         const userData = {
+          _id: data.data._id,
           name: data.data.name,
           email: data.data.email,
           phone: data.data.phone,
-          role: data.data.role
+          role: data.data.role,
+          legacyRole: data.data.legacyRole,
+          isAdmin: data.data.isAdmin,
+          isSuperAdmin: data.data.isSuperAdmin
         };
 
         localStorage.setItem('user', JSON.stringify(userData));
@@ -247,10 +251,12 @@ const Authentication = ({ setUser }) => {
         if (data.success) {
           setSubmitted(true);
 
-          // Store user data
+          // Store user data (IMPORTANT: include _id for proper authentication)
           const userData = {
+            _id: data.data._id,
             name: data.data.name,
             email: data.data.email,
+            phone: data.data.phone,
             role: data.data.role,
             legacyRole: data.data.legacyRole,
             isAdmin: data.data.isAdmin,
