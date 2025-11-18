@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, CheckCircle } from 'lucide-react';
+import { Upload, CheckCircle, User, Building2, Calendar, FileText, MapPin, Phone, Mail, Globe, Image, Shield, Users, AlertCircle, Info } from 'lucide-react';
 import api from '../utils/api';
 
 const AuctionRegistration = () => {
@@ -10,15 +10,12 @@ const AuctionRegistration = () => {
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
-    // Personal Information
     title: 'Mr.',
     fullName: '',
     companyName: '',
     dateOfBirth: '',
     gstNumber: '',
     stateCode: '',
-
-    // Billing Address
     billingAddress: {
       addressLine1: '',
       addressLine2: '',
@@ -28,8 +25,6 @@ const AuctionRegistration = () => {
       city: '',
       pinCode: ''
     },
-
-    // Shipping Address
     sameAsBilling: true,
     shippingAddress: {
       addressLine1: '',
@@ -40,24 +35,16 @@ const AuctionRegistration = () => {
       city: '',
       pinCode: ''
     },
-
-    // Contact Details
     mobile: '',
     email: '',
     phone: '',
     website: '',
-
-    // Documents
     panCard: null,
     idProof: {
       proofType: 'aadhar',
       file: null
     },
-
-    // Collecting Interests
     collectingInterests: '',
-
-    // References
     references: [
       { name: '', city: '', mobile: '' },
       { name: '', city: '', mobile: '' },
@@ -119,7 +106,6 @@ const AuctionRegistration = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Convert to base64
     const reader = new FileReader();
     reader.onloadend = () => {
       if (fieldName === 'panCard') {
@@ -144,7 +130,6 @@ const AuctionRegistration = () => {
     setMessage('');
 
     try {
-      // Prepare data for submission
       const submitData = {
         ...formData,
         idProof: {
@@ -169,38 +154,72 @@ const AuctionRegistration = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6 md:p-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Auction Registration Form</h1>
-        <p className="text-sm text-red-600 mb-6">
-          * Only Indian Residents / NRI having valid address in India can register.
-        </p>
-        <p className="text-xs text-gray-600 mb-8 italic">
-          Items over 100 years old cannot be taken out of India without permission from the Director General, Archaeological Survey of India.
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 py-12 px-4">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full mb-4 shadow-lg">
+            <Shield className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">Auction Registration</h1>
+          <p className="text-lg text-gray-600">Join Chronicle Vaults Exclusive Auction Platform</p>
+        </div>
 
+        {/* Important Notices */}
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg shadow-md">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-red-800 mb-1">Registration Eligibility</p>
+              <p className="text-sm text-red-700">Only Indian Residents / NRI having valid address in India can register.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-4 mb-8 rounded-r-lg shadow-md">
+          <div className="flex items-start gap-3">
+            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-blue-800 mb-1">Export Restrictions</p>
+              <p className="text-sm text-blue-700 italic">Items over 100 years old cannot be taken out of India without permission from the Director General, Archaeological Survey of India.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Messages */}
         {message && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-            <div className="flex items-center gap-2">
-              <CheckCircle size={20} />
-              <span>{message}</span>
+          <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-r-lg shadow-md animate-fade-in">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <span className="text-green-800 font-medium">{message}</span>
             </div>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg shadow-md animate-fade-in">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              <span className="text-red-800 font-medium">{error}</span>
+            </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Information */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Personal Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-amber-100">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-amber-200">
+              <div className="p-3 bg-amber-100 rounded-lg">
+                <User className="w-6 h-6 text-amber-700" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Personal Information</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <User className="w-4 h-4 text-amber-600" />
                   Title <span className="text-red-600">*</span>
                 </label>
                 <select
@@ -208,7 +227,7 @@ const AuctionRegistration = () => {
                   value={formData.title}
                   onChange={handleChange}
                   required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                 >
                   <option value="Mr.">Mr.</option>
                   <option value="Mrs.">Mrs.</option>
@@ -217,7 +236,8 @@ const AuctionRegistration = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <User className="w-4 h-4 text-amber-600" />
                   Full Name <span className="text-red-600">*</span>
                 </label>
                 <input
@@ -226,12 +246,14 @@ const AuctionRegistration = () => {
                   value={formData.fullName}
                   onChange={handleChange}
                   required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="Enter your full name"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Building2 className="w-4 h-4 text-amber-600" />
                   Company Name
                 </label>
                 <input
@@ -239,12 +261,14 @@ const AuctionRegistration = () => {
                   name="companyName"
                   value={formData.companyName}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="Optional"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Calendar className="w-4 h-4 text-amber-600" />
                   Date of Birth <span className="text-red-600">*</span>
                 </label>
                 <input
@@ -253,12 +277,13 @@ const AuctionRegistration = () => {
                   value={formData.dateOfBirth}
                   onChange={handleChange}
                   required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <FileText className="w-4 h-4 text-amber-600" />
                   GST Number
                 </label>
                 <input
@@ -266,12 +291,14 @@ const AuctionRegistration = () => {
                   name="gstNumber"
                   value={formData.gstNumber}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="Optional"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <FileText className="w-4 h-4 text-amber-600" />
                   State Code
                 </label>
                 <input
@@ -279,18 +306,26 @@ const AuctionRegistration = () => {
                   name="stateCode"
                   value={formData.stateCode}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="Optional"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                 />
               </div>
             </div>
-          </section>
+          </div>
 
           {/* Billing Address */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Billing Address</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-amber-100">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-amber-200">
+              <div className="p-3 bg-amber-100 rounded-lg">
+                <MapPin className="w-6 h-6 text-amber-700" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Billing Address</h2>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <MapPin className="w-4 h-4 text-amber-600" />
                   Address Line 1 <span className="text-red-600">*</span>
                 </label>
                 <input
@@ -299,120 +334,135 @@ const AuctionRegistration = () => {
                   value={formData.billingAddress.addressLine1}
                   onChange={handleChange}
                   required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="Street address, P.O. box"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address Line 2
-                </label>
-                <input
-                  type="text"
-                  name="billing.addressLine2"
-                  value={formData.billingAddress.addressLine2}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    Address Line 2
+                  </label>
+                  <input
+                    type="text"
+                    name="billing.addressLine2"
+                    value={formData.billingAddress.addressLine2}
+                    onChange={handleChange}
+                    placeholder="Apartment, suite, unit, building"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    Address Line 3
+                  </label>
+                  <input
+                    type="text"
+                    name="billing.addressLine3"
+                    value={formData.billingAddress.addressLine3}
+                    onChange={handleChange}
+                    placeholder="Additional address information"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  />
+                </div>
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address Line 3
-                </label>
-                <input
-                  type="text"
-                  name="billing.addressLine3"
-                  value={formData.billingAddress.addressLine3}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    Country <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="billing.country"
+                    value={formData.billingAddress.country}
+                    onChange={handleChange}
+                    required
+                    readOnly
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 bg-gray-50 cursor-not-allowed"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Country <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="billing.country"
-                  value={formData.billingAddress.country}
-                  onChange={handleChange}
-                  required
-                  readOnly
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 cursor-not-allowed"
-                />
-              </div>
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    State <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="billing.state"
+                    value={formData.billingAddress.state}
+                    onChange={handleChange}
+                    required
+                    placeholder="e.g., Gujarat, Maharashtra"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  State <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="billing.state"
-                  value={formData.billingAddress.state}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    City <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="billing.city"
+                    value={formData.billingAddress.city}
+                    onChange={handleChange}
+                    required
+                    placeholder="e.g., Ahmedabad, Mumbai"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  City <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="billing.city"
-                  value={formData.billingAddress.city}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Pin Code <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="billing.pinCode"
-                  value={formData.billingAddress.pinCode}
-                  onChange={handleChange}
-                  required
-                  pattern="[0-9]{6}"
-                  placeholder="6-digit PIN code"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    Pin Code <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="billing.pinCode"
+                    value={formData.billingAddress.pinCode}
+                    onChange={handleChange}
+                    required
+                    pattern="[0-9]{6}"
+                    placeholder="6-digit PIN code"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  />
+                </div>
               </div>
             </div>
-          </section>
+          </div>
 
           {/* Shipping Address */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Shipping Address</h2>
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-amber-100">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-amber-200">
+              <div className="p-3 bg-amber-100 rounded-lg">
+                <MapPin className="w-6 h-6 text-amber-700" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Shipping Address</h2>
+            </div>
 
-            <div className="mb-4">
-              <label className="flex items-center gap-2">
+            <div className="mb-6">
+              <label className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
                   name="sameAsBilling"
                   checked={formData.sameAsBilling}
                   onChange={handleChange}
-                  className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                  className="w-5 h-5 text-amber-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-amber-500"
                 />
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-semibold text-gray-700 group-hover:text-amber-600 transition-colors">
                   Same as Billing Address
                 </span>
               </label>
             </div>
 
             {!formData.sameAsBilling && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="grid grid-cols-1 gap-6 animate-fade-in">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <MapPin className="w-4 h-4 text-amber-600" />
                     Address Line 1 <span className="text-red-600">*</span>
                   </label>
                   <input
@@ -421,89 +471,99 @@ const AuctionRegistration = () => {
                     value={formData.shippingAddress.addressLine1}
                     onChange={handleChange}
                     required={!formData.sameAsBilling}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="Street address, P.O. box"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address Line 2
-                  </label>
-                  <input
-                    type="text"
-                    name="shipping.addressLine2"
-                    value={formData.shippingAddress.addressLine2}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  />
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Address Line 2</label>
+                    <input
+                      type="text"
+                      name="shipping.addressLine2"
+                      value={formData.shippingAddress.addressLine2}
+                      onChange={handleChange}
+                      placeholder="Apartment, suite, unit"
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                    />
+                  </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address Line 3
-                  </label>
-                  <input
-                    type="text"
-                    name="shipping.addressLine3"
-                    value={formData.shippingAddress.addressLine3}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  />
-                </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Address Line 3</label>
+                    <input
+                      type="text"
+                      name="shipping.addressLine3"
+                      value={formData.shippingAddress.addressLine3}
+                      onChange={handleChange}
+                      placeholder="Additional information"
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    State <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="shipping.state"
-                    value={formData.shippingAddress.state}
-                    onChange={handleChange}
-                    required={!formData.sameAsBilling}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  />
-                </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                      State <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="shipping.state"
+                      value={formData.shippingAddress.state}
+                      onChange={handleChange}
+                      required={!formData.sameAsBilling}
+                      placeholder="e.g., Gujarat"
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    City <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="shipping.city"
-                    value={formData.shippingAddress.city}
-                    onChange={handleChange}
-                    required={!formData.sameAsBilling}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  />
-                </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                      City <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="shipping.city"
+                      value={formData.shippingAddress.city}
+                      onChange={handleChange}
+                      required={!formData.sameAsBilling}
+                      placeholder="e.g., Ahmedabad"
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pin Code <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="shipping.pinCode"
-                    value={formData.shippingAddress.pinCode}
-                    onChange={handleChange}
-                    required={!formData.sameAsBilling}
-                    pattern="[0-9]{6}"
-                    placeholder="6-digit PIN code"
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  />
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                      Pin Code <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="shipping.pinCode"
+                      value={formData.shippingAddress.pinCode}
+                      onChange={handleChange}
+                      required={!formData.sameAsBilling}
+                      pattern="[0-9]{6}"
+                      placeholder="6-digit PIN code"
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                    />
+                  </div>
                 </div>
               </div>
             )}
-          </section>
+          </div>
 
           {/* Contact Details */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Contact Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-amber-100">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-amber-200">
+              <div className="p-3 bg-amber-100 rounded-lg">
+                <Phone className="w-6 h-6 text-amber-700" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Contact Details</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Phone className="w-4 h-4 text-amber-600" />
                   Mobile Number <span className="text-red-600">*</span>
                 </label>
                 <input
@@ -514,12 +574,13 @@ const AuctionRegistration = () => {
                   required
                   pattern="[0-9]{10}"
                   placeholder="10-digit mobile number"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Mail className="w-4 h-4 text-amber-600" />
                   Email ID <span className="text-red-600">*</span>
                 </label>
                 <input
@@ -528,12 +589,14 @@ const AuctionRegistration = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="your.email@example.com"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Phone className="w-4 h-4 text-amber-600" />
                   Phone Number
                 </label>
                 <input
@@ -541,12 +604,14 @@ const AuctionRegistration = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="Optional"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Globe className="w-4 h-4 text-amber-600" />
                   Website
                 </label>
                 <input
@@ -555,24 +620,31 @@ const AuctionRegistration = () => {
                   value={formData.website}
                   onChange={handleChange}
                   placeholder="https://example.com"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
                 />
               </div>
             </div>
-          </section>
+          </div>
 
           {/* Documents */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Document Attachment</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-amber-100">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-amber-200">
+              <div className="p-3 bg-amber-100 rounded-lg">
+                <Image className="w-6 h-6 text-amber-700" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Document Attachment</h2>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border-2 border-amber-200">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-4">
+                  <FileText className="w-5 h-5 text-amber-600" />
                   PAN Card Photo <span className="text-red-600">*</span>
                 </label>
                 <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg cursor-pointer hover:bg-amber-700">
-                    <Upload size={18} />
-                    <span>Upload PAN Card</span>
+                  <label className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl cursor-pointer hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl">
+                    <Upload className="w-5 h-5" />
+                    <span className="font-semibold">Upload PAN Card</span>
                     <input
                       type="file"
                       accept="image/*,.pdf"
@@ -582,36 +654,38 @@ const AuctionRegistration = () => {
                     />
                   </label>
                   {formData.panCard && (
-                    <span className="text-sm text-green-600">✓ File uploaded</span>
+                    <span className="flex items-center gap-2 text-green-700 font-medium bg-green-100 px-4 py-2 rounded-lg">
+                      <CheckCircle className="w-5 h-5" />
+                      File uploaded
+                    </span>
                   )}
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ID Proof Type <span className="text-red-600">*</span>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-4">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                  ID Proof <span className="text-red-600">*</span>
                 </label>
-                <select
-                  name="idProofType"
-                  value={formData.idProof.proofType}
-                  onChange={handleChange}
-                  required
-                  className="w-full md:w-1/2 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                >
-                  <option value="aadhar">Aadhar Card</option>
-                  <option value="govt-id">Government ID Proof</option>
-                  <option value="passport">Passport</option>
-                </select>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload ID Proof <span className="text-red-600">*</span>
-                </label>
+                <div className="mb-4">
+                  <select
+                    name="idProofType"
+                    value={formData.idProof.proofType}
+                    onChange={handleChange}
+                    required
+                    className="w-full md:w-auto border-2 border-blue-300 rounded-xl px-6 py-3 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  >
+                    <option value="aadhar">Aadhar Card</option>
+                    <option value="govt-id">Government ID Proof</option>
+                    <option value="passport">Passport</option>
+                  </select>
+                </div>
+
                 <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg cursor-pointer hover:bg-amber-700">
-                    <Upload size={18} />
-                    <span>Upload ID Proof</span>
+                  <label className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl cursor-pointer hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl">
+                    <Upload className="w-5 h-5" />
+                    <span className="font-semibold">Upload ID Proof</span>
                     <input
                       type="file"
                       accept="image/*,.pdf"
@@ -621,81 +695,123 @@ const AuctionRegistration = () => {
                     />
                   </label>
                   {formData.idProof.file && (
-                    <span className="text-sm text-green-600">✓ File uploaded</span>
+                    <span className="flex items-center gap-2 text-green-700 font-medium bg-green-100 px-4 py-2 rounded-lg">
+                      <CheckCircle className="w-5 h-5" />
+                      File uploaded
+                    </span>
                   )}
                 </div>
               </div>
             </div>
-          </section>
+          </div>
 
           {/* Collecting Interests */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Collecting Interests</h2>
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-amber-100">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-amber-200">
+              <div className="p-3 bg-amber-100 rounded-lg">
+                <FileText className="w-6 h-6 text-amber-700" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Collecting Interests</h2>
+            </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="text-sm font-semibold text-gray-700 mb-2 block">
                 Please describe your collecting interests
               </label>
               <textarea
                 name="collectingInterests"
                 value={formData.collectingInterests}
                 onChange={handleChange}
-                rows={4}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="e.g., Ancient coins, Mughal era coins, British India coins, etc."
+                rows={5}
+                placeholder="e.g., Ancient coins, Mughal era coins, British India coins, commemorative coins, etc."
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all resize-none"
               />
             </div>
-          </section>
+          </div>
 
           {/* References */}
-          <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">
-              References (2-3 Dealer/Collector References)
-            </h2>
-            <p className="text-sm text-gray-600 mb-4">If no references, write "NA"</p>
-            {formData.references.map((ref, index) => (
-              <div key={index} className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Reference {index + 1}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                    <input
-                      type="text"
-                      value={ref.name}
-                      onChange={(e) => handleReferenceChange(index, 'name', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                    <input
-                      type="text"
-                      value={ref.city}
-                      onChange={(e) => handleReferenceChange(index, 'city', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Mobile</label>
-                    <input
-                      type="tel"
-                      value={ref.mobile}
-                      onChange={(e) => handleReferenceChange(index, 'mobile', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    />
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-amber-100">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-amber-200">
+              <div className="p-3 bg-amber-100 rounded-lg">
+                <Users className="w-6 h-6 text-amber-700" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">References</h2>
+                <p className="text-sm text-gray-600 mt-1">2-3 Dealer/Collector References (If no references, write "NA")</p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {formData.references.map((ref, index) => (
+                <div key={index} className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-6 border-2 border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Reference {index + 1}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                        <User className="w-4 h-4 text-gray-600" />
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        value={ref.name}
+                        onChange={(e) => handleReferenceChange(index, 'name', e.target.value)}
+                        placeholder="Reference name or NA"
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                        <MapPin className="w-4 h-4 text-gray-600" />
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        value={ref.city}
+                        onChange={(e) => handleReferenceChange(index, 'city', e.target.value)}
+                        placeholder="City or NA"
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                        <Phone className="w-4 h-4 text-gray-600" />
+                        Mobile
+                      </label>
+                      <input
+                        type="tel"
+                        value={ref.mobile}
+                        onChange={(e) => handleReferenceChange(index, 'mobile', e.target.value)}
+                        placeholder="Mobile or NA"
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </section>
+              ))}
+            </div>
+          </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center pt-6">
+          <div className="flex justify-center pt-8">
             <button
               type="submit"
               disabled={loading}
-              className="px-8 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="group relative px-12 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-lg font-bold rounded-2xl hover:from-amber-700 hover:to-orange-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all shadow-xl hover:shadow-2xl transform hover:scale-105 disabled:transform-none"
             >
-              {loading ? 'Submitting...' : 'Submit Registration'}
+              {loading ? (
+                <span className="flex items-center gap-3">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Submitting Registration...
+                </span>
+              ) : (
+                <span className="flex items-center gap-3">
+                  <CheckCircle className="w-6 h-6" />
+                  Submit Registration
+                </span>
+              )}
             </button>
           </div>
         </form>
