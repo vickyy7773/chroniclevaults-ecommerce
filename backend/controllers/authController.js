@@ -151,7 +151,7 @@ export const login = async (req, res) => {
 // @access  Private
 export const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id).populate('role', 'name displayName permissions');
 
     res.status(200).json({
       success: true,
@@ -172,7 +172,7 @@ export const updateProfile = async (req, res) => {
   try {
     const { name, email, phone, address } = req.body;
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
 
     if (!user) {
       return res.status(404).json({
@@ -208,7 +208,7 @@ export const updatePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    const user = await User.findById(req.user.id).select('+password');
+    const user = await User.findById(req.user._id).select('+password');
 
     // Check current password
     const isMatch = await user.comparePassword(currentPassword);
@@ -291,7 +291,7 @@ export const facebookCallback = async (req, res) => {
 // @access  Private
 export const getAddresses = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     res.status(200).json({
       success: true,
       data: user.savedAddresses || []
@@ -309,7 +309,7 @@ export const getAddresses = async (req, res) => {
 // @access  Private
 export const addAddress = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     const { type, name, address, city, state, pincode, phone, isDefault } = req.body;
 
     // If this is set as default, unset all other default addresses
@@ -349,7 +349,7 @@ export const addAddress = async (req, res) => {
 // @access  Private
 export const updateAddress = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     const address = user.savedAddresses.id(req.params.addressId);
 
     if (!address) {
@@ -396,7 +396,7 @@ export const updateAddress = async (req, res) => {
 // @access  Private
 export const deleteAddress = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
     const address = user.savedAddresses.id(req.params.addressId);
 
     if (!address) {
@@ -426,7 +426,7 @@ export const deleteAddress = async (req, res) => {
 // @access  Private
 export const setDefaultAddress = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user._id);
 
     // Unset all default addresses
     user.savedAddresses.forEach(addr => {
