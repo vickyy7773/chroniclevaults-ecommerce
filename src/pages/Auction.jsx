@@ -80,11 +80,27 @@ const AuctionPage = () => {
     // Handler function with latest user and auction state
     const handleBidPlaced = (data) => {
       console.log('🔴 LIVE BID UPDATE:', data);
-      console.log('Current user ID:', user?._id);
+
+      // Get current user from localStorage directly to ensure latest value
+      let currentUser = user;
+      if (!currentUser) {
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          try {
+            currentUser = JSON.parse(savedUser);
+            console.log('📦 Loaded user from localStorage:', currentUser._id);
+          } catch (error) {
+            console.error('Error parsing user from localStorage:', error);
+          }
+        }
+      }
+
+      console.log('Current user ID:', currentUser?._id);
       console.log('Latest bidder ID:', data.latestBid?.user?._id);
 
-      // Check if current user has placed any bids
-      const userHasBids = auction && auction.bids.some(bid => bid.user._id === user?._id);
+      // Check if current user has placed any bids in the UPDATED auction data (from socket)
+      const userHasBids = data.auction && data.auction.bids &&
+                          data.auction.bids.some(bid => bid.user._id === currentUser?._id);
       console.log('User has bids:', userHasBids);
 
       // Update auction data with new bid
@@ -97,11 +113,11 @@ const AuctionPage = () => {
 
       // Check if current user is still winning after this bid
       const isStillWinning = data.auction.bids.length > 0 &&
-                             data.auction.bids[data.auction.bids.length - 1].user._id === user?._id;
+                             data.auction.bids[data.auction.bids.length - 1].user._id === currentUser?._id;
       console.log('User still winning:', isStillWinning);
 
       // Show notification for new bid
-      if (data.latestBid.user._id === user?._id) {
+      if (data.latestBid.user._id === currentUser?._id) {
         // Current user placed the bid
         console.log('✅ Current user placed bid');
         if (data.autoBidTriggered) {
