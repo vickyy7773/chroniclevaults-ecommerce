@@ -25,6 +25,7 @@ import filterOptionRoutes from "./routes/filterOptionRoutes.js";
 import paymentRoutes from "./routes/payments.js";
 import userCartRoutes from "./routes/userCart.js";
 import auctionRoutes from "./routes/auctions.js";
+import visitorRoutes from "./routes/visitors.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -119,6 +120,7 @@ app.use("/api/filter-options", filterOptionRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/user", userCartRoutes);
 app.use("/api/auctions", auctionRoutes);
+app.use("/api/visitors", visitorRoutes);
 
 // Import email transporter close function
 import { closeTransporter } from './config/email.js';

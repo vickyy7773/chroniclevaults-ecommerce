@@ -3,27 +3,35 @@ import { Link } from 'react-router-dom';
 import { BadgeCheck, Shield, Mail, MapPin, Clock, Award, Eye } from 'lucide-react';
 import { FaWhatsapp, FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter } from 'react-icons/fa';
 import logoImage from '../../assets/fixed logo.png';
+import api from '../../services';
 
 const Footer = () => {
-  const [visitorCount, setVisitorCount] = useState(0);
+  const [visitorCount, setVisitorCount] = useState(1000);
 
   useEffect(() => {
-    // Get current visitor count from localStorage
-    const currentCount = parseInt(localStorage.getItem('visitorCount') || '1000', 10);
+    const fetchVisitorCount = async () => {
+      try {
+        // Check if visitor has already been counted in this session
+        const hasVisited = sessionStorage.getItem('visitorCounted');
 
-    // Check if this is a new session
-    const lastVisit = sessionStorage.getItem('hasVisited');
+        if (!hasVisited) {
+          // First visit in this session - increment counter
+          const response = await api.post('/visitors/increment');
+          setVisitorCount(response.data.count);
+          sessionStorage.setItem('visitorCounted', 'true');
+        } else {
+          // Already visited in this session - just get the count
+          const response = await api.get('/visitors/count');
+          setVisitorCount(response.data.count);
+        }
+      } catch (error) {
+        console.error('Error fetching visitor count:', error);
+        // Fallback to display a default count
+        setVisitorCount(1000);
+      }
+    };
 
-    if (!lastVisit) {
-      // New session - increment counter
-      const newCount = currentCount + 1;
-      localStorage.setItem('visitorCount', newCount.toString());
-      sessionStorage.setItem('hasVisited', 'true');
-      setVisitorCount(newCount);
-    } else {
-      // Returning visitor in same session
-      setVisitorCount(currentCount);
-    }
+    fetchVisitorCount();
   }, []);
 
   return (
