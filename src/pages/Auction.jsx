@@ -34,12 +34,17 @@ const AuctionPage = () => {
   useEffect(() => {
     // Connect to Socket.io server (use BACKEND_URL without /api)
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
+    // Use only polling in production to avoid WebSocket errors on LiteSpeed
+    const isProduction = backendUrl.includes('chroniclevaults.com');
+
     socketRef.current = io(backendUrl, {
-      transports: ['polling', 'websocket'], // Try polling first for better compatibility
+      transports: isProduction ? ['polling'] : ['polling', 'websocket'],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
-      path: '/socket.io'
+      path: '/socket.io',
+      upgrade: !isProduction // Disable upgrade to websocket in production
     });
 
     socketRef.current.on('connect', () => {
