@@ -70,6 +70,9 @@ const AuctionPage = () => {
       const wasWinning = auction && auction.bids.length > 0 &&
                          auction.bids[auction.bids.length - 1].user._id === user?._id;
 
+      // Check if current user has placed any bids
+      const userHasBids = auction && auction.bids.some(bid => bid.user._id === user?._id);
+
       // Update auction data with new bid
       setAuction(data.auction);
 
@@ -92,15 +95,16 @@ const AuctionPage = () => {
         }
       } else {
         // Someone else placed the bid
-        if (wasWinning && !isStillWinning) {
-          // Current user was winning but is now outbid
+        if (userHasBids && !isStillWinning) {
+          // Current user has bid but is not winning - show outbid message
           toast.warning(`⚠️ You are outbid! New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`, {
             autoClose: 5000
           });
-        } else {
-          // General notification
+        } else if (!userHasBids) {
+          // User hasn't bid yet - show general notification
           toast.info(`New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`);
         }
+        // If user is winning, no need to show notification
       }
     });
 
