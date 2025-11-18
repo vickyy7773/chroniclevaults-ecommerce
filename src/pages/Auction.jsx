@@ -35,10 +35,11 @@ const AuctionPage = () => {
     // Connect to Socket.io server (use BACKEND_URL without /api)
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
     socketRef.current = io(backendUrl, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'], // Try polling first for better compatibility
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      path: '/socket.io'
     });
 
     socketRef.current.on('connect', () => {
