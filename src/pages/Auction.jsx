@@ -62,8 +62,23 @@ const AuctionPage = () => {
       console.error('Socket connection error:', error);
     });
 
-    // Listen for real-time bid updates
-    socketRef.current.on('bid-placed', (data) => {
+    // Cleanup on unmount
+    return () => {
+      if (socketRef.current) {
+        if (id) {
+          socketRef.current.emit('leave-auction', id);
+        }
+        socketRef.current.disconnect();
+      }
+    };
+  }, [id]);
+
+  // Separate useEffect for bid-placed listener that depends on user and auction
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    // Handler function with latest user and auction state
+    const handleBidPlaced = (data) => {
       console.log('🔴 LIVE BID UPDATE:', data);
       console.log('Current user ID:', user?._id);
       console.log('Latest bidder ID:', data.latestBid?.user?._id);
@@ -113,18 +128,19 @@ const AuctionPage = () => {
           console.log('✅ User is winning, no notification');
         }
       }
-    });
+    };
 
-    // Cleanup on unmount
+    // Remove old listener and add new one with updated closure
+    socketRef.current.off('bid-placed', handleBidPlaced);
+    socketRef.current.on('bid-placed', handleBidPlaced);
+
+    // Cleanup
     return () => {
       if (socketRef.current) {
-        if (id) {
-          socketRef.current.emit('leave-auction', id);
-        }
-        socketRef.current.disconnect();
+        socketRef.current.off('bid-placed', handleBidPlaced);
       }
     };
-  }, [id]);
+  }, [user, auction]);
 
   useEffect(() => {
     if (id) {
