@@ -1,5 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Header from './components/common/Header';
 import ScrollToTop from './components/common/ScrollToTop';
 import VintageCoinStore from './components/layout/VintageCoinStore';
@@ -407,6 +409,18 @@ const AppContent = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-50">
       <ScrollToTop />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       {!hideHeaderFooter && (
         <Header
           cartTotal={cartTotal}
