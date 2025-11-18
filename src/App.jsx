@@ -116,26 +116,40 @@ const AppContent = () => {
   useEffect(() => {
     const loadUser = async () => {
       const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
 
-      // If token exists, always fetch fresh user data from backend
+      // First, immediately load user from localStorage for instant UI update
+      if (savedUser && token) {
+        try {
+          const userData = JSON.parse(savedUser);
+          console.log('📦 Loaded user from localStorage:', userData._id);
+          setUser(userData);
+        } catch (error) {
+          console.error('Error parsing saved user:', error);
+        }
+      }
+
+      // Then fetch fresh user data from backend in background
       if (token) {
         try {
-          console.log('🔄 Fetching user data from backend...');
+          console.log('🔄 Fetching fresh user data from backend...');
           const response = await authService.getCurrentUser();
           if (response.success && response.data) {
-            console.log('✅ User data loaded:', response.data._id);
+            console.log('✅ Fresh user data loaded:', response.data._id);
             setUser(response.data);
             localStorage.setItem('user', JSON.stringify(response.data));
           } else {
             // Invalid token or error
             localStorage.removeItem('user');
             localStorage.removeItem('token');
+            setUser(null);
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
           // If fetch fails, clear invalid data
           localStorage.removeItem('user');
           localStorage.removeItem('token');
+          setUser(null);
         }
       }
     };
