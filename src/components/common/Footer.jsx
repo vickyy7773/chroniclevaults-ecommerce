@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BadgeCheck, Shield, Mail, MapPin, Clock, Award, Eye } from 'lucide-react';
 import { FaWhatsapp, FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter } from 'react-icons/fa';
 import logoImage from '../../assets/fixed logo.png';
-import api from '../../services';
+import api from '../../utils/api';
 
 const Footer = () => {
   const [visitorCount, setVisitorCount] = useState(1000);
