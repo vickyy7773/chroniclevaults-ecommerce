@@ -123,14 +123,24 @@ export const createAuction = async (req, res) => {
       });
     }
 
-    // Default increment slabs if not provided
+    // Default increment slabs if not provided (based on conversation requirements)
     const defaultSlabs = incrementSlabs || [
-      { minPrice: 0, maxPrice: 1000, increment: 50 },
-      { minPrice: 1000, maxPrice: 5000, increment: 100 },
-      { minPrice: 5000, maxPrice: 10000, increment: 250 },
-      { minPrice: 10000, maxPrice: 50000, increment: 500 },
-      { minPrice: 50000, maxPrice: 100000, increment: 1000 },
-      { minPrice: 100000, maxPrice: Infinity, increment: 2000 }
+      { minPrice: 1, maxPrice: 1999, increment: 100 },
+      { minPrice: 2000, maxPrice: 2999, increment: 200 },
+      { minPrice: 3000, maxPrice: 4999, increment: 300 },
+      { minPrice: 5000, maxPrice: 9999, increment: 500 },
+      { minPrice: 10000, maxPrice: 19999, increment: 1000 },
+      { minPrice: 20000, maxPrice: 29999, increment: 2000 },
+      { minPrice: 30000, maxPrice: 49999, increment: 3000 },
+      { minPrice: 50000, maxPrice: 99999, increment: 5000 },
+      { minPrice: 100000, maxPrice: 199999, increment: 10000 },
+      { minPrice: 200000, maxPrice: 299999, increment: 20000 },
+      { minPrice: 300000, maxPrice: 499999, increment: 30000 },
+      { minPrice: 500000, maxPrice: 999999, increment: 50000 },
+      { minPrice: 1000000, maxPrice: 1999999, increment: 100000 },
+      { minPrice: 2000000, maxPrice: 2999999, increment: 200000 },
+      { minPrice: 3000000, maxPrice: 4999999, increment: 300000 },
+      { minPrice: 5000000, maxPrice: 10000000, increment: 500000 }
     ];
 
     const auction = new Auction({
@@ -327,42 +337,6 @@ export const placeBid = async (req, res) => {
     auction.totalBids = auction.bids.length;
 
     await auction.save();
-
-    // AUTO-BIDDING LOGIC: Check if there's a previous max bidder who can outbid this
-    const previousBids = auction.bids.slice(0, -1); // All bids except the one just placed
-    for (let i = previousBids.length - 1; i >= 0; i--) {
-      const previousBid = previousBids[i];
-
-      // Skip if no maxBid set or if it's the same user
-      if (!previousBid.maxBid || previousBid.user.toString() === userId.toString()) {
-        continue;
-      }
-
-      // If previous bidder's maxBid can beat current bid
-      if (previousBid.maxBid > auction.currentBid) {
-        const increment = auction.getCurrentIncrement();
-        const autoBidAmount = Math.min(
-          auction.currentBid + increment,
-          previousBid.maxBid
-        );
-
-        // Place auto-bid
-        auction.bids.push({
-          user: previousBid.user,
-          amount: autoBidAmount,
-          maxBid: previousBid.maxBid,
-          isReserveBidder: auction.reserveBidder &&
-                          auction.reserveBidder.toString() === previousBid.user.toString(),
-          isAutoBid: true
-        });
-
-        auction.currentBid = autoBidAmount;
-        auction.totalBids = auction.bids.length;
-
-        await auction.save();
-        break; // Only one auto-bid per manual bid
-      }
-    }
 
     // Populate the latest bid user info
     await auction.populate('bids.user', 'name email');
