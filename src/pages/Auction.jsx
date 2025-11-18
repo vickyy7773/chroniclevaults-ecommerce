@@ -61,6 +61,10 @@ const AuctionPage = () => {
     socketRef.current.on('bid-placed', (data) => {
       console.log('🔴 LIVE BID UPDATE:', data);
 
+      // Check if current user was previously winning
+      const wasWinning = auction && auction.bids.length > 0 &&
+                         auction.bids[auction.bids.length - 1].user._id === user?._id;
+
       // Update auction data with new bid
       setAuction(data.auction);
 
@@ -69,11 +73,29 @@ const AuctionPage = () => {
       const suggestedBid = data.auction.currentBid + currentIncrement;
       setBidAmount(suggestedBid.toString());
 
+      // Check if current user is still winning after this bid
+      const isStillWinning = data.auction.bids.length > 0 &&
+                             data.auction.bids[data.auction.bids.length - 1].user._id === user?._id;
+
       // Show notification for new bid
-      if (data.autoBidTriggered) {
-        toast.info(`Auto-bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
+      if (data.latestBid.user._id === user?._id) {
+        // Current user placed the bid
+        if (data.autoBidTriggered) {
+          toast.success(`Auto-bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
+        } else {
+          toast.success('Bid placed successfully!');
+        }
       } else {
-        toast.info(`New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`);
+        // Someone else placed the bid
+        if (wasWinning && !isStillWinning) {
+          // Current user was winning but is now outbid
+          toast.warning(`⚠️ You are outbid! New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`, {
+            autoClose: 5000
+          });
+        } else {
+          // General notification
+          toast.info(`New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`);
+        }
       }
     });
 
