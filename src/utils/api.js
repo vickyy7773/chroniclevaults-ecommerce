@@ -38,12 +38,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Unauthorized - clear token and redirect to authentication
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/authentication';
-    }
+    // Don't auto-logout on 401 - let individual endpoints handle auth errors
+    // This prevents unwanted logouts during API calls
+    // The App.jsx will handle token validation on page load
     return Promise.reject(error);
   }
 );

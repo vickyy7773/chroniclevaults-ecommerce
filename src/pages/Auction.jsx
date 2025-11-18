@@ -41,10 +41,13 @@ const AuctionPage = () => {
     socketRef.current = io(backendUrl, {
       transports: isProduction ? ['polling'] : ['polling', 'websocket'],
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: Infinity, // Keep trying to reconnect
       path: '/socket.io',
-      upgrade: !isProduction // Disable upgrade to websocket in production
+      upgrade: !isProduction, // Disable upgrade to websocket in production
+      forceNew: true, // Create new connection each time
+      timeout: 20000
     });
 
     socketRef.current.on('connect', () => {
@@ -54,12 +57,24 @@ const AuctionPage = () => {
       }
     });
 
-    socketRef.current.on('disconnect', () => {
-      console.log('❌ Disconnected from Socket.io server');
+    socketRef.current.on('reconnect', (attemptNumber) => {
+      console.log('🔄 Reconnected to Socket.io after', attemptNumber, 'attempts');
+      if (id) {
+        socketRef.current.emit('join-auction', id);
+      }
+    });
+
+    socketRef.current.on('disconnect', (reason) => {
+      console.log('❌ Disconnected from Socket.io:', reason);
+      if (reason === 'io server disconnect') {
+        // Server disconnected, manually reconnect
+        socketRef.current.connect();
+      }
     });
 
     socketRef.current.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+      console.error('Socket connection error:', error.message);
+      // Don't spam console with repetitive errors
     });
 
     // Cleanup on unmount
@@ -69,6 +84,7 @@ const AuctionPage = () => {
           socketRef.current.emit('leave-auction', id);
         }
         socketRef.current.disconnect();
+        socketRef.current = null;
       }
     };
   }, [id]);

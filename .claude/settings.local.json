@@ -14,7 +14,21 @@
       "Bash(timeout:*)",
       "Bash(npm start)",
       "Bash(npm run dev:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(nul)",
+      "Bash(ssh root@72.60.202.163 \"cd /home/chroniclevaults.com/app && git pull && npm run build && echo ''---REMOVING OLD FILES---'' && rm -rf /home/chroniclevaults.com/public_html/* && echo ''---COPYING NEW BUILD---'' && cp -r dist/* /home/chroniclevaults.com/public_html/ && echo ''---CLEARING ALL CACHES---'' && rm -rf /usr/local/lsws/cachedata/chroniclevaults.com/* && /usr/local/lsws/bin/lswsctrl restart && echo ''---VERIFYING FILES---'' && ls -lah /home/chroniclevaults.com/public_html/ && date\")",
+      "Bash(ssh root@72.60.202.163 \"grep -o ''px-[0-9]'' /home/chroniclevaults.com/public_html/assets/index-*.css | head -20\")",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nRemove OTP verification and add direct registration with mobile number\n\n- Remove OTP verification from signup flow\n- Keep mobile number field in signup form\n- Direct registration without OTP (calls /auth/register endpoint)\n- Users now appear directly in Customer Management with phone number\n- Improved user experience with faster signup process\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nRestore email OTP verification with phone number field\n\n- Added back email OTP verification for signup\n- Kept mobile number field in signup form\n- User flow: Fill form → Send OTP to email → Verify OTP → Registration complete\n- Phone number saved with user data\n- Removed direct registration, restored OTP-based signup\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd mobile number display and courier copy feature in Order Management\n\n- Display customer phone number in order details\n- Add dedicated \"Courier Details\" section with copy functionality\n- One-click copy all courier information (Order#, Name, Phone, Address)\n- Format optimized for easy paste to courier services\n- Green-themed copyable section for better visibility\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)",
+      "Bash(ssh root@72.60.202.163 \"cd /home/chroniclevaults.com/app && git pull && pm2 restart chroniclevaults-api && pm2 logs chroniclevaults-api --lines 20 --nostream\")",
+      "Bash(ssh root@72.60.202.163 \"curl -s http://localhost:5000/api/orders | head -200\")",
+      "Bash(ssh root@72.60.202.163 \"pm2 logs chroniclevaults-api --lines 50 --nostream | grep -A 10 -B 5 ''GET /api/orders'' | tail -30\")",
+      "Bash(ssh root@72.60.202.163 \"pm2 logs chroniclevaults-api --lines 100 --nostream | grep -i ''phone'' | tail -10\")",
+      "Bash(ssh root@72.60.202.163:*)"
     ],
     "deny": [],
     "ask": []
