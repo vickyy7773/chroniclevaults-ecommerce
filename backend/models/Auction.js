@@ -93,6 +93,10 @@ const auctionSchema = new mongoose.Schema({
     ref: 'User',
     default: null
   },
+  highestReserveBid: {
+    type: Number,
+    default: null // Current highest reserve bid (hidden from users)
+  },
   winner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

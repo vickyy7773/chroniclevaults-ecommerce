@@ -311,30 +311,101 @@ export const placeBid = async (req, res) => {
       });
     }
 
-    // If maxBid provided, validate it's >= amount
-    if (maxBid && maxBid < amount) {
-      return res.status(400).json({
-        success: false,
-        message: 'Maximum bid must be greater than or equal to current bid'
-      });
+    // If maxBid provided, validate it's >= amount and divisible by 50
+    if (maxBid) {
+      if (maxBid < amount) {
+        return res.status(400).json({
+          success: false,
+          message: 'Maximum bid must be greater than or equal to current bid'
+        });
+      }
+
+      if (maxBid % 50 !== 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Maximum bid must be divisible by 50'
+        });
+      }
     }
 
-    // Check if user is the reserve bidder
-    const isReserveBidder = auction.reserveBidder &&
-                           auction.reserveBidder.toString() === userId.toString();
+    // RESERVE BID LOGIC
+    let autoBidTriggered = false;
+    let previousReserveBidAmount = null;
 
-    // Add the bid
-    auction.bids.push({
-      user: userId,
-      amount,
-      maxBid: maxBid || null,
-      isReserveBidder,
-      isAutoBid: false
-    });
+    // If user is placing a reserve bid (maxBid)
+    if (maxBid) {
+      // Check if there's an existing higher reserve bid
+      if (auction.highestReserveBid && maxBid <= auction.highestReserveBid) {
+        // User's reserve bid is lower than existing reserve bid
+        // Place the normal bid only
+        auction.bids.push({
+          user: userId,
+          amount,
+          maxBid: maxBid,
+          isReserveBidder: false,
+          isAutoBid: false
+        });
 
-    // Update current bid and total bids
-    auction.currentBid = amount;
-    auction.totalBids = auction.bids.length;
+        auction.currentBid = amount;
+        auction.totalBids = auction.bids.length;
+      } else {
+        // User's reserve bid is higher than existing reserve bid (or no existing reserve bid)
+        // First, place the current bid
+        auction.bids.push({
+          user: userId,
+          amount,
+          maxBid: maxBid,
+          isReserveBidder: false,
+          isAutoBid: false
+        });
+
+        auction.currentBid = amount;
+        auction.totalBids = auction.bids.length;
+
+        // If there was a previous reserve bid, automatically jump to that amount
+        if (auction.highestReserveBid && auction.highestReserveBid > amount) {
+          previousReserveBidAmount = auction.highestReserveBid;
+
+          // Auto-increment to the previous reserve bid amount
+          auction.bids.push({
+            user: userId,
+            amount: auction.highestReserveBid,
+            maxBid: maxBid,
+            isReserveBidder: false,
+            isAutoBid: true
+          });
+
+          auction.currentBid = auction.highestReserveBid;
+          auction.totalBids = auction.bids.length;
+          autoBidTriggered = true;
+        }
+
+        // Update the highest reserve bid and reserve bidder
+        auction.highestReserveBid = maxBid;
+        auction.reserveBidder = userId;
+      }
+    } else {
+      // Normal bid without reserve bid
+      // Check if current bid matches or exceeds the reserve bid
+      if (auction.highestReserveBid && amount >= auction.highestReserveBid) {
+        // This bid has reached/exceeded the reserve bid
+        // Clear the reserve bid
+        auction.highestReserveBid = null;
+        auction.reserveBidder = null;
+      }
+
+      // Add the normal bid
+      auction.bids.push({
+        user: userId,
+        amount,
+        maxBid: null,
+        isReserveBidder: false,
+        isAutoBid: false
+      });
+
+      auction.currentBid = amount;
+      auction.totalBids = auction.bids.length;
+    }
 
     await auction.save();
 
@@ -348,17 +419,21 @@ export const placeBid = async (req, res) => {
       io.to(`auction-${auction._id}`).emit('bid-placed', {
         auction,
         latestBid: auction.bids[auction.bids.length - 1],
-        autoBidTriggered: auction.bids[auction.bids.length - 1].isAutoBid
+        autoBidTriggered,
+        previousReserveBidAmount
       });
     }
 
     res.json({
       success: true,
-      message: 'Bid placed successfully',
+      message: autoBidTriggered
+        ? `Bid placed successfully. Auto-incremented to ₹${previousReserveBidAmount.toLocaleString()} (previous reserve bid)`
+        : 'Bid placed successfully',
       data: {
         auction,
         latestBid: auction.bids[auction.bids.length - 1],
-        autoBidTriggered: auction.bids[auction.bids.length - 1].isAutoBid
+        autoBidTriggered,
+        previousReserveBidAmount
       }
     });
   } catch (error) {
