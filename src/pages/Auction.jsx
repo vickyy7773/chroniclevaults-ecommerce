@@ -443,13 +443,24 @@ const AuctionPage = () => {
               </div>
 
               {/* Winning Status */}
-              {user && isUserWinning() && auction.status === 'Active' && (
-                <div className="bg-green-100 border border-green-300 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
-                  <p className="text-green-800 font-semibold text-xs sm:text-sm flex items-center">
-                    <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                    You are currently winning!
-                  </p>
-                </div>
+              {user && auction.status === 'Active' && getUserBidCount() > 0 && (
+                <>
+                  {isUserWinning() ? (
+                    <div className="bg-green-100 border border-green-300 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
+                      <p className="text-green-800 font-semibold text-xs sm:text-sm flex items-center">
+                        <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                        You are currently winning!
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-red-100 border border-red-300 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
+                      <p className="text-red-800 font-semibold text-xs sm:text-sm flex items-center">
+                        <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                        You are outbid! Place a higher bid to win.
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Bid Form */}
