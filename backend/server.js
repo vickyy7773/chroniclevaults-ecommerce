@@ -136,7 +136,11 @@ const io = new Server(httpServer, {
     origin: true, // Allow all origins in development
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
-  }
+  },
+  transports: ['polling', 'websocket'], // Try polling first for better compatibility
+  allowEIO3: true, // Allow Engine.IO v3 clients
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 // Socket.io connection handling
