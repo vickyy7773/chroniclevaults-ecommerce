@@ -65,13 +65,12 @@ const AuctionPage = () => {
     // Listen for real-time bid updates
     socketRef.current.on('bid-placed', (data) => {
       console.log('🔴 LIVE BID UPDATE:', data);
-
-      // Check if current user was previously winning
-      const wasWinning = auction && auction.bids.length > 0 &&
-                         auction.bids[auction.bids.length - 1].user._id === user?._id;
+      console.log('Current user ID:', user?._id);
+      console.log('Latest bidder ID:', data.latestBid?.user?._id);
 
       // Check if current user has placed any bids
       const userHasBids = auction && auction.bids.some(bid => bid.user._id === user?._id);
+      console.log('User has bids:', userHasBids);
 
       // Update auction data with new bid
       setAuction(data.auction);
@@ -84,10 +83,12 @@ const AuctionPage = () => {
       // Check if current user is still winning after this bid
       const isStillWinning = data.auction.bids.length > 0 &&
                              data.auction.bids[data.auction.bids.length - 1].user._id === user?._id;
+      console.log('User still winning:', isStillWinning);
 
       // Show notification for new bid
       if (data.latestBid.user._id === user?._id) {
         // Current user placed the bid
+        console.log('✅ Current user placed bid');
         if (data.autoBidTriggered) {
           toast.success(`Auto-bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
         } else {
@@ -95,16 +96,22 @@ const AuctionPage = () => {
         }
       } else {
         // Someone else placed the bid
+        console.log('❌ Someone else placed bid');
+        console.log('Check: userHasBids && !isStillWinning =', userHasBids && !isStillWinning);
+
         if (userHasBids && !isStillWinning) {
           // Current user has bid but is not winning - show outbid message
+          console.log('🚨 Showing OUTBID message');
           toast.warning(`⚠️ You are outbid! New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`, {
             autoClose: 5000
           });
         } else if (!userHasBids) {
           // User hasn't bid yet - show general notification
+          console.log('ℹ️ Showing INFO message');
           toast.info(`New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`);
+        } else {
+          console.log('✅ User is winning, no notification');
         }
-        // If user is winning, no need to show notification
       }
     });
 
