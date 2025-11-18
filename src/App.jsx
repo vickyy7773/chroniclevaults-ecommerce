@@ -139,17 +139,25 @@ const AppContent = () => {
             setUser(response.data);
             localStorage.setItem('user', JSON.stringify(response.data));
           } else {
-            // Invalid token or error
+            // Only logout if we got a response but it's invalid (actual auth failure)
+            console.warn('⚠️ Invalid user data from backend, logging out');
             localStorage.removeItem('user');
             localStorage.removeItem('token');
             setUser(null);
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
-          // If fetch fails, clear invalid data
-          localStorage.removeItem('user');
-          localStorage.removeItem('token');
-          setUser(null);
+          // Don't logout on network errors - keep using cached user data
+          // Only logout if it's an actual 401 authentication error
+          if (error.response?.status === 401) {
+            console.warn('⚠️ Authentication failed (401), logging out');
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            setUser(null);
+          } else {
+            console.log('📡 Network error, keeping cached user data');
+            // Keep the user data from localStorage that we loaded earlier
+          }
         }
       }
     };
