@@ -6,7 +6,7 @@ import {
   approveRegistration,
   rejectRegistration
 } from '../controllers/auctionRegistrationController.js';
-import { protect, admin } from '../middleware/authMiddleware.js';
+import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
 
