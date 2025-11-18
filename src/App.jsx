@@ -115,38 +115,27 @@ const AppContent = () => {
   // Load user from localStorage on mount
   useEffect(() => {
     const loadUser = async () => {
-      const savedUser = localStorage.getItem('user');
       const token = localStorage.getItem('token');
 
-      if (savedUser && token) {
+      // If token exists, always fetch fresh user data from backend
+      if (token) {
         try {
-          const parsedUser = JSON.parse(savedUser);
-
-          // Check if _id is missing - fetch fresh user data from backend
-          if (!parsedUser._id) {
-            console.log('⚠️ User _id missing, fetching fresh data from backend...');
-            try {
-              const response = await authService.getCurrentUser();
-              if (response.success && response.data) {
-                console.log('✅ Fresh user data loaded:', response.data._id);
-                setUser(response.data);
-                localStorage.setItem('user', JSON.stringify(response.data));
-                return;
-              }
-            } catch (error) {
-              console.error('Error fetching fresh user data:', error);
-              // If fetch fails, clear invalid data
-              localStorage.removeItem('user');
-              localStorage.removeItem('token');
-              return;
-            }
+          console.log('🔄 Fetching user data from backend...');
+          const response = await authService.getCurrentUser();
+          if (response.success && response.data) {
+            console.log('✅ User data loaded:', response.data._id);
+            setUser(response.data);
+            localStorage.setItem('user', JSON.stringify(response.data));
+          } else {
+            // Invalid token or error
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
           }
-
-          // User has _id, use cached data
-          setUser(parsedUser);
         } catch (error) {
-          console.error('Error loading user from localStorage:', error);
+          console.error('Error fetching user data:', error);
+          // If fetch fails, clear invalid data
           localStorage.removeItem('user');
+          localStorage.removeItem('token');
         }
       }
     };
