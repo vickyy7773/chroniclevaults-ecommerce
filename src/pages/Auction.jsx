@@ -144,15 +144,12 @@ const AuctionPage = () => {
         // Current user placed the bid
         console.log('✅ Current user placed bid');
 
-        // Skip notification if this is auto-bid from reserve bidder
-        // (API response already showed appropriate message)
-        if (!data.latestBid.isAutoBid) {
-          if (data.autoBidTriggered) {
-            toast.success(`Auto-bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
-          } else {
-            toast.success('Bid placed successfully!');
-          }
+        // Only show notification if auto-bid was triggered by someone else's bid
+        // Don't show notification for user's own manual bid (they see the UI update)
+        if (data.autoBidTriggered && data.latestBid.isAutoBid) {
+          toast.success(`Auto-bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
         }
+        // No notification for manual bid by current user
       } else {
         // Someone else placed the bid
         console.log('❌ Someone else placed bid');
