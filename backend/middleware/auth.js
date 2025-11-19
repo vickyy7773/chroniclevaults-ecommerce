@@ -15,6 +15,7 @@ export const protect = async (req, res, next) => {
 
   // Check if token exists
   if (!token) {
+    console.log('❌ No token provided');
     return res.status(401).json({
       success: false,
       message: 'Not authorized to access this route'
@@ -24,11 +25,14 @@ export const protect = async (req, res, next) => {
   try {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('✅ Token verified for user ID:', decoded.id);
 
     // Get user from token and populate role
     req.user = await User.findById(decoded.id).select('-password').populate('role');
+    console.log('✅ User loaded:', req.user ? req.user.email : 'null', 'Role:', req.user?.role?.name);
 
     if (!req.user) {
+      console.log('❌ User not found in database');
       return res.status(401).json({
         success: false,
         message: 'User not found'
@@ -37,6 +41,7 @@ export const protect = async (req, res, next) => {
 
     next();
   } catch (error) {
+    console.log('❌ Token verification failed:', error.message);
     return res.status(401).json({
       success: false,
       message: 'Not authorized, token failed'
@@ -46,11 +51,17 @@ export const protect = async (req, res, next) => {
 
 // Admin middleware (legacy support)
 export const admin = (req, res, next) => {
+  console.log('🔐 Admin check - legacyRole:', req.user?.legacyRole, 'role:', req.user?.role?.name);
+  console.log('🔐 Dashboard access:', req.user?.role?.permissions?.dashboard?.access);
+
   if (req.user && (req.user.legacyRole === 'admin' || req.user.legacyRole === 'superadmin')) {
+    console.log('✅ Admin check passed (legacy role)');
     next();
   } else if (req.user && req.user.role && req.user.role.permissions && req.user.role.permissions.dashboard && req.user.role.permissions.dashboard.access) {
+    console.log('✅ Admin check passed (role-based permissions)');
     next();
   } else {
+    console.log('❌ Admin check failed');
     return res.status(403).json({
       success: false,
       message: 'Not authorized as admin'
