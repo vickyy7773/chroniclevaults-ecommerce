@@ -386,7 +386,6 @@ export const placeBid = async (req, res) => {
       }
     } else {
       // Normal bid without reserve bid
-      // First, add the normal bid
       auction.bids.push({
         user: userId,
         amount,
@@ -398,30 +397,10 @@ export const placeBid = async (req, res) => {
       auction.currentBid = amount;
       auction.totalBids = auction.bids.length;
 
-      // Check if there's an active reserve bid that can counter this bid
-      if (auction.highestReserveBid && auction.reserveBidder && amount < auction.highestReserveBid) {
-        // Reserve bidder's max bid is higher than this bid
-        // Automatically place a counter-bid from reserve bidder
-        const increment = auction.getCurrentIncrement(amount);
-        const autoBidAmount = amount + increment;
-
-        // Make sure auto-bid doesn't exceed the reserve bid
-        const finalAutoBidAmount = Math.min(autoBidAmount, auction.highestReserveBid);
-
-        auction.bids.push({
-          user: auction.reserveBidder,
-          amount: finalAutoBidAmount,
-          maxBid: auction.highestReserveBid,
-          isReserveBidder: true,
-          isAutoBid: true
-        });
-
-        auction.currentBid = finalAutoBidAmount;
-        auction.totalBids = auction.bids.length;
-        autoBidTriggered = true;
-      } else if (auction.highestReserveBid && amount >= auction.highestReserveBid) {
+      // Check if this bid has reached/exceeded the reserve bid
+      if (auction.highestReserveBid && amount >= auction.highestReserveBid) {
         // This bid has reached/exceeded the reserve bid
-        // Clear the reserve bid
+        // Clear the reserve bid since it's been overtaken
         auction.highestReserveBid = null;
         auction.reserveBidder = null;
       }
