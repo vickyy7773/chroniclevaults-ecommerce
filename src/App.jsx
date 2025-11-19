@@ -63,6 +63,7 @@ const AuctionRegistrationManagement = lazy(() => import('./pages/admin/AuctionRe
 const Auctions = lazy(() => import('./pages/Auctions'));
 const Auction = lazy(() => import('./pages/Auction'));
 const AuctionRegistration = lazy(() => import('./pages/AuctionRegistration'));
+const NoAuction = lazy(() => import('./pages/NoAuction'));
 
 // Loading component
 const PageLoader = () => (
@@ -587,6 +588,7 @@ const AppContent = () => {
             <Route path="/auctions" element={<Auctions />} />
             <Route path="/auction/:id" element={<Auction />} />
             <Route path="/auction-registration" element={<AuctionRegistration />} />
+            <Route path="/no-auction" element={<NoAuction />} />
 
             {/* Policy Pages */}
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
