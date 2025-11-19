@@ -70,7 +70,7 @@ const Hero = () => {
             title: slide.title,
             subtitle: slide.subtitle || '',
             buttonText: slide.buttonText || 'Shop Now',
-            image: slide.image,
+            image: slide.image?.replace('http://', 'https://'), // Ensure HTTPS for images
             action: () => window.location.href = slide.buttonLink || '/products'
           }));
 
