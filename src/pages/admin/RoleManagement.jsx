@@ -123,9 +123,9 @@ const RoleManagement = () => {
       const response = await roleService.getAllRoles();
       console.log('🔐 Roles Response:', response);
 
-      // Handle axios response format
-      const rolesData = response?.data?.data || response?.data || [];
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response interceptor already returns response.data
+      const rolesData = response?.data || [];
+      const isSuccess = response?.success !== false;
 
       console.log('🔐 Roles Data:', rolesData);
       console.log('✅ Is Success:', isSuccess);
@@ -230,7 +230,7 @@ const RoleManagement = () => {
         console.log('Update response:', response);
 
         // Handle axios response
-        const isSuccess = (response?.status === 200 || response?.status === 201) && response?.data?.success !== false;
+        const isSuccess = response?.success !== false;
 
         if (isSuccess) {
           setSuccess('Role updated successfully');
@@ -246,7 +246,7 @@ const RoleManagement = () => {
         console.log('Create response:', response);
 
         // Handle axios response
-        const isSuccess = (response?.status === 200 || response?.status === 201) && response?.data?.success !== false;
+        const isSuccess = response?.success !== false;
 
         if (isSuccess) {
           setSuccess('Role created successfully');

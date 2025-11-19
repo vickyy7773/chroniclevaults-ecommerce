@@ -33,9 +33,9 @@ const BlogManagement = () => {
       const response = await blogService.getAllBlogs();
       console.log('📝 Blogs Response:', response);
 
-      // Handle axios response format
-      const blogsData = response?.data?.data || response?.data || [];
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response interceptor already returns response.data, so response = {success, data}
+      const blogsData = response?.data || [];
+      const isSuccess = response?.success !== false;
 
       console.log('📝 Blogs Data:', blogsData);
       console.log('✅ Is Success:', isSuccess);
@@ -74,8 +74,8 @@ const BlogManagement = () => {
         const response = await blogService.deleteBlog(blogId);
         console.log('Delete response:', response);
 
-        // Handle axios response
-        const isSuccess = response?.data?.success !== false && response?.status === 200;
+        // Response interceptor already returns response.data
+        const isSuccess = response?.success !== false;
 
         if (isSuccess) {
           alert('✅ Blog deleted successfully!');

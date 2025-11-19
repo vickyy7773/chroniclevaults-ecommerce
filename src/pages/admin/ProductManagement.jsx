@@ -26,9 +26,9 @@ const ProductManagement = () => {
       const response = await productService.getAllProducts(filters);
       console.log('📦 Products Response:', response);
 
-      // Handle axios response format
-      const productsData = response?.data?.data || response?.data || [];
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response interceptor already returns response.data
+      const productsData = response?.data || [];
+      const isSuccess = response?.success !== false;
 
       console.log('📦 Products Data:', productsData);
       console.log('✅ Is Success:', isSuccess);

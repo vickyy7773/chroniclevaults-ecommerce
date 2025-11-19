@@ -22,9 +22,9 @@ const CustomerManagement = () => {
 
       console.log('👥 Customers Response:', response);
 
-      // Handle axios response format
-      const customersData = response?.data?.data || response?.data || [];
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response interceptor already returns response.data
+      const customersData = response?.data || [];
+      const isSuccess = response?.success !== false;
 
       console.log('👥 Customers Data:', customersData);
       console.log('✅ Is Success:', isSuccess);
@@ -62,14 +62,14 @@ const CustomerManagement = () => {
       try {
         const response = await customerService.deleteCustomer(customerId);
 
-        // Handle axios response
-        const isSuccess = response?.data?.success !== false && response?.status === 200;
+        // Response interceptor already returns response.data
+        const isSuccess = response?.success !== false;
 
         if (isSuccess) {
           setCustomers(customers.filter(c => c._id !== customerId));
           alert('Customer deleted successfully!');
         } else {
-          const errorMsg = response?.data?.message || 'Failed to delete customer';
+          const errorMsg = response?.message || 'Failed to delete customer';
           alert(errorMsg);
         }
       } catch (error) {
@@ -87,8 +87,8 @@ const CustomerManagement = () => {
     try {
       const response = await customerService.updateCustomerStatus(customerId, newStatus);
 
-      // Handle axios response
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response interceptor already returns response.data
+      const isSuccess = response?.success !== false;
 
       if (isSuccess) {
         setCustomers(customers.map(c =>
@@ -97,7 +97,7 @@ const CustomerManagement = () => {
         setSelectedCustomer(prev => prev ? { ...prev, status: newStatus } : null);
         alert('Customer status updated successfully!');
       } else {
-        const errorMsg = response?.data?.message || 'Failed to update status';
+        const errorMsg = response?.message || 'Failed to update status';
         alert(errorMsg);
       }
     } catch (error) {

@@ -36,9 +36,9 @@ const SliderManagement = () => {
       const response = await sliderService.getAllSlidersAdmin();
       console.log('🖼️ Sliders Response:', response);
 
-      // Handle axios response format
-      const slidersData = response?.data?.data || response?.data || [];
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response interceptor already returns response.data
+      const slidersData = response?.data || [];
+      const isSuccess = response?.success !== false;
 
       console.log('🖼️ Sliders Data:', slidersData);
       console.log('✅ Is Success:', isSuccess);
@@ -188,7 +188,7 @@ const SliderManagement = () => {
         const response = await sliderService.updateSlider(editingSlider._id, dataToSave);
         console.log('🖼️ Update response:', response);
 
-        const isSuccess = (response?.status === 200 || response?.status === 201) && response?.data?.success !== false;
+        const isSuccess = response?.success !== false;
 
         if (isSuccess) {
           setSuccess('✓ Slider updated successfully!');
@@ -207,7 +207,7 @@ const SliderManagement = () => {
         const response = await sliderService.createSlider(dataToSave);
         console.log('🖼️ Create slider response:', response);
 
-        const isSuccess = (response?.status === 200 || response?.status === 201) && response?.data?.success !== false;
+        const isSuccess = response?.success !== false;
 
         if (isSuccess) {
           setSuccess('✓ Slider created successfully!');
@@ -239,7 +239,7 @@ const SliderManagement = () => {
       const response = await sliderService.deleteSlider(id);
       console.log('🖼️ Delete response:', response);
 
-      const isSuccess = (response?.status === 200 || response?.status === 204) && response?.data?.success !== false;
+      const isSuccess = response?.success !== false;
 
       if (isSuccess) {
         setSuccess('✓ Slider deleted successfully!');

@@ -127,9 +127,9 @@ const AdminManagement = () => {
       const response = await adminService.getAllAdmins();
       console.log('👥 Admins Response:', response);
 
-      // Handle axios response format
-      const adminsData = response?.data?.data || response?.data || [];
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response interceptor already returns response.data
+      const adminsData = response?.data || [];
+      const isSuccess = response?.success !== false;
 
       console.log('👥 Admins Data:', adminsData);
       console.log('✅ Is Success:', isSuccess);
@@ -157,9 +157,9 @@ const AdminManagement = () => {
       const response = await roleService.getAllRoles();
       console.log('🔐 Roles Response:', response);
 
-      // Handle axios response format
-      const rolesData = response?.data?.data || response?.data || [];
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response interceptor already returns response.data
+      const rolesData = response?.data || [];
+      const isSuccess = response?.success !== false;
 
       console.log('🔐 Roles Data:', rolesData);
       console.log('✅ Is Success:', isSuccess);
@@ -205,8 +205,8 @@ const AdminManagement = () => {
       const response = await adminService.createAdmin(adminFormData);
       console.log('Admin creation response:', response);
 
-      // Handle axios response
-      const isSuccess = (response?.status === 200 || response?.status === 201) && response?.data?.success !== false;
+      // Response interceptor already returns response.data
+      const isSuccess = response?.success !== false;
 
       if (isSuccess) {
         setSuccess('Admin created successfully');

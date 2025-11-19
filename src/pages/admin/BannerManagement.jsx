@@ -33,8 +33,9 @@ const BannerManagement = () => {
       const response = await bannerService.getAllBannersAdmin();
       console.log('🎯 Banners Response:', response);
 
-      const bannersData = response?.data?.data || response?.data || [];
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response interceptor already returns response.data
+      const bannersData = response?.data || [];
+      const isSuccess = response?.success !== false;
 
       if (isSuccess && Array.isArray(bannersData)) {
         setBanners(bannersData);
