@@ -52,8 +52,8 @@ const Hero = () => {
       console.log('🖼️ Frontend Sliders Response:', response);
 
       // Handle axios response format
-      const slidersData = response?.data?.data || response?.data || [];
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      const slidersData = response?.data || [];
+      const isSuccess = response?.success !== false;
 
       console.log('🖼️ Sliders Data:', slidersData);
       console.log('✅ Is Success:', isSuccess);
