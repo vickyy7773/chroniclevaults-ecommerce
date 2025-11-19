@@ -27,17 +27,14 @@ export const submitRegistration = async (req, res) => {
       references
     } = req.body;
 
-    // Check if email already registered
+    // Check if email already registered for auction (not in User model)
     const existingRegistration = await AuctionRegistration.findOne({ email });
     if (existingRegistration) {
       return res.status(400).json({ message: 'Email already registered for auction' });
     }
 
-    // Check if email exists in User model
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email already exists in system' });
-    }
+    // Note: We don't check User model because auction email can be same as user account email
+    // Auction registration is separate from user account creation
 
     // Generate email verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -145,22 +142,31 @@ export const approveRegistration = async (req, res) => {
       return res.status(400).json({ message: 'Email not verified yet' });
     }
 
-    // Create user account
-    const user = await User.create({
-      name: registration.fullName,
-      email: registration.email,
-      password: password || 'TempPass123!', // Temporary password
-      phone: registration.mobile,
-      address: {
-        street: registration.billingAddress.addressLine1,
-        city: registration.billingAddress.city,
-        state: registration.billingAddress.state,
-        zipCode: registration.billingAddress.pinCode,
-        country: registration.billingAddress.country
-      },
-      role: 'customer',
-      isAuctionVerified: true
-    });
+    // Check if user already exists with this email
+    let user = await User.findOne({ email: registration.email });
+
+    if (user) {
+      // User already exists, just update auction verification status
+      user.isAuctionVerified = true;
+      await user.save();
+    } else {
+      // Create new user account
+      user = await User.create({
+        name: registration.fullName,
+        email: registration.email,
+        password: password || 'TempPass123!', // Temporary password
+        phone: registration.mobile,
+        address: {
+          street: registration.billingAddress.addressLine1,
+          city: registration.billingAddress.city,
+          state: registration.billingAddress.state,
+          zipCode: registration.billingAddress.pinCode,
+          country: registration.billingAddress.country
+        },
+        role: 'customer',
+        isAuctionVerified: true
+      });
+    }
 
     // Update registration
     registration.status = 'approved';
