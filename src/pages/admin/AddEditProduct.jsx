@@ -124,9 +124,9 @@ const AddEditProduct = () => {
       const response = await productService.getProductById(id);
       console.log('📦 Product Response:', response);
 
-      // Handle axios response format
-      const productData = response?.data?.data || response?.data;
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Axios interceptor returns response.data, so response = {success: true, data: {...}}
+      const productData = response?.data;
+      const isSuccess = response?.success !== false;
 
       console.log('📦 Product Data:', productData);
       console.log('✅ Is Success:', isSuccess);
