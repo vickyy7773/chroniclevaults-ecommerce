@@ -58,9 +58,9 @@ const OrderManagement = () => {
 
       console.log('📋 Admin Orders Response:', response);
 
-      // Handle axios response format
-      const ordersData = response?.data?.data || response?.data || [];
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response interceptor already returns response.data, so response = {success, count, data}
+      const ordersData = response?.data || [];
+      const isSuccess = response?.success !== false;
 
       console.log('📋 Orders Data:', ordersData);
       console.log('✅ Is Success:', isSuccess);
