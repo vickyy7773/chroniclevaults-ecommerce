@@ -43,8 +43,12 @@ export const submitRegistration = async (req, res) => {
     // Note: We don't check User model because auction email can be same as user account email
     // Auction registration is separate from user account creation
 
-    // Generate email verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    // Check if user already exists with this email (from e-commerce signup)
+    const existingUser = await User.findOne({ email });
+    const emailVerified = existingUser ? true : false; // If user exists, email is already verified
+
+    // Generate email verification token (only needed if email not already verified)
+    const verificationToken = emailVerified ? undefined : crypto.randomBytes(32).toString('hex');
 
     // Create registration
     const registration = await AuctionRegistration.create({
@@ -65,7 +69,9 @@ export const submitRegistration = async (req, res) => {
       idProof,
       collectingInterests,
       references,
+      emailVerified, // Auto-verify if user already exists
       verificationToken,
+      userId: existingUser?._id, // Link to existing user
       status: 'pending'
     });
 
@@ -74,10 +80,15 @@ export const submitRegistration = async (req, res) => {
 
     console.log('✅ Registration created successfully:', registration._id);
 
+    const message = emailVerified
+      ? 'Registration submitted successfully! Your email is already verified. Admin will review your application.'
+      : 'Registration submitted successfully. Please check your email for verification.';
+
     res.status(201).json({
       success: true,
-      message: 'Registration submitted successfully. Please check your email for verification.',
-      registrationId: registration._id
+      message,
+      registrationId: registration._id,
+      emailVerified
     });
 
   } catch (error) {
