@@ -36,7 +36,7 @@ const AuctionRegistrationManagement = () => {
       const queryParam = filter !== 'all' ? `?status=${filter}` : '';
       const response = await api.get(`/auction-registration/admin/all${queryParam}`);
       // Response interceptor already returns response.data
-      setRegistrations(response.data || []);
+      setRegistrations(response || []);
     } catch (error) {
       console.error('Error fetching registrations:', error);
       toast.error('Failed to fetch registrations');
@@ -65,7 +65,7 @@ const AuctionRegistrationManagement = () => {
       setShowDetailsModal(false);
     } catch (error) {
       console.error('Error approving registration:', error);
-      toast.error(error.response?.data?.message || 'Failed to approve registration');
+      toast.error(error.response?.message || 'Failed to approve registration');
     } finally {
       setActionLoading(false);
     }
