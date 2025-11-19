@@ -108,7 +108,6 @@ const Header = ({
   // Generate navigation links dynamically from categories
   const navigationLinks = [
     { to: '/', label: 'Home', icon: Home },
-    { to: '/auctions', label: 'Auctions', icon: Gavel },
     ...categories
       .filter(cat => cat.type === 'main' && cat.isActive)
       .sort((a, b) => (a.order || 0) - (b.order || 0))
@@ -250,15 +249,6 @@ const Header = ({
                       <span className="hidden lg:inline text-sm">Sign In</span>
                     </Link>
                   )}
-
-                  {/* Auctions Button */}
-                  <Link
-                    to="/auctions"
-                    className="flex items-center space-x-2 text-neutral-900 hover:text-accent-600 transition-all px-3 py-2 hover:bg-primary-100 rounded-xl font-medium hover:scale-105"
-                  >
-                    <Gavel className="w-5 h-5" />
-                    <span className="hidden lg:inline text-sm">Auctions</span>
-                  </Link>
 
                   {/* Wishlist - Hidden on info pages */}
                   {!hideShoppingFeatures && (
