@@ -136,10 +136,15 @@ const AuctionPage = () => {
       if (data.latestBid.user._id === currentUser?._id) {
         // Current user placed the bid
         console.log('✅ Current user placed bid');
-        if (data.autoBidTriggered) {
-          toast.success(`Auto-bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
-        } else {
-          toast.success('Bid placed successfully!');
+
+        // Skip notification if this is auto-bid from reserve bidder
+        // (API response already showed appropriate message)
+        if (!data.latestBid.isAutoBid) {
+          if (data.autoBidTriggered) {
+            toast.success(`Auto-bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
+          } else {
+            toast.success('Bid placed successfully!');
+          }
         }
       } else {
         // Someone else placed the bid
@@ -147,11 +152,16 @@ const AuctionPage = () => {
         console.log('Check: userHasBids && !isStillWinning =', userHasBids && !isStillWinning);
 
         if (userHasBids && !isStillWinning) {
-          // Current user has bid but is not winning - show outbid message
-          console.log('🚨 Showing OUTBID message');
-          toast.warning(`⚠️ You are outbid! New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`, {
-            autoClose: 5000
-          });
+          // Current user has bid but is not winning
+          // Skip notification if this is auto-bid (API response already showed warning)
+          if (!data.latestBid.isAutoBid) {
+            console.log('🚨 Showing OUTBID message');
+            toast.warning(`⚠️ You are outbid! New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`, {
+              autoClose: 5000
+            });
+          } else {
+            console.log('⏭️ Skipping outbid notification (auto-bid, already handled by API response)');
+          }
         } else if (!userHasBids) {
           // User hasn't bid yet - show general notification
           console.log('ℹ️ Showing INFO message');
