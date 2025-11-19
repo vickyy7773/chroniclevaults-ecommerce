@@ -94,18 +94,17 @@ const auctionRegistrationSchema = new mongoose.Schema({
 
   // Documents
   panCard: {
-    type: String, // URL to uploaded file
+    type: String, // URL to uploaded file or base64
     required: true
   },
   idProof: {
-    type: String, // aadhar/govt-id/passport
     proofType: {
       type: String,
       enum: ['aadhar', 'govt-id', 'passport'],
       required: true
     },
     url: {
-      type: String, // URL to uploaded file
+      type: String, // URL to uploaded file or base64
       required: true
     }
   },
