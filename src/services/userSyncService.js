@@ -11,7 +11,7 @@ const userSyncService = {
         })),
         wishlist: wishlist.map(item => item._id || item)
       });
-      return response.data;
+      return response; // Response interceptor already returns data
     } catch (error) {
       console.error('Error syncing cart/wishlist:', error);
       throw error;
@@ -22,7 +22,7 @@ const userSyncService = {
   async getCart() {
     try {
       const response = await api.get('/user/cart');
-      return response.data;
+      return response; // Response interceptor already returns data
     } catch (error) {
       console.error('Error fetching cart:', error);
       throw error;
@@ -33,7 +33,7 @@ const userSyncService = {
   async addToCart(productId, quantity = 1) {
     try {
       const response = await api.post('/user/cart', { productId, quantity });
-      return response.data;
+      return response; // Response interceptor already returns data
     } catch (error) {
       console.error('Error adding to cart:', error);
       throw error;
@@ -44,7 +44,7 @@ const userSyncService = {
   async updateCartItem(productId, quantity) {
     try {
       const response = await api.put(`/user/cart/${productId}`, { quantity });
-      return response.data;
+      return response; // Response interceptor already returns data
     } catch (error) {
       console.error('Error updating cart item:', error);
       throw error;
@@ -55,7 +55,7 @@ const userSyncService = {
   async removeFromCart(productId) {
     try {
       const response = await api.delete(`/user/cart/${productId}`);
-      return response.data;
+      return response; // Response interceptor already returns data
     } catch (error) {
       console.error('Error removing from cart:', error);
       throw error;
@@ -66,7 +66,7 @@ const userSyncService = {
   async clearCart() {
     try {
       const response = await api.delete('/user/cart');
-      return response.data;
+      return response; // Response interceptor already returns data
     } catch (error) {
       console.error('Error clearing cart:', error);
       throw error;
@@ -77,7 +77,7 @@ const userSyncService = {
   async getWishlist() {
     try {
       const response = await api.get('/user/wishlist');
-      return response.data;
+      return response; // Response interceptor already returns data
     } catch (error) {
       console.error('Error fetching wishlist:', error);
       throw error;
@@ -88,7 +88,7 @@ const userSyncService = {
   async addToWishlist(productId) {
     try {
       const response = await api.post(`/user/wishlist/${productId}`);
-      return response.data;
+      return response; // Response interceptor already returns data
     } catch (error) {
       console.error('Error adding to wishlist:', error);
       throw error;
@@ -99,7 +99,7 @@ const userSyncService = {
   async removeFromWishlist(productId) {
     try {
       const response = await api.delete(`/user/wishlist/${productId}`);
-      return response.data;
+      return response; // Response interceptor already returns data
     } catch (error) {
       console.error('Error removing from wishlist:', error);
       throw error;

@@ -17,12 +17,12 @@ const Footer = () => {
         if (!hasVisited) {
           // First visit in this session - increment counter
           const response = await api.post('/visitors/increment');
-          setVisitorCount(response.data.count);
+          setVisitorCount(response.count);
           sessionStorage.setItem('visitorCounted', 'true');
         } else {
           // Already visited in this session - just get the count
           const response = await api.get('/visitors/count');
-          setVisitorCount(response.data.count);
+          setVisitorCount(response.count);
         }
       } catch (error) {
         console.error('Error fetching visitor count:', error);
