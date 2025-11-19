@@ -224,6 +224,11 @@ const AuctionRegistrationManagement = () => {
                           <div className="text-sm font-semibold text-gray-900">
                             {registration.title} {registration.fullName}
                           </div>
+                          {registration.auctionId && (
+                            <div className="text-xs font-mono text-accent-600 font-bold">
+                              {registration.auctionId}
+                            </div>
+                          )}
                           <div className="text-xs text-gray-500 flex items-center gap-1">
                             <Mail className="w-3 h-3" />
                             {registration.emailVerified ? (

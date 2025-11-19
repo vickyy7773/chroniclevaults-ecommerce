@@ -145,6 +145,13 @@ const auctionRegistrationSchema = new mongoose.Schema({
   // Admin notes
   adminNotes: String,
 
+  // Unique Auction ID (generated after approval)
+  auctionId: {
+    type: String,
+    unique: true,
+    sparse: true // Only enforce uniqueness for non-null values
+  },
+
   // Timestamps
   submittedAt: {
     type: Date,

@@ -205,18 +205,27 @@ export const approveRegistration = async (req, res) => {
       });
     }
 
+    // Generate unique auction ID
+    const year = new Date().getFullYear();
+    const count = await AuctionRegistration.countDocuments({ status: 'approved' });
+    const auctionId = `AUC-${year}-${String(count + 1).padStart(5, '0')}`;
+
     // Update registration
     registration.status = 'approved';
     registration.userId = user._id;
     registration.approvedAt = Date.now();
+    registration.auctionId = auctionId;
     await registration.save();
+
+    console.log('✅ Auction ID generated:', auctionId);
 
     // TODO: Send approval email with login credentials
 
     res.json({
       success: true,
-      message: 'Registration approved and user account created',
-      userId: user._id
+      message: `Registration approved! Auction ID: ${auctionId}`,
+      userId: user._id,
+      auctionId: auctionId
     });
 
   } catch (error) {
