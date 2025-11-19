@@ -181,7 +181,7 @@ const AuctionPage = () => {
         socketRef.current.off('bid-placed', handleBidPlaced);
       }
     };
-  }, [user, auction]);
+  }, [user]); // Removed 'auction' to prevent re-registering listener on every bid
 
   useEffect(() => {
     if (id) {
