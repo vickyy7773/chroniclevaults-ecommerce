@@ -31,7 +31,7 @@ const AuctionManagement = () => {
 
   const fetchCustomers = async () => {
     try {
-      const response = await api.get('/admin/customers');
+      const response = await api.get('/users');
       setCustomers(response.data || []); // Response interceptor already returns data
     } catch (error) {
       console.error('Fetch customers error:', error);
@@ -107,7 +107,8 @@ const AuctionManagement = () => {
       if (formData.image && formData.image.startsWith('data:image/')) {
         try {
           const uploadResponse = await api.post('/upload/base64', { image: formData.image });
-          submitData.image = uploadResponse.data.imageUrl;
+          // Response interceptor already returns data, so response.imageUrl (not response.data.imageUrl)
+          submitData.image = uploadResponse.imageUrl;
         } catch (uploadError) {
           console.error('Image upload error:', uploadError);
           toast.error('Failed to upload image');
