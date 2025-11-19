@@ -476,7 +476,7 @@ const AuctionPage = () => {
                             ₹{bid.amount.toLocaleString()}
                           </p>
                           {index === 0 && (
-                            <p className="text-xs text-green-600 font-semibold hidden sm:block">Highest Bid</p>
+                            <p className="text-xs text-green-600 font-semibold hidden sm:block">Current Bid</p>
                           )}
                         </div>
                       </div>
