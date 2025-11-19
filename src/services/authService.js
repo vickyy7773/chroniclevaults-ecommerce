@@ -60,9 +60,10 @@ export const authService = {
   getCurrentUser: async () => {
     try {
       const response = await api.get(API_ENDPOINTS.AUTH_ME);
-      return response;
+      return response; // Response interceptor already returns response.data
     } catch (error) {
-      authService.logout();
+      // Don't auto-logout - let the caller decide what to do with the error
+      // Only logout on 401 (handled in App.jsx)
       throw error;
     }
   },

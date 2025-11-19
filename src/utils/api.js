@@ -36,7 +36,7 @@ api.interceptors.request.use(
 
 // Add response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => response.data, // Return response.data directly
   (error) => {
     // Don't auto-logout on 401 - let individual endpoints handle auth errors
     // This prevents unwanted logouts during API calls
