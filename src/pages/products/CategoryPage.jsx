@@ -101,9 +101,9 @@ const CategoryPage = ({ addToCart = () => {}, addToWishlist = () => {}, isInWish
       const response = await productService.getAllProducts(queryParams);
       console.log('📦 Products Response:', response);
 
-      // Handle different API response formats
-      const productsData = response?.data?.data || response?.data || [];
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response interceptor already returns response.data
+      const productsData = response?.data || [];
+      const isSuccess = response?.success !== false;
 
       console.log('📦 Products Data:', productsData);
       console.log('📦 Total products fetched:', productsData.length);
