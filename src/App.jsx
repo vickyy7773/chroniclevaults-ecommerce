@@ -88,6 +88,7 @@ const AppContent = () => {
   const hideHeaderFooter = location.pathname === '/authentication' ||
                           location.pathname === '/checkout' ||
                           location.pathname === '/profile' ||
+                          location.pathname === '/auctions' ||
                           location.pathname.startsWith('/admin');
 
   // Show shopping features (search, cart, wishlist) on all pages
