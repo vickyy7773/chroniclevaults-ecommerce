@@ -152,16 +152,11 @@ const AuctionPage = () => {
         console.log('Check: userHasBids && !isStillWinning =', userHasBids && !isStillWinning);
 
         if (userHasBids && !isStillWinning) {
-          // Current user has bid but is not winning
-          // Skip notification if this is auto-bid (API response already showed warning)
-          if (!data.latestBid.isAutoBid) {
-            console.log('🚨 Showing OUTBID message');
-            toast.warning(`⚠️ You are outbid! New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`, {
-              autoClose: 5000
-            });
-          } else {
-            console.log('⏭️ Skipping outbid notification (auto-bid, already handled by API response)');
-          }
+          // Current user has bid but is not winning - show outbid message
+          console.log('🚨 Showing OUTBID message');
+          toast.warning(`⚠️ You are outbid! New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`, {
+            autoClose: 5000
+          });
         } else if (!userHasBids) {
           // User hasn't bid yet - show general notification
           console.log('ℹ️ Showing INFO message');
@@ -305,17 +300,14 @@ const AuctionPage = () => {
       const response = await api.post(`/auctions/${auction._id}/bid`, { amount, maxBid });
 
       // Check if auto-bid was triggered
-      if (response.data.autoBidTriggered && !maxBid) {
-        // Normal bid was immediately outbid by reserve bidder
-        toast.warning(`⚠️ Your bid was placed but immediately outbid by a reserve bidder! Current bid: ₹${response.data.auction.currentBid.toLocaleString()}`, {
-          autoClose: 6000
-        });
-      } else if (response.data.autoBidTriggered && maxBid) {
+      if (response.data.autoBidTriggered && maxBid) {
         // User placed reserve bid and it triggered previous reserve bid
         toast.success('Bid placed! Another bidder\'s max bid was triggered.');
       } else if (maxBid) {
         toast.success(`Bid placed with max bid of ₹${maxBid.toLocaleString()}!`);
       } else {
+        // Always show success for normal bid placement
+        // WebSocket will show outbid notification if needed
         toast.success('Bid placed successfully!');
       }
 
