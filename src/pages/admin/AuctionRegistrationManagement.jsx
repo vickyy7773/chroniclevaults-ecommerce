@@ -35,10 +35,12 @@ const AuctionRegistrationManagement = () => {
       setLoading(true);
       const queryParam = filter !== 'all' ? `?status=${filter}` : '';
       const response = await api.get(`/auction-registration/admin/all${queryParam}`);
-      setRegistrations(response.data);
+      // Response interceptor already returns response.data
+      setRegistrations(response.data || []);
     } catch (error) {
       console.error('Error fetching registrations:', error);
       toast.error('Failed to fetch registrations');
+      setRegistrations([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
