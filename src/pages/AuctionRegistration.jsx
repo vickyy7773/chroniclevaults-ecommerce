@@ -156,7 +156,7 @@ const AuctionRegistration = () => {
       const response = await api.post('/auction-registration', submitData);
       console.log('✅ Response:', response);
 
-      setMessage(response.data.message);
+      setMessage(response.message);
       setTimeout(() => {
         navigate('/');
       }, 3000);
@@ -166,8 +166,8 @@ const AuctionRegistration = () => {
       console.error('Response data:', err.response?.data);
       console.error('Status:', err.response?.status);
 
-      const errorMsg = err.response?.data?.message || 'Error submitting registration';
-      const validationErrors = err.response?.data?.validationErrors;
+      const errorMsg = err.response?.message || 'Error submitting registration';
+      const validationErrors = err.response?.validationErrors;
 
       if (validationErrors) {
         console.error('Validation errors:', validationErrors);
