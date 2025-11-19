@@ -206,31 +206,6 @@ const Header = ({
 
               {/* Right: Actions */}
               <div className="flex items-center space-x-2 md:space-x-4 lg:space-x-5">
-                {/* Mobile Search Toggle - Hidden on info pages and home page */}
-                {!hideShoppingFeatures && !isHomePage && (
-                  <button
-                    onClick={() => setShowMobileSearch(!showMobileSearch)}
-                    className="lg:hidden text-neutral-900 hover:text-accent-600 p-2 hover:bg-primary-100 rounded-xl transition-all hover:scale-110"
-                    aria-label="Search"
-                  >
-                    <Search className="w-5 h-5" />
-                  </button>
-                )}
-
-                {/* Desktop Search - Hidden on info pages and home page */}
-                {!hideShoppingFeatures && !isHomePage && (
-                  <form onSubmit={handleSearch} className="hidden lg:block relative">
-                    <Search className="absolute left-3 top-3 w-5 h-5 text-neutral-600" />
-                    <input
-                      type="text"
-                      placeholder="Search rare coins..."
-                      value={localSearchTerm}
-                      onChange={handleSearchChange}
-                      className="input-modern w-64 xl:w-80 pl-10 pr-4 shadow-soft hover:shadow-medium"
-                    />
-                  </form>
-                )}
-
                 {/* Desktop Actions */}
                 <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
                   {user ? (
@@ -276,6 +251,15 @@ const Header = ({
                     </Link>
                   )}
 
+                  {/* Auctions Button */}
+                  <Link
+                    to="/auctions"
+                    className="flex items-center space-x-2 text-neutral-900 hover:text-accent-600 transition-all px-3 py-2 hover:bg-primary-100 rounded-xl font-medium hover:scale-105"
+                  >
+                    <Gavel className="w-5 h-5" />
+                    <span className="hidden lg:inline text-sm">Auctions</span>
+                  </Link>
+
                   {/* Wishlist - Hidden on info pages */}
                   {!hideShoppingFeatures && (
                     <button
@@ -314,24 +298,6 @@ const Header = ({
             </div>
           </div>
 
-          {/* Mobile Search Bar - Hidden on info pages */}
-          {!hideShoppingFeatures && showMobileSearch && (
-            <div className="lg:hidden pb-3 animate-slideDown w-full">
-              <div className="mx-5">
-                <form onSubmit={handleSearch} className="relative">
-                <Search className="absolute left-3 top-3 w-5 h-5 text-neutral-600" />
-                <input
-                  type="text"
-                  placeholder="Search rare coins..."
-                  value={localSearchTerm}
-                  onChange={handleSearchChange}
-                  className="input-modern w-full pl-10 pr-4 shadow-soft"
-                  autoFocus
-                />
-              </form>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Desktop Navigation - Always visible */}
