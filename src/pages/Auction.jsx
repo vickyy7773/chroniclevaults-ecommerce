@@ -114,10 +114,12 @@ const AuctionPage = () => {
       console.log('Current user ID:', currentUser?._id);
       console.log('Latest bidder ID:', data.latestBid?.user?._id);
 
-      // Check if current user has placed any bids in the UPDATED auction data (from socket)
+      // Check if current user has placed any bids OR is reserve bidder
       const userHasBids = data.auction && data.auction.bids &&
                           data.auction.bids.some(bid => bid.user._id === currentUser?._id);
-      console.log('User has bids:', userHasBids);
+      const userIsReserveBidder = data.auction && data.auction.reserveBidder === currentUser?._id;
+      const userHasParticipated = userHasBids || userIsReserveBidder;
+      console.log('User has bids:', userHasBids, 'Is reserve bidder:', userIsReserveBidder);
 
       // Update auction data with new bid
       setAuction(data.auction);
@@ -128,8 +130,13 @@ const AuctionPage = () => {
       setBidAmount(suggestedBid.toString());
 
       // Check if current user is still winning after this bid
-      const isStillWinning = data.auction.bids.length > 0 &&
-                             data.auction.bids[data.auction.bids.length - 1].user._id === currentUser?._id;
+      const isLastBidMine = data.auction.bids.length > 0 &&
+                            data.auction.bids[data.auction.bids.length - 1].user._id === currentUser?._id;
+      const someoneElseHasHigherReserveBid = data.auction.highestReserveBid &&
+                                             data.auction.reserveBidder &&
+                                             data.auction.reserveBidder !== currentUser?._id &&
+                                             data.auction.highestReserveBid > data.auction.currentBid;
+      const isStillWinning = isLastBidMine && !someoneElseHasHigherReserveBid;
       console.log('User still winning:', isStillWinning);
 
       // Show notification for new bid
@@ -149,16 +156,16 @@ const AuctionPage = () => {
       } else {
         // Someone else placed the bid
         console.log('❌ Someone else placed bid');
-        console.log('Check: userHasBids && !isStillWinning =', userHasBids && !isStillWinning);
+        console.log('Check: userHasParticipated && !isStillWinning =', userHasParticipated && !isStillWinning);
 
-        if (userHasBids && !isStillWinning) {
-          // Current user has bid but is not winning - show outbid message
+        if (userHasParticipated && !isStillWinning) {
+          // Current user has participated (bid/reserve) but is not winning - show outbid message
           console.log('🚨 Showing OUTBID message');
           toast.warning(`⚠️ You are outbid! New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`, {
             autoClose: 5000
           });
-        } else if (!userHasBids) {
-          // User hasn't bid yet - show general notification
+        } else if (!userHasParticipated) {
+          // User hasn't participated yet - show general notification
           console.log('ℹ️ Showing INFO message');
           toast.info(`New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`);
         } else {
@@ -326,9 +333,19 @@ const AuctionPage = () => {
     if (!user || !auction || auction.bids.length === 0) return false;
     const lastBid = auction.bids[auction.bids.length - 1];
 
-    // User is winning ONLY if they placed the last actual bid
-    // Reserve bid doesn't make you winning - you need to place actual bids
-    return lastBid.user._id === user._id;
+    // Check if user placed the last bid
+    const isLastBidMine = lastBid.user._id === user._id;
+
+    // Check if someone else has a higher reserve bid (silent winner)
+    const someoneElseHasHigherReserveBid = auction.highestReserveBid &&
+                                           auction.reserveBidder &&
+                                           auction.reserveBidder !== user._id &&
+                                           auction.highestReserveBid > auction.currentBid;
+
+    // User is winning ONLY if:
+    // 1. They placed the last bid AND
+    // 2. No one else has a higher reserve bid
+    return isLastBidMine && !someoneElseHasHigherReserveBid;
   };
 
   const isUserReserveBidder = () => {
