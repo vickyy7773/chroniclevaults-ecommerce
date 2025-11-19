@@ -7,6 +7,9 @@ import crypto from 'crypto';
 // @access  Public
 export const submitRegistration = async (req, res) => {
   try {
+    console.log('📝 Auction registration request received');
+    console.log('Body keys:', Object.keys(req.body));
+
     const {
       title,
       fullName,
@@ -27,9 +30,13 @@ export const submitRegistration = async (req, res) => {
       references
     } = req.body;
 
+    console.log('📧 Email:', email);
+    console.log('📄 idProof type:', typeof idProof, idProof);
+
     // Check if email already registered for auction (not in User model)
     const existingRegistration = await AuctionRegistration.findOne({ email });
     if (existingRegistration) {
+      console.log('❌ Email already registered for auction');
       return res.status(400).json({ message: 'Email already registered for auction' });
     }
 
@@ -65,6 +72,8 @@ export const submitRegistration = async (req, res) => {
     // TODO: Send verification email
     // await sendVerificationEmail(email, verificationToken);
 
+    console.log('✅ Registration created successfully:', registration._id);
+
     res.status(201).json({
       success: true,
       message: 'Registration submitted successfully. Please check your email for verification.',
@@ -72,8 +81,24 @@ export const submitRegistration = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error submitting auction registration:', error);
-    res.status(500).json({ message: 'Error submitting registration', error: error.message });
+    console.error('❌ Error submitting auction registration:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    if (error.errors) {
+      console.error('Validation errors:', Object.keys(error.errors));
+      Object.keys(error.errors).forEach(key => {
+        console.error(`  ${key}:`, error.errors[key].message);
+      });
+    }
+    res.status(500).json({
+      success: false,
+      message: 'Error submitting registration',
+      error: error.message,
+      validationErrors: error.errors ? Object.keys(error.errors).map(key => ({
+        field: key,
+        message: error.errors[key].message
+      })) : undefined
+    });
   }
 };
 
