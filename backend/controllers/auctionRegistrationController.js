@@ -166,7 +166,6 @@ export const getAllRegistrations = async (req, res) => {
 export const approveRegistration = async (req, res) => {
   try {
     const { id } = req.params;
-    const { password } = req.body;
 
     const registration = await AuctionRegistration.findById(id);
 
@@ -174,36 +173,19 @@ export const approveRegistration = async (req, res) => {
       return res.status(404).json({ message: 'Registration not found' });
     }
 
-    // Skip email verification check - admin can approve directly
-    // if (!registration.emailVerified) {
-    //   return res.status(400).json({ message: 'Email not verified yet' });
-    // }
-
     // Check if user already exists with this email
     let user = await User.findOne({ email: registration.email });
 
-    if (user) {
-      // User already exists, just update auction verification status
-      user.isAuctionVerified = true;
-      await user.save();
-    } else {
-      // Create new user account
-      user = await User.create({
-        name: registration.fullName,
-        email: registration.email,
-        password: password || 'TempPass123!', // Temporary password
-        phone: registration.mobile,
-        address: {
-          street: registration.billingAddress.addressLine1,
-          city: registration.billingAddress.city,
-          state: registration.billingAddress.state,
-          zipCode: registration.billingAddress.pinCode,
-          country: registration.billingAddress.country
-        },
-        role: 'customer',
-        isAuctionVerified: true
+    if (!user) {
+      // User doesn't exist - cannot approve auction registration without e-commerce account
+      return res.status(400).json({
+        message: 'User must create an e-commerce account first before auction registration can be approved'
       });
     }
+
+    // User exists, update auction verification status
+    user.isAuctionVerified = true;
+    await user.save();
 
     // Generate unique auction ID
     const year = new Date().getFullYear();

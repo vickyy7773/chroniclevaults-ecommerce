@@ -47,20 +47,14 @@ const AuctionRegistrationManagement = () => {
   };
 
   const handleApprove = async (registrationId) => {
-    if (!window.confirm('Are you sure you want to approve this registration?')) {
-      return;
-    }
-
-    const password = prompt('Enter temporary password for the user:');
-    if (!password) {
-      toast.error('Password is required to approve registration');
+    if (!window.confirm('Are you sure you want to approve this registration? User must already have an e-commerce account with the same email.')) {
       return;
     }
 
     try {
       setActionLoading(true);
-      await api.put(`/auction-registration/admin/approve/${registrationId}`, { password });
-      toast.success('Registration approved successfully!');
+      await api.put(`/auction-registration/admin/approve/${registrationId}`);
+      toast.success('Registration approved successfully! Auction ID generated.');
       fetchRegistrations();
       setShowDetailsModal(false);
     } catch (error) {
