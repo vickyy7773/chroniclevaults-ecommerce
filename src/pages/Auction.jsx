@@ -295,7 +295,13 @@ const AuctionPage = () => {
       const response = await api.post(`/auctions/${auction._id}/bid`, { amount, maxBid });
 
       // Check if auto-bid was triggered
-      if (response.data.autoBidTriggered) {
+      if (response.data.autoBidTriggered && !maxBid) {
+        // Normal bid was immediately outbid by reserve bidder
+        toast.warning(`⚠️ Your bid was placed but immediately outbid by a reserve bidder! Current bid: ₹${response.data.auction.currentBid.toLocaleString()}`, {
+          autoClose: 6000
+        });
+      } else if (response.data.autoBidTriggered && maxBid) {
+        // User placed reserve bid and it triggered previous reserve bid
         toast.success('Bid placed! Another bidder\'s max bid was triggered.');
       } else if (maxBid) {
         toast.success(`Bid placed with max bid of ₹${maxBid.toLocaleString()}!`);
