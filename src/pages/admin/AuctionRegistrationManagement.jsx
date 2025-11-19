@@ -480,8 +480,27 @@ const AuctionRegistrationManagement = () => {
 
               {selectedRegistration.references && selectedRegistration.references.length > 0 && (
                 <div className="border-2 border-gray-200 rounded-xl p-4">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">References</h3>
-                  <p className="text-gray-700">{selectedRegistration.references}</p>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">References</h3>
+                  <div className="space-y-3">
+                    {selectedRegistration.references.map((ref, index) => (
+                      <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <span className="text-xs text-gray-500">Name:</span>
+                            <p className="text-sm font-semibold text-gray-900">{ref.name || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">City:</span>
+                            <p className="text-sm font-semibold text-gray-900">{ref.city || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Mobile:</span>
+                            <p className="text-sm font-semibold text-gray-900">{ref.mobile || 'N/A'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
