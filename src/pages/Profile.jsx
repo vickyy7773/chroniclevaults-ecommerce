@@ -59,9 +59,9 @@ const Profile = ({ user, onLogout }) => {
       const response = await authService.getAddresses();
       console.log('📍 Profile: Address Response:', response);
 
-      if (response.data && response.data.success && response.data.data) {
-        console.log('📍 Profile: Setting addresses:', response.data.data);
-        setAddresses(response.data.data || []);
+      if (response && response.success && response.data) {
+        console.log('📍 Profile: Setting addresses:', response.data);
+        setAddresses(response.data || []);
       } else {
         console.log('📍 Profile: No addresses found');
         setAddresses([]);
@@ -477,8 +477,8 @@ const Profile = ({ user, onLogout }) => {
 
       console.log('➕ Add Address Response:', response);
 
-      if (response.data && response.data.success && response.data.data) {
-        setAddresses(response.data.data || []);
+      if (response && response.success && response.data) {
+        setAddresses(response.data || []);
         setNewAddressForm({
           type: 'Home',
           name: '',
@@ -506,8 +506,8 @@ const Profile = ({ user, onLogout }) => {
       const response = await authService.updateAddress(editingAddress._id, newAddressForm);
       console.log('✏️ Update Address Response:', response);
 
-      if (response.data && response.data.success && response.data.data) {
-        setAddresses(response.data.data || []);
+      if (response && response.success && response.data) {
+        setAddresses(response.data || []);
         setNewAddressForm({
           type: 'Home',
           name: '',

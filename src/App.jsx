@@ -147,10 +147,9 @@ const AppContent = () => {
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
-          // Don't logout on network errors - keep using cached user data
-          // Only logout if it's an actual 401 authentication error
+          // Token is invalid or expired - clear everything and force re-login
           if (error.response?.status === 401) {
-            console.warn('⚠️ Authentication failed (401), logging out');
+            console.warn('⚠️ Token expired or invalid - clearing session');
             localStorage.removeItem('user');
             localStorage.removeItem('token');
             setUser(null);

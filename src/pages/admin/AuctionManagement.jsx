@@ -32,7 +32,7 @@ const AuctionManagement = () => {
   const fetchCustomers = async () => {
     try {
       const response = await api.get('/admin/customers');
-      setCustomers(response.data.data || []);
+      setCustomers(response.data || []); // Response interceptor already returns data
     } catch (error) {
       console.error('Fetch customers error:', error);
     }
@@ -43,7 +43,7 @@ const AuctionManagement = () => {
       setLoading(true);
       const queryParam = viewMode !== 'all' ? `?status=${viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}` : '';
       const response = await api.get(`/auctions${queryParam}`);
-      setAuctions(response.data.data);
+      setAuctions(response.data || []); // Response interceptor already returns data
     } catch (error) {
       console.error('Fetch auctions error:', error);
       toast.error('Failed to load auctions');

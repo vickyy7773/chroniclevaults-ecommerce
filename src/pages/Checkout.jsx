@@ -96,12 +96,12 @@ const Checkout = () => {
       const response = await authService.getAddresses();
       console.log('📍 Address Response:', response);
 
-      if (response.data && response.data.success && response.data.data) {
-        console.log('📍 Found addresses:', response.data.data.length);
-        setSavedAddresses(response.data.data);
+      if (response && response.success && response.data) {
+        console.log('📍 Found addresses:', response.data.length);
+        setSavedAddresses(response.data);
 
         // Find and select default address
-        const defaultAddress = response.data.data.find(addr => addr.isDefault);
+        const defaultAddress = response.data.find(addr => addr.isDefault);
         if (defaultAddress) {
           console.log('📍 Using default address:', defaultAddress);
           setSelectedAddressId(defaultAddress._id);
@@ -116,10 +116,10 @@ const Checkout = () => {
             state: defaultAddress.state,
             pincode: defaultAddress.pincode
           }));
-        } else if (response.data.data.length > 0) {
+        } else if (response.data.length > 0) {
           // If no default, select first address
-          console.log('📍 Using first address:', response.data.data[0]);
-          const firstAddr = response.data.data[0];
+          console.log('📍 Using first address:', response.data[0]);
+          const firstAddr = response.data[0];
           setSelectedAddressId(firstAddr._id);
           setFormData(prev => ({
             ...prev,

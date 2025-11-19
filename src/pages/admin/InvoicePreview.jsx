@@ -20,8 +20,8 @@ const InvoicePreview = () => {
         setLoading(true);
         const response = await orderService.getOrderById(orderId);
 
-        if (response.data && response.data.success) {
-          const order = response.data.data;
+        if (response && response.success) {
+          const order = response.data;
 
           // Transform order data to invoice format
           const invoiceData = {

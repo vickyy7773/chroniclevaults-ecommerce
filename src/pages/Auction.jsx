@@ -194,11 +194,11 @@ const AuctionPage = () => {
     try {
       setLoading(true);
       const response = await api.get(`/auctions/${id}`);
-      setAuction(response.data.data);
+      setAuction(response.data); // Response interceptor already returns data
 
       // Set suggested bid amount
-      const currentIncrement = getCurrentIncrement(response.data.data);
-      const suggestedBid = response.data.data.currentBid + currentIncrement;
+      const currentIncrement = getCurrentIncrement(response.data);
+      const suggestedBid = response.data.currentBid + currentIncrement;
       setBidAmount(suggestedBid.toString());
     } catch (error) {
       console.error('Fetch auction error:', error);
@@ -304,11 +304,11 @@ const AuctionPage = () => {
       }
 
       // Update auction with new bid
-      setAuction(response.data.data.auction);
+      setAuction(response.data.auction); // Response interceptor already returns data
 
       // Set next suggested bid
-      const newIncrement = getCurrentIncrement(response.data.data.auction);
-      const nextSuggestedBid = response.data.data.auction.currentBid + newIncrement;
+      const newIncrement = getCurrentIncrement(response.data.auction);
+      const nextSuggestedBid = response.data.auction.currentBid + newIncrement;
       setBidAmount(nextSuggestedBid.toString());
       setMaxBidAmount(''); // Clear max bid after placing bid
     } catch (error) {

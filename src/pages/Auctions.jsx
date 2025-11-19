@@ -19,7 +19,7 @@ const AuctionsPage = () => {
       setLoading(true);
       const queryParam = filter !== 'All' ? `?status=${filter}` : '';
       const response = await api.get(`/auctions${queryParam}`);
-      setAuctions(response.data.data);
+      setAuctions(response.data || []); // Response interceptor already returns data
     } catch (error) {
       console.error('Fetch auctions error:', error);
       toast.error('Failed to load auctions');
