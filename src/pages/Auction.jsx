@@ -322,7 +322,17 @@ const AuctionPage = () => {
   const isUserWinning = () => {
     if (!user || !auction || auction.bids.length === 0) return false;
     const lastBid = auction.bids[auction.bids.length - 1];
-    return lastBid.user._id === user._id;
+
+    // Check if user placed the last bid
+    const isLastBidMine = lastBid.user._id === user._id;
+
+    // Check if user has active reserve bid that is higher than current bid
+    const hasActiveReserveBid = isUserReserveBidder() &&
+                                 auction.highestReserveBid &&
+                                 auction.highestReserveBid > auction.currentBid;
+
+    // User is winning if they placed last bid OR have active reserve bid
+    return isLastBidMine || hasActiveReserveBid;
   };
 
   const isUserReserveBidder = () => {
