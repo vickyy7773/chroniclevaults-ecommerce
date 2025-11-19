@@ -299,15 +299,10 @@ const AuctionPage = () => {
       setSubmittingBid(true);
       const response = await api.post(`/auctions/${auction._id}/bid`, { amount, maxBid });
 
-      // Check if auto-bid was triggered
-      if (response.data.autoBidTriggered && maxBid) {
-        // User placed reserve bid and it triggered previous reserve bid
-        toast.success('Bid placed! Another bidder\'s max bid was triggered.');
-      } else if (maxBid) {
-        toast.success(`Bid placed with max bid of ₹${maxBid.toLocaleString()}!`);
+      // Show success message based on bid type
+      if (maxBid) {
+        toast.success(`Reserve bid placed! Max bid: ₹${maxBid.toLocaleString()}`);
       } else {
-        // Always show success for normal bid placement
-        // WebSocket will show outbid notification if needed
         toast.success('Bid placed successfully!');
       }
 
