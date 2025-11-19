@@ -446,7 +446,7 @@ export const placeBid = async (req, res) => {
 
     res.json({
       success: true,
-      message: autoBidTriggered
+      message: autoBidTriggered && previousReserveBidAmount
         ? `Bid placed successfully. Auto-incremented to ₹${previousReserveBidAmount.toLocaleString()} (previous reserve bid)`
         : 'Bid placed successfully',
       data: {
