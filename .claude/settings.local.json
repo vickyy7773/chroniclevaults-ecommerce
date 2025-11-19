@@ -28,7 +28,9 @@
       "Bash(ssh root@72.60.202.163 \"curl -s http://localhost:5000/api/orders | head -200\")",
       "Bash(ssh root@72.60.202.163 \"pm2 logs chroniclevaults-api --lines 50 --nostream | grep -A 10 -B 5 ''GET /api/orders'' | tail -30\")",
       "Bash(ssh root@72.60.202.163 \"pm2 logs chroniclevaults-api --lines 100 --nostream | grep -i ''phone'' | tail -10\")",
-      "Bash(ssh root@72.60.202.163:*)"
+      "Bash(ssh root@72.60.202.163:*)",
+      "Bash(temp_auctions.txt)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
