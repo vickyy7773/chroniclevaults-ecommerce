@@ -139,7 +139,9 @@ const AuctionRegistration = () => {
         panCard: formData.panCard
       };
 
+      console.log('📤 Submitting auction registration:', submitData);
       const response = await api.post('/auction-registration', submitData);
+      console.log('✅ Response:', response);
 
       setMessage(response.data.message);
       setTimeout(() => {
@@ -147,7 +149,19 @@ const AuctionRegistration = () => {
       }, 3000);
 
     } catch (err) {
-      setError(err.response?.data?.message || 'Error submitting registration');
+      console.error('❌ Auction registration error:', err);
+      console.error('Response data:', err.response?.data);
+      console.error('Status:', err.response?.status);
+
+      const errorMsg = err.response?.data?.message || 'Error submitting registration';
+      const validationErrors = err.response?.data?.validationErrors;
+
+      if (validationErrors) {
+        console.error('Validation errors:', validationErrors);
+        setError(`${errorMsg}\n${validationErrors.map(e => `${e.field}: ${e.message}`).join('\n')}`);
+      } else {
+        setError(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
