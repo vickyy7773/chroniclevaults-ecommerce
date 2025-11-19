@@ -272,7 +272,7 @@ const AuctionRegistrationManagement = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {registration.status === 'pending' && registration.emailVerified && (
+                        {registration.status === 'pending' && (
                           <>
                             <button
                               onClick={() => handleApprove(registration._id)}
@@ -521,7 +521,7 @@ const AuctionRegistrationManagement = () => {
               )}
 
               {/* Action Buttons */}
-              {selectedRegistration.status === 'pending' && selectedRegistration.emailVerified && (
+              {selectedRegistration.status === 'pending' && (
                 <div className="flex gap-4 pt-4 border-t-2">
                   <button
                     onClick={() => handleApprove(selectedRegistration._id)}

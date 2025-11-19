@@ -163,9 +163,10 @@ export const approveRegistration = async (req, res) => {
       return res.status(404).json({ message: 'Registration not found' });
     }
 
-    if (!registration.emailVerified) {
-      return res.status(400).json({ message: 'Email not verified yet' });
-    }
+    // Skip email verification check - admin can approve directly
+    // if (!registration.emailVerified) {
+    //   return res.status(400).json({ message: 'Email not verified yet' });
+    // }
 
     // Check if user already exists with this email
     let user = await User.findOne({ email: registration.email });
