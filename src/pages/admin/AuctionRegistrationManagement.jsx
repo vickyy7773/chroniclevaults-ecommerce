@@ -328,6 +328,11 @@ const AuctionRegistrationManagement = () => {
                     <p className="text-sm mt-1">
                       Submitted: {formatDate(selectedRegistration.submittedAt)}
                     </p>
+                    {selectedRegistration.auctionId && (
+                      <p className="text-sm font-mono font-bold text-accent-600 mt-2">
+                        Auction ID: {selectedRegistration.auctionId}
+                      </p>
+                    )}
                   </div>
                   {selectedRegistration.emailVerified ? (
                     <div className="flex items-center gap-2 text-green-600">
