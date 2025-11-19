@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ShoppingCart, Search, Heart, User, Menu, Eye, Truck, BadgeCheck, Shield, Mail,
-  X, ChevronDown, Home, Star, TrendingUp, Award, Package, LogOut, AlertTriangle
+  X, ChevronDown, Home, Star, TrendingUp, Award, Package, LogOut, AlertTriangle, Gavel
 } from 'lucide-react';
 import { FaWhatsapp, FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter } from 'react-icons/fa';
 import logoImage from '../../assets/fixed logo.png';
@@ -108,6 +108,7 @@ const Header = ({
   // Generate navigation links dynamically from categories
   const navigationLinks = [
     { to: '/', label: 'Home', icon: Home },
+    { to: '/auctions', label: 'Auctions', icon: Gavel },
     ...categories
       .filter(cat => cat.type === 'main' && cat.isActive)
       .sort((a, b) => (a.order || 0) - (b.order || 0))
