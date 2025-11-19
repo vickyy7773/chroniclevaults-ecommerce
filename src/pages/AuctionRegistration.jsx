@@ -130,6 +130,19 @@ const AuctionRegistration = () => {
     setMessage('');
 
     try {
+      // Custom validation for file uploads
+      if (!formData.panCard) {
+        setError('Please upload PAN Card');
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.idProof.file) {
+        setError('Please upload ID Proof');
+        setLoading(false);
+        return;
+      }
+
       const submitData = {
         ...formData,
         idProof: {
@@ -663,7 +676,6 @@ const AuctionRegistration = () => {
                       type="file"
                       accept="image/*,.pdf"
                       onChange={(e) => handleFileChange(e, 'panCard')}
-                      required
                       className="hidden"
                     />
                   </label>
@@ -704,7 +716,6 @@ const AuctionRegistration = () => {
                       type="file"
                       accept="image/*,.pdf"
                       onChange={(e) => handleFileChange(e, 'idProof')}
-                      required
                       className="hidden"
                     />
                   </label>
