@@ -306,13 +306,7 @@ const AuctionPage = () => {
       setSubmittingBid(true);
       const response = await api.post(`/auctions/${auction._id}/bid`, { amount, maxBid });
 
-      // Show success message based on bid type
-      if (maxBid) {
-        toast.success(`Reserve bid placed! Max bid: ₹${maxBid.toLocaleString()}`);
-      } else {
-        toast.success('Bid placed successfully!');
-      }
-
+      // WebSocket will handle the success notification
       // Update auction with new bid
       setAuction(response.data.auction); // Response interceptor already returns data
 
