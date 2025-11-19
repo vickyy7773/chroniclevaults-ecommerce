@@ -444,27 +444,43 @@ const AuctionRegistrationManagement = () => {
                   <FileText className="w-5 h-5 text-accent-600" />
                   Documents
                 </h3>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-semibold text-gray-700">PAN Card</label>
+                    <label className="text-sm font-semibold text-gray-700 block mb-2">PAN Card</label>
+                    <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+                      <img
+                        src={selectedRegistration.panCard}
+                        alt="PAN Card"
+                        className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => window.open(selectedRegistration.panCard, '_blank')}
+                      />
+                    </div>
                     <a
                       href={selectedRegistration.panCard}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-accent-600 hover:underline block"
+                      download="PAN_Card.jpg"
+                      className="text-accent-600 hover:underline text-sm mt-2 inline-block"
                     >
-                      View PAN Card →
+                      Download PAN Card
                     </a>
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-gray-700">ID Proof ({selectedRegistration.idProof.proofType})</label>
+                    <label className="text-sm font-semibold text-gray-700 block mb-2">
+                      ID Proof ({selectedRegistration.idProof.proofType})
+                    </label>
+                    <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+                      <img
+                        src={selectedRegistration.idProof.url}
+                        alt="ID Proof"
+                        className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => window.open(selectedRegistration.idProof.url, '_blank')}
+                      />
+                    </div>
                     <a
                       href={selectedRegistration.idProof.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-accent-600 hover:underline block"
+                      download={`ID_Proof_${selectedRegistration.idProof.proofType}.jpg`}
+                      className="text-accent-600 hover:underline text-sm mt-2 inline-block"
                     >
-                      View ID Proof →
+                      Download ID Proof
                     </a>
                   </div>
                 </div>
