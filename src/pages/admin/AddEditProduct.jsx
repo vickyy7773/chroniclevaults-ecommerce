@@ -522,13 +522,14 @@ const AddEditProduct = () => {
       }
 
       // Check if the operation was successful
-      const isSuccess = (response?.status === 200 || response?.status === 201) && response?.data?.success !== false;
+      // Response interceptor already returns data, so response.success (not response.data.success)
+      const isSuccess = response?.success !== false;
 
       if (isSuccess) {
         alert(isEditMode ? 'Product updated successfully!' : 'Product created successfully!');
         navigate('/admin/products');
       } else {
-        const errorMsg = response?.data?.message || 'Failed to save product';
+        const errorMsg = response?.message || 'Failed to save product';
         console.error('❌ Save failed:', errorMsg);
         alert(errorMsg);
       }
