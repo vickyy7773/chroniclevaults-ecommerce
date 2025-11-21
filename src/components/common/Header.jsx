@@ -130,7 +130,19 @@ const Header = ({
           icon: iconMap[category.name] || iconMap['default'],
           categories: subCategories.length > 0 ? ['All', ...subCategories] : null
         };
-      })
+      }),
+    // Auctions dropdown
+    {
+      to: '/auctions',
+      label: 'Auctions',
+      icon: Gavel,
+      categories: ['Current Auction', 'Upcoming Auction', 'Auction Archive'],
+      auctionLinks: {
+        'Current Auction': '/auctions?status=Active',
+        'Upcoming Auction': '/auctions?status=Upcoming',
+        'Auction Archive': '/auctions?status=Ended'
+      }
+    }
   ];
 
   return (
@@ -250,42 +262,6 @@ const Header = ({
                     </Link>
                   )}
 
-                  {/* Auctions Dropdown */}
-                  <div className="relative group">
-                    <button className="flex items-center space-x-2 text-neutral-900 hover:text-accent-600 transition-all px-3 py-2 hover:bg-primary-100 rounded-xl font-medium hover:scale-105">
-                      <Gavel className="w-5 h-5" />
-                      <span className="hidden lg:inline text-sm">Auctions</span>
-                      <ChevronDown className="w-4 h-4 hidden lg:inline" />
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                      <div className="py-2">
-                        <Link
-                          to="/auctions?status=Active"
-                          className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-accent-600 transition-colors"
-                        >
-                          <Gavel className="w-4 h-4 mr-3" />
-                          Current Auction
-                        </Link>
-                        <Link
-                          to="/auctions?status=Upcoming"
-                          className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-accent-600 transition-colors"
-                        >
-                          <Clock className="w-4 h-4 mr-3" />
-                          Upcoming Auction
-                        </Link>
-                        <Link
-                          to="/auctions?status=Ended"
-                          className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-accent-600 transition-colors"
-                        >
-                          <TrendingUp className="w-4 h-4 mr-3" />
-                          Auction Archive
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Wishlist - Hidden on info pages */}
                   {!hideShoppingFeatures && (
                     <button
@@ -346,13 +322,13 @@ const Header = ({
                       <div className="absolute top-full left-0 mt-0 w-56 bg-white rounded-lg shadow-lg border border-neutral-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                         <div className="p-2">
                           <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider px-3 py-2">
-                            Categories
+                            {link.auctionLinks ? 'Auctions' : 'Categories'}
                           </div>
                           {link.categories.map((category) => {
-                            // "All" goes to main category, others add ?sub= param
-                            const categoryUrl = category === 'All'
-                              ? link.to
-                              : `${link.to}?sub=${encodeURIComponent(category)}`;
+                            // For auction links, use predefined URLs
+                            const categoryUrl = link.auctionLinks
+                              ? link.auctionLinks[category]
+                              : (category === 'All' ? link.to : `${link.to}?sub=${encodeURIComponent(category)}`);
 
                             return (
                               <Link
@@ -542,9 +518,10 @@ const Header = ({
                       {hasSubcategories && isExpanded && (
                         <div className="ml-8 mt-1 space-y-1 border-l-2 border-amber-200 pl-3">
                           {link.categories.map((category) => {
-                            const categoryUrl = category === 'All'
-                              ? link.to
-                              : `${link.to}?sub=${encodeURIComponent(category)}`;
+                            // For auction links, use predefined URLs
+                            const categoryUrl = link.auctionLinks
+                              ? link.auctionLinks[category]
+                              : (category === 'All' ? link.to : `${link.to}?sub=${encodeURIComponent(category)}`);
 
                             return (
                               <Link
