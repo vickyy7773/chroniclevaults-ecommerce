@@ -135,6 +135,10 @@ const userSchema = new mongoose.Schema({
     default: 0,
     min: 0
   },
+  auctionId: {
+    type: String,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now

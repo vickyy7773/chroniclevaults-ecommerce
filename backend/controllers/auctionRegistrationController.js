@@ -202,19 +202,21 @@ export const approveRegistration = async (req, res) => {
       });
     }
 
-    // User exists, update auction verification status and coins
-    console.log('💰 Before save - user.auctionCoins:', user.auctionCoins);
-    user.isAuctionVerified = true;
-    user.auctionCoins = Number(auctionCoins);
-    console.log('💰 After assignment - user.auctionCoins:', user.auctionCoins);
-    await user.save();
-    console.log('💰 After save - user.auctionCoins:', user.auctionCoins);
-    console.log('💰 User ID:', user._id);
-
-    // Generate unique auction ID
+    // Generate unique auction ID first
     const year = new Date().getFullYear();
     const count = await AuctionRegistration.countDocuments({ status: 'approved' });
     const auctionId = `AUC-${year}-${String(count + 1).padStart(5, '0')}`;
+
+    // User exists, update auction verification status, coins and auctionId
+    console.log('💰 Before save - user.auctionCoins:', user.auctionCoins);
+    user.isAuctionVerified = true;
+    user.auctionCoins = Number(auctionCoins);
+    user.auctionId = auctionId; // Save auctionId to user
+    console.log('💰 After assignment - user.auctionCoins:', user.auctionCoins);
+    console.log('💰 After assignment - user.auctionId:', user.auctionId);
+    await user.save();
+    console.log('💰 After save - user.auctionCoins:', user.auctionCoins);
+    console.log('💰 User ID:', user._id);
 
     // Update registration
     registration.status = 'approved';
