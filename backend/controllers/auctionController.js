@@ -1,5 +1,6 @@
 import Auction from '../models/Auction.js';
 import Product from '../models/Product.js';
+import User from '../models/User.js';
 
 // @desc    Get all auctions
 // @route   GET /api/auctions
@@ -302,6 +303,30 @@ export const placeBid = async (req, res) => {
       });
     }
 
+    // Check user's auction coins
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (!user.isAuctionVerified) {
+      return res.status(403).json({
+        success: false,
+        message: 'You must be verified for auctions to place bids'
+      });
+    }
+
+    // Check if user has enough coins
+    if (user.auctionCoins < amount) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient coins. You have ${user.auctionCoins.toLocaleString()} coins but bid requires ${amount.toLocaleString()} coins`
+      });
+    }
+
     // Validate bid amount
     const validation = auction.validateBid(amount);
     if (!validation.valid) {
@@ -408,6 +433,11 @@ export const placeBid = async (req, res) => {
 
     await auction.save();
 
+    // Deduct coins from user
+    user.auctionCoins -= amount;
+    await user.save();
+    console.log(`💰 Deducted ${amount} coins from user ${user._id}. Remaining: ${user.auctionCoins}`);
+
     // Populate the latest bid user info
     await auction.populate('bids.user', 'name email');
 
@@ -432,7 +462,8 @@ export const placeBid = async (req, res) => {
         auction,
         latestBid: auction.bids[auction.bids.length - 1],
         autoBidTriggered,
-        previousReserveBidAmount
+        previousReserveBidAmount,
+        remainingCoins: user.auctionCoins
       }
     });
   } catch (error) {

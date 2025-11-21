@@ -287,6 +287,12 @@ const AuctionPage = () => {
       return;
     }
 
+    // Check if user has enough coins
+    if (user.auctionCoins < amount) {
+      toast.error(`Insufficient coins! You have ${user.auctionCoins?.toLocaleString() || 0} coins but need ${amount.toLocaleString()}`);
+      return;
+    }
+
     try {
       setSubmittingBid(true);
       const response = await api.post(`/auctions/${auction._id}/bid`, { amount, maxBid });
@@ -295,6 +301,14 @@ const AuctionPage = () => {
       const nextSuggestedBid = response.data.auction.currentBid + newIncrement;
       setBidAmount(nextSuggestedBid.toString());
       setMaxBidAmount('');
+
+      // Update user's remaining coins in state and localStorage
+      if (response.data.remainingCoins !== undefined) {
+        const updatedUser = { ...user, auctionCoins: response.data.remainingCoins };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        toast.success(`Bid placed! Remaining coins: ${response.data.remainingCoins.toLocaleString()}`);
+      }
     } catch (error) {
       console.error('Place bid error:', error);
       toast.error(error.response?.data?.message || 'Failed to place bid');
