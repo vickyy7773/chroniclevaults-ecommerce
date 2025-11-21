@@ -426,12 +426,42 @@ export const placeBid = async (req, res) => {
       auction.currentBid = amount;
       auction.totalBids = auction.bids.length;
 
-      // Check if this bid has reached/exceeded the reserve bid
-      if (auction.highestReserveBid && amount >= auction.highestReserveBid) {
-        // This bid has reached/exceeded the reserve bid
-        // Clear the reserve bid since it's been overtaken
-        auction.highestReserveBid = null;
-        auction.reserveBidder = null;
+      // AUTO-BID LOGIC: Check if there's an active reserve bidder who should auto-bid
+      if (auction.highestReserveBid && auction.reserveBidder && auction.reserveBidder.toString() !== userId.toString()) {
+        // There's a reserve bidder (not the current bidder)
+        const increment = auction.getCurrentIncrement();
+        const autoBidAmount = amount + increment;
+
+        if (autoBidAmount <= auction.highestReserveBid) {
+          // Reserve bidder can auto-bid
+          const reserveBidderUser = await User.findById(auction.reserveBidder);
+          const autoBidCoinDeduction = increment;
+
+          if (reserveBidderUser && reserveBidderUser.auctionCoins >= autoBidCoinDeduction) {
+            // Place auto-bid for reserve bidder
+            auction.bids.push({
+              user: auction.reserveBidder,
+              amount: autoBidAmount,
+              maxBid: auction.highestReserveBid,
+              isReserveBidder: true,
+              isAutoBid: true
+            });
+
+            auction.currentBid = autoBidAmount;
+            auction.totalBids = auction.bids.length;
+            autoBidTriggered = true;
+
+            // Deduct coins from reserve bidder
+            reserveBidderUser.auctionCoins -= autoBidCoinDeduction;
+            await reserveBidderUser.save();
+            console.log(`💰 Auto-bid: Deducted ${autoBidCoinDeduction} coins from reserve bidder ${reserveBidderUser._id}. Remaining: ${reserveBidderUser.auctionCoins}`);
+          }
+        } else if (amount >= auction.highestReserveBid) {
+          // This bid has exceeded the reserve bid
+          // Clear the reserve bid since it's been overtaken
+          auction.highestReserveBid = null;
+          auction.reserveBidder = null;
+        }
       }
     }
 
