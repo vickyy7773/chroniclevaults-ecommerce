@@ -333,15 +333,22 @@ const AuctionRegistrationManagement = () => {
               {/* Status Banner */}
               <div className={`rounded-lg p-4 border-2 ${getStatusBadge(selectedRegistration.status)}`}>
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex-1">
                     <p className="font-bold text-lg">Status: {selectedRegistration.status.toUpperCase()}</p>
                     <p className="text-sm mt-1">
                       Submitted: {formatDate(selectedRegistration.submittedAt)}
                     </p>
                     {selectedRegistration.auctionId && (
-                      <p className="text-sm font-mono font-bold text-accent-600 mt-2">
-                        Auction ID: {selectedRegistration.auctionId}
-                      </p>
+                      <div className="mt-3 space-y-1">
+                        <p className="text-sm font-mono font-bold text-accent-600">
+                          Auction ID: {selectedRegistration.auctionId}
+                        </p>
+                        {selectedRegistration.userId && (
+                          <p className="text-sm font-bold text-green-600">
+                            Coins Assigned: {selectedRegistration.userId.auctionCoins || 0}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                   {selectedRegistration.emailVerified ? (

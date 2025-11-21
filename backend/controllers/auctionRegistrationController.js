@@ -150,6 +150,7 @@ export const getAllRegistrations = async (req, res) => {
     const filter = status ? { status } : {};
 
     const registrations = await AuctionRegistration.find(filter)
+      .populate('userId', 'auctionCoins isAuctionVerified')
       .sort({ submittedAt: -1 })
       .select('-verificationToken');
 
