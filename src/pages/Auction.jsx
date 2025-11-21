@@ -302,7 +302,11 @@ const AuctionPage = () => {
         const updatedUser = { ...user, auctionCoins: response.data.remainingCoins };
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        toast.success(`Bid placed! Remaining coins: ${response.data.remainingCoins.toLocaleString()}`);
+        if (maxBid) {
+          toast.success(`Bid placed with reserve of ₹${maxBid.toLocaleString()}! Remaining coins: ${response.data.remainingCoins.toLocaleString()}`);
+        } else {
+          toast.success(`Bid placed! Remaining coins: ${response.data.remainingCoins.toLocaleString()}`);
+        }
       }
     } catch (error) {
       console.error('Place bid error:', error);
