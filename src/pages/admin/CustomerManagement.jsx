@@ -271,6 +271,9 @@ const CustomerManagement = () => {
                     Contact
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                    Auction Details
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     Orders
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-wider">
@@ -334,6 +337,27 @@ const CustomerManagement = () => {
                           </div>
                         )}
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {customer.isAuctionVerified ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold">
+                              ✓ Verified
+                            </span>
+                          </div>
+                          <div className="text-sm font-bold text-accent-600">
+                            {customer.auctionId || 'N/A'}
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400 font-semibold">
+                            Coins: <span className="text-accent-600 font-bold">{customer.auctionCoins || 0}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                          Not registered
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-bold text-gray-900 dark:text-white">{customer.totalOrders}</div>
