@@ -661,7 +661,7 @@ const AuctionPage = () => {
                     <form onSubmit={handlePlaceBid} className="space-y-3 sm:space-y-4">
                       <div>
                         <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                          Your Bid (₹)
+                          Enter Bid Amount (₹)
                         </label>
                         <input
                           type="number"
@@ -670,25 +670,12 @@ const AuctionPage = () => {
                           min={minBid}
                           step="50"
                           required
-                          className="w-full px-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-accent-500 focus:border-accent-500 text-lg sm:text-xl font-bold text-center"
+                          className="w-full px-4 py-4 sm:py-5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-accent-500 focus:border-accent-500 text-xl sm:text-2xl font-bold text-center"
                           placeholder={minBid.toString()}
                         />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                          Max Auto-Bid (Optional)
-                        </label>
-                        <input
-                          type="number"
-                          value={maxBidAmount}
-                          onChange={(e) => setMaxBidAmount(e.target.value)}
-                          min={bidAmount || minBid}
-                          step="50"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-accent-500 focus:border-accent-500 text-base sm:text-lg font-semibold text-center"
-                          placeholder="Auto-bid up to..."
-                        />
-                        <p className="text-[10px] sm:text-xs text-gray-500 mt-1">System will auto-bid for you</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 mt-2 text-center">
+                          Min: ₹{minBid.toLocaleString()} • Increment: ₹{currentIncrement.toLocaleString()}
+                        </p>
                       </div>
 
                       <button
