@@ -257,7 +257,6 @@ const AuctionPage = () => {
     }
 
     const amount = parseInt(bidAmount);
-    const maxBid = maxBidAmount ? parseInt(maxBidAmount) : null;
 
     if (isNaN(amount) || amount <= 0) {
       toast.error('Please enter a valid bid amount');
@@ -269,26 +268,21 @@ const AuctionPage = () => {
       return;
     }
 
-    if (maxBid && maxBid < amount) {
-      toast.error('Maximum bid must be greater than or equal to your bid');
-      return;
-    }
-
-    if (maxBid && maxBid % 50 !== 0) {
-      toast.error('Maximum bid must be divisible by 50');
-      return;
-    }
-
     const currentIncrement = getCurrentIncrement(auction);
     const minBid = auction.currentBid + currentIncrement;
+
+    // If amount > minBid, treat as max reserve bid
+    const maxBid = amount > minBid ? amount : null;
 
     if (amount < minBid) {
       toast.error(`Minimum bid is ₹${minBid.toLocaleString()}`);
       return;
     }
 
-    // Check if user has enough coins for the increment
-    const coinDeduction = amount - auction.currentBid;
+    // If maxBid is set, actual bid is minBid, coin deduction is based on minBid
+    const actualBid = maxBid ? minBid : amount;
+    const coinDeduction = actualBid - auction.currentBid;
+
     if (user.auctionCoins < coinDeduction) {
       toast.error(`Insufficient coins! You have ${user.auctionCoins?.toLocaleString() || 0} coins but need ${coinDeduction.toLocaleString()} for this bid`);
       return;
@@ -296,7 +290,7 @@ const AuctionPage = () => {
 
     try {
       setSubmittingBid(true);
-      const response = await api.post(`/auctions/${auction._id}/bid`, { amount, maxBid });
+      const response = await api.post(`/auctions/${auction._id}/bid`, { amount: actualBid, maxBid });
       setAuction(response.data.auction);
       const newIncrement = getCurrentIncrement(response.data.auction);
       const nextSuggestedBid = response.data.auction.currentBid + newIncrement;
@@ -661,7 +655,7 @@ const AuctionPage = () => {
                     <form onSubmit={handlePlaceBid} className="space-y-3 sm:space-y-4">
                       <div>
                         <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                          Your Bid (₹)
+                          Your Bid / Max Reserve (₹)
                         </label>
                         <input
                           type="number"
@@ -674,25 +668,7 @@ const AuctionPage = () => {
                           placeholder={minBid.toString()}
                         />
                         <p className="text-[10px] sm:text-xs text-gray-500 mt-1 text-center">
-                          Min: ₹{minBid.toLocaleString()}
-                        </p>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                          Max Reserve Bid (Optional)
-                        </label>
-                        <input
-                          type="number"
-                          value={maxBidAmount}
-                          onChange={(e) => setMaxBidAmount(e.target.value)}
-                          min={bidAmount || minBid}
-                          step="50"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-accent-500 focus:border-accent-500 text-base sm:text-lg font-semibold text-center"
-                          placeholder="Auto-bid up to this amount"
-                        />
-                        <p className="text-[10px] sm:text-xs text-gray-500 mt-1 text-center">
-                          System auto-bids for you up to this limit
+                          Min: ₹{minBid.toLocaleString()} • Enter higher amount to set as max reserve
                         </p>
                       </div>
 
