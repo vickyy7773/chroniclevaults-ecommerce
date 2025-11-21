@@ -396,12 +396,9 @@ const AuctionPage = () => {
               </div>
               <div className="flex flex-wrap gap-3 sm:gap-6">
                 <div className="bg-white/10 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-3 backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    <Hash className="w-4 h-4 sm:w-5 sm:h-5 text-white/70" />
-                    <div>
-                      <p className="text-white/70 text-[10px] sm:text-xs uppercase tracking-wide">Auction ID</p>
-                      <p className="font-bold text-sm sm:text-base font-mono">{user.auctionId || 'N/A'}</p>
-                    </div>
+                  <div>
+                    <p className="text-white/70 text-[10px] sm:text-xs uppercase tracking-wide">Auction ID</p>
+                    <p className="font-bold text-sm sm:text-base font-mono">{user.auctionId || 'N/A'}</p>
                   </div>
                 </div>
                 <div className="bg-white/10 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-3 backdrop-blur-sm">
