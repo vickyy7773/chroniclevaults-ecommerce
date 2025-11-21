@@ -14,7 +14,9 @@ import {
   Calendar,
   Hash,
   Globe,
-  Clock
+  Clock,
+  Coins,
+  Edit
 } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -26,6 +28,9 @@ const AuctionRegistrationManagement = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [auctionCoins, setAuctionCoins] = useState(0);
+  const [showCoinsEditModal, setShowCoinsEditModal] = useState(false);
+  const [editingCoins, setEditingCoins] = useState(0);
+  const [updatingCoins, setUpdatingCoins] = useState(false);
 
   useEffect(() => {
     fetchRegistrations();
@@ -107,6 +112,33 @@ const AuctionRegistrationManagement = () => {
     console.log('📋 auctionCoins:', registration.userId?.auctionCoins);
     setSelectedRegistration(registration);
     setShowDetailsModal(true);
+  };
+
+  const openCoinsEditModal = () => {
+    setEditingCoins(selectedRegistration?.userId?.auctionCoins || 0);
+    setShowCoinsEditModal(true);
+  };
+
+  const handleUpdateCoins = async () => {
+    if (editingCoins < 0 || isNaN(editingCoins)) {
+      toast.error('Please enter a valid number (0 or greater)');
+      return;
+    }
+
+    try {
+      setUpdatingCoins(true);
+      await api.put(`/users/${selectedRegistration.userId._id}/auction-coins`, {
+        auctionCoins: editingCoins
+      });
+      toast.success('Auction coins updated successfully!');
+      setShowCoinsEditModal(false);
+      fetchRegistrations();
+    } catch (error) {
+      console.error('Error updating coins:', error);
+      toast.error(error.response?.data?.message || 'Failed to update coins');
+    } finally {
+      setUpdatingCoins(false);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -352,9 +384,19 @@ const AuctionRegistrationManagement = () => {
                           Auction ID: {selectedRegistration.auctionId}
                         </p>
                         {selectedRegistration.userId && (
-                          <p className="text-sm font-bold text-green-600">
-                            Coins Assigned: {selectedRegistration.userId.auctionCoins || 0}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <Coins className="w-4 h-4 text-green-600" />
+                            <p className="text-sm font-bold text-green-600">
+                              Coins: {selectedRegistration.userId.auctionCoins || 0}
+                            </p>
+                            <button
+                              onClick={openCoinsEditModal}
+                              className="p-1 hover:bg-green-100 rounded text-green-600"
+                              title="Edit Coins"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          </div>
                         )}
                       </div>
                     )}
@@ -591,6 +633,79 @@ const AuctionRegistrationManagement = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Coins Modal */}
+      {showCoinsEditModal && selectedRegistration && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <Coins className="w-6 h-6" />
+                <h2 className="text-xl font-bold">Edit Auction Coins</h2>
+              </div>
+              <button
+                onClick={() => setShowCoinsEditModal(false)}
+                className="text-white/80 hover:text-white transition-colors text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-1">
+                  User: {selectedRegistration.fullName}
+                </label>
+                <p className="text-xs text-gray-600">{selectedRegistration.email}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-2">
+                  Auction Coins
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={editingCoins}
+                  onChange={(e) => setEditingCoins(Number(e.target.value))}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none text-lg font-semibold"
+                  placeholder="Enter coins amount"
+                />
+                <p className="text-xs text-gray-600 mt-2">
+                  Current: <span className="font-bold text-green-600">{selectedRegistration.userId?.auctionCoins || 0}</span> coins
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowCoinsEditModal(false)}
+                  className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-bold hover:bg-gray-300 transition-colors"
+                  disabled={updatingCoins}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateCoins}
+                  disabled={updatingCoins}
+                  className="flex-1 bg-green-600 text-white py-3 px-6 rounded-xl font-bold hover:bg-green-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
+                >
+                  {updatingCoins ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Coins className="w-5 h-5" />
+                      Update Coins
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
