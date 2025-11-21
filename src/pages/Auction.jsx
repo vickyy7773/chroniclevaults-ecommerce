@@ -30,8 +30,10 @@ const AuctionPage = () => {
           const parsedUser = JSON.parse(savedUser);
           // Fetch fresh user data from API to get latest auctionId and auctionCoins
           const response = await api.get('/auth/me');
-          if (response.data) {
-            const updatedUser = { ...parsedUser, ...response.data };
+          const userData = response.data || response;
+          if (userData) {
+            const updatedUser = { ...parsedUser, ...userData };
+            console.log('Updated user with auction data:', updatedUser.auctionId, updatedUser.auctionCoins);
             setUser(updatedUser);
             localStorage.setItem('user', JSON.stringify(updatedUser));
           } else {
