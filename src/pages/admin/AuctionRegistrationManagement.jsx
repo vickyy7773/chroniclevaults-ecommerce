@@ -47,14 +47,31 @@ const AuctionRegistrationManagement = () => {
   };
 
   const handleApprove = async (registrationId) => {
-    if (!window.confirm('Are you sure you want to approve this registration? User must already have an e-commerce account with the same email.')) {
+    // Ask for auction coins
+    const coinsInput = prompt('Enter auction coins to assign to this user (minimum 0):');
+
+    if (coinsInput === null) {
+      // User cancelled
+      return;
+    }
+
+    const auctionCoins = parseInt(coinsInput);
+
+    if (isNaN(auctionCoins) || auctionCoins < 0) {
+      toast.error('Please enter a valid number (0 or greater)');
+      return;
+    }
+
+    if (!window.confirm(`Approve registration and assign ${auctionCoins} auction coins? User must already have an e-commerce account with the same email.`)) {
       return;
     }
 
     try {
       setActionLoading(true);
-      await api.put(`/auction-registration/admin/approve/${registrationId}`);
-      toast.success('Registration approved successfully! Auction ID generated.');
+      const response = await api.put(`/auction-registration/admin/approve/${registrationId}`, {
+        auctionCoins
+      });
+      toast.success(response.message || 'Registration approved successfully!');
       fetchRegistrations();
       setShowDetailsModal(false);
     } catch (error) {

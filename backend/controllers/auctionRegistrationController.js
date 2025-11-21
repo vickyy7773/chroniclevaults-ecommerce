@@ -166,11 +166,19 @@ export const getAllRegistrations = async (req, res) => {
 export const approveRegistration = async (req, res) => {
   try {
     const { id } = req.params;
+    const { auctionCoins } = req.body; // Admin specifies coins
 
     const registration = await AuctionRegistration.findById(id);
 
     if (!registration) {
       return res.status(404).json({ message: 'Registration not found' });
+    }
+
+    // Validate coins
+    if (auctionCoins === undefined || auctionCoins < 0) {
+      return res.status(400).json({
+        message: 'Please specify auction coins (must be 0 or greater)'
+      });
     }
 
     // Check if user already exists with this email
@@ -183,8 +191,9 @@ export const approveRegistration = async (req, res) => {
       });
     }
 
-    // User exists, update auction verification status
+    // User exists, update auction verification status and coins
     user.isAuctionVerified = true;
+    user.auctionCoins = Number(auctionCoins);
     await user.save();
 
     // Generate unique auction ID
@@ -200,14 +209,16 @@ export const approveRegistration = async (req, res) => {
     await registration.save();
 
     console.log('✅ Auction ID generated:', auctionId);
+    console.log('✅ Auction coins assigned:', auctionCoins);
 
-    // TODO: Send approval email with login credentials
+    // TODO: Send approval email with login credentials and coin balance
 
     res.json({
       success: true,
-      message: `Registration approved! Auction ID: ${auctionId}`,
+      message: `Registration approved! Auction ID: ${auctionId}, Coins: ${auctionCoins}`,
       userId: user._id,
-      auctionId: auctionId
+      auctionId: auctionId,
+      auctionCoins: auctionCoins
     });
 
   } catch (error) {
