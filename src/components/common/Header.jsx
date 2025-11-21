@@ -250,14 +250,41 @@ const Header = ({
                     </Link>
                   )}
 
-                  {/* Auctions Button */}
-                  <Link
-                    to="/no-auction"
-                    className="flex items-center space-x-2 text-neutral-900 hover:text-accent-600 transition-all px-3 py-2 hover:bg-primary-100 rounded-xl font-medium hover:scale-105"
-                  >
-                    <Gavel className="w-5 h-5" />
-                    <span className="hidden lg:inline text-sm">Auctions</span>
-                  </Link>
+                  {/* Auctions Dropdown */}
+                  <div className="relative group">
+                    <button className="flex items-center space-x-2 text-neutral-900 hover:text-accent-600 transition-all px-3 py-2 hover:bg-primary-100 rounded-xl font-medium hover:scale-105">
+                      <Gavel className="w-5 h-5" />
+                      <span className="hidden lg:inline text-sm">Auctions</span>
+                      <ChevronDown className="w-4 h-4 hidden lg:inline" />
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                      <div className="py-2">
+                        <Link
+                          to="/auctions?status=Active"
+                          className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-accent-600 transition-colors"
+                        >
+                          <Gavel className="w-4 h-4 mr-3" />
+                          Current Auction
+                        </Link>
+                        <Link
+                          to="/auctions?status=Upcoming"
+                          className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-accent-600 transition-colors"
+                        >
+                          <Clock className="w-4 h-4 mr-3" />
+                          Upcoming Auction
+                        </Link>
+                        <Link
+                          to="/auctions?status=Ended"
+                          className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-primary-50 hover:text-accent-600 transition-colors"
+                        >
+                          <TrendingUp className="w-4 h-4 mr-3" />
+                          Auction Archive
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Wishlist - Hidden on info pages */}
                   {!hideShoppingFeatures && (

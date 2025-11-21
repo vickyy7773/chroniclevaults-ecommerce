@@ -1,14 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Gavel, Clock, TrendingUp, Users, Filter } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
 
 const AuctionsPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('Active'); // Active, Upcoming, Ended, All
+
+  // Get initial filter from URL query params or default to 'Active'
+  const initialFilter = searchParams.get('status') || 'Active';
+  const [filter, setFilter] = useState(initialFilter);
+
+  useEffect(() => {
+    // Update filter when URL changes
+    const urlStatus = searchParams.get('status');
+    if (urlStatus && urlStatus !== filter) {
+      setFilter(urlStatus);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchAuctions();
