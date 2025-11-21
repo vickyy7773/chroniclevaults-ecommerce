@@ -16,7 +16,8 @@ import {
   Globe,
   Clock,
   Coins,
-  Edit
+  Edit,
+  Search
 } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -31,6 +32,7 @@ const AuctionRegistrationManagement = () => {
   const [showCoinsEditModal, setShowCoinsEditModal] = useState(false);
   const [editingCoins, setEditingCoins] = useState(0);
   const [updatingCoins, setUpdatingCoins] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchRegistrations();
@@ -178,6 +180,20 @@ const AuctionRegistrationManagement = () => {
         <p className="text-gray-600">Review and manage auction registration applications</p>
       </div>
 
+      {/* Search Bar */}
+      <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search by Auction ID, Name, Email, or Mobile..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-gray-100 border-0 rounded-xl focus:ring-2 focus:ring-accent-500 text-gray-900 placeholder-gray-500 font-medium"
+          />
+        </div>
+      </div>
+
       {/* Filter Tabs */}
       <div className="bg-white rounded-lg shadow-md p-4 mb-6">
         <div className="flex flex-wrap gap-2">
@@ -225,7 +241,19 @@ const AuctionRegistrationManagement = () => {
       </div>
 
       {/* Registrations List */}
-      {registrations.length === 0 ? (
+      {(() => {
+        const filteredRegistrations = registrations.filter(reg => {
+          if (!searchTerm) return true;
+          const search = searchTerm.toLowerCase();
+          return (
+            (reg.auctionId && reg.auctionId.toLowerCase().includes(search)) ||
+            (reg.fullName && reg.fullName.toLowerCase().includes(search)) ||
+            (reg.email && reg.email.toLowerCase().includes(search)) ||
+            (reg.mobile && reg.mobile.includes(search))
+          );
+        });
+
+        return filteredRegistrations.length === 0 ? (
         <div className="bg-white rounded-lg shadow-md p-12 text-center">
           <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 text-lg">No registrations found</p>
@@ -257,7 +285,7 @@ const AuctionRegistrationManagement = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {registrations.map((registration) => (
+                {filteredRegistrations.map((registration) => (
                   <tr key={registration._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
@@ -349,7 +377,8 @@ const AuctionRegistrationManagement = () => {
             </table>
           </div>
         </div>
-      )}
+      );
+      })()}
 
       {/* Details Modal */}
       {showDetailsModal && selectedRegistration && (
