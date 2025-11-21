@@ -557,7 +557,7 @@ const AuctionPage = () => {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">
-                            {bid.user.name}
+                            Bidder #{auction.bids.length - index}
                             {index === 0 && (
                               <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded-full">
                                 Leading
