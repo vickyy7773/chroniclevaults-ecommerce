@@ -154,6 +154,16 @@ export const getAllRegistrations = async (req, res) => {
       .sort({ submittedAt: -1 })
       .select('-verificationToken');
 
+    console.log('📋 Total registrations found:', registrations.length);
+    if (registrations.length > 0) {
+      const firstReg = registrations[0];
+      console.log('📋 First registration auctionId:', firstReg.auctionId);
+      console.log('📋 First registration userId:', firstReg.userId);
+      if (firstReg.userId) {
+        console.log('📋 First registration userId.auctionCoins:', firstReg.userId.auctionCoins);
+      }
+    }
+
     res.json(registrations);
   } catch (error) {
     console.error('Error fetching registrations:', error);
@@ -193,9 +203,13 @@ export const approveRegistration = async (req, res) => {
     }
 
     // User exists, update auction verification status and coins
+    console.log('💰 Before save - user.auctionCoins:', user.auctionCoins);
     user.isAuctionVerified = true;
     user.auctionCoins = Number(auctionCoins);
+    console.log('💰 After assignment - user.auctionCoins:', user.auctionCoins);
     await user.save();
+    console.log('💰 After save - user.auctionCoins:', user.auctionCoins);
+    console.log('💰 User ID:', user._id);
 
     // Generate unique auction ID
     const year = new Date().getFullYear();

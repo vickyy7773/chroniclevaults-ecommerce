@@ -8,7 +8,8 @@ import {
   getSavedAddresses,
   addAddress,
   setDefaultAddress,
-  deleteAddress
+  deleteAddress,
+  updateAuctionCoins
 } from '../controllers/userController.js';
 import { protect, admin } from '../middleware/auth.js';
 
@@ -36,6 +37,9 @@ router.put('/:id', updateUser);
 
 // Update user status
 router.put('/:id/status', updateUserStatus);
+
+// Update auction coins (Admin only)
+router.put('/:id/auction-coins', updateAuctionCoins);
 
 // Delete user
 router.delete('/:id', deleteUser);

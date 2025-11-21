@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, Edit, Trash2, Eye, UserPlus, Mail, Phone, MapPin, ShoppingBag, Users, X } from 'lucide-react';
+import { Search, Edit, Trash2, Eye, UserPlus, Mail, Phone, MapPin, ShoppingBag, Users, X, Coins } from 'lucide-react';
 import { customerService } from '../../services';
+import { toast } from 'react-toastify';
+import api from '../../utils/api';
 
 const CustomerManagement = () => {
   const [customers, setCustomers] = useState([]);
@@ -9,6 +11,9 @@ const CustomerManagement = () => {
   const [loading, setLoading] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showCoinsModal, setShowCoinsModal] = useState(false);
+  const [editingCoins, setEditingCoins] = useState(0);
+  const [updatingCoins, setUpdatingCoins] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
@@ -113,6 +118,35 @@ const CustomerManagement = () => {
   const viewCustomerDetails = (customer) => {
     setSelectedCustomer(customer);
     setShowModal(true);
+  };
+
+  const openCoinsModal = (customer) => {
+    setSelectedCustomer(customer);
+    setEditingCoins(customer.auctionCoins || 0);
+    setShowCoinsModal(true);
+  };
+
+  const handleUpdateCoins = async () => {
+    if (editingCoins < 0 || isNaN(editingCoins)) {
+      toast.error('Please enter a valid number (0 or greater)');
+      return;
+    }
+
+    try {
+      setUpdatingCoins(true);
+      const response = await api.put(`/users/${selectedCustomer._id}/auction-coins`, {
+        auctionCoins: editingCoins
+      });
+
+      toast.success('Auction coins updated successfully!');
+      setShowCoinsModal(false);
+      fetchCustomers(); // Refresh customer list
+    } catch (error) {
+      console.error('Error updating coins:', error);
+      toast.error(error.response?.data?.message || 'Failed to update coins');
+    } finally {
+      setUpdatingCoins(false);
+    }
   };
 
   const filteredCustomers = customers.filter(customer => {
@@ -349,8 +383,16 @@ const CustomerManagement = () => {
                           <div className="text-sm font-bold text-accent-600">
                             {customer.auctionId || 'N/A'}
                           </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400 font-semibold">
+                          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 font-semibold">
+                            <Coins className="w-3 h-3" />
                             Coins: <span className="text-accent-600 font-bold">{customer.auctionCoins || 0}</span>
+                            <button
+                              onClick={() => openCoinsModal(customer)}
+                              className="p-1 hover:bg-accent-100 rounded text-accent-600"
+                              title="Edit Coins"
+                            >
+                              <Edit className="w-3 h-3" />
+                            </button>
                           </div>
                         </div>
                       ) : (
@@ -527,6 +569,82 @@ const CustomerManagement = () => {
                       Save Changes
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Coins Modal */}
+        {showCoinsModal && selectedCustomer && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-accent-600 to-accent-700 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <Coins className="w-6 h-6" />
+                  <h2 className="text-xl font-bold">Edit Auction Coins</h2>
+                </div>
+                <button
+                  onClick={() => setShowCoinsModal(false)}
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1">
+                    Customer: {selectedCustomer.name}
+                  </label>
+                  <p className="text-xs text-gray-600">{selectedCustomer.email}</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-900 mb-2">
+                    Auction Coins
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editingCoins}
+                    onChange={(e) => setEditingCoins(Number(e.target.value))}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-accent-600 focus:outline-none text-lg font-semibold"
+                    placeholder="Enter coins amount"
+                  />
+                  <p className="text-xs text-gray-600 mt-2">
+                    Current: <span className="font-bold text-accent-600">{selectedCustomer.auctionCoins || 0}</span> coins
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setShowCoinsModal(false)}
+                    className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-bold hover:bg-gray-300 transition-colors"
+                    disabled={updatingCoins}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleUpdateCoins}
+                    disabled={updatingCoins}
+                    className="flex-1 bg-accent-600 text-white py-3 px-6 rounded-xl font-bold hover:bg-accent-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {updatingCoins ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <Coins className="w-5 h-5" />
+                        Update Coins
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>

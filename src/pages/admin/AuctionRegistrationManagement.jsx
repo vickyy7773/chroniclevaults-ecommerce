@@ -37,6 +37,11 @@ const AuctionRegistrationManagement = () => {
       const queryParam = filter !== 'all' ? `?status=${filter}` : '';
       const response = await api.get(`/auction-registration/admin/all${queryParam}`);
       // Response interceptor already returns response.data
+      console.log('📊 Fetched Registrations:', response);
+      if (response && response.length > 0) {
+        console.log('📊 First registration sample:', response[0]);
+        console.log('📊 userId populated?', response[0].userId);
+      }
       setRegistrations(response || []);
     } catch (error) {
       console.error('Error fetching registrations:', error);
@@ -97,6 +102,9 @@ const AuctionRegistrationManagement = () => {
   };
 
   const viewDetails = (registration) => {
+    console.log('📋 Selected Registration:', registration);
+    console.log('📋 userId:', registration.userId);
+    console.log('📋 auctionCoins:', registration.userId?.auctionCoins);
     setSelectedRegistration(registration);
     setShowDetailsModal(true);
   };

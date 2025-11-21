@@ -386,3 +386,55 @@ export const deleteAddress = async (req, res) => {
     });
   }
 };
+
+// @desc    Update user auction coins
+// @route   PUT /api/users/:id/auction-coins
+// @access  Private/Admin
+export const updateAuctionCoins = async (req, res) => {
+  try {
+    const { auctionCoins } = req.body;
+
+    // Validate coins
+    if (auctionCoins === undefined || auctionCoins < 0 || isNaN(auctionCoins)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide valid auction coins (must be 0 or greater)'
+      });
+    }
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Update auction coins
+    console.log('💰 Updating auction coins for user:', user._id);
+    console.log('💰 Old coins:', user.auctionCoins);
+    console.log('💰 New coins:', auctionCoins);
+
+    user.auctionCoins = Number(auctionCoins);
+    await user.save();
+
+    console.log('💰 Coins updated successfully');
+
+    res.status(200).json({
+      success: true,
+      message: 'Auction coins updated successfully',
+      data: {
+        userId: user._id,
+        auctionCoins: user.auctionCoins
+      }
+    });
+  } catch (error) {
+    console.error('Update auction coins error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating auction coins',
+      error: error.message
+    });
+  }
+};
