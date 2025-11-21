@@ -41,17 +41,22 @@ const AuctionPage = () => {
     socketRef.current = io(backendUrl, {
       transports: isProduction ? ['polling'] : ['polling', 'websocket'],
       reconnection: true,
-      reconnectionDelay: 2000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: Infinity, // Keep trying to reconnect
+      reconnectionDelay: 3000,
+      reconnectionDelayMax: 10000,
+      reconnectionAttempts: 5, // Limit to 5 attempts instead of infinite
       path: '/socket.io',
       upgrade: !isProduction, // Disable upgrade to websocket in production
-      forceNew: true, // Create new connection each time
-      timeout: 20000
+      forceNew: false, // Reuse existing connection if available
+      timeout: 20000,
+      autoConnect: true
     });
+
+    let errorCount = 0;
+    const MAX_ERRORS_TO_LOG = 3;
 
     socketRef.current.on('connect', () => {
       console.log('✅ Connected to Socket.io server');
+      errorCount = 0; // Reset error count on successful connection
       if (id) {
         socketRef.current.emit('join-auction', id);
       }
@@ -59,6 +64,7 @@ const AuctionPage = () => {
 
     socketRef.current.on('reconnect', (attemptNumber) => {
       console.log('🔄 Reconnected to Socket.io after', attemptNumber, 'attempts');
+      errorCount = 0; // Reset error count on reconnection
       if (id) {
         socketRef.current.emit('join-auction', id);
       }
@@ -66,15 +72,25 @@ const AuctionPage = () => {
 
     socketRef.current.on('disconnect', (reason) => {
       console.log('❌ Disconnected from Socket.io:', reason);
+      // Don't automatically reconnect on transport close errors
       if (reason === 'io server disconnect') {
-        // Server disconnected, manually reconnect
         socketRef.current.connect();
       }
     });
 
     socketRef.current.on('connect_error', (error) => {
-      console.error('Socket connection error:', error.message);
-      // Don't spam console with repetitive errors
+      errorCount++;
+      // Only log first 3 errors to reduce console spam
+      if (errorCount <= MAX_ERRORS_TO_LOG) {
+        console.error('Socket connection error:', error.message);
+        if (errorCount === MAX_ERRORS_TO_LOG) {
+          console.log('...further socket errors will be suppressed');
+        }
+      }
+    });
+
+    socketRef.current.on('reconnect_failed', () => {
+      console.warn('⚠️ Socket.io reconnection failed after 5 attempts. Please refresh the page for live updates.');
     });
 
     // Cleanup on unmount
