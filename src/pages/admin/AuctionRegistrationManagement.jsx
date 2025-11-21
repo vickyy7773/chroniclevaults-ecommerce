@@ -25,6 +25,7 @@ const AuctionRegistrationManagement = () => {
   const [selectedRegistration, setSelectedRegistration] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [auctionCoins, setAuctionCoins] = useState(0);
 
   useEffect(() => {
     fetchRegistrations();
@@ -47,17 +48,8 @@ const AuctionRegistrationManagement = () => {
   };
 
   const handleApprove = async (registrationId) => {
-    // Ask for auction coins
-    const coinsInput = prompt('Enter auction coins to assign to this user (minimum 0):');
-
-    if (coinsInput === null) {
-      // User cancelled
-      return;
-    }
-
-    const auctionCoins = parseInt(coinsInput);
-
-    if (isNaN(auctionCoins) || auctionCoins < 0) {
+    // Validate coins
+    if (auctionCoins < 0 || isNaN(auctionCoins)) {
       toast.error('Please enter a valid number (0 or greater)');
       return;
     }
@@ -74,6 +66,7 @@ const AuctionRegistrationManagement = () => {
       toast.success(response.message || 'Registration approved successfully!');
       fetchRegistrations();
       setShowDetailsModal(false);
+      setAuctionCoins(0); // Reset coins
     } catch (error) {
       console.error('Error approving registration:', error);
       toast.error(error.response?.message || 'Failed to approve registration');
@@ -541,25 +534,46 @@ const AuctionRegistrationManagement = () => {
                 </div>
               )}
 
-              {/* Action Buttons */}
+              {/* Auction Coins Input & Action Buttons */}
               {selectedRegistration.status === 'pending' && (
-                <div className="flex gap-4 pt-4 border-t-2">
-                  <button
-                    onClick={() => handleApprove(selectedRegistration._id)}
-                    disabled={actionLoading}
-                    className="flex-1 bg-green-600 text-white py-3 px-6 rounded-xl font-bold hover:bg-green-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle className="w-5 h-5" />
-                    Approve Registration
-                  </button>
-                  <button
-                    onClick={() => handleReject(selectedRegistration._id)}
-                    disabled={actionLoading}
-                    className="flex-1 bg-red-600 text-white py-3 px-6 rounded-xl font-bold hover:bg-red-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <XCircle className="w-5 h-5" />
-                    Reject Registration
-                  </button>
+                <div className="space-y-4 pt-4 border-t-2">
+                  {/* Auction Coins Input */}
+                  <div className="border-2 border-accent-200 rounded-xl p-4 bg-accent-50">
+                    <label className="block text-sm font-bold text-gray-900 mb-2">
+                      Auction Coins to Assign
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={auctionCoins}
+                      onChange={(e) => setAuctionCoins(Number(e.target.value))}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-accent-600 focus:outline-none text-lg font-semibold"
+                      placeholder="Enter coins amount (e.g., 1000, 5000)"
+                    />
+                    <p className="text-xs text-gray-600 mt-2">
+                      Specify how many auction coins this user will receive upon approval
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => handleApprove(selectedRegistration._id)}
+                      disabled={actionLoading}
+                      className="flex-1 bg-green-600 text-white py-3 px-6 rounded-xl font-bold hover:bg-green-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle className="w-5 h-5" />
+                      Approve Registration
+                    </button>
+                    <button
+                      onClick={() => handleReject(selectedRegistration._id)}
+                      disabled={actionLoading}
+                      className="flex-1 bg-red-600 text-white py-3 px-6 rounded-xl font-bold hover:bg-red-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <XCircle className="w-5 h-5" />
+                      Reject Registration
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
