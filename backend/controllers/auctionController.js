@@ -319,11 +319,15 @@ export const placeBid = async (req, res) => {
       });
     }
 
-    // Check if user has enough coins
-    if (user.auctionCoins < amount) {
+    // Calculate coin deduction (only the increment, not full bid)
+    const previousBid = auction.currentBid;
+    const coinDeduction = amount - previousBid;
+
+    // Check if user has enough coins for the increment
+    if (user.auctionCoins < coinDeduction) {
       return res.status(400).json({
         success: false,
-        message: `Insufficient coins. You have ${user.auctionCoins.toLocaleString()} coins but bid requires ${amount.toLocaleString()} coins`
+        message: `Insufficient coins. You have ${user.auctionCoins.toLocaleString()} coins but need ${coinDeduction.toLocaleString()} coins for this bid`
       });
     }
 
@@ -433,10 +437,10 @@ export const placeBid = async (req, res) => {
 
     await auction.save();
 
-    // Deduct coins from user
-    user.auctionCoins -= amount;
+    // Deduct only the increment coins from user
+    user.auctionCoins -= coinDeduction;
     await user.save();
-    console.log(`💰 Deducted ${amount} coins from user ${user._id}. Remaining: ${user.auctionCoins}`);
+    console.log(`💰 Deducted ${coinDeduction} coins (increment) from user ${user._id}. Remaining: ${user.auctionCoins}`);
 
     // Populate the latest bid user info
     await auction.populate('bids.user', 'name email');

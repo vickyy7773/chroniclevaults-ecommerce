@@ -287,9 +287,10 @@ const AuctionPage = () => {
       return;
     }
 
-    // Check if user has enough coins
-    if (user.auctionCoins < amount) {
-      toast.error(`Insufficient coins! You have ${user.auctionCoins?.toLocaleString() || 0} coins but need ${amount.toLocaleString()}`);
+    // Check if user has enough coins for the increment
+    const coinDeduction = amount - auction.currentBid;
+    if (user.auctionCoins < coinDeduction) {
+      toast.error(`Insufficient coins! You have ${user.auctionCoins?.toLocaleString() || 0} coins but need ${coinDeduction.toLocaleString()} for this bid`);
       return;
     }
 
