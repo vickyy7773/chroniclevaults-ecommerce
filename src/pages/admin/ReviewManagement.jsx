@@ -20,7 +20,7 @@ const ReviewManagement = () => {
         {
           _id: '1',
           productName: 'Ancient Roman Coin',
-          productImage: '/api/placeholder/100/100',
+          productImage: '',
           customerName: 'John Doe',
           customerEmail: 'john@example.com',
           rating: 5,
@@ -34,7 +34,7 @@ const ReviewManagement = () => {
         {
           _id: '2',
           productName: 'Vintage Indian Note',
-          productImage: '/api/placeholder/100/100',
+          productImage: '',
           customerName: 'Jane Smith',
           customerEmail: 'jane@example.com',
           rating: 4,
@@ -48,7 +48,7 @@ const ReviewManagement = () => {
         {
           _id: '3',
           productName: 'Medieval Gold Coin',
-          productImage: '/api/placeholder/100/100',
+          productImage: '',
           customerName: 'Mike Johnson',
           customerEmail: 'mike@example.com',
           rating: 3,

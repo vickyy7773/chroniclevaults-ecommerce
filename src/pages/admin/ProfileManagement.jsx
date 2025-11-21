@@ -11,7 +11,7 @@ const ProfileManagement = () => {
     phone: '',
     address: '',
     role: '',
-    avatar: '/api/placeholder/150/150'
+    avatar: ''
   });
 
   // Load user data from localStorage on component mount

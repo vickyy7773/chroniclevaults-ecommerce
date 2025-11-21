@@ -807,7 +807,7 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                 >
                   <div className="relative overflow-hidden">
                     <img
-                      src={relatedProduct.images?.[0] || relatedProduct.image || '/api/placeholder/300/300'}
+                      src={relatedProduct.images?.[0] || relatedProduct.image || 'https://placehold.co/300x300/e2e8f0/64748b?text=No+Image'}
                       alt={relatedProduct.name}
                       className="w-full h-40 sm:h-48 lg:h-64 object-cover group-hover:scale-110 sm:group-hover:scale-125 transition-transform duration-500 ease-out"
                     />
