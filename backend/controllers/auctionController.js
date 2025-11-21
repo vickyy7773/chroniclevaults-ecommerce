@@ -465,6 +465,30 @@ export const placeBid = async (req, res) => {
       }
     }
 
+    // REFUND LOGIC: Refund coins to previous highest bidder (they got outbid)
+    // Find who was leading before this bid
+    const bidsBeforeThis = auction.bids.slice(0, -1); // All bids except the latest
+    if (bidsBeforeThis.length > 0) {
+      // Sort to find previous leader
+      const sortedPrevBids = [...bidsBeforeThis].sort((a, b) => b.amount - a.amount);
+      const previousHighestBid = sortedPrevBids[0];
+
+      // Only refund if previous leader is different from current bidder
+      if (previousHighestBid && previousHighestBid.user.toString() !== userId.toString()) {
+        const previousLeader = await User.findById(previousHighestBid.user);
+        if (previousLeader) {
+          // Calculate coins this user spent: their highest bid - starting price
+          const coinsSpentByPrevLeader = previousHighestBid.amount - auction.startingPrice;
+
+          if (coinsSpentByPrevLeader > 0) {
+            previousLeader.auctionCoins += coinsSpentByPrevLeader;
+            await previousLeader.save();
+            console.log(`💰 Refunded ${coinsSpentByPrevLeader} coins to outbid user ${previousLeader._id}. New balance: ${previousLeader.auctionCoins}`);
+          }
+        }
+      }
+    }
+
     await auction.save();
 
     // Deduct only the increment coins from user
