@@ -23,14 +23,28 @@ const AuctionPage = () => {
   const [selectedImage, setSelectedImage] = useState(0);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Error loading user:', error);
+    const fetchUserData = async () => {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          // Fetch fresh user data from API to get latest auctionId and auctionCoins
+          const response = await api.get('/auth/me');
+          if (response.data) {
+            const updatedUser = { ...parsedUser, ...response.data };
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          } else {
+            setUser(parsedUser);
+          }
+        } catch (error) {
+          console.error('Error loading user:', error);
+          const parsedUser = JSON.parse(savedUser);
+          setUser(parsedUser);
+        }
       }
-    }
+    };
+    fetchUserData();
   }, []);
 
   // Socket.io connection setup
