@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, CheckCircle, User, Building2, Calendar, FileText, MapPin, Phone, Mail, Globe, Image, Shield, Users, AlertCircle, Info } from 'lucide-react';
 import api from '../utils/api';
@@ -51,6 +51,24 @@ const AuctionRegistration = () => {
       { name: '', city: '', mobile: '' }
     ]
   });
+
+  // Pre-fill user data from localStorage
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
+        setFormData(prev => ({
+          ...prev,
+          fullName: user.name || '',
+          email: user.email || '',
+          mobile: user.phone || ''
+        }));
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
