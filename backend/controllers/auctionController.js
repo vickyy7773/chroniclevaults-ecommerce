@@ -214,6 +214,10 @@ export const updateAuction = async (req, res) => {
 
     allowedUpdates.forEach(field => {
       if (req.body[field] !== undefined) {
+        // Skip reserveBidder if it's empty string or null (let it remain unchanged)
+        if (field === 'reserveBidder' && (!req.body[field] || req.body[field] === '')) {
+          return;
+        }
         auction[field] = req.body[field];
       }
     });
