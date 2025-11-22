@@ -469,36 +469,45 @@ export const placeBid = async (req, res) => {
       }
     }
 
-    // REFUND LOGIC: Refund coins to previous highest bidder (they got outbid)
+    // FREEZE/UNFREEZE LOGIC
     // Find who was leading before this bid
-    const bidsBeforeThis = auction.bids.slice(0, -1); // All bids except the latest
+    const bidsBeforeThis = auction.bids.slice(0, -1);
     if (bidsBeforeThis.length > 0) {
-      // Sort to find previous leader
       const sortedPrevBids = [...bidsBeforeThis].sort((a, b) => b.amount - a.amount);
       const previousHighestBid = sortedPrevBids[0];
 
-      // Only refund if previous leader is different from current bidder
+      // Unfreeze previous leader's coins (they got outbid)
       if (previousHighestBid && previousHighestBid.user.toString() !== userId.toString()) {
         const previousLeader = await User.findById(previousHighestBid.user);
-        if (previousLeader) {
-          // Calculate coins this user spent: their highest bid - starting price
-          const coinsSpentByPrevLeader = previousHighestBid.amount - auction.startingPrice;
-
-          if (coinsSpentByPrevLeader > 0) {
-            previousLeader.auctionCoins += coinsSpentByPrevLeader;
-            await previousLeader.save();
-            console.log(`💰 Refunded ${coinsSpentByPrevLeader} coins to outbid user ${previousLeader._id}. New balance: ${previousLeader.auctionCoins}`);
-          }
+        if (previousLeader && previousLeader.frozenCoins > 0) {
+          // Release frozen coins back to available
+          previousLeader.auctionCoins += previousLeader.frozenCoins;
+          const unfrozenAmount = previousLeader.frozenCoins;
+          previousLeader.frozenCoins = 0;
+          await previousLeader.save();
+          console.log(`🔓 Unfroze ${unfrozenAmount} coins for outbid user ${previousLeader._id}. Available: ${previousLeader.auctionCoins}`);
         }
       }
     }
 
     await auction.save();
 
-    // Deduct only the increment coins from user
-    user.auctionCoins -= coinDeduction;
+    // Freeze coins for current bid (bid amount - starting price)
+    const freezeAmount = amount - auction.startingPrice;
+
+    // Check if user has enough available coins
+    if (user.auctionCoins < freezeAmount) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient coins. You have ${user.auctionCoins.toLocaleString()} available coins but need ${freezeAmount.toLocaleString()} for this bid`
+      });
+    }
+
+    // Freeze the coins
+    user.auctionCoins -= freezeAmount;
+    user.frozenCoins = freezeAmount;
     await user.save();
-    console.log(`💰 Deducted ${coinDeduction} coins (increment) from user ${user._id}. Remaining: ${user.auctionCoins}`);
+    console.log(`🔒 Froze ${freezeAmount} coins for user ${user._id}. Available: ${user.auctionCoins}, Frozen: ${user.frozenCoins}`);
 
     // Populate the latest bid user info
     await auction.populate('bids.user', 'name email');
