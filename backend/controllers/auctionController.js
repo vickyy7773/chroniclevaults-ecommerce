@@ -323,15 +323,11 @@ export const placeBid = async (req, res) => {
       });
     }
 
-    // Calculate coin deduction (only the increment, not full bid)
-    const previousBid = auction.currentBid;
-    const coinDeduction = amount - previousBid;
-
-    // Check if user has enough coins for the increment
-    if (user.auctionCoins < coinDeduction) {
+    // Check if user has enough coins for the full bid amount
+    if (user.auctionCoins < amount) {
       return res.status(400).json({
         success: false,
-        message: `Insufficient coins. You have ${user.auctionCoins.toLocaleString()} coins but need ${coinDeduction.toLocaleString()} coins for this bid`
+        message: `Insufficient coins. You have ${user.auctionCoins.toLocaleString()} coins but need ${amount.toLocaleString()} coins for this bid`
       });
     }
 
@@ -439,9 +435,8 @@ export const placeBid = async (req, res) => {
         if (autoBidAmount <= auction.highestReserveBid) {
           // Reserve bidder can auto-bid
           const reserveBidderUser = await User.findById(auction.reserveBidder);
-          const autoBidCoinDeduction = increment;
 
-          if (reserveBidderUser && reserveBidderUser.auctionCoins >= autoBidCoinDeduction) {
+          if (reserveBidderUser && reserveBidderUser.auctionCoins >= autoBidAmount) {
             // Place auto-bid for reserve bidder
             auction.bids.push({
               user: auction.reserveBidder,
@@ -455,10 +450,12 @@ export const placeBid = async (req, res) => {
             auction.totalBids = auction.bids.length;
             autoBidTriggered = true;
 
-            // Deduct coins from reserve bidder
-            reserveBidderUser.auctionCoins -= autoBidCoinDeduction;
+            // The current user's frozen coins will be unfrozen in the freeze/unfreeze logic below
+            // Now freeze the reserve bidder's coins for the auto-bid
+            reserveBidderUser.auctionCoins -= autoBidAmount;
+            reserveBidderUser.frozenCoins = autoBidAmount;
             await reserveBidderUser.save();
-            console.log(`💰 Auto-bid: Deducted ${autoBidCoinDeduction} coins from reserve bidder ${reserveBidderUser._id}. Remaining: ${reserveBidderUser.auctionCoins}`);
+            console.log(`💰 Auto-bid: Froze ${autoBidAmount} coins for reserve bidder ${reserveBidderUser._id}. Available: ${reserveBidderUser.auctionCoins}, Frozen: ${reserveBidderUser.frozenCoins}`);
           }
         } else if (amount >= auction.highestReserveBid) {
           // This bid has exceeded the reserve bid
@@ -492,18 +489,10 @@ export const placeBid = async (req, res) => {
 
     await auction.save();
 
-    // Freeze coins for current bid (bid amount - starting price)
-    const freezeAmount = amount - auction.startingPrice;
+    // Freeze the full bid amount
+    const freezeAmount = amount;
 
-    // Check if user has enough available coins
-    if (user.auctionCoins < freezeAmount) {
-      return res.status(400).json({
-        success: false,
-        message: `Insufficient coins. You have ${user.auctionCoins.toLocaleString()} available coins but need ${freezeAmount.toLocaleString()} for this bid`
-      });
-    }
-
-    // Freeze the coins
+    // Freeze the coins (move from available to frozen)
     user.auctionCoins -= freezeAmount;
     user.frozenCoins = freezeAmount;
     await user.save();
