@@ -52,12 +52,22 @@ const AuctionRegistration = () => {
     ]
   });
 
-  // Pre-fill user data from localStorage
+  // Pre-fill user data from localStorage and check if already verified
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       try {
         const user = JSON.parse(savedUser);
+
+        // If user is already auction verified, redirect to auctions
+        if (user.isAuctionVerified) {
+          setError('You are already registered for auctions!');
+          setTimeout(() => {
+            navigate('/auctions?status=Active');
+          }, 2000);
+          return;
+        }
+
         setFormData(prev => ({
           ...prev,
           fullName: user.name || '',
@@ -68,7 +78,7 @@ const AuctionRegistration = () => {
         console.error('Error parsing user data:', error);
       }
     }
-  }, []);
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

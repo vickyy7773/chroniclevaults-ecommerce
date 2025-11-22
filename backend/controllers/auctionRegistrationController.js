@@ -33,18 +33,28 @@ export const submitRegistration = async (req, res) => {
     console.log('📧 Email:', email);
     console.log('📄 idProof type:', typeof idProof, idProof);
 
+    // Check if user already exists with this email (from e-commerce signup)
+    const existingUser = await User.findOne({ email });
+
+    // If user is already auction verified, don't allow re-registration
+    if (existingUser && existingUser.isAuctionVerified) {
+      console.log('❌ User already verified for auctions');
+      return res.status(400).json({
+        message: 'You are already registered and verified for auctions! Please login to participate.',
+        alreadyVerified: true
+      });
+    }
+
     // Check if email already registered for auction (not in User model)
     const existingRegistration = await AuctionRegistration.findOne({ email });
     if (existingRegistration) {
       console.log('❌ Email already registered for auction');
-      return res.status(400).json({ message: 'Email already registered for auction' });
+      return res.status(400).json({
+        message: `Auction registration already exists with status: ${existingRegistration.status}. Please contact admin if you need assistance.`,
+        status: existingRegistration.status
+      });
     }
 
-    // Note: We don't check User model because auction email can be same as user account email
-    // Auction registration is separate from user account creation
-
-    // Check if user already exists with this email (from e-commerce signup)
-    const existingUser = await User.findOne({ email });
     const emailVerified = existingUser ? true : false; // If user exists, email is already verified
 
     // Generate email verification token (only needed if email not already verified)
