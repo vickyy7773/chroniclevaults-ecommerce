@@ -137,6 +137,14 @@ const AuctionPage = () => {
         }
       }
 
+      // Check if current user got outbid and received their coins back
+      if (data.outbidUser && currentUser && data.outbidUser.userId === currentUser._id) {
+        console.log('🔓 Coins unfrozen! New balance:', data.outbidUser.newBalance);
+        const updatedUser = { ...currentUser, auctionCoins: data.outbidUser.newBalance };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+
       const userHasBids = data.auction && data.auction.bids &&
                           data.auction.bids.some(bid => bid.user._id === currentUser?._id);
       const userIsReserveBidder = data.auction && data.auction.reserveBidder === currentUser?._id;

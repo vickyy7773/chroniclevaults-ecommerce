@@ -469,6 +469,9 @@ export const placeBid = async (req, res) => {
     // FREEZE/UNFREEZE LOGIC
     // Find who was leading before this bid
     const bidsBeforeThis = auction.bids.slice(0, -1);
+    let outbidUserId = null;
+    let outbidUserNewBalance = null;
+
     if (bidsBeforeThis.length > 0) {
       const sortedPrevBids = [...bidsBeforeThis].sort((a, b) => b.amount - a.amount);
       const previousHighestBid = sortedPrevBids[0];
@@ -483,6 +486,10 @@ export const placeBid = async (req, res) => {
           previousLeader.frozenCoins = 0;
           await previousLeader.save();
           console.log(`🔓 Unfroze ${unfrozenAmount} coins for outbid user ${previousLeader._id}. Available: ${previousLeader.auctionCoins}`);
+
+          // Store outbid user info to send via Socket.io
+          outbidUserId = previousLeader._id.toString();
+          outbidUserNewBalance = previousLeader.auctionCoins;
         }
       }
     }
@@ -509,7 +516,11 @@ export const placeBid = async (req, res) => {
         auction,
         latestBid: auction.bids[auction.bids.length - 1],
         autoBidTriggered,
-        previousReserveBidAmount
+        previousReserveBidAmount,
+        outbidUser: outbidUserId ? {
+          userId: outbidUserId,
+          newBalance: outbidUserNewBalance
+        } : null
       });
     }
 
