@@ -170,11 +170,11 @@ const AuctionPage = () => {
         }
       } else {
         if (userHasParticipated && !isStillWinning) {
-          toast.warning(`⚠️ You are outbid! New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`, {
+          toast.warning(`⚠️ You are outbid! New bid placed: ₹${data.latestBid.amount.toLocaleString()}`, {
             autoClose: 5000
           });
         } else if (!userHasParticipated) {
-          toast.info(`New bid: ₹${data.latestBid.amount.toLocaleString()} by ${data.latestBid.user.name}`);
+          toast.info(`New bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
         }
       }
     };
