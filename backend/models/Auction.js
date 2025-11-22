@@ -151,8 +151,9 @@ auctionSchema.methods.validateBid = function(bidAmount) {
 };
 
 // Update auction status based on time
-auctionSchema.methods.updateStatus = function() {
+auctionSchema.methods.updateStatus = async function() {
   const now = new Date();
+  const previousStatus = this.status;
 
   if (now < this.startTime) {
     this.status = 'Upcoming';
@@ -165,10 +166,57 @@ auctionSchema.methods.updateStatus = function() {
     if (this.bids.length > 0 && !this.winner) {
       const highestBid = this.bids[this.bids.length - 1];
       this.winner = highestBid.user;
+
+      // Handle frozen coins when auction ends (first time only)
+      if (previousStatus !== 'Ended') {
+        await this.settleFrozenCoins();
+      }
     }
   }
 
   return this.status;
+};
+
+// Settle frozen coins when auction ends
+auctionSchema.methods.settleFrozenCoins = async function() {
+  try {
+    const User = mongoose.model('User');
+
+    // Get all unique bidders
+    const bidderIds = [...new Set(this.bids.map(bid => bid.user.toString()))];
+
+    // Get winner ID
+    const winnerId = this.winner ? this.winner.toString() : null;
+
+    console.log(`🏁 Settling frozen coins for auction ${this._id}`);
+    console.log(`👑 Winner: ${winnerId}`);
+    console.log(`👥 Total bidders: ${bidderIds.length}`);
+
+    for (const bidderId of bidderIds) {
+      const user = await User.findById(bidderId);
+
+      if (!user) continue;
+
+      if (bidderId === winnerId) {
+        // Winner: Keep frozen coins as deducted (already frozen)
+        console.log(`💰 Winner ${user.email}: Frozen ${user.frozenCoins} coins will be deducted`);
+        user.frozenCoins = 0; // Clear frozen amount (coins already removed from available)
+      } else {
+        // Losers: Return frozen coins to available balance
+        if (user.frozenCoins > 0) {
+          console.log(`🔓 Loser ${user.email}: Returning ${user.frozenCoins} frozen coins`);
+          user.auctionCoins += user.frozenCoins;
+          user.frozenCoins = 0;
+        }
+      }
+
+      await user.save();
+    }
+
+    console.log(`✅ Frozen coins settled for auction ${this._id}`);
+  } catch (error) {
+    console.error('Error settling frozen coins:', error);
+  }
 };
 
 // Index for faster queries

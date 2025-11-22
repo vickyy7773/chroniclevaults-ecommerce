@@ -23,7 +23,7 @@ export const getAllAuctions = async (req, res) => {
 
     // Update status for all auctions based on current time
     for (let auction of auctions) {
-      auction.updateStatus();
+      await auction.updateStatus();
       await auction.save();
     }
 
@@ -60,7 +60,7 @@ export const getAuctionById = async (req, res) => {
     }
 
     // Update status based on current time
-    auction.updateStatus();
+    await auction.updateStatus();
     await auction.save();
 
     res.json({
@@ -158,7 +158,7 @@ export const createAuction = async (req, res) => {
     });
 
     // Set initial status
-    auction.updateStatus();
+    await auction.updateStatus();
 
     const savedAuction = await auction.save();
 
@@ -223,7 +223,7 @@ export const updateAuction = async (req, res) => {
     });
 
     // Update status based on time
-    auction.updateStatus();
+    await auction.updateStatus();
 
     const updatedAuction = await auction.save();
 
@@ -298,7 +298,7 @@ export const placeBid = async (req, res) => {
     }
 
     // Update and check auction status
-    auction.updateStatus();
+    await auction.updateStatus();
 
     if (auction.status !== 'Active') {
       return res.status(400).json({
