@@ -132,44 +132,47 @@ const BlogDetail = () => {
 
         {/* Main Content */}
         <article className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200">
-          {/* Title and Meta Info */}
-          <div className="p-8 md:p-12 pb-0">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight text-gray-900">
-              {blog.title}
-            </h1>
-
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-6">
-              <div className="flex items-center gap-2">
-                <Calendar size={18} />
-                <span>{new Date(blog.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <User size={18} />
-                <span>{blog.author}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock size={18} />
-                <span>{blog.readTime} min read</span>
-              </div>
-            </div>
-
-            {/* Excerpt */}
-            <div className="text-xl text-gray-700 font-semibold mb-8 leading-relaxed">
+          {/* Excerpt at the top */}
+          <div className="p-8 md:p-12 pb-6">
+            <div className="text-xl text-gray-700 font-semibold leading-relaxed">
               {blog.excerpt}
             </div>
           </div>
 
           {/* Hero Image */}
-          <div className="relative w-full bg-gray-900 mx-8 md:mx-12 rounded-xl overflow-hidden mb-8">
+          <div className="relative w-full bg-gray-900">
             <img
               src={blog.image}
               alt={blog.title}
               className="w-full h-auto max-h-[500px] object-contain"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+
+            {/* Title Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+                {blog.title}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar size={18} />
+                  <span>{new Date(blog.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User size={18} />
+                  <span>{blog.author}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock size={18} />
+                  <span>{blog.readTime} min read</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Content */}
-          <div className="px-8 md:px-12 pb-8 md:pb-12">
+          <div className="p-8 md:p-12">
             {/* Share Button */}
             <div className="mb-8 pb-8 border-b-2 border-gray-200">
 
