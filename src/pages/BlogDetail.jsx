@@ -132,13 +132,6 @@ const BlogDetail = () => {
 
         {/* Main Content */}
         <article className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200">
-          {/* Excerpt at the top */}
-          <div className="p-8 md:p-12 pb-6">
-            <div className="text-xl text-gray-700 font-semibold leading-relaxed">
-              {blog.excerpt}
-            </div>
-          </div>
-
           {/* Hero Image */}
           <div className="relative w-full bg-gray-900">
             <img
@@ -173,8 +166,11 @@ const BlogDetail = () => {
 
           {/* Content */}
           <div className="p-8 md:p-12">
-            {/* Share Button */}
+            {/* Excerpt and Share Button */}
             <div className="mb-8 pb-8 border-b-2 border-gray-200">
+              <div className="text-xl text-gray-700 font-semibold mb-6 leading-relaxed">
+                {blog.excerpt}
+              </div>
 
               {/* Share on Social Media */}
               <div className="flex items-center gap-3 flex-wrap">
