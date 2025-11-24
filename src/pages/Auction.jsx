@@ -21,6 +21,8 @@ const AuctionPage = () => {
   const [submittingBid, setSubmittingBid] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState('');
   const [selectedImage, setSelectedImage] = useState(0);
+  const [goingWarning, setGoingWarning] = useState(0);
+  const [warningMessage, setWarningMessage] = useState('');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -188,6 +190,62 @@ const AuctionPage = () => {
       }
     };
   }, [user]);
+
+  // Going, Going, Gone warning listener
+  useEffect(() => {
+    if (!socketRef.current || !auction) return;
+
+    const handleAuctionWarning = (data) => {
+      console.log('🔔 AUCTION WARNING:', data);
+
+      if (data.auctionId === auction._id) {
+        setGoingWarning(data.warning);
+        setWarningMessage(data.message);
+
+        if (data.warning === 1) {
+          toast.warning('⚠️ GOING ONCE! 🔨 Place your bid now!', {
+            autoClose: 5000,
+            position: 'top-center'
+          });
+        } else if (data.warning === 2) {
+          toast.error('🚨 GOING TWICE! 🔨🔨 Last chance to bid!', {
+            autoClose: 5000,
+            position: 'top-center'
+          });
+        } else if (data.final) {
+          toast.success('🎉 SOLD! 🎉 Auction has ended!', {
+            autoClose: 7000,
+            position: 'top-center'
+          });
+          // Refresh auction data
+          setTimeout(() => {
+            fetchAuction();
+          }, 1000);
+        }
+      }
+    };
+
+    const handleWarningReset = (data) => {
+      console.log('🔄 WARNING RESET:', data);
+
+      if (data.auctionId === auction._id) {
+        setGoingWarning(0);
+        setWarningMessage('');
+      }
+    };
+
+    socketRef.current.off('auction-warning', handleAuctionWarning);
+    socketRef.current.off('auction-warning-reset', handleWarningReset);
+    socketRef.current.on('auction-warning', handleAuctionWarning);
+    socketRef.current.on('auction-warning-reset', handleWarningReset);
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off('auction-warning', handleAuctionWarning);
+        socketRef.current.off('auction-warning-reset', handleWarningReset);
+      }
+    };
+  }, [auction]);
 
   useEffect(() => {
     if (id) {
@@ -432,6 +490,64 @@ const AuctionPage = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Going, Going, Gone Warning Banner */}
+        {auction && auction.status === 'Active' && goingWarning > 0 && (
+          <div className={`mb-4 sm:mb-6 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl border-2 animate-pulse ${
+            goingWarning === 1
+              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 border-yellow-300'
+              : goingWarning === 2
+              ? 'bg-gradient-to-r from-red-500 to-pink-600 border-red-300'
+              : 'bg-gradient-to-r from-green-500 to-emerald-600 border-green-300'
+          }`}>
+            <div className="flex items-center justify-center gap-3 text-white">
+              {goingWarning === 1 && (
+                <>
+                  <Gavel className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />
+                  <div className="text-center">
+                    <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-wider">
+                      GOING ONCE! 🔨
+                    </h3>
+                    <p className="text-sm sm:text-base font-medium mt-1">
+                      30 seconds to next warning!
+                    </p>
+                  </div>
+                  <Gavel className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />
+                </>
+              )}
+              {goingWarning === 2 && (
+                <>
+                  <Gavel className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />
+                  <Gavel className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />
+                  <div className="text-center">
+                    <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-wider">
+                      GOING TWICE! 🔨🔨
+                    </h3>
+                    <p className="text-sm sm:text-base font-medium mt-1">
+                      Last 30 seconds! Place your bid NOW!
+                    </p>
+                  </div>
+                  <Gavel className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />
+                  <Gavel className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />
+                </>
+              )}
+              {goingWarning === 3 && (
+                <>
+                  <Award className="w-8 h-8 sm:w-10 sm:h-10" />
+                  <div className="text-center">
+                    <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-wider">
+                      SOLD! 🎉
+                    </h3>
+                    <p className="text-sm sm:text-base font-medium mt-1">
+                      Auction has ended!
+                    </p>
+                  </div>
+                  <Award className="w-8 h-8 sm:w-10 sm:h-10" />
+                </>
+              )}
             </div>
           </div>
         )}

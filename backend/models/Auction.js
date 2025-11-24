@@ -105,6 +105,18 @@ const auctionSchema = new mongoose.Schema({
   totalBids: {
     type: Number,
     default: 0
+  },
+  lastBidTime: {
+    type: Date,
+    default: null // Track when last bid was placed for Going, Going, Gone timer
+  },
+  warningCount: {
+    type: Number,
+    default: 0 // 0 = no warning, 1 = going once, 2 = going twice, 3 = sold
+  },
+  isGoingGoingGoneEnabled: {
+    type: Boolean,
+    default: true // Enable/disable Going, Going, Gone feature per auction
   }
 }, {
   timestamps: true

@@ -2,6 +2,134 @@ import Auction from '../models/Auction.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
 
+// Global timer tracking for Going, Going, Gone feature
+const auctionTimers = new Map();
+
+// Start Going, Going, Gone timer for an auction
+export const startGoingGoingGoneTimer = (auctionId, io) => {
+  // Clear existing timer if any
+  if (auctionTimers.has(auctionId)) {
+    clearTimeout(auctionTimers.get(auctionId));
+  }
+
+  const checkAndAnnounce = async () => {
+    try {
+      const auction = await Auction.findById(auctionId);
+
+      if (!auction || auction.status !== 'Active' || !auction.isGoingGoingGoneEnabled) {
+        // Auction ended or disabled, clear timer
+        auctionTimers.delete(auctionId);
+        return;
+      }
+
+      // Check if there are any bids
+      if (!auction.lastBidTime || auction.bids.length === 0) {
+        // No bids yet, check again in 30 seconds
+        const timerId = setTimeout(checkAndAnnounce, 30000);
+        auctionTimers.set(auctionId, timerId);
+        return;
+      }
+
+      const now = new Date();
+      const timeSinceLastBid = now - new Date(auction.lastBidTime);
+      const thirtySeconds = 30000;
+
+      if (timeSinceLastBid >= thirtySeconds) {
+        // Increment warning count
+        auction.warningCount += 1;
+
+        if (auction.warningCount === 1) {
+          // GOING ONCE!
+          await auction.save();
+          io.to(`auction-${auctionId}`).emit('auction-warning', {
+            auctionId: auctionId.toString(),
+            message: 'GOING ONCE! 🔨',
+            warning: 1,
+            timeSinceLastBid
+          });
+          console.log(`🔨 Auction ${auctionId}: GOING ONCE!`);
+
+          // Schedule next check in 30 seconds
+          const timerId = setTimeout(checkAndAnnounce, 30000);
+          auctionTimers.set(auctionId, timerId);
+
+        } else if (auction.warningCount === 2) {
+          // GOING TWICE!
+          await auction.save();
+          io.to(`auction-${auctionId}`).emit('auction-warning', {
+            auctionId: auctionId.toString(),
+            message: 'GOING TWICE! 🔨🔨',
+            warning: 2,
+            timeSinceLastBid
+          });
+          console.log(`🔨🔨 Auction ${auctionId}: GOING TWICE!`);
+
+          // Schedule next check in 30 seconds
+          const timerId = setTimeout(checkAndAnnounce, 30000);
+          auctionTimers.set(auctionId, timerId);
+
+        } else if (auction.warningCount >= 3) {
+          // SOLD! - Close auction
+          auction.status = 'Ended';
+          await auction.updateStatus();
+          await auction.save();
+
+          io.to(`auction-${auctionId}`).emit('auction-warning', {
+            auctionId: auctionId.toString(),
+            message: 'SOLD! 🎉',
+            warning: 3,
+            final: true,
+            timeSinceLastBid
+          });
+          console.log(`🎉 Auction ${auctionId}: SOLD!`);
+
+          // Clear timer
+          auctionTimers.delete(auctionId);
+        }
+      } else {
+        // Not enough time has passed yet, check again later
+        const remainingTime = thirtySeconds - timeSinceLastBid;
+        const timerId = setTimeout(checkAndAnnounce, remainingTime);
+        auctionTimers.set(auctionId, timerId);
+      }
+    } catch (error) {
+      console.error('Going, Going, Gone timer error:', error);
+      auctionTimers.delete(auctionId);
+    }
+  };
+
+  // Start the timer
+  const timerId = setTimeout(checkAndAnnounce, 30000);
+  auctionTimers.set(auctionId, timerId);
+  console.log(`⏰ Started Going, Going, Gone timer for auction ${auctionId}`);
+};
+
+// Reset timer when new bid is placed
+export const resetGoingGoingGoneTimer = async (auctionId, io) => {
+  try {
+    const auction = await Auction.findById(auctionId);
+
+    if (auction && auction.isGoingGoingGoneEnabled) {
+      // Reset warning count
+      auction.warningCount = 0;
+      auction.lastBidTime = new Date();
+      await auction.save();
+
+      // Emit reset event
+      io.to(`auction-${auctionId}`).emit('auction-warning-reset', {
+        auctionId: auctionId.toString(),
+        message: 'New bid! Timer reset.'
+      });
+
+      // Restart timer
+      startGoingGoingGoneTimer(auctionId, io);
+      console.log(`🔄 Reset Going, Going, Gone timer for auction ${auctionId}`);
+    }
+  } catch (error) {
+    console.error('Reset timer error:', error);
+  }
+};
+
 // @desc    Get all auctions
 // @route   GET /api/auctions
 // @access  Public
@@ -62,6 +190,14 @@ export const getAuctionById = async (req, res) => {
     // Update status based on current time
     await auction.updateStatus();
     await auction.save();
+
+    // Start Going, Going, Gone timer if auction is active and has bids
+    const io = req.app.get('io');
+    if (io && auction.status === 'Active' && auction.isGoingGoingGoneEnabled && auction.bids.length > 0) {
+      if (!auctionTimers.has(auction._id.toString())) {
+        startGoingGoingGoneTimer(auction._id, io);
+      }
+    }
 
     res.json({
       success: true,
@@ -522,6 +658,9 @@ export const placeBid = async (req, res) => {
           newBalance: outbidUserNewBalance
         } : null
       });
+
+      // Reset Going, Going, Gone timer on new bid
+      await resetGoingGoingGoneTimer(auction._id, io);
     }
 
     res.json({
