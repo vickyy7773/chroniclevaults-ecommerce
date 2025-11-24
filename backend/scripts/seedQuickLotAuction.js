@@ -28,6 +28,7 @@ const seedQuickLotAuction = async () => {
     console.log('🗄️  Connected to MongoDB');
 
     // Create a QUICK lot-based auction with 3 lots (2 minutes each for quick testing)
+    const startTime = new Date(Date.now() + 30 * 1000); // Starts in 30 SECONDS!
     const quickLotAuction = new Auction({
       title: '🚀 QUICK TEST: 3 Rare Coins - Sequential Lot Bidding',
       description: 'FAST TESTING: 3 lots, 2 minutes each. Watch them auction one by one automatically!',
@@ -35,13 +36,16 @@ const seedQuickLotAuction = async () => {
       startingPrice: 1000,
       currentBid: 1000,
       reservePrice: 10000,
-      startTime: new Date(Date.now() + 30 * 1000), // Starts in 30 SECONDS!
+      startTime: startTime,
       endTime: new Date(Date.now() + 10 * 60 * 1000), // Ends in 10 minutes (more than enough)
+      status: 'Active', // Set as Active immediately
       isGoingGoingGoneEnabled: true,
       isLotBidding: true,
       lotNumber: 1,
       totalLots: 3, // Only 3 lots for quick testing
       lotDuration: 2, // 2 minutes per lot (fast!)
+      currentLotStartTime: startTime,
+      currentLotEndTime: new Date(startTime.getTime() + 2 * 60 * 1000), // 2 minutes from start
       incrementSlabs: [
         { minPrice: 1, maxPrice: 4999, increment: 100 },
         { minPrice: 5000, maxPrice: 9999, increment: 500 },
@@ -57,7 +61,9 @@ const seedQuickLotAuction = async () => {
           startingPrice: 1000,
           currentBid: 1000,
           bids: [],
-          status: 'Upcoming'
+          status: 'Active', // First lot starts as Active
+          startTime: startTime,
+          endTime: new Date(startTime.getTime() + 2 * 60 * 1000)
         },
         {
           lotNumber: 2,

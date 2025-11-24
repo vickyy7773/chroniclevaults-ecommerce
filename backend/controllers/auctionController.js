@@ -23,7 +23,19 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
       }
 
       // Check if there are any bids
-      if (!auction.lastBidTime || auction.bids.length === 0) {
+      let hasBids = false;
+      if (auction.isLotBidding) {
+        // For lot bidding, check current lot's bids
+        const currentLotIndex = (auction.lotNumber || 1) - 1;
+        if (auction.lots && auction.lots[currentLotIndex]) {
+          hasBids = auction.lots[currentLotIndex].bids && auction.lots[currentLotIndex].bids.length > 0;
+        }
+      } else {
+        // For normal auctions, check main bids array
+        hasBids = auction.bids && auction.bids.length > 0;
+      }
+
+      if (!auction.lastBidTime || !hasBids) {
         // No bids yet, check again in 30 seconds
         const timerId = setTimeout(checkAndAnnounce, 30000);
         auctionTimers.set(auctionId, timerId);
@@ -546,6 +558,27 @@ export const placeBid = async (req, res) => {
       });
     }
 
+    // FOR LOT BIDDING: Get current lot index
+    let currentLotIndex = null;
+    let currentLot = null;
+    if (auction.isLotBidding) {
+      currentLotIndex = (auction.lotNumber || 1) - 1;
+      if (!auction.lots || !auction.lots[currentLotIndex]) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current lot not found'
+        });
+      }
+      currentLot = auction.lots[currentLotIndex];
+
+      if (currentLot.status !== 'Active') {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot place bid. Current lot is ${currentLot.status.toLowerCase()}`
+        });
+      }
+    }
+
     // Validate bid amount
     const validation = auction.validateBid(amount);
     if (!validation.valid) {
@@ -582,26 +615,50 @@ export const placeBid = async (req, res) => {
       if (auction.highestReserveBid && maxBid <= auction.highestReserveBid) {
         // User's reserve bid is lower than existing reserve bid
         // Place the normal bid only
-        auction.bids.push({
-          user: userId,
-          amount,
-          maxBid: maxBid,
-          isReserveBidder: false,
-          isAutoBid: false
-        });
+
+        if (auction.isLotBidding && currentLot) {
+          // LOT BIDDING: Place bid in current lot's bids array
+          currentLot.bids.push({
+            user: userId,
+            amount,
+            timestamp: new Date()
+          });
+          currentLot.currentBid = amount;
+        } else {
+          // NORMAL AUCTION: Place in main bids array
+          auction.bids.push({
+            user: userId,
+            amount,
+            maxBid: maxBid,
+            isReserveBidder: false,
+            isAutoBid: false
+          });
+        }
 
         auction.currentBid = amount;
         auction.totalBids = auction.bids.length;
       } else {
         // User's reserve bid is higher than existing reserve bid (or no existing reserve bid)
         // First, place the current bid
-        auction.bids.push({
-          user: userId,
-          amount,
-          maxBid: maxBid,
-          isReserveBidder: false,
-          isAutoBid: false
-        });
+
+        if (auction.isLotBidding && currentLot) {
+          // LOT BIDDING: Place bid in current lot's bids array
+          currentLot.bids.push({
+            user: userId,
+            amount,
+            timestamp: new Date()
+          });
+          currentLot.currentBid = amount;
+        } else {
+          // NORMAL AUCTION: Place in main bids array
+          auction.bids.push({
+            user: userId,
+            amount,
+            maxBid: maxBid,
+            isReserveBidder: false,
+            isAutoBid: false
+          });
+        }
 
         auction.currentBid = amount;
         auction.totalBids = auction.bids.length;
@@ -611,13 +668,24 @@ export const placeBid = async (req, res) => {
           previousReserveBidAmount = auction.highestReserveBid;
 
           // Auto-increment to the previous reserve bid amount
-          auction.bids.push({
-            user: userId,
-            amount: auction.highestReserveBid,
-            maxBid: maxBid,
-            isReserveBidder: false,
-            isAutoBid: true
-          });
+          if (auction.isLotBidding && currentLot) {
+            // LOT BIDDING: Auto-bid in current lot
+            currentLot.bids.push({
+              user: userId,
+              amount: auction.highestReserveBid,
+              timestamp: new Date()
+            });
+            currentLot.currentBid = auction.highestReserveBid;
+          } else {
+            // NORMAL AUCTION: Auto-bid in main bids array
+            auction.bids.push({
+              user: userId,
+              amount: auction.highestReserveBid,
+              maxBid: maxBid,
+              isReserveBidder: false,
+              isAutoBid: true
+            });
+          }
 
           auction.currentBid = auction.highestReserveBid;
           auction.totalBids = auction.bids.length;
@@ -630,13 +698,25 @@ export const placeBid = async (req, res) => {
       }
     } else {
       // Normal bid without reserve bid
-      auction.bids.push({
-        user: userId,
-        amount,
-        maxBid: null,
-        isReserveBidder: false,
-        isAutoBid: false
-      });
+
+      if (auction.isLotBidding && currentLot) {
+        // LOT BIDDING: Place bid in current lot's bids array
+        currentLot.bids.push({
+          user: userId,
+          amount,
+          timestamp: new Date()
+        });
+        currentLot.currentBid = amount;
+      } else {
+        // NORMAL AUCTION: Place in main bids array
+        auction.bids.push({
+          user: userId,
+          amount,
+          maxBid: null,
+          isReserveBidder: false,
+          isAutoBid: false
+        });
+      }
 
       auction.currentBid = amount;
       auction.totalBids = auction.bids.length;
@@ -653,13 +733,25 @@ export const placeBid = async (req, res) => {
 
           if (reserveBidderUser && reserveBidderUser.auctionCoins >= autoBidAmount) {
             // Place auto-bid for reserve bidder
-            auction.bids.push({
-              user: auction.reserveBidder,
-              amount: autoBidAmount,
-              maxBid: auction.highestReserveBid,
-              isReserveBidder: true,
-              isAutoBid: true
-            });
+
+            if (auction.isLotBidding && currentLot) {
+              // LOT BIDDING: Auto-bid in current lot
+              currentLot.bids.push({
+                user: auction.reserveBidder,
+                amount: autoBidAmount,
+                timestamp: new Date()
+              });
+              currentLot.currentBid = autoBidAmount;
+            } else {
+              // NORMAL AUCTION: Auto-bid in main bids array
+              auction.bids.push({
+                user: auction.reserveBidder,
+                amount: autoBidAmount,
+                maxBid: auction.highestReserveBid,
+                isReserveBidder: true,
+                isAutoBid: true
+              });
+            }
 
             auction.currentBid = autoBidAmount;
             auction.totalBids = auction.bids.length;
@@ -683,7 +775,15 @@ export const placeBid = async (req, res) => {
 
     // FREEZE/UNFREEZE LOGIC
     // Find who was leading before this bid
-    const bidsBeforeThis = auction.bids.slice(0, -1);
+    let bidsBeforeThis;
+    if (auction.isLotBidding && currentLot) {
+      // LOT BIDDING: Check previous bids in current lot
+      bidsBeforeThis = currentLot.bids.slice(0, -1);
+    } else {
+      // NORMAL AUCTION: Check previous bids in main array
+      bidsBeforeThis = auction.bids.slice(0, -1);
+    }
+
     let outbidUserId = null;
     let outbidUserNewBalance = null;
 
@@ -708,6 +808,9 @@ export const placeBid = async (req, res) => {
         }
       }
     }
+
+    // Update lastBidTime for Going, Going, Gone timer
+    auction.lastBidTime = new Date();
 
     await auction.save();
 
