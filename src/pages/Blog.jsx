@@ -23,9 +23,9 @@ const Blog = () => {
 
       console.log('📝 Published Blogs Response:', response);
 
-      // Handle axios response format
-      const blogsData = response?.data?.data || response?.data || [];
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Axios interceptor already returns response.data
+      const blogsData = response?.data || [];
+      const isSuccess = response?.success !== false;
 
       console.log('📝 Blogs Data:', blogsData);
       console.log('✅ Is Success:', isSuccess);
