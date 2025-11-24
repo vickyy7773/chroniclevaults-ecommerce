@@ -483,6 +483,21 @@ const BlogManagement = () => {
                     />
                   </div>
 
+                  {/* Excerpt */}
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      Excerpt (Short Description) *
+                    </label>
+                    <textarea
+                      required
+                      rows="3"
+                      value={formData.excerpt}
+                      onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-accent-500 dark:text-white font-medium"
+                      placeholder="Short description for blog preview"
+                    />
+                  </div>
+
                   {/* Image Upload */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
@@ -533,21 +548,6 @@ const BlogManagement = () => {
                         placeholder="e.g., 5 min read"
                       />
                     </div>
-                  </div>
-
-                  {/* Excerpt */}
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                      Excerpt (Short Description) *
-                    </label>
-                    <textarea
-                      required
-                      rows="3"
-                      value={formData.excerpt}
-                      onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-accent-500 dark:text-white font-medium"
-                      placeholder="Short description for blog preview"
-                    />
                   </div>
 
                   {/* Full Content */}
