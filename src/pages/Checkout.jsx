@@ -383,7 +383,7 @@ const Checkout = () => {
       // Create Razorpay order
       const razorpayOrderResponse = await paymentService.createRazorpayOrder(orderAmount);
 
-      if (!razorpayOrderResponse.success) {
+      if (!razorpayOrderResponse || !razorpayOrderResponse.success) {
         throw new Error('Failed to create payment order');
       }
 

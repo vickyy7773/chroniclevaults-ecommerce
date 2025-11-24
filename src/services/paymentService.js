@@ -5,7 +5,7 @@ const paymentService = {
   getRazorpayKey: async () => {
     try {
       const response = await api.get('/payments/razorpay-key');
-      return response.data;
+      return response; // Axios interceptor already returns response.data
     } catch (error) {
       throw error;
     }
@@ -19,7 +19,7 @@ const paymentService = {
         currency,
         receipt: `order_${Date.now()}`
       });
-      return response.data;
+      return response; // Axios interceptor already returns response.data
     } catch (error) {
       throw error;
     }
@@ -29,7 +29,7 @@ const paymentService = {
   verifyPayment: async (paymentData) => {
     try {
       const response = await api.post('/payments/verify-payment', paymentData);
-      return response.data;
+      return response; // Axios interceptor already returns response.data
     } catch (error) {
       throw error;
     }
@@ -42,7 +42,7 @@ const paymentService = {
         orderId,
         error
       });
-      return response.data;
+      return response; // Axios interceptor already returns response.data
     } catch (error) {
       throw error;
     }
