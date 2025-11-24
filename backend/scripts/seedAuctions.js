@@ -99,8 +99,14 @@ const sampleAuctions = [
 
 const seedAuctions = async () => {
   try {
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGO_URI, {
+    // Connect to MongoDB (support both MONGO_URI and MONGODB_URI)
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+
+    if (!mongoUri) {
+      throw new Error('MongoDB URI not found in environment variables. Please set MONGO_URI or MONGODB_URI.');
+    }
+
+    await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
