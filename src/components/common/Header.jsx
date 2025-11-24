@@ -262,7 +262,7 @@ const Header = ({
                     </Link>
                   )}
 
-                  {/* Live Auction Button */}
+                  {/* Auction Button */}
                   <Link
                     to="/auctions?status=Active"
                     className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white transition-all px-3 py-2 rounded-xl font-medium hover:scale-105"
@@ -271,7 +271,7 @@ const Header = ({
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                     </span>
-                    <span className="hidden lg:inline text-sm font-semibold">Live Auction</span>
+                    <span className="hidden lg:inline text-sm font-semibold">Auction</span>
                     <Gavel className="w-4 h-4 lg:hidden" />
                   </Link>
 
