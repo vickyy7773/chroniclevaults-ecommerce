@@ -569,14 +569,14 @@ const Checkout = () => {
 
       console.log('📬 Response received:', response);
 
-      if (response && response.data && response.data.success) {
-        const createdOrderId = response.data.data._id;
-        console.log('✅ Order created successfully:', response.data.data);
+      if (response && response.success) {
+        const createdOrderId = response.data._id;
+        console.log('✅ Order created successfully:', response.data);
 
         // Always initiate Razorpay payment
         await handleRazorpayPayment(createdOrderId, total);
       } else {
-        const errorMsg = response?.data?.message || response?.message || 'Unknown error occurred';
+        const errorMsg = response?.message || 'Unknown error occurred';
         console.error('❌ Order failed:', errorMsg);
         alert('Failed to place order: ' + errorMsg);
       }
