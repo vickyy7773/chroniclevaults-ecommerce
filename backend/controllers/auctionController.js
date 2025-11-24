@@ -69,11 +69,7 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
           auctionTimers.set(auctionId, timerId);
 
         } else if (auction.warningCount >= 3) {
-          // SOLD! - Close auction
-          auction.status = 'Ended';
-          await auction.updateStatus();
-          await auction.save();
-
+          // SOLD! - Close auction or move to next lot
           io.to(`auction-${auctionId}`).emit('auction-warning', {
             auctionId: auctionId.toString(),
             message: 'SOLD! 🎉',
@@ -82,6 +78,17 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
             timeSinceLastBid
           });
           console.log(`🎉 Auction ${auctionId}: SOLD!`);
+
+          // Check if this is lot bidding
+          if (auction.isLotBidding) {
+            // Start next lot
+            await startNextLot(auctionId, io);
+          } else {
+            // Regular auction - just close it
+            auction.status = 'Ended';
+            await auction.updateStatus();
+            await auction.save();
+          }
 
           // Clear timer
           auctionTimers.delete(auctionId);
@@ -127,6 +134,78 @@ export const resetGoingGoingGoneTimer = async (auctionId, io) => {
     }
   } catch (error) {
     console.error('Reset timer error:', error);
+  }
+};
+
+// Start next lot in sequence when current lot ends
+export const startNextLot = async (auctionId, io) => {
+  try {
+    const auction = await Auction.findById(auctionId);
+
+    if (!auction || !auction.isLotBidding) {
+      return;
+    }
+
+    const currentLotNum = auction.lotNumber || 1;
+    const nextLotNum = currentLotNum + 1;
+
+    console.log(`📦 Lot ${currentLotNum} ended for auction ${auctionId}`);
+
+    // Mark current lot as Ended
+    if (auction.lots && auction.lots[currentLotNum - 1]) {
+      auction.lots[currentLotNum - 1].status = 'Ended';
+      auction.lots[currentLotNum - 1].endTime = new Date();
+
+      // Set winner for current lot
+      if (auction.lots[currentLotNum - 1].bids.length > 0) {
+        const lastBid = auction.lots[currentLotNum - 1].bids[auction.lots[currentLotNum - 1].bids.length - 1];
+        auction.lots[currentLotNum - 1].winner = lastBid.user;
+      }
+    }
+
+    // Check if there are more lots
+    if (nextLotNum <= auction.totalLots && auction.lots[nextLotNum - 1]) {
+      // Start next lot
+      auction.lotNumber = nextLotNum;
+      auction.lots[nextLotNum - 1].status = 'Active';
+      auction.lots[nextLotNum - 1].startTime = new Date();
+      auction.lots[nextLotNum - 1].endTime = new Date(Date.now() + auction.lotDuration * 60 * 1000);
+
+      auction.currentLotStartTime = auction.lots[nextLotNum - 1].startTime;
+      auction.currentLotEndTime = auction.lots[nextLotNum - 1].endTime;
+
+      // Update main auction fields to reflect current lot
+      auction.currentBid = auction.lots[nextLotNum - 1].currentBid;
+      auction.warningCount = 0;
+      auction.lastBidTime = null;
+
+      await auction.save();
+
+      console.log(`🎬 Lot ${nextLotNum} started for auction ${auctionId}`);
+
+      // Emit socket event for lot change
+      io.to(`auction-${auctionId}`).emit('lot-changed', {
+        auctionId: auctionId.toString(),
+        previousLot: currentLotNum,
+        currentLot: nextLotNum,
+        lotData: auction.lots[nextLotNum - 1],
+        message: `Lot ${nextLotNum} has started!`
+      });
+
+    } else {
+      // All lots completed - end entire auction
+      auction.status = 'Ended';
+      await auction.save();
+
+      console.log(`🏁 All lots completed for auction ${auctionId}`);
+
+      io.to(`auction-${auctionId}`).emit('auction-completed', {
+        auctionId: auctionId.toString(),
+        message: 'All lots have been completed!'
+      });
+    }
+  } catch (error) {
+    console.error('Start next lot error:', error);
   }
 };
 

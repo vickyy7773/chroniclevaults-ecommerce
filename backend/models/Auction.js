@@ -117,7 +117,63 @@ const auctionSchema = new mongoose.Schema({
   isGoingGoingGoneEnabled: {
     type: Boolean,
     default: true // Enable/disable Going, Going, Gone feature per auction
-  }
+  },
+  // Sequential Lot Bidding Fields
+  isLotBidding: {
+    type: Boolean,
+    default: false // Is this a lot-based auction?
+  },
+  lotNumber: {
+    type: Number,
+    default: null // Current lot number (1, 2, 3, etc.)
+  },
+  totalLots: {
+    type: Number,
+    default: 1 // Total number of lots in this auction
+  },
+  lotDuration: {
+    type: Number,
+    default: 10 // Duration for each lot in minutes
+  },
+  currentLotStartTime: {
+    type: Date,
+    default: null // When current lot started
+  },
+  currentLotEndTime: {
+    type: Date,
+    default: null // When current lot will end
+  },
+  lots: [{
+    lotNumber: Number,
+    title: String,
+    description: String,
+    image: String,
+    startingPrice: Number,
+    currentBid: Number,
+    bids: [{
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      amount: Number,
+      timestamp: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    winner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    status: {
+      type: String,
+      enum: ['Upcoming', 'Active', 'Ended'],
+      default: 'Upcoming'
+    },
+    startTime: Date,
+    endTime: Date
+  }]
 }, {
   timestamps: true
 });
