@@ -140,6 +140,21 @@ const userSchema = new mongoose.Schema({
     default: 0,
     min: 0
   },
+  // Track frozen coins per auction (for lot bidding)
+  frozenCoinsPerAuction: [{
+    auctionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Auction'
+    },
+    amount: {
+      type: Number,
+      default: 0
+    },
+    lotNumber: {
+      type: Number,
+      default: null
+    }
+  }],
   auctionId: {
     type: String,
     default: null

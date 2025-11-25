@@ -150,6 +150,15 @@ const auctionSchema = new mongoose.Schema({
     image: String,
     startingPrice: Number,
     currentBid: Number,
+    reservePrice: {
+      type: Number,
+      default: 0
+    },
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      default: null
+    },
     bids: [{
       user: {
         type: mongoose.Schema.Types.ObjectId,
@@ -168,8 +177,13 @@ const auctionSchema = new mongoose.Schema({
     },
     status: {
       type: String,
-      enum: ['Upcoming', 'Active', 'Ended'],
+      enum: ['Upcoming', 'Active', 'Sold', 'Unsold', 'Ended'],
       default: 'Upcoming'
+    },
+    unsoldReason: {
+      type: String,
+      enum: ['No bids', 'Below reserve price', null],
+      default: null
     },
     startTime: Date,
     endTime: Date

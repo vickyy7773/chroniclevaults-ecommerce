@@ -764,19 +764,36 @@ const AuctionManagement = () => {
                                   />
                                 </div>
 
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Starting Price (₹)
-                                  </label>
-                                  <input
-                                    type="number"
-                                    value={lot.startingPrice || ''}
-                                    onChange={(e) => handleLotChange(index, 'startingPrice', e.target.value)}
-                                    required
-                                    min="0"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                                    placeholder="0"
-                                  />
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                      Starting Price (₹)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={lot.startingPrice || ''}
+                                      onChange={(e) => handleLotChange(index, 'startingPrice', e.target.value)}
+                                      required
+                                      min="0"
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                      placeholder="0"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                      Reserve Price (₹)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={lot.reservePrice || ''}
+                                      onChange={(e) => handleLotChange(index, 'reservePrice', e.target.value)}
+                                      min="0"
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                      placeholder="0 (optional)"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Min bid to sell</p>
+                                  </div>
                                 </div>
 
                                 <div>

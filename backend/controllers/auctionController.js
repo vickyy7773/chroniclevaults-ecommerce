@@ -2,6 +2,299 @@ import Auction from '../models/Auction.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
 
+// ============================================
+// HELPER FUNCTIONS FOR PER-LOT COIN MANAGEMENT
+// ============================================
+
+/**
+ * Freeze coins for a specific lot in an auction
+ * @param {String} userId - User's ObjectId
+ * @param {String} auctionId - Auction's ObjectId
+ * @param {Number} lotNumber - Lot number
+ * @param {Number} amount - Amount to freeze
+ */
+export const freezeCoinsForLot = async (userId, auctionId, lotNumber, amount) => {
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Check if user has enough available coins
+    const availableCoins = user.auctionCoins - user.frozenCoins;
+    if (availableCoins < amount) {
+      throw new Error('Insufficient auction coins');
+    }
+
+    // Check if user already has frozen coins for this auction+lot
+    const existingFrozen = user.frozenCoinsPerAuction.find(
+      f => f.auctionId.toString() === auctionId.toString() && f.lotNumber === lotNumber
+    );
+
+    if (existingFrozen) {
+      // Update existing frozen amount
+      const difference = amount - existingFrozen.amount;
+      existingFrozen.amount = amount;
+      user.frozenCoins += difference;
+    } else {
+      // Add new frozen entry
+      user.frozenCoinsPerAuction.push({
+        auctionId,
+        lotNumber,
+        amount
+      });
+      user.frozenCoins += amount;
+    }
+
+    await user.save();
+    return { success: true, user };
+  } catch (error) {
+    console.error('Error freezing coins for lot:', error);
+    throw error;
+  }
+};
+
+/**
+ * Unfreeze coins for a specific lot in an auction
+ * @param {String} userId - User's ObjectId
+ * @param {String} auctionId - Auction's ObjectId
+ * @param {Number} lotNumber - Lot number
+ */
+export const unfreezeCoinsForLot = async (userId, auctionId, lotNumber) => {
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Find frozen coins for this auction+lot
+    const frozenIndex = user.frozenCoinsPerAuction.findIndex(
+      f => f.auctionId.toString() === auctionId.toString() && f.lotNumber === lotNumber
+    );
+
+    if (frozenIndex !== -1) {
+      const frozenAmount = user.frozenCoinsPerAuction[frozenIndex].amount;
+
+      // Remove from frozenCoinsPerAuction array
+      user.frozenCoinsPerAuction.splice(frozenIndex, 1);
+
+      // Decrease total frozen coins
+      user.frozenCoins = Math.max(0, user.frozenCoins - frozenAmount);
+
+      await user.save();
+      return { success: true, unfrozenAmount: frozenAmount, user };
+    }
+
+    return { success: true, unfrozenAmount: 0, user };
+  } catch (error) {
+    console.error('Error unfreezing coins for lot:', error);
+    throw error;
+  }
+};
+
+/**
+ * Deduct frozen coins from winner (move from frozen to spent)
+ * @param {String} userId - User's ObjectId
+ * @param {String} auctionId - Auction's ObjectId
+ * @param {Number} lotNumber - Lot number
+ * @param {Number} amount - Amount to deduct
+ */
+export const deductFrozenCoins = async (userId, auctionId, lotNumber, amount) => {
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Find frozen coins for this auction+lot
+    const frozenIndex = user.frozenCoinsPerAuction.findIndex(
+      f => f.auctionId.toString() === auctionId.toString() && f.lotNumber === lotNumber
+    );
+
+    if (frozenIndex !== -1) {
+      const frozenAmount = user.frozenCoinsPerAuction[frozenIndex].amount;
+
+      // Remove from frozenCoinsPerAuction array
+      user.frozenCoinsPerAuction.splice(frozenIndex, 1);
+
+      // Decrease both frozen coins AND total auction coins
+      user.frozenCoins = Math.max(0, user.frozenCoins - frozenAmount);
+      user.auctionCoins = Math.max(0, user.auctionCoins - amount);
+
+      await user.save();
+      return { success: true, deductedAmount: amount, user };
+    }
+
+    // If no frozen coins found, just deduct from auction coins
+    user.auctionCoins = Math.max(0, user.auctionCoins - amount);
+    await user.save();
+    return { success: true, deductedAmount: amount, user };
+  } catch (error) {
+    console.error('Error deducting frozen coins:', error);
+    throw error;
+  }
+};
+
+/**
+ * End the current lot and determine if it's SOLD or UNSOLD
+ * @param {String} auctionId - Auction's ObjectId
+ * @param {Object} io - Socket.io instance
+ */
+export const endCurrentLot = async (auctionId, io) => {
+  try {
+    const auction = await Auction.findById(auctionId);
+
+    if (!auction || !auction.isLotBidding) {
+      throw new Error('Not a valid lot bidding auction');
+    }
+
+    const currentLotIndex = (auction.lotNumber || 1) - 1;
+    if (!auction.lots || !auction.lots[currentLotIndex]) {
+      throw new Error('Current lot not found');
+    }
+
+    const currentLot = auction.lots[currentLotIndex];
+    const lotNumber = currentLot.lotNumber;
+
+    console.log(`\n🏁 Ending LOT ${lotNumber} of Auction ${auctionId}`);
+
+    // Check if lot has bids
+    if (!currentLot.bids || currentLot.bids.length === 0) {
+      // NO BIDS - Mark as UNSOLD
+      currentLot.status = 'Unsold';
+      currentLot.unsoldReason = 'No bids';
+      currentLot.endTime = new Date();
+
+      console.log(`❌ LOT ${lotNumber} UNSOLD - No bids received`);
+
+      // Emit socket event
+      if (io) {
+        io.to(`auction-${auctionId}`).emit('lot-unsold', {
+          auctionId,
+          lotNumber,
+          reason: 'No bids',
+          nextLotNumber: auction.lotNumber + 1 <= auction.totalLots ? auction.lotNumber + 1 : null
+        });
+      }
+    } else {
+      // Has bids - check if winner's bid meets reserve price
+      const sortedBids = [...currentLot.bids].sort((a, b) => b.amount - a.amount);
+      const winningBid = sortedBids[0];
+      const reservePrice = currentLot.reservePrice || 0;
+
+      if (winningBid.amount < reservePrice) {
+        // BELOW RESERVE PRICE - Mark as UNSOLD
+        currentLot.status = 'Unsold';
+        currentLot.unsoldReason = 'Below reserve price';
+        currentLot.endTime = new Date();
+
+        console.log(`❌ LOT ${lotNumber} UNSOLD - Winning bid ₹${winningBid.amount} below reserve ₹${reservePrice}`);
+
+        // Unfreeze all bidders' coins for this lot
+        for (const bid of currentLot.bids) {
+          await unfreezeCoinsForLot(bid.user, auctionId, lotNumber);
+          console.log(`🔓 Unfroze coins for bidder ${bid.user} on UNSOLD lot ${lotNumber}`);
+        }
+
+        // Emit socket event
+        if (io) {
+          io.to(`auction-${auctionId}`).emit('lot-unsold', {
+            auctionId,
+            lotNumber,
+            reason: 'Below reserve price',
+            winningBid: winningBid.amount,
+            reservePrice,
+            nextLotNumber: auction.lotNumber + 1 <= auction.totalLots ? auction.lotNumber + 1 : null
+          });
+        }
+      } else {
+        // SOLD - Winner pays, losers get unfrozen
+        currentLot.status = 'Sold';
+        currentLot.winner = winningBid.user;
+        currentLot.endTime = new Date();
+
+        console.log(`✅ LOT ${lotNumber} SOLD to user ${winningBid.user} for ₹${winningBid.amount}`);
+
+        // Deduct winner's frozen coins
+        await deductFrozenCoins(winningBid.user, auctionId, lotNumber, winningBid.amount);
+        console.log(`💰 Deducted ₹${winningBid.amount} from winner ${winningBid.user}`);
+
+        // Unfreeze all other bidders' coins
+        for (const bid of currentLot.bids) {
+          if (bid.user.toString() !== winningBid.user.toString()) {
+            await unfreezeCoinsForLot(bid.user, auctionId, lotNumber);
+            console.log(`🔓 Unfroze coins for non-winner ${bid.user} on lot ${lotNumber}`);
+          }
+        }
+
+        // Emit socket event
+        if (io) {
+          io.to(`auction-${auctionId}`).emit('lot-sold', {
+            auctionId,
+            lotNumber,
+            winner: winningBid.user,
+            finalPrice: winningBid.amount,
+            nextLotNumber: auction.lotNumber + 1 <= auction.totalLots ? auction.lotNumber + 1 : null
+          });
+        }
+      }
+    }
+
+    // Move to next lot or end auction
+    if (auction.lotNumber < auction.totalLots) {
+      // Start next lot
+      const nextLotIndex = auction.lotNumber; // Current lotNumber is 1-indexed
+      auction.lotNumber += 1;
+
+      if (auction.lots[nextLotIndex]) {
+        auction.lots[nextLotIndex].status = 'Active';
+        auction.lots[nextLotIndex].startTime = new Date(Date.now() + 3000); // 3-second pause
+
+        console.log(`🚀 Starting LOT ${auction.lotNumber} in 3 seconds`);
+
+        // Emit socket event for lot start and restart timer
+        if (io) {
+          setTimeout(() => {
+            io.to(`auction-${auctionId}`).emit('lot-started', {
+              auctionId,
+              lotNumber: auction.lotNumber,
+              lot: auction.lots[nextLotIndex]
+            });
+
+            // Restart Going Going Gone timer for new lot
+            if (auction.isGoingGoingGoneEnabled) {
+              startGoingGoingGoneTimer(auctionId, io);
+            }
+          }, 3000);
+        }
+      }
+    } else {
+      // All lots completed - end auction
+      auction.status = 'Ended';
+      auction.endTime = new Date();
+
+      console.log(`🎉 AUCTION ${auctionId} COMPLETED - All ${auction.totalLots} lots processed`);
+
+      // Emit socket event for auction completion
+      if (io) {
+        io.to(`auction-${auctionId}`).emit('auction-completed', {
+          auctionId,
+          totalLots: auction.totalLots
+        });
+      }
+    }
+
+    await auction.save();
+    return { success: true, auction };
+  } catch (error) {
+    console.error('Error ending current lot:', error);
+    throw error;
+  }
+};
+
 // Global timer tracking for Going, Going, Gone feature
 const auctionTimers = new Map();
 
@@ -81,22 +374,24 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
           auctionTimers.set(auctionId, timerId);
 
         } else if (auction.warningCount >= 3) {
-          // SOLD! - Close auction or move to next lot
-          io.to(`auction-${auctionId}`).emit('auction-warning', {
-            auctionId: auctionId.toString(),
-            message: 'SOLD! 🎉',
-            warning: 3,
-            final: true,
-            timeSinceLastBid
-          });
-          console.log(`🎉 Auction ${auctionId}: SOLD!`);
+          // SOLD/UNSOLD! - End lot or close auction
+          console.log(`🎯 Auction ${auctionId}: Ending after 3 warnings...`);
 
           // Check if this is lot bidding
           if (auction.isLotBidding) {
-            // Start next lot
-            await startNextLot(auctionId, io);
+            // End current lot (will determine SOLD or UNSOLD)
+            await endCurrentLot(auctionId, io);
           } else {
-            // Regular auction - just close it
+            // Regular auction - emit SOLD and close it
+            io.to(`auction-${auctionId}`).emit('auction-warning', {
+              auctionId: auctionId.toString(),
+              message: 'SOLD! 🎉',
+              warning: 3,
+              final: true,
+              timeSinceLastBid
+            });
+            console.log(`🎉 Auction ${auctionId}: SOLD!`);
+
             auction.status = 'Ended';
             await auction.updateStatus();
             await auction.save();
@@ -412,6 +707,8 @@ export const createAuction = async (req, res) => {
         image: lot.image || '',
         startingPrice: lot.startingPrice,
         currentBid: lot.startingPrice,
+        reservePrice: lot.reservePrice || 0,
+        productId: lot.productId || null,
         bids: [],
         status: index === 0 && isAuctionStarted ? 'Active' : 'Upcoming',
         startTime: index === 0 ? auctionStart : null,
@@ -802,10 +1099,18 @@ export const placeBid = async (req, res) => {
 
             // The current user's frozen coins will be unfrozen in the freeze/unfreeze logic below
             // Now freeze the reserve bidder's coins for the auto-bid
-            reserveBidderUser.auctionCoins -= autoBidAmount;
-            reserveBidderUser.frozenCoins = autoBidAmount;
-            await reserveBidderUser.save();
-            console.log(`💰 Auto-bid: Froze ${autoBidAmount} coins for reserve bidder ${reserveBidderUser._id}. Available: ${reserveBidderUser.auctionCoins}, Frozen: ${reserveBidderUser.frozenCoins}`);
+            if (auction.isLotBidding) {
+              // LOT BIDDING: Use per-lot freeze for auto-bid
+              const lotNumber = auction.lotNumber || 1;
+              await freezeCoinsForLot(auction.reserveBidder, auction._id, lotNumber, autoBidAmount);
+              console.log(`💰 Auto-bid LOT ${lotNumber}: Froze ${autoBidAmount} coins for reserve bidder ${auction.reserveBidder}`);
+            } else {
+              // NORMAL AUCTION: Use old freeze logic
+              reserveBidderUser.auctionCoins -= autoBidAmount;
+              reserveBidderUser.frozenCoins = autoBidAmount;
+              await reserveBidderUser.save();
+              console.log(`💰 Auto-bid: Froze ${autoBidAmount} coins for reserve bidder ${reserveBidderUser._id}. Available: ${reserveBidderUser.auctionCoins}, Frozen: ${reserveBidderUser.frozenCoins}`);
+            }
           }
         } else if (amount >= auction.highestReserveBid) {
           // This bid has exceeded the reserve bid
@@ -836,18 +1141,30 @@ export const placeBid = async (req, res) => {
 
       // Unfreeze previous leader's coins (they got outbid)
       if (previousHighestBid && previousHighestBid.user.toString() !== userId.toString()) {
-        const previousLeader = await User.findById(previousHighestBid.user);
-        if (previousLeader && previousLeader.frozenCoins > 0) {
-          // Release frozen coins back to available
-          previousLeader.auctionCoins += previousLeader.frozenCoins;
-          const unfrozenAmount = previousLeader.frozenCoins;
-          previousLeader.frozenCoins = 0;
-          await previousLeader.save();
-          console.log(`🔓 Unfroze ${unfrozenAmount} coins for outbid user ${previousLeader._id}. Available: ${previousLeader.auctionCoins}`);
+        if (auction.isLotBidding) {
+          // LOT BIDDING: Use per-lot unfreeze
+          const lotNumber = auction.lotNumber || 1;
+          const unfreezeResult = await unfreezeCoinsForLot(previousHighestBid.user, auction._id, lotNumber);
+          if (unfreezeResult.success && unfreezeResult.unfrozenAmount > 0) {
+            console.log(`🔓 LOT ${lotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for outbid user ${previousHighestBid.user}`);
+            outbidUserId = previousHighestBid.user.toString();
+            outbidUserNewBalance = unfreezeResult.user.auctionCoins;
+          }
+        } else {
+          // NORMAL AUCTION: Use old freeze/unfreeze logic
+          const previousLeader = await User.findById(previousHighestBid.user);
+          if (previousLeader && previousLeader.frozenCoins > 0) {
+            // Release frozen coins back to available
+            previousLeader.auctionCoins += previousLeader.frozenCoins;
+            const unfrozenAmount = previousLeader.frozenCoins;
+            previousLeader.frozenCoins = 0;
+            await previousLeader.save();
+            console.log(`🔓 Unfroze ${unfrozenAmount} coins for outbid user ${previousLeader._id}. Available: ${previousLeader.auctionCoins}`);
 
-          // Store outbid user info to send via Socket.io
-          outbidUserId = previousLeader._id.toString();
-          outbidUserNewBalance = previousLeader.auctionCoins;
+            // Store outbid user info to send via Socket.io
+            outbidUserId = previousLeader._id.toString();
+            outbidUserNewBalance = previousLeader.auctionCoins;
+          }
         }
       }
     }
@@ -860,11 +1177,24 @@ export const placeBid = async (req, res) => {
     // Freeze the full bid amount
     const freezeAmount = amount;
 
-    // Freeze the coins (move from available to frozen)
-    user.auctionCoins -= freezeAmount;
-    user.frozenCoins = freezeAmount;
-    await user.save();
-    console.log(`🔒 Froze ${freezeAmount} coins for user ${user._id}. Available: ${user.auctionCoins}, Frozen: ${user.frozenCoins}`);
+    // Freeze the coins
+    if (auction.isLotBidding) {
+      // LOT BIDDING: Use per-lot freeze
+      const lotNumber = auction.lotNumber || 1;
+      await freezeCoinsForLot(userId, auction._id, lotNumber, freezeAmount);
+      console.log(`🔒 LOT ${lotNumber}: Froze ${freezeAmount} coins for user ${userId}`);
+
+      // Refresh user to get updated balances
+      const updatedUser = await User.findById(userId);
+      user.auctionCoins = updatedUser.auctionCoins;
+      user.frozenCoins = updatedUser.frozenCoins;
+    } else {
+      // NORMAL AUCTION: Use old freeze logic
+      user.auctionCoins -= freezeAmount;
+      user.frozenCoins = freezeAmount;
+      await user.save();
+      console.log(`🔒 Froze ${freezeAmount} coins for user ${user._id}. Available: ${user.auctionCoins}, Frozen: ${user.frozenCoins}`);
+    }
 
     // Populate the latest bid user info
     await auction.populate('bids.user', 'name email');
