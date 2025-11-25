@@ -329,11 +329,23 @@ const AuctionPage = () => {
   const updateTimeRemaining = () => {
     if (!auction) return;
     const now = new Date();
-    const endTime = new Date(auction.endTime);
+
+    // FOR LOT BIDDING: Use currentLotEndTime instead of auction endTime
+    let endTime;
+    if (auction.isLotBidding && auction.currentLotEndTime) {
+      endTime = new Date(auction.currentLotEndTime);
+    } else {
+      endTime = new Date(auction.endTime);
+    }
+
     const diff = endTime - now;
 
     if (diff <= 0) {
-      setTimeRemaining('Auction Ended');
+      if (auction.isLotBidding) {
+        setTimeRemaining('Lot Ending...');
+      } else {
+        setTimeRemaining('Auction Ended');
+      }
       fetchAuction();
       return;
     }
@@ -476,9 +488,25 @@ const AuctionPage = () => {
     );
   }
 
+  // FOR LOT BIDDING: Get current lot data
+  const currentLot = auction.isLotBidding && auction.lots && auction.lotNumber
+    ? auction.lots[auction.lotNumber - 1]
+    : null;
+
+  // Use current lot's bid or auction's currentBid
+  const displayCurrentBid = currentLot ? currentLot.currentBid : auction.currentBid;
+  const displayStartingPrice = currentLot ? currentLot.startingPrice : auction.startingPrice;
+
   const currentIncrement = getCurrentIncrement(auction);
-  const minBid = auction.currentBid + currentIncrement;
-  const auctionImages = auction.images?.length > 0 ? auction.images : (auction.image ? [auction.image] : []);
+  const minBid = displayCurrentBid + currentIncrement;
+
+  // FOR LOT BIDDING: Use current lot's image
+  let auctionImages;
+  if (auction.isLotBidding && currentLot && currentLot.image) {
+    auctionImages = [currentLot.image];
+  } else {
+    auctionImages = auction.images?.length > 0 ? auction.images : (auction.image ? [auction.image] : []);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
@@ -658,8 +686,28 @@ const AuctionPage = () => {
 
             {/* Auction Information */}
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">{auction.title}</h1>
-              <p className="text-gray-600 text-sm sm:text-base leading-relaxed">{auction.description}</p>
+              {/* FOR LOT BIDDING: Show current lot title */}
+              {auction.isLotBidding && auction.lots && auction.lotNumber ? (
+                <>
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="px-3 py-1 bg-accent-100 text-accent-700 rounded-full text-sm font-bold">
+                      Lot {auction.lotNumber} of {auction.totalLots}
+                    </span>
+                    <span className="text-sm text-gray-500">Sequential Lot Bidding</span>
+                  </div>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
+                    {auction.lots[auction.lotNumber - 1]?.title || auction.title}
+                  </h1>
+                  <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
+                    {auction.lots[auction.lotNumber - 1]?.description || auction.description}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">{auction.title}</h1>
+                  <p className="text-gray-600 text-sm sm:text-base leading-relaxed">{auction.description}</p>
+                </>
+              )}
 
               {/* Auction Timeline */}
               <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -762,7 +810,7 @@ const AuctionPage = () => {
                 <div className="text-center py-4 sm:py-6 border-b-2 border-gray-100">
                   <p className="text-gray-500 text-xs sm:text-sm uppercase tracking-wide mb-2">Current Bid</p>
                   <p className="text-3xl sm:text-4xl lg:text-5xl font-black text-accent-600">
-                    ₹{auction.currentBid.toLocaleString()}
+                    ₹{displayCurrentBid.toLocaleString()}
                   </p>
                 </div>
 
@@ -770,7 +818,7 @@ const AuctionPage = () => {
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div className="bg-gray-50 rounded-xl p-3 sm:p-4">
                     <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">Starting Price</p>
-                    <p className="font-bold text-gray-900 text-sm sm:text-base">₹{auction.startingPrice.toLocaleString()}</p>
+                    <p className="font-bold text-gray-900 text-sm sm:text-base">₹{displayStartingPrice.toLocaleString()}</p>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-3 sm:p-4">
                     <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">Total Bids</p>
