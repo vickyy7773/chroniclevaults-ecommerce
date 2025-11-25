@@ -644,8 +644,8 @@ export const createAuction = async (req, res) => {
       }
     }
 
-    // Image is required if no product is linked
-    if (!image && !product) {
+    // Image is required if no product is linked (unless it's lot bidding where each lot has its own image)
+    if (!image && !product && !isLotBidding) {
       return res.status(400).json({
         success: false,
         message: 'Image is required for standalone auctions'
@@ -720,6 +720,10 @@ export const createAuction = async (req, res) => {
         auctionData.currentLotStartTime = auctionStart;
         auctionData.currentLotEndTime = new Date(auctionStart.getTime() + (lotDuration || 10) * 60 * 1000);
       }
+
+      // Override main auction prices with first lot's prices
+      auctionData.startingPrice = lots[0].startingPrice;
+      auctionData.currentBid = lots[0].startingPrice;
     }
 
     const auction = new Auction(auctionData);
