@@ -16,7 +16,10 @@ const auctionSchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    required: true
+    required: function() {
+      // Image is only required if it's NOT lot bidding (lot bidding uses per-lot images)
+      return !this.isLotBidding;
+    }
   },
   startingPrice: {
     type: Number,
