@@ -34,14 +34,21 @@ const seedTestProducts = async () => {
 
     console.log(`📂 Using category: ${category.name}`);
 
-    // Create 5 test products
+    // Create 5 test products with all required fields
     const testProducts = [
       {
         name: '1947 Independence Gold Coin',
         description: 'Rare commemorative gold coin from India\'s independence year. Pristine condition with original luster.',
         price: 25000,
-        discountedPrice: 22500,
-        category: category._id,
+        originalPrice: 28000,
+        discount: 10,
+        category: category.name,
+        subCategory: 'Gold Coins',
+        year: '1947',
+        rarity: 'Rare',
+        condition: 'Uncirculated',
+        metal: 'Gold',
+        denomination: '1 Mohur',
         stock: 5,
         images: [
           'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=800',
@@ -54,8 +61,15 @@ const seedTestProducts = async () => {
         name: '1950 First Coin Series',
         description: 'First coin series of independent India. Complete set in excellent condition.',
         price: 15000,
-        discountedPrice: 13500,
-        category: category._id,
+        originalPrice: 17000,
+        discount: 12,
+        category: category.name,
+        subCategory: 'Silver Coins',
+        year: '1950',
+        rarity: 'Very Rare',
+        condition: 'Extremely Fine',
+        metal: 'Silver',
+        denomination: '1 Rupee',
         stock: 8,
         images: [
           'https://images.unsplash.com/photo-1621339571892-0ec0b16ec203?w=800'
@@ -67,8 +81,15 @@ const seedTestProducts = async () => {
         name: 'Silver Rupee Collection 1960s',
         description: 'Beautiful collection of silver rupees from the 1960s era. 10 coins in total.',
         price: 8500,
-        discountedPrice: 7500,
-        category: category._id,
+        originalPrice: 10000,
+        discount: 15,
+        category: category.name,
+        subCategory: 'Silver Coins',
+        year: '1960-1969',
+        rarity: 'Common',
+        condition: 'Very Fine',
+        metal: 'Silver',
+        denomination: '1 Rupee',
         stock: 12,
         images: [
           'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=800'
@@ -80,8 +101,15 @@ const seedTestProducts = async () => {
         name: 'Bronze Anna Set - Pre-Independence',
         description: 'Rare bronze anna coins from British India period. Historical significance.',
         price: 5000,
-        discountedPrice: 4500,
-        category: category._id,
+        originalPrice: 6000,
+        discount: 17,
+        category: category.name,
+        subCategory: 'Bronze Coins',
+        year: '1940-1946',
+        rarity: 'Rare',
+        condition: 'Fine',
+        metal: 'Bronze',
+        denomination: '1/4 Anna',
         stock: 15,
         images: [
           'https://images.unsplash.com/photo-1621339571892-0ec0b16ec203?w=800'
@@ -93,8 +121,15 @@ const seedTestProducts = async () => {
         name: 'Commemorative 10 Rupee Coin - 1975 FAO',
         description: 'Food and Agriculture Organization commemorative coin from 1975. Limited edition.',
         price: 3500,
-        discountedPrice: 3000,
-        category: category._id,
+        originalPrice: 4000,
+        discount: 12,
+        category: category.name,
+        subCategory: 'Commemorative Coins',
+        year: '1975',
+        rarity: 'Uncommon',
+        condition: 'Uncirculated',
+        metal: 'Copper-Nickel',
+        denomination: '10 Rupees',
         stock: 20,
         images: [
           'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=800'
