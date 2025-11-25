@@ -29,6 +29,7 @@ import userCartRoutes from "./routes/userCart.js";
 import auctionRoutes from "./routes/auctions.js";
 import visitorRoutes from "./routes/visitors.js";
 import auctionRegistrationRoutes from "./routes/auctionRegistration.js";
+import { initLotTimerService, stopLotTimerService } from "./services/lotTimerService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -167,6 +168,9 @@ io.on('connection', (socket) => {
 // Make io accessible to controllers
 app.set('io', io);
 
+// Initialize Lot Timer Service
+initLotTimerService(io);
+
 // Start server
 const PORT = process.env.PORT || 5000;
 const HOST = '0.0.0.0'; // Listen on all network interfaces
@@ -185,6 +189,9 @@ const gracefulShutdown = async (signal) => {
     console.log('🔌 HTTP server closed');
 
     try {
+      // Stop lot timer service
+      stopLotTimerService();
+
       // Close Socket.io connections
       io.close(() => {
         console.log('🔌 Socket.io server closed');
