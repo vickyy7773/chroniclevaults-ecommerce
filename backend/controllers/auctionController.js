@@ -361,6 +361,7 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
 
       if (!auction.lastBidTime || !hasBids) {
         // No bids yet, check again in 30 seconds
+        console.log(`⏰ No bids yet for auction ${auctionId}, checking again in 30 sec`);
         const timerId = setTimeout(checkAndAnnounce, 30000);
         auctionTimers.set(auctionId, timerId);
         return;
@@ -769,9 +770,12 @@ export const createAuction = async (req, res) => {
 
     // Start Going Going Gone timer if enabled and auction is active
     const io = req.app.get('io');
+    console.log(`🔍 Timer Check - io: ${!!io}, isGoingGoingGoneEnabled: ${savedAuction.isGoingGoingGoneEnabled}, status: ${savedAuction.status}`);
     if (io && savedAuction.isGoingGoingGoneEnabled && savedAuction.status === 'Active') {
       startGoingGoingGoneTimer(savedAuction._id, io);
       console.log(`⏰ Started Going Going Gone timer for newly created auction ${savedAuction._id}`);
+    } else {
+      console.log(`⚠️  Timer NOT started for auction ${savedAuction._id}`);
     }
 
     res.status(201).json({
