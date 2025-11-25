@@ -157,8 +157,10 @@ const seedTestProducts = async () => {
     createdProducts.forEach((product, index) => {
       console.log(`  ${index + 1}. ${product.name}`);
       console.log(`     💰 Price: ₹${product.price.toLocaleString()}`);
-      console.log(`     🏷️  Discounted: ₹${product.discountedPrice.toLocaleString()}`);
+      console.log(`     🏷️  Original: ₹${product.originalPrice?.toLocaleString() || 'N/A'}`);
       console.log(`     📦 Stock: ${product.stock} units`);
+      console.log(`     🎯 Year: ${product.year}`);
+      console.log(`     ⭐ Rarity: ${product.rarity}`);
       console.log('');
     });
 
