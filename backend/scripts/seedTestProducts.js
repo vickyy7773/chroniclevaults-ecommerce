@@ -35,15 +35,16 @@ const seedTestProducts = async () => {
     console.log(`📂 Using category: ${category.name}`);
 
     // Helper function to generate slug
-    const generateSlug = (name) => {
-      return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const generateSlug = (name, index) => {
+      const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      return `${baseSlug}-test-${Date.now()}-${index}`;
     };
 
     // Create 5 test products with all required fields
     const testProducts = [
       {
         name: '1947 Independence Gold Coin',
-        slug: generateSlug('1947 Independence Gold Coin'),
+        slug: generateSlug('1947 Independence Gold Coin', 1),
         description: 'Rare commemorative gold coin from India\'s independence year. Pristine condition with original luster.',
         price: 25000,
         originalPrice: 28000,
@@ -65,7 +66,7 @@ const seedTestProducts = async () => {
       },
       {
         name: '1950 First Coin Series',
-        slug: generateSlug('1950 First Coin Series'),
+        slug: generateSlug('1950 First Coin Series', 2),
         description: 'First coin series of independent India. Complete set in excellent condition.',
         price: 15000,
         originalPrice: 17000,
@@ -86,7 +87,7 @@ const seedTestProducts = async () => {
       },
       {
         name: 'Silver Rupee Collection 1960s',
-        slug: generateSlug('Silver Rupee Collection 1960s'),
+        slug: generateSlug('Silver Rupee Collection 1960s', 3),
         description: 'Beautiful collection of silver rupees from the 1960s era. 10 coins in total.',
         price: 8500,
         originalPrice: 10000,
@@ -107,7 +108,7 @@ const seedTestProducts = async () => {
       },
       {
         name: 'Bronze Anna Set - Pre-Independence',
-        slug: generateSlug('Bronze Anna Set - Pre-Independence'),
+        slug: generateSlug('Bronze Anna Set - Pre-Independence', 4),
         description: 'Rare bronze anna coins from British India period. Historical significance.',
         price: 5000,
         originalPrice: 6000,
@@ -128,7 +129,7 @@ const seedTestProducts = async () => {
       },
       {
         name: 'Commemorative 10 Rupee Coin - 1975 FAO',
-        slug: generateSlug('Commemorative 10 Rupee Coin - 1975 FAO'),
+        slug: generateSlug('Commemorative 10 Rupee Coin - 1975 FAO', 5),
         description: 'Food and Agriculture Organization commemorative coin from 1975. Limited edition.',
         price: 3500,
         originalPrice: 4000,
