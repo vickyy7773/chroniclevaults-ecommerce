@@ -14,6 +14,11 @@ const auctionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  // Sequential Lot Bidding - Must be defined before image field for conditional validation
+  isLotBidding: {
+    type: Boolean,
+    default: false // Is this a lot-based auction?
+  },
   image: {
     type: String,
     required: function() {
@@ -121,11 +126,7 @@ const auctionSchema = new mongoose.Schema({
     type: Boolean,
     default: true // Enable/disable Going, Going, Gone feature per auction
   },
-  // Sequential Lot Bidding Fields
-  isLotBidding: {
-    type: Boolean,
-    default: false // Is this a lot-based auction?
-  },
+  // Sequential Lot Bidding Fields (isLotBidding is defined earlier for conditional image validation)
   lotNumber: {
     type: Number,
     default: null // Current lot number (1, 2, 3, etc.)
