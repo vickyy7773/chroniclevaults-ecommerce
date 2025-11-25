@@ -245,6 +245,23 @@ auctionSchema.methods.updateStatus = async function() {
     this.status = 'Upcoming';
   } else if (now >= this.startTime && now < this.endTime) {
     this.status = 'Active';
+
+    // FOR LOT BIDDING: Activate first lot when auction becomes active
+    if (this.isLotBidding && this.lots && this.lots.length > 0) {
+      const firstLot = this.lots[0];
+      if (firstLot.status === 'Upcoming' && previousStatus === 'Upcoming') {
+        firstLot.status = 'Active';
+        firstLot.startTime = now;
+        firstLot.endTime = new Date(now.getTime() + (this.lotDuration || 10) * 60 * 1000);
+
+        // Set current lot times
+        this.currentLotStartTime = now;
+        this.currentLotEndTime = firstLot.endTime;
+        this.lotNumber = 1;
+
+        console.log(`🎯 Lot 1 activated for auction ${this._id}`);
+      }
+    }
   } else if (now >= this.endTime) {
     this.status = 'Ended';
 
