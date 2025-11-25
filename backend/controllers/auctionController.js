@@ -712,13 +712,16 @@ export const createAuction = async (req, res) => {
         bids: [],
         status: index === 0 && isAuctionStarted ? 'Active' : 'Upcoming',
         startTime: index === 0 ? auctionStart : null,
-        endTime: null
+        endTime: index === 0 && isAuctionStarted
+          ? new Date(auctionStart.getTime() + (lotDuration || 10) * 60 * 1000)
+          : null
       }));
 
       // Set current lot times if auction is starting
       if (isAuctionStarted) {
         auctionData.currentLotStartTime = auctionStart;
         auctionData.currentLotEndTime = new Date(auctionStart.getTime() + (lotDuration || 10) * 60 * 1000);
+        auctionData.lotNumber = 1; // Set current lot number
       }
 
       // Override main auction prices with first lot's prices

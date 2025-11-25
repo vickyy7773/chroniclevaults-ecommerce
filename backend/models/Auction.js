@@ -249,7 +249,7 @@ auctionSchema.methods.updateStatus = async function() {
     // FOR LOT BIDDING: Activate first lot when auction becomes active
     if (this.isLotBidding && this.lots && this.lots.length > 0) {
       const firstLot = this.lots[0];
-      if (firstLot.status === 'Upcoming' && previousStatus === 'Upcoming') {
+      if (firstLot.status === 'Upcoming') {
         firstLot.status = 'Active';
         firstLot.startTime = now;
         firstLot.endTime = new Date(now.getTime() + (this.lotDuration || 10) * 60 * 1000);
