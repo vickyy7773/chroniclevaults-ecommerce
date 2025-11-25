@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Gavel, Clock, TrendingUp, Users, AlertCircle, CheckCircle, History,
-  Coins, User, Hash, ArrowLeft, Timer, Award, Shield
+  Coins, User, Hash, ArrowLeft, Timer, Award, Shield, Package, CheckCircle2, Circle
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
@@ -234,15 +234,51 @@ const AuctionPage = () => {
       }
     };
 
+    const handleLotChanged = (data) => {
+      console.log('📦 LOT CHANGED:', data);
+
+      if (data.auctionId === auction._id) {
+        toast.info(`🚀 Lot ${data.currentLot} has started!`, {
+          autoClose: 5000,
+          position: 'top-center'
+        });
+        // Refresh auction data to show new lot
+        setTimeout(() => {
+          fetchAuction();
+        }, 500);
+      }
+    };
+
+    const handleAuctionCompleted = (data) => {
+      console.log('🏁 AUCTION COMPLETED:', data);
+
+      if (data.auctionId === auction._id) {
+        toast.success('🎉 All lots completed! Auction has ended!', {
+          autoClose: 7000,
+          position: 'top-center'
+        });
+        setTimeout(() => {
+          fetchAuction();
+        }, 1000);
+      }
+    };
+
     socketRef.current.off('auction-warning', handleAuctionWarning);
     socketRef.current.off('auction-warning-reset', handleWarningReset);
+    socketRef.current.off('lot-changed', handleLotChanged);
+    socketRef.current.off('auction-completed', handleAuctionCompleted);
+
     socketRef.current.on('auction-warning', handleAuctionWarning);
     socketRef.current.on('auction-warning-reset', handleWarningReset);
+    socketRef.current.on('lot-changed', handleLotChanged);
+    socketRef.current.on('auction-completed', handleAuctionCompleted);
 
     return () => {
       if (socketRef.current) {
         socketRef.current.off('auction-warning', handleAuctionWarning);
         socketRef.current.off('auction-warning-reset', handleWarningReset);
+        socketRef.current.off('lot-changed', handleLotChanged);
+        socketRef.current.off('auction-completed', handleAuctionCompleted);
       }
     };
   }, [auction]);
@@ -857,6 +893,119 @@ const AuctionPage = () => {
                     <span>All bids are final. Review carefully before submitting.</span>
                   </p>
                 </div>
+
+                {/* Lot Bidding Sidebar - Show all lots */}
+                {auction.isLotBidding && auction.lots && auction.lots.length > 0 && (
+                  <div className="border-t-2 border-gray-200 pt-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <Package className="w-5 h-5 text-accent-600" />
+                      All Lots ({auction.lots.length})
+                    </h3>
+
+                    <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+                      {auction.lots.map((lot, index) => (
+                        <div
+                          key={index}
+                          className={`rounded-xl p-3 border-2 transition-all ${
+                            lot.status === 'Active'
+                              ? 'bg-green-50 border-green-500 shadow-md'
+                              : lot.status === 'Ended'
+                              ? 'bg-gray-50 border-gray-300'
+                              : 'bg-blue-50 border-blue-300'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            {/* Lot Icon */}
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              lot.status === 'Active'
+                                ? 'bg-green-500 text-white'
+                                : lot.status === 'Ended'
+                                ? 'bg-gray-400 text-white'
+                                : 'bg-blue-400 text-white'
+                            }`}>
+                              {lot.status === 'Ended' ? (
+                                <CheckCircle2 className="w-5 h-5" />
+                              ) : lot.status === 'Active' ? (
+                                <Gavel className="w-5 h-5 animate-pulse" />
+                              ) : (
+                                <Circle className="w-5 h-5" />
+                              )}
+                            </div>
+
+                            {/* Lot Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                                  lot.status === 'Active'
+                                    ? 'bg-green-500 text-white'
+                                    : lot.status === 'Ended'
+                                    ? 'bg-gray-500 text-white'
+                                    : 'bg-blue-500 text-white'
+                                }`}>
+                                  Lot {lot.lotNumber}
+                                </span>
+                                <span className={`text-xs font-semibold ${
+                                  lot.status === 'Active'
+                                    ? 'text-green-700'
+                                    : lot.status === 'Ended'
+                                    ? 'text-gray-600'
+                                    : 'text-blue-700'
+                                }`}>
+                                  {lot.status === 'Active' && '🔴 LIVE'}
+                                  {lot.status === 'Ended' && '✅ SOLD'}
+                                  {lot.status === 'Upcoming' && '⏳ UPCOMING'}
+                                </span>
+                              </div>
+
+                              <h4 className="font-semibold text-sm text-gray-900 truncate mb-1">
+                                {lot.title}
+                              </h4>
+
+                              <div className="flex items-center justify-between text-xs">
+                                <div>
+                                  <span className="text-gray-500">Current:</span>
+                                  <span className="font-bold text-gray-900 ml-1">
+                                    ₹{lot.currentBid.toLocaleString()}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Bids:</span>
+                                  <span className="font-bold text-gray-900 ml-1">
+                                    {lot.bids?.length || 0}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {lot.status === 'Ended' && lot.winner && (
+                                <div className="mt-1 text-xs text-gray-600">
+                                  <span className="font-semibold">Winner:</span> {lot.winner.name || 'N/A'}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Lot Progress Indicator */}
+                    <div className="mt-4 bg-gray-100 rounded-lg p-3">
+                      <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+                        <span>Progress</span>
+                        <span className="font-bold">
+                          Lot {auction.lotNumber || 1} of {auction.totalLots}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-300 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-accent-500 to-accent-600 h-2 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${((auction.lotNumber || 1) / auction.totalLots) * 100}%`
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
