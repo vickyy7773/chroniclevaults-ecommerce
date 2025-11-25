@@ -170,8 +170,18 @@ export const endCurrentLot = async (auctionId, io) => {
 
       console.log(`❌ LOT ${lotNumber} UNSOLD - No bids received`);
 
-      // Emit socket event
+      // Emit final announcement and socket event
       if (io) {
+        // Emit UNSOLD announcement
+        io.to(`auction-${auctionId}`).emit('auction-warning', {
+          auctionId: auctionId.toString(),
+          message: 'UNSOLD! ❌',
+          warning: 3,
+          final: true,
+          lotNumber
+        });
+
+        // Emit lot-unsold event
         io.to(`auction-${auctionId}`).emit('lot-unsold', {
           auctionId,
           lotNumber,
@@ -199,8 +209,18 @@ export const endCurrentLot = async (auctionId, io) => {
           console.log(`🔓 Unfroze coins for bidder ${bid.user} on UNSOLD lot ${lotNumber}`);
         }
 
-        // Emit socket event
+        // Emit final announcement and socket event
         if (io) {
+          // Emit UNSOLD announcement
+          io.to(`auction-${auctionId}`).emit('auction-warning', {
+            auctionId: auctionId.toString(),
+            message: 'UNSOLD! ❌ (Below reserve)',
+            warning: 3,
+            final: true,
+            lotNumber
+          });
+
+          // Emit lot-unsold event
           io.to(`auction-${auctionId}`).emit('lot-unsold', {
             auctionId,
             lotNumber,
@@ -230,8 +250,19 @@ export const endCurrentLot = async (auctionId, io) => {
           }
         }
 
-        // Emit socket event
+        // Emit final announcement and socket event
         if (io) {
+          // Emit SOLD announcement
+          io.to(`auction-${auctionId}`).emit('auction-warning', {
+            auctionId: auctionId.toString(),
+            message: 'SOLD! 🎉',
+            warning: 3,
+            final: true,
+            lotNumber,
+            finalPrice: winningBid.amount
+          });
+
+          // Emit lot-sold event
           io.to(`auction-${auctionId}`).emit('lot-sold', {
             auctionId,
             lotNumber,
@@ -735,6 +766,13 @@ export const createAuction = async (req, res) => {
     await auction.updateStatus();
 
     const savedAuction = await auction.save();
+
+    // Start Going Going Gone timer if enabled and auction is active
+    const io = req.app.get('io');
+    if (io && savedAuction.isGoingGoingGoneEnabled && savedAuction.status === 'Active') {
+      startGoingGoingGoneTimer(savedAuction._id, io);
+      console.log(`⏰ Started Going Going Gone timer for newly created auction ${savedAuction._id}`);
+    }
 
     res.status(201).json({
       success: true,
