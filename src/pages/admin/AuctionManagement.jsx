@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Clock, Gavel, Users, TrendingUp, Eye, User } from 'lucide-react';
+import { Plus, Edit2, Trash2, Clock, Gavel, Users, TrendingUp, Eye, User, Package, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../../utils/api';
 
 const AuctionManagement = () => {
   const [auctions, setAuctions] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedAuction, setSelectedAuction] = useState(null);
@@ -18,7 +19,11 @@ const AuctionManagement = () => {
     reservePrice: '',
     reserveBidder: '',
     startTime: '',
-    endTime: ''
+    endTime: '',
+    isLotBidding: false,
+    totalLots: 1,
+    lotDuration: 10,
+    lots: []
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
@@ -27,12 +32,22 @@ const AuctionManagement = () => {
   useEffect(() => {
     fetchAuctions();
     fetchCustomers();
+    fetchProducts();
   }, [viewMode]);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await api.get('/products');
+      setProducts(response.data || []);
+    } catch (error) {
+      console.error('Fetch products error:', error);
+    }
+  };
 
   const fetchCustomers = async () => {
     try {
       const response = await api.get('/users');
-      setCustomers(response.data || []); // Response interceptor already returns data
+      setCustomers(response.data || []);
     } catch (error) {
       console.error('Fetch customers error:', error);
     }
@@ -43,7 +58,7 @@ const AuctionManagement = () => {
       setLoading(true);
       const queryParam = viewMode !== 'all' ? `?status=${viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}` : '';
       const response = await api.get(`/auctions${queryParam}`);
-      setAuctions(response.data || []); // Response interceptor already returns data
+      setAuctions(response.data || []);
     } catch (error) {
       console.error('Fetch auctions error:', error);
       toast.error('Failed to load auctions');
@@ -53,10 +68,50 @@ const AuctionManagement = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleLotChange = (index, field, value) => {
+    const updatedLots = [...formData.lots];
+    updatedLots[index] = {
+      ...updatedLots[index],
+      [field]: value
+    };
+    setFormData(prev => ({ ...prev, lots: updatedLots }));
+  };
+
+  const addLot = () => {
+    setFormData(prev => ({
+      ...prev,
+      lots: [
+        ...prev.lots,
+        {
+          lotNumber: prev.lots.length + 1,
+          title: '',
+          description: '',
+          productId: '',
+          image: '',
+          startingPrice: '',
+          status: 'Upcoming'
+        }
+      ]
+    }));
+  };
+
+  const removeLot = (index) => {
+    const updatedLots = formData.lots.filter((_, i) => i !== index);
+    // Renumber lots
+    const renumberedLots = updatedLots.map((lot, i) => ({
+      ...lot,
+      lotNumber: i + 1
+    }));
+    setFormData(prev => ({
+      ...prev,
+      lots: renumberedLots
     }));
   };
 
@@ -65,13 +120,12 @@ const AuctionManagement = () => {
     if (file) {
       setImageFile(file);
 
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
         setFormData(prev => ({
           ...prev,
-          image: reader.result // Base64 for upload
+          image: reader.result
         }));
       };
       reader.readAsDataURL(file);
@@ -85,20 +139,11 @@ const AuctionManagement = () => {
       let submitData = { ...formData };
 
       // Convert datetime-local values to ISO strings
-      // datetime-local format: "2025-11-18T21:37" (no timezone - browser interprets as local)
       if (submitData.startTime) {
-        const startDate = new Date(submitData.startTime);
-        console.log('Start Time Input:', submitData.startTime);
-        console.log('Start Time Date Object:', startDate);
-        console.log('Start Time ISO:', startDate.toISOString());
-        submitData.startTime = startDate.toISOString();
+        submitData.startTime = new Date(submitData.startTime).toISOString();
       }
       if (submitData.endTime) {
-        const endDate = new Date(submitData.endTime);
-        console.log('End Time Input:', submitData.endTime);
-        console.log('End Time Date Object:', endDate);
-        console.log('End Time ISO:', endDate.toISOString());
-        submitData.endTime = endDate.toISOString();
+        submitData.endTime = new Date(submitData.endTime).toISOString();
       }
 
       console.log('Submitting auction data:', submitData);
@@ -107,7 +152,6 @@ const AuctionManagement = () => {
       if (formData.image && formData.image.startsWith('data:image/')) {
         try {
           const uploadResponse = await api.post('/upload/base64', { image: formData.image });
-          // Response interceptor already returns data, so response.imageUrl (not response.data.imageUrl)
           submitData.image = uploadResponse.imageUrl;
         } catch (uploadError) {
           console.error('Image upload error:', uploadError);
@@ -116,12 +160,53 @@ const AuctionManagement = () => {
         }
       }
 
+      // If lot bidding, process lots data
+      if (submitData.isLotBidding) {
+        submitData.totalLots = submitData.lots.length;
+        submitData.lotNumber = 1; // Start with first lot
+
+        // Process each lot
+        const processedLots = await Promise.all(submitData.lots.map(async (lot) => {
+          let lotData = { ...lot };
+
+          // If lot has product, get product details
+          if (lot.productId) {
+            const product = products.find(p => p._id === lot.productId);
+            if (product) {
+              lotData.image = lotData.image || product.images[0];
+              lotData.description = lotData.description || product.description;
+            }
+          }
+
+          // Upload lot image if it's base64
+          if (lotData.image && lotData.image.startsWith('data:image/')) {
+            try {
+              const uploadResponse = await api.post('/upload/base64', { image: lotData.image });
+              lotData.image = uploadResponse.imageUrl;
+            } catch (error) {
+              console.error('Lot image upload error:', error);
+            }
+          }
+
+          return {
+            ...lotData,
+            currentBid: lotData.startingPrice,
+            bids: []
+          };
+        }));
+
+        submitData.lots = processedLots;
+        // Set main auction fields from first lot
+        if (processedLots.length > 0) {
+          submitData.startingPrice = processedLots[0].startingPrice;
+          submitData.currentBid = processedLots[0].startingPrice;
+        }
+      }
+
       if (selectedAuction) {
-        // Update existing auction
         await api.put(`/auctions/${selectedAuction._id}`, submitData);
         toast.success('Auction updated successfully');
       } else {
-        // Create new auction
         await api.post('/auctions', submitData);
         toast.success('Auction created successfully');
       }
@@ -138,11 +223,9 @@ const AuctionManagement = () => {
   const handleEdit = (auction) => {
     setSelectedAuction(auction);
 
-    // Convert UTC time to IST for display
     const startTimeIST = new Date(auction.startTime);
     const endTimeIST = new Date(auction.endTime);
 
-    // Format for datetime-local input (YYYY-MM-DDTHH:mm)
     const formatDateTimeLocal = (date) => {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -161,9 +244,13 @@ const AuctionManagement = () => {
       reservePrice: auction.reservePrice || '',
       reserveBidder: auction.reserveBidder?._id || '',
       startTime: formatDateTimeLocal(startTimeIST),
-      endTime: formatDateTimeLocal(endTimeIST)
+      endTime: formatDateTimeLocal(endTimeIST),
+      isLotBidding: auction.isLotBidding || false,
+      totalLots: auction.totalLots || 1,
+      lotDuration: auction.lotDuration || 10,
+      lots: auction.lots || []
     });
-    setImagePreview(auction.image); // Show existing image
+    setImagePreview(auction.image);
     setShowModal(true);
   };
 
@@ -192,7 +279,11 @@ const AuctionManagement = () => {
       reservePrice: '',
       reserveBidder: '',
       startTime: '',
-      endTime: ''
+      endTime: '',
+      isLotBidding: false,
+      totalLots: 1,
+      lotDuration: 10,
+      lots: []
     });
     setImageFile(null);
     setImagePreview('');
@@ -293,6 +384,11 @@ const AuctionManagement = () => {
                 <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(auction.status)}`}>
                   {auction.status}
                 </div>
+                {auction.isLotBidding && (
+                  <div className="absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-bold border bg-purple-100 text-purple-800 border-purple-300">
+                    {auction.totalLots} Lots
+                  </div>
+                )}
               </div>
 
               {/* Auction Details */}
@@ -377,8 +473,8 @@ const AuctionManagement = () => {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto my-8">
             <div className="p-6">
               <h2 className="text-2xl font-bold mb-4">
                 {selectedAuction ? 'Edit Auction' : 'Create New Auction'}
@@ -386,109 +482,324 @@ const AuctionManagement = () => {
 
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Product ID (Optional)
+                  {/* Lot Bidding Toggle */}
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="isLotBidding"
+                        checked={formData.isLotBidding}
+                        onChange={handleInputChange}
+                        className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                      />
+                      <div>
+                        <span className="text-sm font-bold text-purple-900">Enable Lot Bidding</span>
+                        <p className="text-xs text-purple-700">Create multiple lots that auction sequentially</p>
+                      </div>
                     </label>
-                    <input
-                      type="text"
-                      name="productId"
-                      value={formData.productId}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                      placeholder="Enter product ID (optional - leave empty for standalone auction)"
-                    />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Title
-                    </label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                      placeholder="Auction title"
-                    />
-                  </div>
+                  {/* Regular Auction Fields */}
+                  {!formData.isLotBidding && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Product (Optional)
+                        </label>
+                        <select
+                          name="productId"
+                          value={formData.productId}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        >
+                          <option value="">No Product (Standalone Auction)</option>
+                          {products.map(product => (
+                            <option key={product._id} value={product._id}>
+                              {product.name} - ₹{product.price.toLocaleString()}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
-                    </label>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      required
-                      rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                      placeholder="Auction description"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Upload Image
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                    />
-                    {imagePreview && (
-                      <div className="mt-2">
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className="w-full h-48 object-cover rounded-lg border border-gray-300"
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Title
+                        </label>
+                        <input
+                          type="text"
+                          name="title"
+                          value={formData.title}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          placeholder="Auction title"
                         />
                       </div>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1">
-                      Upload auction image (required if no product linked)
-                    </p>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Starting Price (₹)
-                      </label>
-                      <input
-                        type="number"
-                        name="startingPrice"
-                        value={formData.startingPrice}
-                        onChange={handleInputChange}
-                        required
-                        min="0"
-                        step="50"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                        placeholder="0"
-                      />
-                    </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Description
+                        </label>
+                        <textarea
+                          name="description"
+                          value={formData.description}
+                          onChange={handleInputChange}
+                          required
+                          rows={3}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          placeholder="Auction description"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Reserve Price (₹)
-                      </label>
-                      <input
-                        type="number"
-                        name="reservePrice"
-                        value={formData.reservePrice}
-                        onChange={handleInputChange}
-                        min="0"
-                        step="50"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                        placeholder="Optional"
-                      />
-                    </div>
-                  </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Upload Image
+                        </label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        />
+                        {imagePreview && (
+                          <div className="mt-2">
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="w-full h-48 object-cover rounded-lg border border-gray-300"
+                            />
+                          </div>
+                        )}
+                      </div>
 
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Starting Price (₹)
+                          </label>
+                          <input
+                            type="number"
+                            name="startingPrice"
+                            value={formData.startingPrice}
+                            onChange={handleInputChange}
+                            required
+                            min="0"
+                            step="50"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                            placeholder="0"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Reserve Price (₹)
+                          </label>
+                          <input
+                            type="number"
+                            name="reservePrice"
+                            value={formData.reservePrice}
+                            onChange={handleInputChange}
+                            min="0"
+                            step="50"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                            placeholder="Optional"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Lot Bidding Fields */}
+                  {formData.isLotBidding && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Auction Title
+                        </label>
+                        <input
+                          type="text"
+                          name="title"
+                          value={formData.title}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          placeholder="Overall auction title"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Auction Description
+                        </label>
+                        <textarea
+                          name="description"
+                          value={formData.description}
+                          onChange={handleInputChange}
+                          required
+                          rows={2}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          placeholder="Overall auction description"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Lot Duration (minutes)
+                        </label>
+                        <input
+                          type="number"
+                          name="lotDuration"
+                          value={formData.lotDuration}
+                          onChange={handleInputChange}
+                          required
+                          min="1"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          placeholder="10"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          How long each lot will run before moving to next
+                        </p>
+                      </div>
+
+                      {/* Lots Management */}
+                      <div className="border-t pt-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                            <Package className="w-5 h-5 mr-2 text-purple-600" />
+                            Lots ({formData.lots.length})
+                          </h3>
+                          <button
+                            type="button"
+                            onClick={addLot}
+                            className="flex items-center space-x-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                          >
+                            <Plus className="w-4 h-4" />
+                            <span>Add Lot</span>
+                          </button>
+                        </div>
+
+                        {formData.lots.length === 0 && (
+                          <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                            <Package className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                            <p className="text-gray-600">No lots added yet</p>
+                            <button
+                              type="button"
+                              onClick={addLot}
+                              className="mt-2 text-purple-600 hover:text-purple-700 font-medium"
+                            >
+                              Add your first lot
+                            </button>
+                          </div>
+                        )}
+
+                        <div className="space-y-4">
+                          {formData.lots.map((lot, index) => (
+                            <div key={index} className="border-2 border-purple-200 rounded-lg p-4 bg-purple-50">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-bold text-purple-900">Lot {index + 1}</h4>
+                                {formData.lots.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeLot(index)}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <X className="w-5 h-5" />
+                                  </button>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-1 gap-3">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Select Product
+                                  </label>
+                                  <select
+                                    value={lot.productId || ''}
+                                    onChange={(e) => {
+                                      handleLotChange(index, 'productId', e.target.value);
+                                      // Auto-fill from product
+                                      const product = products.find(p => p._id === e.target.value);
+                                      if (product) {
+                                        handleLotChange(index, 'title', `Lot ${index + 1}: ${product.name}`);
+                                        handleLotChange(index, 'description', product.description);
+                                        handleLotChange(index, 'image', product.images[0]);
+                                        handleLotChange(index, 'startingPrice', Math.floor(product.price * 0.7));
+                                      }
+                                    }}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                  >
+                                    <option value="">No Product (Manual Entry)</option>
+                                    {products.map(product => (
+                                      <option key={product._id} value={product._id}>
+                                        {product.name} - ₹{product.price.toLocaleString()}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Lot Title
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={lot.title || ''}
+                                    onChange={(e) => handleLotChange(index, 'title', e.target.value)}
+                                    required
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                    placeholder={`Lot ${index + 1} title`}
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Lot Description
+                                  </label>
+                                  <textarea
+                                    value={lot.description || ''}
+                                    onChange={(e) => handleLotChange(index, 'description', e.target.value)}
+                                    rows={2}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                    placeholder={`Description for lot ${index + 1}`}
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Starting Price (₹)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={lot.startingPrice || ''}
+                                    onChange={(e) => handleLotChange(index, 'startingPrice', e.target.value)}
+                                    required
+                                    min="0"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                    placeholder="0"
+                                  />
+                                </div>
+
+                                {lot.image && (
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                      Image Preview
+                                    </label>
+                                    <img
+                                      src={lot.image}
+                                      alt={`Lot ${index + 1}`}
+                                      className="w-full h-32 object-cover rounded-lg border border-gray-300"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Common Fields */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Reserve Bidder (Optional)
@@ -506,34 +817,13 @@ const AuctionManagement = () => {
                         </option>
                       ))}
                     </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Reserve bidder will automatically bid if price is below reserve price
-                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-sm font-medium text-gray-700">
-                          Start Date & Time
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const now = new Date();
-                            const year = now.getFullYear();
-                            const month = String(now.getMonth() + 1).padStart(2, '0');
-                            const day = String(now.getDate()).padStart(2, '0');
-                            const hours = String(now.getHours()).padStart(2, '0');
-                            const minutes = String(now.getMinutes()).padStart(2, '0');
-                            const currentDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-                            setFormData(prev => ({ ...prev, startTime: currentDateTime }));
-                          }}
-                          className="text-xs text-blue-600 hover:text-blue-800"
-                        >
-                          Use Now
-                        </button>
-                      </div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Start Date & Time
+                      </label>
                       <input
                         type="datetime-local"
                         name="startTime"
@@ -542,34 +832,12 @@ const AuctionManagement = () => {
                         required
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Use 24-hour format (e.g., 21:30 for 9:30 PM)
-                      </p>
                     </div>
 
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-sm font-medium text-gray-700">
-                          End Date & Time
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const now = new Date();
-                            now.setDate(now.getDate() + 2); // Default: 2 days from now
-                            const year = now.getFullYear();
-                            const month = String(now.getMonth() + 1).padStart(2, '0');
-                            const day = String(now.getDate()).padStart(2, '0');
-                            const hours = String(now.getHours()).padStart(2, '0');
-                            const minutes = String(now.getMinutes()).padStart(2, '0');
-                            const futureDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-                            setFormData(prev => ({ ...prev, endTime: futureDateTime }));
-                          }}
-                          className="text-xs text-blue-600 hover:text-blue-800"
-                        >
-                          +2 Days
-                        </button>
-                      </div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        End Date & Time
+                      </label>
                       <input
                         type="datetime-local"
                         name="endTime"
@@ -578,18 +846,6 @@ const AuctionManagement = () => {
                         required
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Use 24-hour format (e.g., 21:30 for 9:30 PM)
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Time Conversion Helper */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-xs font-semibold text-blue-900 mb-2">⏰ 24-Hour Format Guide:</p>
-                    <div className="grid grid-cols-2 gap-2 text-xs text-blue-800">
-                      <div>12:00 AM = 00:00 | 1:00 AM = 01:00 | 6:00 AM = 06:00</div>
-                      <div>12:00 PM = 12:00 | 6:00 PM = 18:00 | 9:00 PM = 21:00</div>
                     </div>
                   </div>
                 </div>
