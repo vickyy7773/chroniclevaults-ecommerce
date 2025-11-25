@@ -10,6 +10,7 @@
     "seed:auctions": "node scripts/seedAuctions.js",
     "seed:lot-auction": "node scripts/seedLotAuction.js",
     "seed:quick-lot": "node scripts/seedQuickLotAuction.js",
+    "seed:products": "node scripts/seedTestProducts.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
