@@ -779,6 +779,28 @@ const AuctionManagement = () => {
                                   />
                                 </div>
 
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Lot Image
+                                  </label>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                      const file = e.target.files[0];
+                                      if (file) {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                          handleLotChange(index, 'image', reader.result);
+                                        };
+                                        reader.readAsDataURL(file);
+                                      }
+                                    }}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">Upload an image for this lot</p>
+                                </div>
+
                                 {lot.image && (
                                   <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
