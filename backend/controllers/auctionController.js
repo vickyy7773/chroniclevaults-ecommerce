@@ -316,9 +316,15 @@ export const createAuction = async (req, res) => {
       image,
       startingPrice,
       reservePrice,
+      reserveBidder,
       incrementSlabs,
       startTime,
-      endTime
+      endTime,
+      isLotBidding,
+      lots,
+      totalLots,
+      lotDuration,
+      isGoingGoingGoneEnabled
     } = req.body;
 
     // Validate product exists (if productId is provided and valid)
@@ -371,7 +377,8 @@ export const createAuction = async (req, res) => {
       { minPrice: 5000000, maxPrice: 10000000, increment: 500000 }
     ];
 
-    const auction = new Auction({
+    // Create auction object
+    const auctionData = {
       product: isValidProductId ? productId : null,
       title,
       description,
@@ -379,10 +386,46 @@ export const createAuction = async (req, res) => {
       startingPrice,
       currentBid: startingPrice,
       reservePrice,
+      reserveBidder: reserveBidder && reserveBidder.trim() !== '' ? reserveBidder : null,
       incrementSlabs: defaultSlabs,
       startTime: new Date(startTime),
-      endTime: new Date(endTime)
-    });
+      endTime: new Date(endTime),
+      isGoingGoingGoneEnabled: isGoingGoingGoneEnabled || false
+    };
+
+    // If lot bidding, add lot-specific fields
+    if (isLotBidding && lots && lots.length > 0) {
+      auctionData.isLotBidding = true;
+      auctionData.totalLots = lots.length;
+      auctionData.lotNumber = 1; // Start with first lot
+      auctionData.lotDuration = lotDuration || 10; // Default 10 minutes per lot
+
+      // Process lots - set first lot as Active/Upcoming based on startTime
+      const now = new Date();
+      const auctionStart = new Date(startTime);
+      const isAuctionStarted = now >= auctionStart;
+
+      auctionData.lots = lots.map((lot, index) => ({
+        lotNumber: index + 1,
+        title: lot.title,
+        description: lot.description || '',
+        image: lot.image || '',
+        startingPrice: lot.startingPrice,
+        currentBid: lot.startingPrice,
+        bids: [],
+        status: index === 0 && isAuctionStarted ? 'Active' : 'Upcoming',
+        startTime: index === 0 ? auctionStart : null,
+        endTime: null
+      }));
+
+      // Set current lot times if auction is starting
+      if (isAuctionStarted) {
+        auctionData.currentLotStartTime = auctionStart;
+        auctionData.currentLotEndTime = new Date(auctionStart.getTime() + (lotDuration || 10) * 60 * 1000);
+      }
+    }
+
+    const auction = new Auction(auctionData);
 
     // Set initial status
     await auction.updateStatus();
