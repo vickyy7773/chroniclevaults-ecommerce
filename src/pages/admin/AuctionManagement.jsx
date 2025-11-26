@@ -603,7 +603,7 @@ const AuctionManagement = () => {
                             required
                             min="0"
                             step="50"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             placeholder="0"
                           />
                         </div>
@@ -619,7 +619,7 @@ const AuctionManagement = () => {
                             onChange={handleInputChange}
                             min="0"
                             step="50"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             placeholder="Optional"
                           />
                         </div>
@@ -774,7 +774,7 @@ const AuctionManagement = () => {
                                       onChange={(e) => handleLotChange(index, 'startingPrice', e.target.value)}
                                       required
                                       min="0"
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                       placeholder="0"
                                     />
                                   </div>
@@ -788,7 +788,7 @@ const AuctionManagement = () => {
                                       value={lot.reservePrice || ''}
                                       onChange={(e) => handleLotChange(index, 'reservePrice', e.target.value)}
                                       min="0"
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                       placeholder="0 (optional)"
                                     />
                                     <p className="text-xs text-gray-500 mt-1">Min bid to sell</p>
