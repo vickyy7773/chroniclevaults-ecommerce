@@ -284,11 +284,15 @@ export const endCurrentLot = async (auctionId, io) => {
         auction.lots[nextLotIndex].status = 'Active';
         auction.lots[nextLotIndex].startTime = new Date(Date.now() + 3000); // 3-second pause
 
+        // Reset warning count and set lastBidTime for new lot
+        auction.warningCount = 0;
+        auction.lastBidTime = new Date(Date.now() + 3000); // Set to when lot starts
+
         console.log(`🚀 Starting LOT ${auction.lotNumber} in 3 seconds`);
 
         // Emit socket event for lot start and restart timer
         if (io) {
-          setTimeout(() => {
+          setTimeout(async () => {
             io.to(`auction-${auctionId}`).emit('lot-started', {
               auctionId,
               lotNumber: auction.lotNumber,
@@ -298,6 +302,7 @@ export const endCurrentLot = async (auctionId, io) => {
             // Restart Going Going Gone timer for new lot
             if (auction.isGoingGoingGoneEnabled) {
               startGoingGoingGoneTimer(auctionId, io);
+              console.log(`⏰ Started timer for newly activated Lot ${auction.lotNumber}`);
             }
           }, 3000);
         }
@@ -619,9 +624,7 @@ export const startNextLot = async (auctionId, io) => {
         message: `Lot ${nextLotNum} has started!`
       });
 
-      // Start Going, Going, Gone timer for the new lot
-      startGoingGoingGoneTimer(auctionId, io);
-      console.log(`⏰ Started timer for newly activated Lot ${nextLotNum}`);
+      // NOTE: Timer is started in endCurrentLot after 3-second delay
 
     } else {
       // All lots completed - end entire auction
