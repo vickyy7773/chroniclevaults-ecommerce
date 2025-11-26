@@ -241,6 +241,9 @@ const AuctionPage = () => {
         // Dismiss any active toasts (like SOLD message)
         toast.dismiss();
 
+        // Reset warning overlay (hide SOLD screen)
+        setGoingWarning(0);
+
         toast.info(`🚀 Lot ${data.currentLot} has started!`, {
           autoClose: 5000,
           position: 'top-center'
