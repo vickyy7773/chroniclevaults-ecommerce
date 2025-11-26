@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Gavel, Clock, TrendingUp, Users, AlertCircle, CheckCircle, History,
-  Coins, User, Hash, ArrowLeft, Timer, Award, Shield, Package, CheckCircle2, Circle
+  Coins, User, Hash, ArrowLeft, Timer, Award, Shield, Package, CheckCircle2, Circle, XCircle
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
@@ -203,20 +203,28 @@ const AuctionPage = () => {
         setWarningMessage(data.message);
 
         if (data.warning === 1) {
-          toast.warning('⚠️ GOING ONCE! 🔨 Place your bid now!', {
+          toast.warning(`⚠️ ${data.message} Place your bid now!`, {
             autoClose: 5000,
             position: 'top-center'
           });
         } else if (data.warning === 2) {
-          toast.error('🚨 GOING TWICE! 🔨🔨 Last chance to bid!', {
+          toast.error(`🚨 ${data.message} Last chance to bid!`, {
             autoClose: 5000,
             position: 'top-center'
           });
         } else if (data.final) {
-          toast.success('🎉 SOLD! 🎉 Auction has ended!', {
-            autoClose: 1000,
-            position: 'top-center'
-          });
+          // Show appropriate message based on whether lot was SOLD or UNSOLD
+          if (data.message.includes('UNSOLD')) {
+            toast.warning(`❌ ${data.message}`, {
+              autoClose: 1000,
+              position: 'top-center'
+            });
+          } else {
+            toast.success(`🎉 ${data.message}`, {
+              autoClose: 1000,
+              position: 'top-center'
+            });
+          }
           // Refresh auction data
           setTimeout(() => {
             fetchAuction();
@@ -606,16 +614,33 @@ const AuctionPage = () => {
               )}
               {goingWarning === 3 && (
                 <>
-                  <Award className="w-8 h-8 sm:w-10 sm:h-10" />
-                  <div className="text-center">
-                    <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-wider">
-                      SOLD! 🎉
-                    </h3>
-                    <p className="text-sm sm:text-base font-medium mt-1">
-                      Auction has ended!
-                    </p>
-                  </div>
-                  <Award className="w-8 h-8 sm:w-10 sm:h-10" />
+                  {warningMessage.includes('UNSOLD') ? (
+                    <>
+                      <XCircle className="w-8 h-8 sm:w-10 sm:h-10 text-red-500" />
+                      <div className="text-center">
+                        <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-wider text-red-600">
+                          {warningMessage}
+                        </h3>
+                        <p className="text-sm sm:text-base font-medium mt-1">
+                          Lot did not sell
+                        </p>
+                      </div>
+                      <XCircle className="w-8 h-8 sm:w-10 sm:h-10 text-red-500" />
+                    </>
+                  ) : (
+                    <>
+                      <Award className="w-8 h-8 sm:w-10 sm:h-10 text-green-500" />
+                      <div className="text-center">
+                        <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-wider text-green-600">
+                          {warningMessage}
+                        </h3>
+                        <p className="text-sm sm:text-base font-medium mt-1">
+                          Auction has ended!
+                        </p>
+                      </div>
+                      <Award className="w-8 h-8 sm:w-10 sm:h-10 text-green-500" />
+                    </>
+                  )}
                 </>
               )}
             </div>
