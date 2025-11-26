@@ -334,6 +334,8 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
   // Clear existing timer if any
   if (auctionTimers.has(auctionId)) {
     clearTimeout(auctionTimers.get(auctionId));
+    auctionTimers.delete(auctionId);
+    console.log(`🧹 Cleared existing timer for auction ${auctionId}`);
   }
 
   const checkAndAnnounce = async () => {
@@ -362,6 +364,12 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
       if (!auction.lastBidTime || !hasBids) {
         // No bids yet, check again in 30 seconds
         console.log(`⏰ No bids yet for auction ${auctionId}, checking again in 30 sec`);
+
+        // Clear any existing timer before setting new one
+        if (auctionTimers.has(auctionId)) {
+          clearTimeout(auctionTimers.get(auctionId));
+        }
+
         const timerId = setTimeout(checkAndAnnounce, 30000);
         auctionTimers.set(auctionId, timerId);
         return;
@@ -386,6 +394,11 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
           });
           console.log(`🔨 Auction ${auctionId}: GOING ONCE!`);
 
+          // Clear any existing timer before scheduling next check
+          if (auctionTimers.has(auctionId)) {
+            clearTimeout(auctionTimers.get(auctionId));
+          }
+
           // Schedule next check in 30 seconds
           const timerId = setTimeout(checkAndAnnounce, 30000);
           auctionTimers.set(auctionId, timerId);
@@ -400,6 +413,11 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
             timeSinceLastBid
           });
           console.log(`🔨🔨 Auction ${auctionId}: GOING TWICE!`);
+
+          // Clear any existing timer before scheduling next check
+          if (auctionTimers.has(auctionId)) {
+            clearTimeout(auctionTimers.get(auctionId));
+          }
 
           // Schedule next check in 30 seconds
           const timerId = setTimeout(checkAndAnnounce, 30000);
@@ -435,6 +453,12 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
       } else {
         // Not enough time has passed yet, check again later
         const remainingTime = thirtySeconds - timeSinceLastBid;
+
+        // Clear any existing timer before scheduling new check
+        if (auctionTimers.has(auctionId)) {
+          clearTimeout(auctionTimers.get(auctionId));
+        }
+
         const timerId = setTimeout(checkAndAnnounce, remainingTime);
         auctionTimers.set(auctionId, timerId);
       }
