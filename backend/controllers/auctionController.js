@@ -175,7 +175,7 @@ export const endCurrentLot = async (auctionId, io) => {
         // Emit UNSOLD announcement
         io.to(`auction-${auctionId}`).emit('auction-warning', {
           auctionId: auctionId.toString(),
-          message: 'UNSOLD! ❌',
+          message: 'UNSOLD! ❌ (No bids received)',
           warning: 3,
           final: true,
           lotNumber
@@ -465,13 +465,19 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
           // GOING TWICE!
           auction.warningCount = 2;
           await auction.save();
+
+          // Check if there are any bids on current lot
+          const currentLot = auction.lots.find(lot => lot.lotNumber === auction.lotNumber);
+          const hasBids = currentLot && currentLot.bids && currentLot.bids.length > 0;
+          const message = hasBids ? 'GOING TWICE! 🔨🔨' : 'GOING TWICE! 🔨🔨 (No bids received)';
+
           io.to(`auction-${auctionId}`).emit('auction-warning', {
             auctionId: auctionId.toString(),
-            message: 'GOING TWICE! 🔨🔨',
+            message: message,
             warning: 2,
             timeSinceLastBid
           });
-          console.log(`🔨🔨 Auction ${auctionId}: GOING TWICE!`);
+          console.log(`🔨🔨 Auction ${auctionId}: ${message}`);
 
           // Clear any existing timer before scheduling next check
           if (auctionTimers.has(auctionId)) {
