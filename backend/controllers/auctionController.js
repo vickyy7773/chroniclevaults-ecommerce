@@ -328,6 +328,7 @@ export const endCurrentLot = async (auctionId, io) => {
 
 // Global timer tracking for Going, Going, Gone feature
 const auctionTimers = new Map();
+const runningChecks = new Map(); // Track currently running checks to prevent duplicates
 
 // Start Going, Going, Gone timer for an auction
 export const startGoingGoingGoneTimer = (auctionId, io) => {
@@ -339,12 +340,21 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
   }
 
   const checkAndAnnounce = async () => {
+    // Prevent duplicate execution
+    if (runningChecks.get(auctionId)) {
+      console.log(`⚠️  Check already running for auction ${auctionId}, skipping`);
+      return;
+    }
+
+    runningChecks.set(auctionId, true);
+
     try {
       const auction = await Auction.findById(auctionId);
 
       if (!auction || auction.status !== 'Active' || !auction.isGoingGoingGoneEnabled) {
         // Auction ended or disabled, clear timer
         auctionTimers.delete(auctionId);
+        runningChecks.delete(auctionId);
         return;
       }
 
@@ -515,6 +525,9 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
     } catch (error) {
       console.error('Going, Going, Gone timer error:', error);
       auctionTimers.delete(auctionId);
+    } finally {
+      // Always clear running flag when done
+      runningChecks.delete(auctionId);
     }
   };
 
@@ -530,6 +543,13 @@ export const resetGoingGoingGoneTimer = async (auctionId, io) => {
     const auction = await Auction.findById(auctionId);
 
     if (auction && auction.isGoingGoingGoneEnabled) {
+      // FIRST: Clear existing timer completely before resetting
+      if (auctionTimers.has(auctionId)) {
+        clearTimeout(auctionTimers.get(auctionId));
+        auctionTimers.delete(auctionId);
+        console.log(`🧹 Cleared existing timer for reset on auction ${auctionId}`);
+      }
+
       // Reset warning count
       auction.warningCount = 0;
       auction.lastBidTime = new Date();
@@ -541,7 +561,7 @@ export const resetGoingGoingGoneTimer = async (auctionId, io) => {
         message: 'New bid! Timer reset.'
       });
 
-      // Restart timer
+      // Restart timer AFTER clearing old one
       startGoingGoingGoneTimer(auctionId, io);
       console.log(`🔄 Reset Going, Going, Gone timer for auction ${auctionId}`);
     }
