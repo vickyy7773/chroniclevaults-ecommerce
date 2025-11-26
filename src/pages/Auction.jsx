@@ -281,11 +281,13 @@ const AuctionPage = () => {
     socketRef.current.off('auction-warning', handleAuctionWarning);
     socketRef.current.off('auction-warning-reset', handleWarningReset);
     socketRef.current.off('lot-changed', handleLotChanged);
+    socketRef.current.off('lot-started', handleLotChanged); // Also listen to lot-started
     socketRef.current.off('auction-completed', handleAuctionCompleted);
 
     socketRef.current.on('auction-warning', handleAuctionWarning);
     socketRef.current.on('auction-warning-reset', handleWarningReset);
     socketRef.current.on('lot-changed', handleLotChanged);
+    socketRef.current.on('lot-started', handleLotChanged); // Also listen to lot-started
     socketRef.current.on('auction-completed', handleAuctionCompleted);
 
     return () => {
@@ -293,6 +295,7 @@ const AuctionPage = () => {
         socketRef.current.off('auction-warning', handleAuctionWarning);
         socketRef.current.off('auction-warning-reset', handleWarningReset);
         socketRef.current.off('lot-changed', handleLotChanged);
+        socketRef.current.off('lot-started', handleLotChanged);
         socketRef.current.off('auction-completed', handleAuctionCompleted);
       }
     };
