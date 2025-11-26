@@ -168,8 +168,8 @@ io.on('connection', (socket) => {
 // Make io accessible to controllers
 app.set('io', io);
 
-// Initialize Lot Timer Service
-initLotTimerService(io);
+// Initialize Lot Timer Service - DISABLED (using bidding-activity-based timing instead)
+// initLotTimerService(io);
 
 // Start server
 const PORT = process.env.PORT || 5000;
@@ -189,8 +189,8 @@ const gracefulShutdown = async (signal) => {
     console.log('🔌 HTTP server closed');
 
     try {
-      // Stop lot timer service
-      stopLotTimerService();
+      // Stop lot timer service - DISABLED
+      // stopLotTimerService();
 
       // Close Socket.io connections
       io.close(() => {

@@ -578,10 +578,10 @@ export const startNextLot = async (auctionId, io) => {
       auction.lotNumber = nextLotNum;
       auction.lots[nextLotNum - 1].status = 'Active';
       auction.lots[nextLotNum - 1].startTime = new Date();
-      auction.lots[nextLotNum - 1].endTime = new Date(Date.now() + auction.lotDuration * 60 * 1000);
+      // endTime removed - lot ends based on bidding activity via Going Gone timer
 
       auction.currentLotStartTime = auction.lots[nextLotNum - 1].startTime;
-      auction.currentLotEndTime = auction.lots[nextLotNum - 1].endTime;
+      // currentLotEndTime removed - lot ends based on bidding activity
 
       // Update main auction fields to reflect current lot
       auction.currentBid = auction.lots[nextLotNum - 1].currentBid;
@@ -786,7 +786,7 @@ export const createAuction = async (req, res) => {
       reserveBidder: reserveBidder && reserveBidder.trim() !== '' ? reserveBidder : null,
       incrementSlabs: defaultSlabs,
       startTime: new Date(startTime),
-      endTime: new Date(endTime),
+      // endTime removed - auction duration is now based on bidding activity via Going Gone timer
       isGoingGoingGoneEnabled: isGoingGoingGoneEnabled || false
     };
 
@@ -813,16 +813,14 @@ export const createAuction = async (req, res) => {
         productId: lot.productId || null,
         bids: [],
         status: index === 0 && isAuctionStarted ? 'Active' : 'Upcoming',
-        startTime: index === 0 ? auctionStart : null,
-        endTime: index === 0 && isAuctionStarted
-          ? new Date(auctionStart.getTime() + (lotDuration || 10) * 60 * 1000)
-          : null
+        startTime: index === 0 ? auctionStart : null
+        // endTime removed - lot duration is now based on bidding activity
       }));
 
       // Set current lot times if auction is starting
       if (isAuctionStarted) {
         auctionData.currentLotStartTime = auctionStart;
-        auctionData.currentLotEndTime = new Date(auctionStart.getTime() + (lotDuration || 10) * 60 * 1000);
+        // currentLotEndTime removed - lot ends based on bidding activity via Going Gone timer
         auctionData.lotNumber = 1; // Set current lot number
       }
 
