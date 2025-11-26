@@ -361,7 +361,9 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
         hasBids = auction.bids && auction.bids.length > 0;
       }
 
-      if (!auction.lastBidTime || !hasBids) {
+      // Check if we need to trigger the 1-minute no-bid warning
+      // Only do this if warningCount is 0 (sequence hasn't started yet)
+      if (!auction.lastBidTime && !hasBids && auction.warningCount === 0) {
         // No bids yet - check how long lot has been active
         const now = new Date();
         let lotStartTime;
@@ -376,8 +378,8 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
         const oneMinute = 60000; // 60 seconds
 
         if (timeSinceLotStart >= oneMinute) {
-          // 1 minute has passed with no bids - start Going Gone sequence ONLY if not already started
-          if (auction.warningCount === 0) {
+          // 1 minute has passed with no bids - start Going Gone sequence
+          if (true) { // Always true now since we checked warningCount above
             console.log(`⏰ 1 minute passed with NO BIDS for auction ${auctionId} - Starting Going Gone sequence`);
 
             // Set warning count to 1 and trigger GOING ONCE
@@ -426,11 +428,11 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
       const thirtySeconds = 30000;
 
       if (timeSinceLastBid >= thirtySeconds) {
-        // Increment warning count
-        auction.warningCount += 1;
+        // Check current warning count and emit appropriate message
 
-        if (auction.warningCount === 1) {
+        if (auction.warningCount === 0) {
           // GOING ONCE!
+          auction.warningCount = 1;
           await auction.save();
           io.to(`auction-${auctionId}`).emit('auction-warning', {
             auctionId: auctionId.toString(),
@@ -449,8 +451,9 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
           const timerId = setTimeout(checkAndAnnounce, 30000);
           auctionTimers.set(auctionId, timerId);
 
-        } else if (auction.warningCount === 2) {
+        } else if (auction.warningCount === 1) {
           // GOING TWICE!
+          auction.warningCount = 2;
           await auction.save();
           io.to(`auction-${auctionId}`).emit('auction-warning', {
             auctionId: auctionId.toString(),
@@ -469,8 +472,9 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
           const timerId = setTimeout(checkAndAnnounce, 30000);
           auctionTimers.set(auctionId, timerId);
 
-        } else if (auction.warningCount >= 3) {
+        } else if (auction.warningCount >= 2) {
           // SOLD/UNSOLD! - End lot or close auction
+          auction.warningCount = 3;
           console.log(`🎯 Auction ${auctionId}: Ending after 3 warnings...`);
 
           // Check if this is lot bidding
