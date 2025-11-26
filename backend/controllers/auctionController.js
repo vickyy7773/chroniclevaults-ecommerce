@@ -344,9 +344,10 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
   }
 
   const checkAndAnnounce = async () => {
-    // Check if this callback is still valid (not superseded by newer timer)
-    if (timerGeneration.get(auctionId) !== currentGen) {
-      console.log(`⚠️  Timer gen ${currentGen} superseded for auction ${auctionId}, skipping`);
+    // FIRST: Check if this callback is still valid (not superseded by newer timer)
+    const currentActiveGen = timerGeneration.get(auctionId);
+    if (currentActiveGen !== currentGen) {
+      console.log(`⚠️  Timer callback gen ${currentGen} superseded by gen ${currentActiveGen} for auction ${auctionId}, skipping execution`);
       return;
     }
 
@@ -355,6 +356,7 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
 
       if (!auction || auction.status !== 'Active' || !auction.isGoingGoingGoneEnabled) {
         // Auction ended or disabled, clear timer
+        console.log(`⏹️  Auction ${auctionId} ended or disabled, stopping timer (gen ${currentGen})`);
         auctionTimers.delete(auctionId);
         timerGeneration.delete(auctionId);
         return;
@@ -442,11 +444,12 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
             warning: 1,
             timeSinceLastBid
           });
-          console.log(`🔨 Auction ${auctionId}: GOING ONCE!`);
+          console.log(`🔨 [GEN ${currentGen}] Auction ${auctionId}: GOING ONCE! (timeSinceLastBid: ${Math.floor(timeSinceLastBid/1000)}s)`);
 
           // Schedule next check in 30 seconds
           const timerId = setTimeout(checkAndAnnounce, 30000);
           auctionTimers.set(auctionId, { timerId, generation: currentGen });
+          console.log(`   ⏰ [GEN ${currentGen}] Scheduled GOING TWICE check in 30s`);
 
         } else if (auction.warningCount === 1) {
           // GOING TWICE!
@@ -464,11 +467,12 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
             warning: 2,
             timeSinceLastBid
           });
-          console.log(`🔨🔨 Auction ${auctionId}: ${message}`);
+          console.log(`🔨🔨 [GEN ${currentGen}] Auction ${auctionId}: ${message} (timeSinceLastBid: ${Math.floor(timeSinceLastBid/1000)}s)`);
 
           // Schedule next check in 30 seconds
           const timerId = setTimeout(checkAndAnnounce, 30000);
           auctionTimers.set(auctionId, { timerId, generation: currentGen });
+          console.log(`   ⏰ [GEN ${currentGen}] Scheduled SOLD/UNSOLD check in 30s`);
 
         } else if (auction.warningCount >= 2) {
           // SOLD/UNSOLD! - End lot or close auction
@@ -517,10 +521,10 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
     }
   };
 
-  // Start the timer
+  // Start the timer - first check in 30 seconds
   const timerId = setTimeout(checkAndAnnounce, 30000);
   auctionTimers.set(auctionId, { timerId, generation: currentGen });
-  console.log(`⏰ Started Going, Going, Gone timer (gen ${currentGen}) for auction ${auctionId}`);
+  console.log(`⏰ [GEN ${currentGen}] Started Going, Going, Gone timer for auction ${auctionId} - first check in 30s`);
 };
 
 // Reset timer when new bid is placed
@@ -529,11 +533,14 @@ export const resetGoingGoingGoneTimer = async (auctionId, io) => {
     const auction = await Auction.findById(auctionId);
 
     if (auction && auction.isGoingGoingGoneEnabled) {
+      // Get current generation before clearing
+      const oldGen = timerGeneration.get(auctionId) || 0;
+
       // FIRST: Clear existing timer completely before resetting
       const existingTimer = auctionTimers.get(auctionId);
       if (existingTimer) {
         clearTimeout(existingTimer.timerId);
-        console.log(`🧹 Cleared existing timer (gen ${existingTimer.generation}) for reset on auction ${auctionId}`);
+        console.log(`🧹 [GEN ${oldGen}] Cleared existing timer for reset on auction ${auctionId}`);
       }
 
       // Reset warning count
@@ -547,9 +554,10 @@ export const resetGoingGoingGoneTimer = async (auctionId, io) => {
         message: 'New bid! Timer reset.'
       });
 
-      // Restart timer AFTER clearing old one
+      // Restart timer AFTER clearing old one (this will increment generation)
       startGoingGoingGoneTimer(auctionId, io);
-      console.log(`🔄 Reset Going, Going, Gone timer for auction ${auctionId}`);
+      const newGen = timerGeneration.get(auctionId);
+      console.log(`🔄 Reset timer for auction ${auctionId}: gen ${oldGen} → ${newGen}`);
     }
   } catch (error) {
     console.error('Reset timer error:', error);
