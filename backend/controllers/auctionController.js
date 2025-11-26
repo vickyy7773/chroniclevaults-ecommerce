@@ -327,26 +327,28 @@ export const endCurrentLot = async (auctionId, io) => {
 };
 
 // Global timer tracking for Going, Going, Gone feature
-const auctionTimers = new Map();
-const runningChecks = new Map(); // Track currently running checks to prevent duplicates
+const auctionTimers = new Map(); // Stores { timerId, generation }
+const timerGeneration = new Map(); // Track timer generation to invalidate old callbacks
 
 // Start Going, Going, Gone timer for an auction
 export const startGoingGoingGoneTimer = (auctionId, io) => {
+  // Increment generation for this auction to invalidate old timers
+  const currentGen = (timerGeneration.get(auctionId) || 0) + 1;
+  timerGeneration.set(auctionId, currentGen);
+
   // Clear existing timer if any
-  if (auctionTimers.has(auctionId)) {
-    clearTimeout(auctionTimers.get(auctionId));
-    auctionTimers.delete(auctionId);
-    console.log(`🧹 Cleared existing timer for auction ${auctionId}`);
+  const existingTimer = auctionTimers.get(auctionId);
+  if (existingTimer) {
+    clearTimeout(existingTimer.timerId);
+    console.log(`🧹 Cleared existing timer (gen ${existingTimer.generation}) for auction ${auctionId}`);
   }
 
   const checkAndAnnounce = async () => {
-    // Prevent duplicate execution
-    if (runningChecks.get(auctionId)) {
-      console.log(`⚠️  Check already running for auction ${auctionId}, skipping`);
+    // Check if this callback is still valid (not superseded by newer timer)
+    if (timerGeneration.get(auctionId) !== currentGen) {
+      console.log(`⚠️  Timer gen ${currentGen} superseded for auction ${auctionId}, skipping`);
       return;
     }
-
-    runningChecks.set(auctionId, true);
 
     try {
       const auction = await Auction.findById(auctionId);
@@ -354,7 +356,7 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
       if (!auction || auction.status !== 'Active' || !auction.isGoingGoingGoneEnabled) {
         // Auction ended or disabled, clear timer
         auctionTimers.delete(auctionId);
-        runningChecks.delete(auctionId);
+        timerGeneration.delete(auctionId);
         return;
       }
 
@@ -405,14 +407,9 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
             });
             console.log(`🔨 Auction ${auctionId}: GOING ONCE! (No bids)`);
 
-            // Clear any existing timer before scheduling next check
-            if (auctionTimers.has(auctionId)) {
-              clearTimeout(auctionTimers.get(auctionId));
-            }
-
             // Schedule GOING TWICE in 30 seconds
             const timerId = setTimeout(checkAndAnnounce, 30000);
-            auctionTimers.set(auctionId, timerId);
+            auctionTimers.set(auctionId, { timerId, generation: currentGen });
           }
           return;
         } else {
@@ -422,13 +419,8 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
 
           console.log(`⏰ No bids yet for auction ${auctionId}, checking again in ${nextCheckTime/1000} sec`);
 
-          // Clear any existing timer before setting new one
-          if (auctionTimers.has(auctionId)) {
-            clearTimeout(auctionTimers.get(auctionId));
-          }
-
           const timerId = setTimeout(checkAndAnnounce, nextCheckTime);
-          auctionTimers.set(auctionId, timerId);
+          auctionTimers.set(auctionId, { timerId, generation: currentGen });
           return;
         }
       }
@@ -452,14 +444,9 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
           });
           console.log(`🔨 Auction ${auctionId}: GOING ONCE!`);
 
-          // Clear any existing timer before scheduling next check
-          if (auctionTimers.has(auctionId)) {
-            clearTimeout(auctionTimers.get(auctionId));
-          }
-
           // Schedule next check in 30 seconds
           const timerId = setTimeout(checkAndAnnounce, 30000);
-          auctionTimers.set(auctionId, timerId);
+          auctionTimers.set(auctionId, { timerId, generation: currentGen });
 
         } else if (auction.warningCount === 1) {
           // GOING TWICE!
@@ -479,14 +466,9 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
           });
           console.log(`🔨🔨 Auction ${auctionId}: ${message}`);
 
-          // Clear any existing timer before scheduling next check
-          if (auctionTimers.has(auctionId)) {
-            clearTimeout(auctionTimers.get(auctionId));
-          }
-
           // Schedule next check in 30 seconds
           const timerId = setTimeout(checkAndAnnounce, 30000);
-          auctionTimers.set(auctionId, timerId);
+          auctionTimers.set(auctionId, { timerId, generation: currentGen });
 
         } else if (auction.warningCount >= 2) {
           // SOLD/UNSOLD! - End lot or close auction
@@ -531,16 +513,14 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
     } catch (error) {
       console.error('Going, Going, Gone timer error:', error);
       auctionTimers.delete(auctionId);
-    } finally {
-      // Always clear running flag when done
-      runningChecks.delete(auctionId);
+      timerGeneration.delete(auctionId);
     }
   };
 
   // Start the timer
   const timerId = setTimeout(checkAndAnnounce, 30000);
-  auctionTimers.set(auctionId, timerId);
-  console.log(`⏰ Started Going, Going, Gone timer for auction ${auctionId}`);
+  auctionTimers.set(auctionId, { timerId, generation: currentGen });
+  console.log(`⏰ Started Going, Going, Gone timer (gen ${currentGen}) for auction ${auctionId}`);
 };
 
 // Reset timer when new bid is placed
@@ -550,10 +530,10 @@ export const resetGoingGoingGoneTimer = async (auctionId, io) => {
 
     if (auction && auction.isGoingGoingGoneEnabled) {
       // FIRST: Clear existing timer completely before resetting
-      if (auctionTimers.has(auctionId)) {
-        clearTimeout(auctionTimers.get(auctionId));
-        auctionTimers.delete(auctionId);
-        console.log(`🧹 Cleared existing timer for reset on auction ${auctionId}`);
+      const existingTimer = auctionTimers.get(auctionId);
+      if (existingTimer) {
+        clearTimeout(existingTimer.timerId);
+        console.log(`🧹 Cleared existing timer (gen ${existingTimer.generation}) for reset on auction ${auctionId}`);
       }
 
       // Reset warning count
