@@ -62,7 +62,7 @@ const auctionSchema = new mongoose.Schema({
   },
   endTime: {
     type: Date,
-    required: true
+    required: false // Optional - lot bidding auctions end based on bidding activity
   },
   status: {
     type: String,
@@ -243,7 +243,7 @@ auctionSchema.methods.updateStatus = async function() {
 
   if (now < this.startTime) {
     this.status = 'Upcoming';
-  } else if (now >= this.startTime && now < this.endTime) {
+  } else if (now >= this.startTime && (!this.endTime || now < this.endTime)) {
     this.status = 'Active';
 
     // FOR LOT BIDDING: Activate first lot when auction becomes active
@@ -252,17 +252,17 @@ auctionSchema.methods.updateStatus = async function() {
       if (firstLot.status === 'Upcoming') {
         firstLot.status = 'Active';
         firstLot.startTime = now;
-        firstLot.endTime = new Date(now.getTime() + (this.lotDuration || 10) * 60 * 1000);
+        // endTime removed - lot ends based on bidding activity
 
         // Set current lot times
         this.currentLotStartTime = now;
-        this.currentLotEndTime = firstLot.endTime;
+        // currentLotEndTime removed - lot ends based on bidding activity
         this.lotNumber = 1;
 
         console.log(`🎯 Lot 1 activated for auction ${this._id}`);
       }
     }
-  } else if (now >= this.endTime) {
+  } else if (this.endTime && now >= this.endTime) {
     this.status = 'Ended';
 
     // Set winner if auction ended and has bids
