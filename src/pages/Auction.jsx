@@ -251,6 +251,7 @@ const AuctionPage = () => {
 
         // Reset warning overlay (hide SOLD screen)
         setGoingWarning(0);
+        setWarningMessage('');
 
         toast.info(`🚀 Lot ${data.currentLot} has started!`, {
           autoClose: 5000,
@@ -587,7 +588,7 @@ const AuctionPage = () => {
                   <Gavel className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />
                   <div className="text-center">
                     <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-wider">
-                      GOING ONCE! 🔨
+                      {warningMessage || 'GOING ONCE! 🔨'}
                     </h3>
                     <p className="text-sm sm:text-base font-medium mt-1">
                       30 seconds to next warning!
@@ -602,7 +603,7 @@ const AuctionPage = () => {
                   <Gavel className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />
                   <div className="text-center">
                     <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-wider">
-                      GOING TWICE! 🔨🔨
+                      {warningMessage || 'GOING TWICE! 🔨🔨'}
                     </h3>
                     <p className="text-sm sm:text-base font-medium mt-1">
                       Last 30 seconds! Place your bid NOW!
