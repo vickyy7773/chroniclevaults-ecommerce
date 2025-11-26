@@ -148,7 +148,7 @@ const AuctionPage = () => {
       }
 
       const userHasBids = data.auction && data.auction.bids &&
-                          data.auction.bids.some(bid => bid.user._id === currentUser?._id);
+                          data.auction.bids.some(bid => bid.user?._id === currentUser?._id);
       const userIsReserveBidder = data.auction && data.auction.reserveBidder === currentUser?._id;
       const userHasParticipated = userHasBids || userIsReserveBidder;
 
@@ -159,12 +159,18 @@ const AuctionPage = () => {
       setBidAmount(suggestedBid.toString());
 
       const isLastBidMine = data.auction.bids.length > 0 &&
-                            data.auction.bids[data.auction.bids.length - 1].user._id === currentUser?._id;
+                            data.auction.bids[data.auction.bids.length - 1].user?._id === currentUser?._id;
       const someoneElseHasHigherReserveBid = data.auction.highestReserveBid &&
                                              data.auction.reserveBidder &&
                                              data.auction.reserveBidder !== currentUser?._id &&
                                              data.auction.highestReserveBid > data.auction.currentBid;
       const isStillWinning = isLastBidMine && !someoneElseHasHigherReserveBid;
+
+      // Guard clause: Validate latestBid data structure
+      if (!data.latestBid || !data.latestBid.user) {
+        console.warn('Invalid bid data received:', data);
+        return;
+      }
 
       if (data.latestBid.user._id === currentUser?._id) {
         if (data.autoBidTriggered && data.latestBid.isAutoBid) {
@@ -451,6 +457,7 @@ const AuctionPage = () => {
   const isUserWinning = () => {
     if (!user || !auction || auction.bids.length === 0) return false;
     const lastBid = auction.bids[auction.bids.length - 1];
+    if (!lastBid || !lastBid.user) return false; // Guard clause
     const isLastBidMine = lastBid.user._id === user._id;
     const someoneElseHasHigherReserveBid = auction.highestReserveBid &&
                                            auction.reserveBidder &&
@@ -466,7 +473,7 @@ const AuctionPage = () => {
 
   const getUserBidCount = () => {
     if (!user || !auction) return 0;
-    return auction.bids.filter(bid => bid.user._id === user._id).length;
+    return auction.bids.filter(bid => bid.user?._id === user._id).length;
   };
 
   const formatDate = (dateString) => {
