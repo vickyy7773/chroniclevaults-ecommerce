@@ -376,30 +376,32 @@ export const startGoingGoingGoneTimer = (auctionId, io) => {
         const oneMinute = 60000; // 60 seconds
 
         if (timeSinceLotStart >= oneMinute) {
-          // 1 minute has passed with no bids - start Going Gone sequence
-          console.log(`⏰ 1 minute passed with NO BIDS for auction ${auctionId} - Starting Going Gone sequence`);
+          // 1 minute has passed with no bids - start Going Gone sequence ONLY if not already started
+          if (auction.warningCount === 0) {
+            console.log(`⏰ 1 minute passed with NO BIDS for auction ${auctionId} - Starting Going Gone sequence`);
 
-          // Set warning count to 1 and trigger GOING ONCE
-          auction.warningCount = 1;
-          auction.lastBidTime = now; // Set a fake lastBidTime to trigger the sequence
-          await auction.save();
+            // Set warning count to 1 and trigger GOING ONCE
+            auction.warningCount = 1;
+            auction.lastBidTime = now; // Set a fake lastBidTime to trigger the sequence
+            await auction.save();
 
-          io.to(`auction-${auctionId}`).emit('auction-warning', {
-            auctionId: auctionId.toString(),
-            message: 'GOING ONCE! 🔨 (No bids received)',
-            warning: 1,
-            timeSinceLastBid: 0
-          });
-          console.log(`🔨 Auction ${auctionId}: GOING ONCE! (No bids)`);
+            io.to(`auction-${auctionId}`).emit('auction-warning', {
+              auctionId: auctionId.toString(),
+              message: 'GOING ONCE! 🔨 (No bids received)',
+              warning: 1,
+              timeSinceLastBid: 0
+            });
+            console.log(`🔨 Auction ${auctionId}: GOING ONCE! (No bids)`);
 
-          // Clear any existing timer before scheduling next check
-          if (auctionTimers.has(auctionId)) {
-            clearTimeout(auctionTimers.get(auctionId));
+            // Clear any existing timer before scheduling next check
+            if (auctionTimers.has(auctionId)) {
+              clearTimeout(auctionTimers.get(auctionId));
+            }
+
+            // Schedule GOING TWICE in 30 seconds
+            const timerId = setTimeout(checkAndAnnounce, 30000);
+            auctionTimers.set(auctionId, timerId);
           }
-
-          // Schedule GOING TWICE in 30 seconds
-          const timerId = setTimeout(checkAndAnnounce, 30000);
-          auctionTimers.set(auctionId, timerId);
           return;
         } else {
           // Not yet 1 minute - check again in 10 seconds
