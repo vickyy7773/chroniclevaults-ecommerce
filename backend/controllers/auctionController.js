@@ -159,6 +159,12 @@ export const endCurrentLot = async (auctionId, io) => {
     const currentLot = auction.lots[currentLotIndex];
     const lotNumber = currentLot.lotNumber;
 
+    // CRITICAL: Check if lot already ended (prevent duplicate calls)
+    if (currentLot.status === 'Sold' || currentLot.status === 'Unsold' || currentLot.status === 'Ended') {
+      console.log(`⚠️  LOT ${lotNumber} already ended (${currentLot.status}), skipping duplicate endCurrentLot call`);
+      return { success: false, message: 'Lot already ended' };
+    }
+
     console.log(`\n🏁 Ending LOT ${lotNumber} of Auction ${auctionId}`);
 
     // Check if lot has bids
