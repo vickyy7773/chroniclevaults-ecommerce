@@ -604,7 +604,7 @@ export const startNextLot = async (auctionId, io) => {
       // Update main auction fields to reflect current lot
       auction.currentBid = auction.lots[nextLotNum - 1].currentBid;
       auction.warningCount = 0;
-      auction.lastBidTime = null;
+      auction.lastBidTime = new Date(); // Set to NOW, not null!
 
       await auction.save();
 
@@ -618,6 +618,10 @@ export const startNextLot = async (auctionId, io) => {
         lotData: auction.lots[nextLotNum - 1],
         message: `Lot ${nextLotNum} has started!`
       });
+
+      // Start Going, Going, Gone timer for the new lot
+      startGoingGoingGoneTimer(auctionId, io);
+      console.log(`⏰ Started timer for newly activated Lot ${nextLotNum}`);
 
     } else {
       // All lots completed - end entire auction
