@@ -145,6 +145,18 @@ export const deductFrozenCoins = async (userId, auctionId, lotNumber, amount) =>
  */
 export const endCurrentLot = async (auctionId, io) => {
   try {
+    // FIRST: Immediately increment generation and clear all old timers for this auction
+    // This prevents duplicate timer starts from old callbacks
+    const newGen = (timerGeneration.get(auctionId) || 0) + 1;
+    timerGeneration.set(auctionId, newGen);
+
+    const existingTimer = auctionTimers.get(auctionId);
+    if (existingTimer) {
+      clearTimeout(existingTimer.timerId);
+      console.log(`🧹 [endCurrentLot] Cleared timer gen ${existingTimer.generation}, new gen: ${newGen}`);
+    }
+    auctionTimers.delete(auctionId);
+
     const auction = await Auction.findById(auctionId);
 
     if (!auction || !auction.isLotBidding) {
@@ -298,7 +310,17 @@ export const endCurrentLot = async (auctionId, io) => {
 
         // Emit socket event for lot start and restart timer
         if (io) {
+          // Capture the generation for this callback
+          const capturedGen = newGen;
+
           setTimeout(async () => {
+            // CRITICAL: Check if this callback is still valid (not superseded by newer lot switch)
+            const currentGen = timerGeneration.get(auctionId);
+            if (currentGen !== capturedGen) {
+              console.log(`⚠️  [GEN ${capturedGen}] Lot start callback superseded by gen ${currentGen}, skipping timer start`);
+              return;
+            }
+
             io.to(`auction-${auctionId}`).emit('lot-started', {
               auctionId,
               lotNumber: auction.lotNumber,
@@ -308,7 +330,7 @@ export const endCurrentLot = async (auctionId, io) => {
             // Restart Going Going Gone timer for new lot
             if (auction.isGoingGoingGoneEnabled) {
               startGoingGoingGoneTimer(auctionId, io);
-              console.log(`⏰ Started timer for newly activated Lot ${auction.lotNumber}`);
+              console.log(`⏰ [GEN ${capturedGen}] Started timer for newly activated Lot ${auction.lotNumber}`);
             }
           }, 3000);
         }
