@@ -145,18 +145,6 @@ export const deductFrozenCoins = async (userId, auctionId, lotNumber, amount) =>
  */
 export const endCurrentLot = async (auctionId, io) => {
   try {
-    // FIRST: Immediately increment generation and clear all old timers for this auction
-    // This prevents duplicate timer starts from old callbacks
-    const newGen = (timerGeneration.get(auctionId) || 0) + 1;
-    timerGeneration.set(auctionId, newGen);
-
-    const existingTimer = auctionTimers.get(auctionId);
-    if (existingTimer) {
-      clearTimeout(existingTimer.timerId);
-      console.log(`🧹 [endCurrentLot] Cleared timer gen ${existingTimer.generation}, new gen: ${newGen}`);
-    }
-    auctionTimers.delete(auctionId);
-
     const auction = await Auction.findById(auctionId);
 
     if (!auction || !auction.isLotBidding) {
@@ -176,6 +164,17 @@ export const endCurrentLot = async (auctionId, io) => {
       console.log(`⚠️  LOT ${lotNumber} already ended (${currentLot.status}), skipping duplicate endCurrentLot call`);
       return { success: false, message: 'Lot already ended' };
     }
+
+    // NOW increment generation and clear timers (only for valid lot ends)
+    const newGen = (timerGeneration.get(auctionId) || 0) + 1;
+    timerGeneration.set(auctionId, newGen);
+
+    const existingTimer = auctionTimers.get(auctionId);
+    if (existingTimer) {
+      clearTimeout(existingTimer.timerId);
+      console.log(`🧹 [endCurrentLot] Cleared timer gen ${existingTimer.generation}, new gen: ${newGen}`);
+    }
+    auctionTimers.delete(auctionId);
 
     console.log(`\n🏁 Ending LOT ${lotNumber} of Auction ${auctionId}`);
 
