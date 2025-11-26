@@ -234,7 +234,7 @@ const AuctionManagement = () => {
     setSelectedAuction(auction);
 
     const startTimeIST = new Date(auction.startTime);
-    const endTimeIST = new Date(auction.endTime);
+    const endTimeIST = auction.endTime ? new Date(auction.endTime) : null;
 
     const formatDateTimeLocal = (date) => {
       const year = date.getFullYear();
@@ -254,7 +254,7 @@ const AuctionManagement = () => {
       reservePrice: auction.reservePrice || '',
       reserveBidder: auction.reserveBidder?._id || '',
       startTime: formatDateTimeLocal(startTimeIST),
-      endTime: formatDateTimeLocal(endTimeIST),
+      endTime: endTimeIST ? formatDateTimeLocal(endTimeIST) : '',
       isLotBidding: auction.isLotBidding || false,
       totalLots: auction.totalLots || 1,
       lotDuration: auction.lotDuration || 10,
@@ -435,10 +435,18 @@ const AuctionManagement = () => {
                     <Clock className="w-3 h-3 mr-1" />
                     <span>Start: {formatDate(auction.startTime)}</span>
                   </div>
-                  <div className="flex items-center text-xs text-gray-600">
-                    <Clock className="w-3 h-3 mr-1" />
-                    <span>End: {formatDate(auction.endTime)}</span>
-                  </div>
+                  {auction.endTime && (
+                    <div className="flex items-center text-xs text-gray-600">
+                      <Clock className="w-3 h-3 mr-1" />
+                      <span>End: {formatDate(auction.endTime)}</span>
+                    </div>
+                  )}
+                  {!auction.endTime && auction.isLotBidding && (
+                    <div className="flex items-center text-xs text-green-600">
+                      <Clock className="w-3 h-3 mr-1" />
+                      <span>Ends via Going Gone timer</span>
+                    </div>
+                  )}
                 </div>
 
                 {auction.reserveBidder && (
@@ -849,34 +857,21 @@ const AuctionManagement = () => {
                     </select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Start Date & Time
-                      </label>
-                      <input
-                        type="datetime-local"
-                        name="startTime"
-                        value={formData.startTime}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        End Date & Time
-                      </label>
-                      <input
-                        type="datetime-local"
-                        name="endTime"
-                        value={formData.endTime}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Date & Time
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="startTime"
+                      value={formData.startTime}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Auction will end based on bidding activity via Going Gone timer
+                    </p>
                   </div>
                 </div>
 
