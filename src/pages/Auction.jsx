@@ -214,7 +214,7 @@ const AuctionPage = () => {
           });
         } else if (data.final) {
           toast.success('🎉 SOLD! 🎉 Auction has ended!', {
-            autoClose: 7000,
+            autoClose: 1000,
             position: 'top-center'
           });
           // Refresh auction data
@@ -238,6 +238,9 @@ const AuctionPage = () => {
       console.log('📦 LOT CHANGED:', data);
 
       if (data.auctionId === auction._id) {
+        // Dismiss any active toasts (like SOLD message)
+        toast.dismiss();
+
         toast.info(`🚀 Lot ${data.currentLot} has started!`, {
           autoClose: 5000,
           position: 'top-center'

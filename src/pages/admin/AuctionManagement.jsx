@@ -652,25 +652,6 @@ const AuctionManagement = () => {
                         />
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Lot Duration (minutes)
-                        </label>
-                        <input
-                          type="number"
-                          name="lotDuration"
-                          value={formData.lotDuration}
-                          onChange={handleInputChange}
-                          required
-                          min="1"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                          placeholder="10"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          How long each lot will run before moving to next
-                        </p>
-                      </div>
-
                       {/* Lots Management */}
                       <div className="border-t pt-4">
                         <div className="flex items-center justify-between mb-3">
