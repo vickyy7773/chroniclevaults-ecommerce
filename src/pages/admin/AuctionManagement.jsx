@@ -69,10 +69,20 @@ const AuctionManagement = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+
+    // Auto-enable Going Going Gone timer when lot bidding is enabled
+    if (name === 'isLotBidding' && checked) {
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked,
+        isGoingGoingGoneEnabled: true // Automatically enable timer for lot bidding
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
   };
 
   const handleLotChange = (index, field, value) => {
