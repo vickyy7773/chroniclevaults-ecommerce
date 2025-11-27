@@ -532,8 +532,8 @@ export const startGoingGoingGoneTimer = async (auctionId, io) => {
 
           // Check if there are any bids on current lot
           const currentLot = auction.lots.find(lot => lot.lotNumber === auction.lotNumber);
-          const hasBids = currentLot && currentLot.bids && currentLot.bids.length > 0;
-          const message = hasBids ? 'GOING TWICE! 🔨🔨' : 'GOING TWICE! 🔨🔨 (No bids received)';
+          const lotHasBids = currentLot && currentLot.bids && currentLot.bids.length > 0;
+          const message = lotHasBids ? 'GOING TWICE! 🔨🔨' : 'GOING TWICE! 🔨🔨 (No bids received)';
 
           const nextWarningTime = Date.now() + 30000; // 30 seconds from now
           io.to(`auction-${auctionId}`).emit('auction-warning', {
