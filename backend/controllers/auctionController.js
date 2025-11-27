@@ -492,9 +492,9 @@ export const startGoingGoingGoneTimer = async (auctionId, io) => {
       const thirtySeconds = 30000;
 
       // IMPORTANT: Only use 30s timer if there has been at least ONE actual bid
-      const hasBids = auction.bids && auction.bids.length > 0;
+      const hasMainAuctionBids = auction.bids && auction.bids.length > 0;
 
-      if (!hasBids) {
+      if (!hasMainAuctionBids) {
         // No bids yet - this shouldn't trigger warnings
         // The 1-minute no-bid logic above should handle this case
         console.log(`⏰ [${timerKey}] [GEN ${currentGen}] Has lastBidTime but no actual bids - skipping 30s check`);
