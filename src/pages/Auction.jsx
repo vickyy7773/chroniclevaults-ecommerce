@@ -429,6 +429,14 @@ const AuctionPage = () => {
         const thirtySeconds = 30000; // 30 seconds in ms
 
         const remaining = Math.max(0, thirtySeconds - timeSinceLastBid);
+
+        // If warning is active (GOING ONCE/TWICE), the countdown will take over
+        // So we don't need to show 0.0s - just let the warning countdown show
+        if (remaining === 0 && goingWarning > 0) {
+          // Warning active, countdown will handle display
+          return;
+        }
+
         const seconds = Math.floor(remaining / 1000);
         const milliseconds = Math.floor((remaining % 1000) / 100);
 
