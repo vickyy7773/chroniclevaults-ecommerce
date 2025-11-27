@@ -417,7 +417,11 @@ const AuctionPage = () => {
 
       // Priority 2: Show timer countdown
       // LOGIC: First timer = 1 minute (60s), After first bid = 30s timer
-      const hasBids = auction.bids && auction.bids.length > 0;
+
+      // Check if current lot has bids (for lot bidding, bids are in lots array)
+      const currentLotIndex = (auction.lotNumber || 1) - 1;
+      const currentLot = auction.lots && auction.lots[currentLotIndex];
+      const hasBids = currentLot && currentLot.bids && currentLot.bids.length > 0;
 
       if (hasBids && auction.lastBidTime) {
         // After first bid: 30-second timer (resets on each new bid)
