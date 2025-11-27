@@ -156,6 +156,11 @@ const AuctionPage = () => {
 
       setAuction(data.auction);
 
+      // Reset warning countdown when new bid is placed
+      setGoingWarning(0);
+      setNextWarningTime(null);
+      setCountdown('');
+
       const currentIncrement = getCurrentIncrement(data.auction);
       const suggestedBid = data.auction.currentBid + currentIncrement;
       setBidAmount(suggestedBid.toString());
@@ -404,32 +409,32 @@ const AuctionPage = () => {
 
     // FOR LOT BIDDING: Show different timers based on state
     if (auction.isLotBidding) {
-      // If we have countdown from warning timer (GOING ONCE/TWICE), show that
+      // Priority 1: If we have countdown from warning timer (GOING ONCE/TWICE), show that
       if (countdown) {
         setTimeRemaining(countdown);
         return;
       }
 
-      // Always show timer from lot start time (never show "Awaiting bids...")
-      if (auction.currentLotStartTime || auction.lastBidTime) {
-        const lotStartTime = auction.currentLotStartTime ? new Date(auction.currentLotStartTime) : new Date(auction.lastBidTime);
-        const timeSinceLotStart = now - lotStartTime;
+      // Priority 2: Show 1-minute countdown timer (60s → 0s)
+      // Use lastBidTime if available (resets on each bid), otherwise use currentLotStartTime
+      const timerStartTime = auction.lastBidTime
+        ? new Date(auction.lastBidTime)
+        : (auction.currentLotStartTime ? new Date(auction.currentLotStartTime) : null);
 
-        // Calculate time elapsed and show it
-        const totalSeconds = Math.floor(timeSinceLotStart / 1000);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        const milliseconds = Math.floor((timeSinceLotStart % 1000) / 100);
+      if (timerStartTime) {
+        const timeSinceLastActivity = now - timerStartTime;
+        const oneMinute = 60000; // 60 seconds in ms
 
-        if (minutes > 0) {
-          setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds}`);
-        } else {
-          setTimeRemaining(`${seconds}.${milliseconds}s`);
-        }
+        // Show countdown from 60s to 0s
+        const remaining = Math.max(0, oneMinute - timeSinceLastActivity);
+        const seconds = Math.floor(remaining / 1000);
+        const milliseconds = Math.floor((remaining % 1000) / 100);
+
+        setTimeRemaining(`${seconds}.${milliseconds}s`);
         return;
       }
 
-      // Fallback - if no lot start time available
+      // Fallback - if no timer available
       setTimeRemaining('Starting soon...');
       return;
     }
