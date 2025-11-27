@@ -373,7 +373,7 @@ const AuctionPage = () => {
       }, 100); // Update every 100ms for smooth countdown
       return () => clearInterval(timer);
     }
-  }, [auction]);
+  }, [auction, countdown, goingWarning]); // Include countdown and goingWarning to prevent stale closure
 
   const fetchAuction = async () => {
     try {

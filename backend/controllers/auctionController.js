@@ -302,9 +302,10 @@ export const endCurrentLot = async (auctionId, io) => {
         auction.lots[nextLotIndex].status = 'Active';
         auction.lots[nextLotIndex].startTime = new Date(Date.now() + 3000); // 3-second pause
 
-        // Reset warning count and set lastBidTime for new lot
+        // Reset warning count and clear lastBidTime for new lot
         auction.warningCount = 0;
-        auction.lastBidTime = new Date(Date.now() + 3000); // Set to when lot starts
+        auction.lastBidTime = null; // CRITICAL: Must be null so 60s no-bid timer triggers
+        auction.currentLotStartTime = new Date(Date.now() + 3000); // Set lot start time for 60s timer
 
         console.log(`🚀 Starting LOT ${auction.lotNumber} in 3 seconds`);
 
@@ -504,14 +505,15 @@ export const startGoingGoingGoneTimer = async (auctionId, io) => {
         console.log(`🔍 [${timerKey}] Regular auction check: hasBids=${hasActualBids}, bidsCount=${auction.bids?.length || 0}`);
       }
 
-      if (!hasActualBids) {
-        // No bids yet - this shouldn't trigger warnings
+      if (!hasActualBids && auction.warningCount === 0) {
+        // No bids yet AND warning sequence hasn't started - skip 30s check
         // The 1-minute no-bid logic above should handle this case
         console.log(`⏰ [${timerKey}] [GEN ${currentGen}] Has lastBidTime but no actual bids - skipping 30s check`);
         const timerId = setTimeout(checkAndAnnounce, 10000); // Check again in 10 seconds
         auctionTimers.set(timerKey, { timerId, generation: currentGen });
         return;
       }
+      // If warningCount >= 1, continue progression even without bids (GOING ONCE → TWICE → UNSOLD)
 
       console.log(`⏱️  [${timerKey}] [GEN ${currentGen}] Time check: timeSinceLastBid=${Math.floor(timeSinceLastBid/1000)}s, warningCount=${auction.warningCount}`);
 
