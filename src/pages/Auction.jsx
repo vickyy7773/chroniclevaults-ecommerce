@@ -231,6 +231,13 @@ const AuctionPage = () => {
               position: 'top-center'
             });
           }
+
+          // Auto-dismiss SOLD/UNSOLD overlay after 3 seconds
+          setTimeout(() => {
+            setGoingWarning(0);
+            setWarningMessage('');
+          }, 3000);
+
           // Refresh auction data
           setTimeout(() => {
             fetchAuction();
