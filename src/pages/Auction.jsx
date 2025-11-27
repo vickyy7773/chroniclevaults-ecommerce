@@ -415,18 +415,27 @@ const AuctionPage = () => {
         return;
       }
 
-      // Priority 2: Show 1-minute countdown timer (60s → 0s)
-      // Use lastBidTime if available (resets on each bid), otherwise use currentLotStartTime
-      const timerStartTime = auction.lastBidTime
-        ? new Date(auction.lastBidTime)
-        : (auction.currentLotStartTime ? new Date(auction.currentLotStartTime) : null);
+      // Priority 2: Show timer countdown
+      // LOGIC: First timer = 1 minute (60s), After first bid = 30s timer
+      const hasBids = auction.bids && auction.bids.length > 0;
 
-      if (timerStartTime) {
-        const timeSinceLastActivity = now - timerStartTime;
+      if (hasBids && auction.lastBidTime) {
+        // After first bid: 30-second timer (resets on each new bid)
+        const timeSinceLastBid = now - new Date(auction.lastBidTime);
+        const thirtySeconds = 30000; // 30 seconds in ms
+
+        const remaining = Math.max(0, thirtySeconds - timeSinceLastBid);
+        const seconds = Math.floor(remaining / 1000);
+        const milliseconds = Math.floor((remaining % 1000) / 100);
+
+        setTimeRemaining(`${seconds}.${milliseconds}s`);
+        return;
+      } else if (auction.currentLotStartTime) {
+        // Before first bid: 1-minute timer
+        const timeSinceLotStart = now - new Date(auction.currentLotStartTime);
         const oneMinute = 60000; // 60 seconds in ms
 
-        // Show countdown from 60s to 0s
-        const remaining = Math.max(0, oneMinute - timeSinceLastActivity);
+        const remaining = Math.max(0, oneMinute - timeSinceLotStart);
         const seconds = Math.floor(remaining / 1000);
         const milliseconds = Math.floor((remaining % 1000) / 100);
 
