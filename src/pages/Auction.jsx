@@ -410,24 +410,27 @@ const AuctionPage = () => {
         return;
       }
 
-      // Otherwise, show countdown from lot start time (1 minute timer)
+      // Always show timer from lot start time (never show "Awaiting bids...")
       if (auction.currentLotStartTime || auction.lastBidTime) {
         const lotStartTime = auction.currentLotStartTime ? new Date(auction.currentLotStartTime) : new Date(auction.lastBidTime);
         const timeSinceLotStart = now - lotStartTime;
-        const oneMinute = 60000; // 1 minute in ms
 
-        if (timeSinceLotStart < oneMinute) {
-          // Show countdown to 1 minute
-          const remaining = oneMinute - timeSinceLotStart;
-          const seconds = Math.floor(remaining / 1000);
-          const milliseconds = Math.floor((remaining % 1000) / 100);
+        // Calculate time elapsed and show it
+        const totalSeconds = Math.floor(timeSinceLotStart / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const milliseconds = Math.floor((timeSinceLotStart % 1000) / 100);
+
+        if (minutes > 0) {
+          setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds}`);
+        } else {
           setTimeRemaining(`${seconds}.${milliseconds}s`);
-          return;
         }
+        return;
       }
 
-      // If no specific timer, show waiting
-      setTimeRemaining('Awaiting bids...');
+      // Fallback - if no lot start time available
+      setTimeRemaining('Starting soon...');
       return;
     }
 
