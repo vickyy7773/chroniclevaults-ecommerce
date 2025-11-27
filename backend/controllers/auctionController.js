@@ -308,11 +308,18 @@ export const endCurrentLot = async (auctionId, io) => {
 
         console.log(`🚀 Starting LOT ${auction.lotNumber} in 3 seconds`);
 
-        // Emit socket event for lot start and restart timer
+        // Emit socket event for lot start IMMEDIATELY (to dismiss overlays)
         if (io) {
-          // Capture the generation for this callback
+          io.to(`auction-${auctionId}`).emit('lot-started', {
+            auctionId,
+            lotNumber: auction.lotNumber,
+            lot: auction.lots[nextLotIndex]
+          });
+
+          // Capture the generation for timer callback
           const capturedGen = newGen;
 
+          // Start timer after 3-second pause
           setTimeout(async () => {
             // CRITICAL: Check if this callback is still valid (not superseded by newer lot switch)
             const currentGen = timerGeneration.get(auctionId);
@@ -320,12 +327,6 @@ export const endCurrentLot = async (auctionId, io) => {
               console.log(`⚠️  [GEN ${capturedGen}] Lot start callback superseded by gen ${currentGen}, skipping timer start`);
               return;
             }
-
-            io.to(`auction-${auctionId}`).emit('lot-started', {
-              auctionId,
-              lotNumber: auction.lotNumber,
-              lot: auction.lots[nextLotIndex]
-            });
 
             // Restart Going Going Gone timer for new lot
             if (auction.isGoingGoingGoneEnabled) {
