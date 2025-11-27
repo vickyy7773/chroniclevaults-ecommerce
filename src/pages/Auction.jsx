@@ -365,7 +365,7 @@ const AuctionPage = () => {
     if (auction && auction.status === 'Active') {
       const timer = setInterval(() => {
         updateTimeRemaining();
-      }, 1000);
+      }, 100); // Update every 100ms for smooth countdown
       return () => clearInterval(timer);
     }
   }, [auction]);
@@ -402,14 +402,31 @@ const AuctionPage = () => {
     if (!auction) return;
     const now = new Date();
 
-    // FOR LOT BIDDING: Show countdown from Going Gone timer instead of endTime
+    // FOR LOT BIDDING: Show different timers based on state
     if (auction.isLotBidding) {
-      // If we have countdown from warning timer, show that
+      // If we have countdown from warning timer (GOING ONCE/TWICE), show that
       if (countdown) {
         setTimeRemaining(countdown);
         return;
       }
-      // Otherwise show waiting message
+
+      // Otherwise, show countdown from lot start time (1 minute timer)
+      if (auction.currentLotStartTime || auction.lastBidTime) {
+        const lotStartTime = auction.currentLotStartTime ? new Date(auction.currentLotStartTime) : new Date(auction.lastBidTime);
+        const timeSinceLotStart = now - lotStartTime;
+        const oneMinute = 60000; // 1 minute in ms
+
+        if (timeSinceLotStart < oneMinute) {
+          // Show countdown to 1 minute
+          const remaining = oneMinute - timeSinceLotStart;
+          const seconds = Math.floor(remaining / 1000);
+          const milliseconds = Math.floor((remaining % 1000) / 100);
+          setTimeRemaining(`${seconds}.${milliseconds}s`);
+          return;
+        }
+      }
+
+      // If no specific timer, show waiting
       setTimeRemaining('Awaiting bids...');
       return;
     }
