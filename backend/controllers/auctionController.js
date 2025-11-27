@@ -314,7 +314,9 @@ export const endCurrentLot = async (auctionId, io) => {
           io.to(`auction-${auctionId}`).emit('lot-started', {
             auctionId,
             lotNumber: auction.lotNumber,
-            lot: auction.lots[nextLotIndex]
+            lot: auction.lots[nextLotIndex],
+            currentLotStartTime: auction.currentLotStartTime, // CRITICAL: Send this so frontend can show 60s timer
+            lastBidTime: auction.lastBidTime // Should be null for new lot
           });
 
           // Capture the generation for timer callback

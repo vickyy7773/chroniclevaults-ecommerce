@@ -280,7 +280,17 @@ const AuctionPage = () => {
         setGoingWarning(0);
         setWarningMessage('');
 
-        toast.info(`🚀 Lot ${data.currentLot} has started!`, {
+        // CRITICAL: Update auction with new lot timer values immediately
+        if (data.currentLotStartTime !== undefined && data.lastBidTime !== undefined) {
+          setAuction(prev => ({
+            ...prev,
+            currentLotStartTime: data.currentLotStartTime,
+            lastBidTime: data.lastBidTime,
+            lotNumber: data.lotNumber
+          }));
+        }
+
+        toast.info(`🚀 Lot ${data.lotNumber || data.currentLot} has started!`, {
           autoClose: 5000,
           position: 'top-center'
         });
