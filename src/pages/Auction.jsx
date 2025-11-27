@@ -23,6 +23,8 @@ const AuctionPage = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [goingWarning, setGoingWarning] = useState(0);
   const [warningMessage, setWarningMessage] = useState('');
+  const [nextWarningTime, setNextWarningTime] = useState(null); // Timestamp of next warning
+  const [countdown, setCountdown] = useState(''); // Live countdown display
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -208,6 +210,11 @@ const AuctionPage = () => {
         setGoingWarning(data.warning);
         setWarningMessage(data.message);
 
+        // Store next warning time for countdown
+        if (data.nextWarningTime) {
+          setNextWarningTime(data.nextWarningTime);
+        }
+
         if (data.warning === 1) {
           toast.warning(`⚠️ ${data.message} Place your bid now!`, {
             autoClose: 5000,
@@ -252,6 +259,8 @@ const AuctionPage = () => {
       if (data.auctionId === auction._id) {
         setGoingWarning(0);
         setWarningMessage('');
+        setNextWarningTime(null); // Clear countdown when warning resets
+        setCountdown('');
       }
     };
 
@@ -319,6 +328,38 @@ const AuctionPage = () => {
       fetchAuction();
     }
   }, [id]);
+
+  // Countdown timer - updates every 100ms for smooth seconds.milliseconds display
+  useEffect(() => {
+    if (!nextWarningTime || goingWarning === 3) {
+      setCountdown('');
+      return;
+    }
+
+    const updateCountdown = () => {
+      const now = Date.now();
+      const remaining = nextWarningTime - now;
+
+      if (remaining <= 0) {
+        setCountdown('0.0s');
+        return;
+      }
+
+      const totalSeconds = remaining / 1000;
+      const seconds = Math.floor(totalSeconds);
+      const milliseconds = Math.floor((totalSeconds - seconds) * 10); // Get first decimal place
+
+      setCountdown(`${seconds}.${milliseconds}s`);
+    };
+
+    // Update immediately
+    updateCountdown();
+
+    // Then update every 100ms
+    const interval = setInterval(updateCountdown, 100);
+
+    return () => clearInterval(interval);
+  }, [nextWarningTime, goingWarning]);
 
   useEffect(() => {
     if (auction && auction.status === 'Active') {
@@ -608,7 +649,7 @@ const AuctionPage = () => {
                       {warningMessage || 'GOING ONCE! 🔨'}
                     </h3>
                     <p className="text-sm sm:text-base font-medium mt-1">
-                      30 seconds to next warning!
+                      {countdown ? `Next warning in ${countdown}` : '30 seconds to next warning!'}
                     </p>
                   </div>
                   <Gavel className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />
@@ -623,7 +664,7 @@ const AuctionPage = () => {
                       {warningMessage || 'GOING TWICE! 🔨🔨'}
                     </h3>
                     <p className="text-sm sm:text-base font-medium mt-1">
-                      Last 30 seconds! Place your bid NOW!
+                      {countdown ? `SOLD/UNSOLD in ${countdown}` : 'Last 30 seconds! Place your bid NOW!'}
                     </p>
                   </div>
                   <Gavel className="w-8 h-8 sm:w-10 sm:h-10 animate-bounce" />

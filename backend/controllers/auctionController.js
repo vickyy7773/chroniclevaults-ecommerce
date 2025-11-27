@@ -459,11 +459,13 @@ export const startGoingGoingGoneTimer = async (auctionId, io) => {
             auction.lastBidTime = now; // Set a fake lastBidTime to trigger the sequence
             await auction.save();
 
+            const nextWarningTime = Date.now() + 30000; // 30 seconds from now
             io.to(`auction-${auctionId}`).emit('auction-warning', {
               auctionId: auctionId.toString(),
               message: 'GOING ONCE! 🔨 (No bids received)',
               warning: 1,
-              timeSinceLastBid: 0
+              timeSinceLastBid: 0,
+              nextWarningTime // Send when next warning will occur
             });
             console.log(`🔨 Auction ${auctionId}: GOING ONCE! (No bids)`);
 
@@ -496,11 +498,13 @@ export const startGoingGoingGoneTimer = async (auctionId, io) => {
           // GOING ONCE!
           auction.warningCount = 1;
           await auction.save();
+          const nextWarningTime = Date.now() + 30000; // 30 seconds from now
           io.to(`auction-${auctionId}`).emit('auction-warning', {
             auctionId: auctionId.toString(),
             message: 'GOING ONCE! 🔨',
             warning: 1,
-            timeSinceLastBid
+            timeSinceLastBid,
+            nextWarningTime // Send when next warning will occur
           });
           console.log(`🔨 [${timerKey}] [GEN ${currentGen}] GOING ONCE! (timeSinceLastBid: ${Math.floor(timeSinceLastBid/1000)}s)`);
 
@@ -519,11 +523,13 @@ export const startGoingGoingGoneTimer = async (auctionId, io) => {
           const hasBids = currentLot && currentLot.bids && currentLot.bids.length > 0;
           const message = hasBids ? 'GOING TWICE! 🔨🔨' : 'GOING TWICE! 🔨🔨 (No bids received)';
 
+          const nextWarningTime = Date.now() + 30000; // 30 seconds from now
           io.to(`auction-${auctionId}`).emit('auction-warning', {
             auctionId: auctionId.toString(),
             message: message,
             warning: 2,
-            timeSinceLastBid
+            timeSinceLastBid,
+            nextWarningTime // Send when next warning will occur
           });
           console.log(`🔨🔨 [${timerKey}] [GEN ${currentGen}] ${message} (timeSinceLastBid: ${Math.floor(timeSinceLastBid/1000)}s)`);
 
