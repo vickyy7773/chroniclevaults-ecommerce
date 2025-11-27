@@ -402,22 +402,24 @@ const AuctionPage = () => {
     if (!auction) return;
     const now = new Date();
 
-    // FOR LOT BIDDING: Use currentLotEndTime instead of auction endTime
-    let endTime;
-    if (auction.isLotBidding && auction.currentLotEndTime) {
-      endTime = new Date(auction.currentLotEndTime);
-    } else {
-      endTime = new Date(auction.endTime);
+    // FOR LOT BIDDING: Show countdown from Going Gone timer instead of endTime
+    if (auction.isLotBidding) {
+      // If we have countdown from warning timer, show that
+      if (countdown) {
+        setTimeRemaining(countdown);
+        return;
+      }
+      // Otherwise show waiting message
+      setTimeRemaining('Awaiting bids...');
+      return;
     }
 
+    // For regular auctions, use endTime
+    const endTime = new Date(auction.endTime);
     const diff = endTime - now;
 
     if (diff <= 0) {
-      if (auction.isLotBidding) {
-        setTimeRemaining('Lot Ending...');
-      } else {
-        setTimeRemaining('Auction Ended');
-      }
+      setTimeRemaining('Auction Ended');
       fetchAuction();
       return;
     }
