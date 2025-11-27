@@ -498,8 +498,10 @@ export const startGoingGoingGoneTimer = async (auctionId, io) => {
         const currentLotIndex = (auction.lotNumber || 1) - 1;
         const currentLot = auction.lots && auction.lots[currentLotIndex];
         hasActualBids = currentLot && currentLot.bids && currentLot.bids.length > 0;
+        console.log(`🔍 [${timerKey}] Lot bidding check: lotIndex=${currentLotIndex}, hasBids=${hasActualBids}, bidsCount=${currentLot?.bids?.length || 0}`);
       } else {
         hasActualBids = auction.bids && auction.bids.length > 0;
+        console.log(`🔍 [${timerKey}] Regular auction check: hasBids=${hasActualBids}, bidsCount=${auction.bids?.length || 0}`);
       }
 
       if (!hasActualBids) {
@@ -511,8 +513,11 @@ export const startGoingGoingGoneTimer = async (auctionId, io) => {
         return;
       }
 
+      console.log(`⏱️  [${timerKey}] [GEN ${currentGen}] Time check: timeSinceLastBid=${Math.floor(timeSinceLastBid/1000)}s, warningCount=${auction.warningCount}`);
+
       if (timeSinceLastBid >= thirtySeconds) {
         // Check current warning count and emit appropriate message
+        console.log(`✅ [${timerKey}] [GEN ${currentGen}] 30s passed! warningCount=${auction.warningCount}`);
 
         if (auction.warningCount === 0) {
           // GOING ONCE!
