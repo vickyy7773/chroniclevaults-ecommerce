@@ -279,25 +279,36 @@ const AuctionPage = () => {
         // Reset warning overlay (hide SOLD screen)
         setGoingWarning(0);
         setWarningMessage('');
+        setNextWarningTime(null);
+        setCountdown('');
 
         // CRITICAL: Update auction with new lot timer values immediately
+        // Don't call fetchAuction() - it will overwrite these values!
         if (data.currentLotStartTime !== undefined && data.lastBidTime !== undefined) {
           setAuction(prev => ({
             ...prev,
             currentLotStartTime: data.currentLotStartTime,
             lastBidTime: data.lastBidTime,
-            lotNumber: data.lotNumber
+            lotNumber: data.lotNumber,
+            warningCount: 0 // Reset warning count for new lot
           }));
+
+          console.log(`✅ Updated auction state for Lot ${data.lotNumber}:`, {
+            currentLotStartTime: data.currentLotStartTime,
+            lastBidTime: data.lastBidTime,
+            lotNumber: data.lotNumber
+          });
         }
 
-        toast.info(`🚀 Lot ${data.lotNumber || data.currentLot} has started!`, {
+        toast.info(`🚀 Lot ${data.lotNumber} has started!`, {
           autoClose: 5000,
           position: 'top-center'
         });
-        // Refresh auction data to show new lot
+
+        // Fetch full auction data after a delay to get complete lot info
         setTimeout(() => {
           fetchAuction();
-        }, 500);
+        }, 1000);
       }
     };
 
