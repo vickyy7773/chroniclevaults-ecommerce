@@ -697,7 +697,7 @@ export const startNextLot = async (auctionId, io) => {
       // Update main auction fields to reflect current lot
       auction.currentBid = auction.lots[nextLotNum - 1].currentBid;
       auction.warningCount = 0;
-      auction.lastBidTime = new Date(); // Set to NOW, not null!
+      auction.lastBidTime = null; // CRITICAL: Must be null for new lot to trigger 60s timer!
 
       await auction.save();
 
