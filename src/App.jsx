@@ -198,6 +198,32 @@ const AppContent = () => {
     };
   }, []);
 
+  // Remove out-of-stock items from cart automatically
+  useEffect(() => {
+    if (cart.length === 0) return;
+
+    // Filter out items with inStock <= 0
+    const validItems = cart.filter(item => {
+      const stock = item.inStock || 0;
+      if (stock <= 0) {
+        console.log(`🗑️ Removing out-of-stock item from cart: ${item.name} (stock: ${stock})`);
+        return false;
+      }
+      // Also adjust quantity if it exceeds available stock
+      if (item.quantity > stock) {
+        console.log(`⚠️ Adjusting quantity for ${item.name} from ${item.quantity} to ${stock}`);
+        item.quantity = stock;
+      }
+      return true;
+    });
+
+    // Update cart if any items were filtered out
+    if (validItems.length !== cart.length) {
+      console.log(`🗑️ Removed ${cart.length - validItems.length} out-of-stock items from cart`);
+      setCart(validItems);
+    }
+  }, [cart]);
+
   // Sync cart and wishlist with backend when user logs in
   useEffect(() => {
     const syncWithBackend = async () => {
