@@ -184,6 +184,20 @@ const AppContent = () => {
     localStorage.setItem('wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
+  // Listen for cart cleared event from Checkout page
+  useEffect(() => {
+    const handleCartCleared = () => {
+      console.log('🗑️ Cart cleared event received in App.jsx');
+      setCart([]);
+    };
+
+    window.addEventListener('cartCleared', handleCartCleared);
+
+    return () => {
+      window.removeEventListener('cartCleared', handleCartCleared);
+    };
+  }, []);
+
   // Sync cart and wishlist with backend when user logs in
   useEffect(() => {
     const syncWithBackend = async () => {

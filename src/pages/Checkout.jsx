@@ -454,10 +454,16 @@ const Checkout = () => {
                 // Clear localStorage cart
                 localStorage.removeItem('cart');
                 console.log('✅ LocalStorage cart cleared');
+
+                // Dispatch custom event to notify App.jsx that cart has been cleared
+                window.dispatchEvent(new Event('cartCleared'));
+                console.log('✅ Cart cleared event dispatched');
               } catch (error) {
                 console.error('❌ Error clearing cart:', error);
                 // Still clear localStorage even if backend fails
                 localStorage.removeItem('cart');
+                // Dispatch event even if backend fails
+                window.dispatchEvent(new Event('cartCleared'));
               }
             } else {
               alert('Payment verification failed. Please contact support.');
