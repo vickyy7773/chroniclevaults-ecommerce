@@ -1,6 +1,7 @@
 import AuctionRegistration from '../models/AuctionRegistration.js';
 import User from '../models/User.js';
 import crypto from 'crypto';
+import { sendAuctionApprovalEmail } from '../services/emailService.js';
 
 // @desc    Submit auction registration
 // @route   POST /api/auction-registration
@@ -238,44 +239,13 @@ export const approveRegistration = async (req, res) => {
     console.log('✅ Auction ID generated:', auctionId);
     console.log('✅ Auction coins assigned:', auctionCoins);
 
-    // Send approval email
-    const transporter = req.app.get('emailTransporter');
-    if (transporter) {
-      try {
-        await transporter.sendMail({
-          from: process.env.EMAIL_USER,
-          to: registration.email,
-          subject: '🎉 Auction Registration Approved - Chronicle Vaults',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #2c5530;">🎉 Congratulations! Your Auction Registration is Approved</h2>
-              <p>Dear ${registration.fullName},</p>
-              <p>Your auction registration has been approved. You can now participate in our auctions!</p>
-
-              <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="margin-top: 0;">Your Auction Details:</h3>
-                <p><strong>Auction ID:</strong> ${auctionId}</p>
-                <p><strong>Auction Coins:</strong> ${auctionCoins.toLocaleString()}</p>
-                <p><strong>Email:</strong> ${user.email}</p>
-              </div>
-
-              <p>You can now login to your account and start bidding!</p>
-              <a href="${process.env.FRONTEND_URL || 'https://chroniclevaults.com'}/login"
-                 style="display: inline-block; background-color: #2c5530; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 10px 0;">
-                Login to Your Account
-              </a>
-
-              <p style="margin-top: 20px; color: #666; font-size: 14px;">
-                Thank you for choosing Chronicle Vaults!
-              </p>
-            </div>
-          `
-        });
-        console.log('📧 Approval email sent to:', registration.email);
-      } catch (emailError) {
-        console.error('❌ Failed to send approval email:', emailError);
-        // Don't fail the approval if email fails
-      }
+    // Send professional approval email
+    try {
+      await sendAuctionApprovalEmail(registration.email, registration.fullName, auctionCoins);
+      console.log('📧 Auction approval email sent to:', registration.email);
+    } catch (emailError) {
+      console.error('❌ Failed to send auction approval email:', emailError);
+      // Don't fail the approval if email fails
     }
 
     res.json({

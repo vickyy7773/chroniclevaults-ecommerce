@@ -6,7 +6,9 @@ import {
   orderConfirmationTemplate,
   orderStatusUpdateTemplate,
   passwordResetTemplate,
-  contactFormTemplate
+  contactFormTemplate,
+  auctionApprovalEmailTemplate,
+  auctionLimitUpgradeEmailTemplate
 } from '../utils/emailTemplates.js';
 
 // Generate 6-digit OTP
@@ -227,6 +229,38 @@ export const sendContactFormEmail = async (formData) => {
   }
 };
 
+// Send Auction Approval Email
+export const sendAuctionApprovalEmail = async (email, name, auctionLimit) => {
+  try {
+    const result = await sendEmail({
+      email,
+      subject: 'Auction Registration Approved - Chronicle Vaults',
+      html: auctionApprovalEmailTemplate(name, auctionLimit)
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Send Auction Approval Email Error:', error);
+    throw error;
+  }
+};
+
+// Send Auction Limit Upgrade Email
+export const sendAuctionLimitUpgradeEmail = async (email, name, oldLimit, newLimit) => {
+  try {
+    const result = await sendEmail({
+      email,
+      subject: 'Your Auction Limit Has Been Upgraded - Chronicle Vaults',
+      html: auctionLimitUpgradeEmailTemplate(name, oldLimit, newLimit)
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Send Auction Limit Upgrade Email Error:', error);
+    throw error;
+  }
+};
+
 export default {
   sendOTPEmail,
   verifyOTP,
@@ -234,5 +268,7 @@ export default {
   sendOrderConfirmationEmail,
   sendOrderStatusEmail,
   sendPasswordResetEmail,
-  sendContactFormEmail
+  sendContactFormEmail,
+  sendAuctionApprovalEmail,
+  sendAuctionLimitUpgradeEmail
 };

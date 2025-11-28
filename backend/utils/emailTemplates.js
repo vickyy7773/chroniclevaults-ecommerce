@@ -418,3 +418,232 @@ export const contactFormTemplate = (formData) => {
     </html>
   `;
 };
+
+// Auction Registration Approval Email Template
+export const auctionApprovalEmailTemplate = (name, auctionLimit) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Auction Registration Approved</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Georgia', serif; background-color: #f5f1ed; line-height: 1.6;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f1ed; padding: 30px 20px;">
+        <tr>
+          <td align="center">
+            <table width="650" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 3px solid #8B6F47;">
+              <!-- Header with elegant design -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #2c1810 0%, #5a3d2b 100%); padding: 50px 40px; text-align: center; border-bottom: 4px solid #d4af37;">
+                  <h1 style="color: #d4af37; margin: 0 0 10px 0; font-size: 32px; font-family: 'Georgia', serif; letter-spacing: 2px; text-transform: uppercase;">
+                    Chronicle Vaults
+                  </h1>
+                  <p style="color: #f5f1ed; margin: 0; font-size: 14px; letter-spacing: 3px; text-transform: uppercase; font-weight: 300;">
+                    Auction Access Approved
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Content -->
+              <tr>
+                <td style="padding: 50px 40px; background-color: #fefdfb;">
+                  <p style="color: #2c1810; font-size: 18px; margin: 0 0 25px 0; font-weight: 300;">
+                    Dear ${name},
+                  </p>
+
+                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.8; margin: 0 0 25px 0;">
+                    Welcome to <strong>Chronicle Vaults</strong>, where heritage, craftsmanship and rare collectibles come together.
+                  </p>
+
+                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.8; margin: 0 0 30px 0;">
+                    Your registration and document verification have been successfully completed, and your auction account is now fully active. You are now eligible to bid on exclusive numismatic pieces curated from across India and beyond.
+                  </p>
+
+                  <!-- Auction Access Box -->
+                  <div style="background: linear-gradient(135deg, #fef8e7 0%, #f9f3e3 100%); border-left: 5px solid #d4af37; padding: 30px; margin: 0 0 30px 0; border-radius: 0;">
+                    <h3 style="color: #2c1810; margin: 0 0 20px 0; font-size: 22px; font-family: 'Georgia', serif;">
+                      🔶 Your Auction Access
+                    </h3>
+                    <table width="100%" cellpadding="8" cellspacing="0">
+                      <tr>
+                        <td style="color: #5a5a5a; font-size: 15px; padding: 8px 0;"><strong>Bidding Limit:</strong></td>
+                        <td style="color: #2c1810; font-size: 18px; font-weight: bold; text-align: right; padding: 8px 0;">₹${Number(auctionLimit).toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #5a5a5a; font-size: 15px; padding: 8px 0;"><strong>Account Status:</strong></td>
+                        <td style="color: #16a34a; font-size: 15px; font-weight: bold; text-align: right; padding: 8px 0;">Verified & Active</td>
+                      </tr>
+                    </table>
+                    <p style="color: #5a5a5a; font-size: 14px; margin: 20px 0 0 0; font-style: italic;">
+                      Every bid you place now brings you one step closer to owning a rare piece of history.
+                    </p>
+                  </div>
+
+                  <!-- Journey Section -->
+                  <div style="margin: 0 0 30px 0;">
+                    <h3 style="color: #2c1810; margin: 0 0 20px 0; font-size: 20px; font-family: 'Georgia', serif;">
+                      🔶 Begin Your Auction Journey
+                    </h3>
+                    <p style="color: #4a4a4a; font-size: 15px; margin: 0 0 15px 0;">
+                      👉 <a href="${process.env.FRONTEND_URL || 'https://chroniclevaults.com'}/authentication" style="color: #d4af37; text-decoration: none; font-weight: bold;">Login to your account</a><br>
+                      <span style="color: #999; font-size: 13px; margin-left: 20px;">${process.env.FRONTEND_URL || 'https://chroniclevaults.com'}/authentication</span>
+                    </p>
+                    <p style="color: #4a4a4a; font-size: 15px; margin: 0;">
+                      👉 <a href="${process.env.FRONTEND_URL || 'https://chroniclevaults.com'}/auctions?type=upcoming" style="color: #d4af37; text-decoration: none; font-weight: bold;">Explore upcoming auctions</a><br>
+                      <span style="color: #999; font-size: 13px; margin-left: 20px;">${process.env.FRONTEND_URL || 'https://chroniclevaults.com'}/auctions?type=upcoming</span>
+                    </p>
+                  </div>
+
+                  <p style="color: #4a4a4a; font-size: 15px; line-height: 1.8; margin: 0 0 25px 0;">
+                    At Chronicle Vaults, we strive to offer a transparent, secure, and world-class auction experience. We are excited to have you as a part of our collector community and look forward to your active participation in our upcoming auctions.
+                  </p>
+
+                  <p style="color: #4a4a4a; font-size: 15px; line-height: 1.8; margin: 0 0 10px 0;">
+                    If you have any questions or need assistance at any stage, our team is here to help:<br>
+                    📩 <a href="mailto:info@chroniclevaults.com" style="color: #d4af37; text-decoration: none;">info@chroniclevaults.com</a>
+                  </p>
+
+                  <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e5e5e5;">
+                    <p style="color: #2c1810; font-size: 16px; margin: 0 0 10px 0;">
+                      Warm regards,<br>
+                      <strong>Chronicle Vaults Auction Team</strong>
+                    </p>
+                    <p style="color: #8B6F47; font-size: 14px; margin: 0;">
+                      <a href="https://www.chroniclevaults.com" style="color: #8B6F47; text-decoration: none;">www.chroniclevaults.com</a>
+                    </p>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #2c1810; padding: 25px 40px; border-top: 4px solid #d4af37;">
+                  <p style="color: #d4af37; font-size: 12px; line-height: 1.5; margin: 0; text-align: center; letter-spacing: 1px;">
+                    CHRONICLE VAULTS - WHERE HISTORY MEETS HERITAGE
+                  </p>
+                  <p style="color: #8B6F47; font-size: 11px; line-height: 1.5; margin: 10px 0 0 0; text-align: center;">
+                    © ${new Date().getFullYear()} Chronicle Vaults. All rights reserved.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+};
+
+// Auction Limit Upgrade Email Template
+export const auctionLimitUpgradeEmailTemplate = (name, oldLimit, newLimit) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Auction Limit Upgraded</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Georgia', serif; background-color: #f5f1ed; line-height: 1.6;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f1ed; padding: 30px 20px;">
+        <tr>
+          <td align="center">
+            <table width="650" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 3px solid #8B6F47;">
+              <!-- Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #2c1810 0%, #5a3d2b 100%); padding: 50px 40px; text-align: center; border-bottom: 4px solid #d4af37;">
+                  <h1 style="color: #d4af37; margin: 0 0 10px 0; font-size: 32px; font-family: 'Georgia', serif; letter-spacing: 2px; text-transform: uppercase;">
+                    Chronicle Vaults
+                  </h1>
+                  <p style="color: #f5f1ed; margin: 0; font-size: 14px; letter-spacing: 3px; text-transform: uppercase; font-weight: 300;">
+                    Bidding Limit Upgraded
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Content -->
+              <tr>
+                <td style="padding: 50px 40px; background-color: #fefdfb;">
+                  <p style="color: #2c1810; font-size: 18px; margin: 0 0 25px 0; font-weight: 300;">
+                    Dear ${name},
+                  </p>
+
+                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.8; margin: 0 0 30px 0;">
+                    We are pleased to inform you that your auction bidding limit has been successfully upgraded!
+                  </p>
+
+                  <!-- Upgrade Details Box -->
+                  <div style="background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%); border-left: 5px solid #16a34a; padding: 30px; margin: 0 0 30px 0; border-radius: 0;">
+                    <h3 style="color: #2c1810; margin: 0 0 20px 0; font-size: 22px; font-family: 'Georgia', serif;">
+                      🔶 Your Updated Auction Limit
+                    </h3>
+                    <table width="100%" cellpadding="8" cellspacing="0">
+                      <tr>
+                        <td style="color: #5a5a5a; font-size: 15px; padding: 8px 0;"><strong>Previous Limit:</strong></td>
+                        <td style="color: #666; font-size: 16px; text-decoration: line-through; text-align: right; padding: 8px 0;">₹${Number(oldLimit).toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #5a5a5a; font-size: 15px; padding: 8px 0;"><strong>New Limit:</strong></td>
+                        <td style="color: #16a34a; font-size: 22px; font-weight: bold; text-align: right; padding: 8px 0;">₹${Number(newLimit).toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #5a5a5a; font-size: 15px; padding: 8px 0;"><strong>Increase:</strong></td>
+                        <td style="color: #2c1810; font-size: 18px; font-weight: bold; text-align: right; padding: 8px 0;">+₹${Number(newLimit - oldLimit).toLocaleString()}</td>
+                      </tr>
+                    </table>
+                    <p style="color: #5a5a5a; font-size: 14px; margin: 20px 0 0 0; font-style: italic;">
+                      Your increased limit opens doors to a broader collection of premium numismatic pieces.
+                    </p>
+                  </div>
+
+                  <p style="color: #4a4a4a; font-size: 16px; line-height: 1.8; margin: 0 0 25px 0;">
+                    This upgrade reflects your growing trust and engagement with Chronicle Vaults. You can now participate in higher-value auctions and expand your collection with even more prestigious items.
+                  </p>
+
+                  <!-- Call to Action -->
+                  <div style="text-align: center; margin: 35px 0;">
+                    <a href="${process.env.FRONTEND_URL || 'https://chroniclevaults.com'}/auctions"
+                       style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #b8941f 100%); color: #2c1810; text-decoration: none; padding: 16px 40px; border-radius: 0; font-size: 16px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                      Explore Auctions
+                    </a>
+                  </div>
+
+                  <p style="color: #4a4a4a; font-size: 15px; line-height: 1.8; margin: 0 0 10px 0;">
+                    If you have any questions regarding your upgraded limit, please feel free to contact us:<br>
+                    📩 <a href="mailto:info@chroniclevaults.com" style="color: #d4af37; text-decoration: none;">info@chroniclevaults.com</a>
+                  </p>
+
+                  <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e5e5e5;">
+                    <p style="color: #2c1810; font-size: 16px; margin: 0 0 10px 0;">
+                      Thank you for being a valued member of our community.<br>
+                      <strong>Chronicle Vaults Auction Team</strong>
+                    </p>
+                    <p style="color: #8B6F47; font-size: 14px; margin: 0;">
+                      <a href="https://www.chroniclevaults.com" style="color: #8B6F47; text-decoration: none;">www.chroniclevaults.com</a>
+                    </p>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #2c1810; padding: 25px 40px; border-top: 4px solid #d4af37;">
+                  <p style="color: #d4af37; font-size: 12px; line-height: 1.5; margin: 0; text-align: center; letter-spacing: 1px;">
+                    CHRONICLE VAULTS - WHERE HISTORY MEETS HERITAGE
+                  </p>
+                  <p style="color: #8B6F47; font-size: 11px; line-height: 1.5; margin: 10px 0 0 0; text-align: center;">
+                    © ${new Date().getFullYear()} Chronicle Vaults. All rights reserved.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+};

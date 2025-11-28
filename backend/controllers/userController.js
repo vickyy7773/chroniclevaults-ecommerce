@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Order from '../models/Order.js';
+import { sendAuctionLimitUpgradeEmail } from '../services/emailService.js';
 
 // @desc    Get all users/customers
 // @route   GET /api/users
@@ -413,13 +414,31 @@ export const updateAuctionCoins = async (req, res) => {
 
     // Update auction coins
     console.log('💰 Updating auction coins for user:', user._id);
-    console.log('💰 Old coins:', user.auctionCoins);
+    const oldCoins = user.auctionCoins || 0;
+    console.log('💰 Old coins:', oldCoins);
     console.log('💰 New coins:', auctionCoins);
 
-    user.auctionCoins = Number(auctionCoins);
+    const newCoins = Number(auctionCoins);
+    user.auctionCoins = newCoins;
     await user.save();
 
     console.log('💰 Coins updated successfully');
+
+    // Send email notification if limit was upgraded
+    if (newCoins > oldCoins && user.isAuctionVerified) {
+      try {
+        await sendAuctionLimitUpgradeEmail(
+          user.email,
+          user.name,
+          oldCoins,
+          newCoins
+        );
+        console.log('📧 Auction limit upgrade email sent to:', user.email);
+      } catch (emailError) {
+        console.error('❌ Failed to send limit upgrade email:', emailError);
+        // Don't fail the update if email fails
+      }
+    }
 
     res.status(200).json({
       success: true,
