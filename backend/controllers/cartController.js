@@ -188,17 +188,16 @@ export const removeFromCart = async (req, res) => {
 // @access  Private
 export const clearCart = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ user: req.user.id });
+    let cart = await Cart.findOne({ user: req.user.id });
 
     if (!cart) {
-      return res.status(404).json({
-        success: false,
-        message: 'Cart not found'
-      });
+      // If cart doesn't exist, create an empty one (or just return success since there's nothing to clear)
+      cart = await Cart.create({ user: req.user.id, items: [] });
+    } else {
+      // Clear existing cart
+      cart.items = [];
+      await cart.save();
     }
-
-    cart.items = [];
-    await cart.save();
 
     res.status(200).json({
       success: true,
