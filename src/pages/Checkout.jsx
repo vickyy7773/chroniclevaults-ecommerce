@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, ShoppingBag, MapPin, CreditCard, Package, ChevronRight, ChevronLeft, Edit2, X, Plus } from 'lucide-react';
 import { orderService, authService, userSyncService } from '../services';
 import paymentService from '../services/paymentService';
+import cartService from '../services/cartService';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -442,8 +443,22 @@ const Checkout = () => {
                 // Don't block order completion if wishlist update fails
               }
 
-              // Clear cart
-              localStorage.removeItem('cart');
+              // Clear cart from both backend and localStorage
+              try {
+                console.log('🗑️ Clearing cart after successful purchase...');
+
+                // Clear backend cart
+                await cartService.clearCart();
+                console.log('✅ Backend cart cleared');
+
+                // Clear localStorage cart
+                localStorage.removeItem('cart');
+                console.log('✅ LocalStorage cart cleared');
+              } catch (error) {
+                console.error('❌ Error clearing cart:', error);
+                // Still clear localStorage even if backend fails
+                localStorage.removeItem('cart');
+              }
             } else {
               alert('Payment verification failed. Please contact support.');
             }
