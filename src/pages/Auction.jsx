@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Gavel, Clock, TrendingUp, Users, AlertCircle, CheckCircle, History,
-  Coins, User, Hash, Timer, Award, Shield, Package, ArrowLeft
+  Coins, User, Hash, Timer, Award, Shield, ArrowLeft
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
@@ -1027,161 +1027,138 @@ const AuctionPage = () => {
                   </p>
                 </div>
 
-                {/* Lot Bidding Sidebar - Show all lots */}
-                {auction.isLotBidding && auction.lots && auction.lots.length > 0 && (
-                  <div className="border-t-2 border-gray-200 pt-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <Package className="w-5 h-5 text-accent-600" />
-                      All Lots ({auction.lots.length})
-                    </h3>
-
-                    <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
-                      {auction.lots.map((lot, index) => (
-                        <div
-                          key={index}
-                          onClick={() => handleLotClick(index)}
-                          className={`rounded-xl p-3 border-2 transition-all cursor-pointer hover:shadow-lg ${
-                            selectedLotIndex === index
-                              ? 'bg-accent-50 border-accent-500 shadow-lg ring-2 ring-accent-300'
-                              : lot.status === 'Active'
-                              ? 'bg-green-50 border-green-500 shadow-md'
-                              : lot.status === 'Ended'
-                              ? 'bg-gray-50 border-gray-300'
-                              : 'bg-blue-50 border-blue-300'
-                          }`}
-                        >
-                          <div className="flex items-start gap-3">
-                            {/* Lot Image */}
-                            <div className="w-16 h-16 rounded-lg flex-shrink-0 overflow-hidden border-2 border-gray-200 bg-gray-100">
-                              {lot.image ? (
-                                <img
-                                  src={lot.image}
-                                  alt={lot.title}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect fill="%23f3f4f6" width="64" height="64"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="10"%3ENo Image%3C/text%3E%3C/svg%3E';
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-400">
-                                  No Image
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Lot Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                                  lot.status === 'Active'
-                                    ? 'bg-green-500 text-white'
-                                    : lot.status === 'Sold'
-                                    ? 'bg-emerald-500 text-white'
-                                    : lot.status === 'Unsold'
-                                    ? 'bg-red-500 text-white'
-                                    : lot.status === 'Ended'
-                                    ? 'bg-gray-500 text-white'
-                                    : 'bg-blue-500 text-white'
-                                }`}>
-                                  Lot {lot.lotNumber}
-                                </span>
-                                <span className={`text-xs font-semibold ${
-                                  lot.status === 'Active'
-                                    ? 'text-green-700'
-                                    : lot.status === 'Sold'
-                                    ? 'text-emerald-700'
-                                    : lot.status === 'Unsold'
-                                    ? 'text-red-700'
-                                    : lot.status === 'Ended'
-                                    ? 'text-gray-600'
-                                    : 'text-blue-700'
-                                }`}>
-                                  {lot.status === 'Active' && '🔴 LIVE'}
-                                  {lot.status === 'Sold' && '✅ SOLD'}
-                                  {lot.status === 'Unsold' && '❌ UNSOLD'}
-                                  {lot.status === 'Ended' && '✅ ENDED'}
-                                  {lot.status === 'Upcoming' && '⏳ UPCOMING'}
-                                </span>
-                              </div>
-
-                              <h4 className="font-semibold text-sm text-gray-900 truncate mb-1">
-                                {lot.title}
-                              </h4>
-
-                              <div className="space-y-1">
-                                {/* Starting and Current/Final Price */}
-                                <div className="flex items-center justify-between text-xs">
-                                  <div>
-                                    <span className="text-gray-500">Starting:</span>
-                                    <span className="font-semibold text-gray-700 ml-1">
-                                      ₹{lot.startingPrice.toLocaleString()}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-500">
-                                      {lot.status === 'Active' || lot.status === 'Upcoming' ? 'Current:' : 'Final:'}
-                                    </span>
-                                    <span className={`font-bold ml-1 ${
-                                      lot.status === 'Sold' ? 'text-emerald-600' :
-                                      lot.status === 'Unsold' ? 'text-red-600' :
-                                      'text-gray-900'
-                                    }`}>
-                                      ₹{lot.currentBid.toLocaleString()}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Total Bids */}
-                                <div className="flex items-center justify-between text-xs">
-                                  <div>
-                                    <span className="text-gray-500">Total Bids:</span>
-                                    <span className="font-bold text-gray-900 ml-1">
-                                      {lot.bids?.length || 0}
-                                    </span>
-                                  </div>
-                                  {lot.status === 'Unsold' && lot.unsoldReason && (
-                                    <div className="text-red-600 font-semibold">
-                                      {lot.unsoldReason}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              {lot.status === 'Sold' && lot.winner && (
-                                <div className="mt-1 text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded">
-                                  <span className="font-semibold">Winner:</span> {lot.winner.name || 'N/A'}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Lot Progress Indicator */}
-                    <div className="mt-4 bg-gray-100 rounded-lg p-3">
-                      <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
-                        <span>Progress</span>
-                        <span className="font-bold">
-                          Lot {auction.lotNumber || 1} of {auction.totalLots}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-300 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-accent-500 to-accent-600 h-2 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${((auction.lotNumber || 1) / auction.totalLots) * 100}%`
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Horizontal Lots Strip at Bottom */}
+        {auction.isLotBidding && auction.lots && auction.lots.length > 0 && (
+          <div className="mt-3 bg-white border-t-2 border-gray-200 rounded-lg shadow-lg overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <span>All Lots ({auction.lots.length})</span>
+              </h3>
+              {/* Lot Progress Indicator */}
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-600">
+                  Lot <span className="font-bold text-gray-900">{auction.lotNumber || 1}</span> of <span className="font-bold text-gray-900">{auction.totalLots}</span>
+                </span>
+                <div className="w-32 bg-gray-200 rounded-full h-1.5">
+                  <div
+                    className="bg-gradient-to-r from-accent-500 to-accent-600 h-1.5 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${((auction.lotNumber || 1) / auction.totalLots) * 100}%`
+                    }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Horizontal Scrolling Lots */}
+            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+              <div className="flex gap-3 p-4 min-w-min">
+                {auction.lots.map((lot, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleLotClick(index)}
+                    className={`flex-shrink-0 w-64 rounded-lg p-3 border-2 transition-all cursor-pointer hover:shadow-lg ${
+                      selectedLotIndex === index
+                        ? 'bg-accent-50 border-accent-500 shadow-lg ring-2 ring-accent-300'
+                        : lot.status === 'Active'
+                        ? 'bg-green-50 border-green-500 shadow-md'
+                        : lot.status === 'Ended'
+                        ? 'bg-gray-50 border-gray-300'
+                        : 'bg-blue-50 border-blue-300'
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      {/* Lot Image */}
+                      <div className="w-20 h-20 rounded-lg flex-shrink-0 overflow-hidden border-2 border-gray-200 bg-gray-100">
+                        {lot.image ? (
+                          <img
+                            src={lot.image}
+                            alt={lot.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23f3f4f6" width="80" height="80"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="10"%3ENo Image%3C/text%3E%3C/svg%3E';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-400">
+                            No Image
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Lot Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                            lot.status === 'Active'
+                              ? 'bg-green-500 text-white'
+                              : lot.status === 'Sold'
+                              ? 'bg-emerald-500 text-white'
+                              : lot.status === 'Unsold'
+                              ? 'bg-red-500 text-white'
+                              : lot.status === 'Ended'
+                              ? 'bg-gray-500 text-white'
+                              : 'bg-blue-500 text-white'
+                          }`}>
+                            #{lot.lotNumber}
+                          </span>
+                          <span className={`text-[10px] font-semibold ${
+                            lot.status === 'Active'
+                              ? 'text-green-700'
+                              : lot.status === 'Sold'
+                              ? 'text-emerald-700'
+                              : lot.status === 'Unsold'
+                              ? 'text-red-700'
+                              : lot.status === 'Ended'
+                              ? 'text-gray-600'
+                              : 'text-blue-700'
+                          }`}>
+                            {lot.status === 'Active' && '🔴 LIVE'}
+                            {lot.status === 'Sold' && '✅ SOLD'}
+                            {lot.status === 'Unsold' && '❌ UNSOLD'}
+                            {lot.status === 'Ended' && '✅ ENDED'}
+                            {lot.status === 'Upcoming' && '⏳ UPCOMING'}
+                          </span>
+                        </div>
+
+                        <h4 className="font-semibold text-xs text-gray-900 truncate mb-1.5">
+                          {lot.title}
+                        </h4>
+
+                        <div className="space-y-0.5">
+                          <div className="flex items-center justify-between text-[10px]">
+                            <span className="text-gray-500">Start: ₹{lot.startingPrice.toLocaleString()}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-gray-600 font-medium">
+                              {lot.status === 'Active' || lot.status === 'Upcoming' ? 'Current' : 'Final'}
+                            </span>
+                            <span className={`font-bold ${
+                              lot.status === 'Sold' ? 'text-emerald-600' :
+                              lot.status === 'Unsold' ? 'text-red-600' :
+                              'text-gray-900'
+                            }`}>
+                              ₹{lot.currentBid.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-gray-500">
+                            {lot.bids?.length || 0} bid{(lot.bids?.length || 0) !== 1 ? 's' : ''}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
