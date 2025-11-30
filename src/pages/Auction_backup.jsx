@@ -663,55 +663,72 @@ const AuctionPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Compact Header Bar */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <button
-            onClick={() => navigate('/auctions')}
-            className="flex items-center gap-2 text-gray-600 hover:text-accent-600 transition-colors text-sm font-medium"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Auctions</span>
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/auctions')}
+          className="mb-4 flex items-center gap-2 text-gray-600 hover:text-accent-600 transition-colors font-medium"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="hidden sm:inline">Back to Auctions</span>
+        </button>
 
-          {user && user.isAuctionVerified && (
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-gray-500" />
-                <span className="font-medium text-gray-700">{user.name}</span>
+        {/* User Info Card - Shows logged in user's auction details */}
+        {user && user.isAuctionVerified && (
+          <div className="mb-4 sm:mb-6 bg-gradient-to-r from-accent-600 to-accent-700 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center">
+                  <User className="w-6 h-6 sm:w-7 sm:h-7" />
+                </div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold">{user.name}</h3>
+                  <p className="text-white/80 text-xs sm:text-sm">Verified Auction Member</p>
+                </div>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 rounded-lg">
-                <Coins className="w-4 h-4 text-amber-600" />
-                <span className="font-bold text-amber-700">₹{user.auctionCoins?.toLocaleString() || 0}</span>
+              <div className="flex flex-wrap gap-3 sm:gap-6">
+                <div className="bg-white/10 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-3 backdrop-blur-sm">
+                  <div>
+                    <p className="text-white/70 text-[10px] sm:text-xs uppercase tracking-wide">Auction ID</p>
+                    <p className="font-bold text-sm sm:text-base font-mono">{user.auctionId || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="bg-white/10 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-3 backdrop-blur-sm">
+                  <div className="flex items-center gap-2">
+                    <Coins className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-300" />
+                    <div>
+                      <p className="text-white/70 text-[10px] sm:text-xs uppercase tracking-wide">Available Coins</p>
+                      <p className="font-bold text-sm sm:text-base">{user.auctionCoins?.toLocaleString() || 0}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 py-3">
+          </div>
+        )}
 
 
         {/* Not verified message */}
         {user && !user.isAuctionVerified && (
-          <div className="mb-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-3">
-            <Shield className="w-5 h-5 text-yellow-600 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="font-semibold text-yellow-800 text-sm">Auction Registration Required</p>
-              <p className="text-yellow-700 text-xs">Register to participate in bidding</p>
+          <div className="mb-4 sm:mb-6 bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 sm:p-6">
+            <div className="flex items-start gap-3">
+              <Shield className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-bold text-yellow-800">Auction Registration Required</h3>
+                <p className="text-yellow-700 text-sm mt-1">You need to register for auctions to participate in bidding.</p>
+                <button
+                  onClick={() => navigate('/auction-registration')}
+                  className="mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-semibold hover:bg-yellow-700 transition-colors"
+                >
+                  Register Now
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => navigate('/auction-registration')}
-              className="px-3 py-1.5 bg-yellow-600 text-white rounded-lg text-xs font-semibold hover:bg-yellow-700 transition-colors"
-            >
-              Register Now
-            </button>
           </div>
         )}
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3" style={{ height: 'calc(100vh - 120px)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
           {/* Left Column - Auction Images & Details */}
           <div className="lg:col-span-3 space-y-4 sm:space-y-6">
             {/* Auction Image Gallery */}
