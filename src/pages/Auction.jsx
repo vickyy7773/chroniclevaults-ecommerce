@@ -1048,21 +1048,16 @@ const AuctionPage = () => {
                           }`}
                         >
                           <div className="flex items-start gap-3">
-                            {/* Lot Icon */}
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                              lot.status === 'Active'
-                                ? 'bg-green-500 text-white'
-                                : lot.status === 'Ended'
-                                ? 'bg-gray-400 text-white'
-                                : 'bg-blue-400 text-white'
-                            }`}>
-                              {lot.status === 'Ended' ? (
-                                <CheckCircle2 className="w-5 h-5" />
-                              ) : lot.status === 'Active' ? (
-                                <Gavel className="w-5 h-5 animate-pulse" />
-                              ) : (
-                                <Circle className="w-5 h-5" />
-                              )}
+                            {/* Lot Image */}
+                            <div className="w-16 h-16 rounded-lg flex-shrink-0 overflow-hidden border-2 border-gray-200">
+                              <img
+                                src={lot.images?.[0] || '/placeholder-product.jpg'}
+                                alt={lot.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.src = '/placeholder-product.jpg';
+                                }}
+                              />
                             </div>
 
                             {/* Lot Info */}
