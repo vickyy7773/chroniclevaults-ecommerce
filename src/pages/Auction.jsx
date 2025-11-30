@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Gavel, Clock, TrendingUp, Users, AlertCircle, CheckCircle, History,
-  Coins, User, Hash, Timer, Award, Shield, Package
+  Coins, User, Hash, Timer, Award, Shield, Package, ArrowLeft
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
@@ -665,6 +665,15 @@ const AuctionPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/auctions')}
+          className="mb-4 flex items-center gap-2 text-gray-600 hover:text-accent-600 transition-colors font-medium"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="hidden sm:inline">Back to Auctions</span>
+        </button>
+
         {/* User Info Card - Shows logged in user's auction details */}
         {user && user.isAuctionVerified && (
           <div className="mb-4 sm:mb-6 bg-gradient-to-r from-accent-600 to-accent-700 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-xl">
