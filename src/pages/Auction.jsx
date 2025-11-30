@@ -1049,15 +1049,22 @@ const AuctionPage = () => {
                         >
                           <div className="flex items-start gap-3">
                             {/* Lot Image */}
-                            <div className="w-16 h-16 rounded-lg flex-shrink-0 overflow-hidden border-2 border-gray-200">
-                              <img
-                                src={lot.images?.[0] || '/placeholder-product.jpg'}
-                                alt={lot.title}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.target.src = '/placeholder-product.jpg';
-                                }}
-                              />
+                            <div className="w-16 h-16 rounded-lg flex-shrink-0 overflow-hidden border-2 border-gray-200 bg-gray-100">
+                              {lot.image ? (
+                                <img
+                                  src={lot.image}
+                                  alt={lot.title}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect fill="%23f3f4f6" width="64" height="64"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="10"%3ENo Image%3C/text%3E%3C/svg%3E';
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-400">
+                                  No Image
+                                </div>
+                              )}
                             </div>
 
                             {/* Lot Info */}
