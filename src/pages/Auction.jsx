@@ -664,9 +664,9 @@ const AuctionPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1600px] mx-auto px-3 py-2">
-        {/* Compact Header */}
-        <div className="mb-2 flex items-center justify-between">
+      {/* TOP BAR */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-[1920px] mx-auto px-4 py-2.5 flex items-center justify-between">
           <button
             onClick={() => navigate('/auctions')}
             className="flex items-center gap-2 text-gray-600 hover:text-accent-600 transition-colors text-sm font-medium"
@@ -677,39 +677,45 @@ const AuctionPage = () => {
 
           {user && user.isAuctionVerified && (
             <div className="flex items-center gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-gray-500" />
-                <span className="font-medium text-gray-700">{user.name}</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+                <User className="w-4 h-4 text-gray-600" />
+                <span className="font-semibold text-gray-800">{user.name}</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 rounded border border-amber-200">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg border border-blue-200">
+                <Hash className="w-4 h-4 text-blue-600" />
+                <span className="text-xs text-blue-600 font-medium">ID:</span>
+                <span className="font-bold text-blue-700">{user.auctionId || 'N/A'}</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 rounded-lg border border-amber-200">
                 <Coins className="w-4 h-4 text-amber-600" />
+                <span className="text-xs text-amber-600 font-medium">Coins:</span>
                 <span className="font-bold text-amber-700">₹{user.auctionCoins?.toLocaleString() || 0}</span>
               </div>
             </div>
           )}
+
+          {user && !user.isAuctionVerified && (
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-yellow-600" />
+              <span className="text-sm font-medium text-yellow-800">Registration Required</span>
+              <button
+                onClick={() => navigate('/auction-registration')}
+                className="ml-2 px-3 py-1 bg-yellow-600 text-white rounded text-xs font-semibold hover:bg-yellow-700"
+              >
+                Register
+              </button>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* Not verified message */}
-        {user && !user.isAuctionVerified && (
-          <div className="mb-2 bg-yellow-50 border border-yellow-200 rounded p-2 flex items-center gap-2 text-sm">
-            <Shield className="w-4 h-4 text-yellow-600" />
-            <span className="flex-1 font-medium text-yellow-800">Register to bid</span>
-            <button
-              onClick={() => navigate('/auction-registration')}
-              className="px-3 py-1 bg-yellow-600 text-white rounded text-xs font-semibold hover:bg-yellow-700"
-            >
-              Register
-            </button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2" style={{ height: 'calc(100vh - 100px)' }}>
-
-          {/* LEFT COLUMN - Product + Bids */}
-          <div className="flex flex-col gap-2 overflow-hidden">
-            {/* Product Section */}
-            <div className="bg-white rounded-lg shadow overflow-hidden" style={{ height: '42%' }}>
-              <div className="relative h-full bg-gray-100">
+      <div className="max-w-[1920px] mx-auto px-4 py-3">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
+          {/* Left Column - Auction Images & Details */}
+          <div className="lg:col-span-3 space-y-4 sm:space-y-6">
+            {/* Auction Image Gallery */}
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden">
+              <div className="relative aspect-square sm:aspect-[4/3] bg-gray-100">
                 {auctionImages.length > 0 ? (
                   <img
                     src={auctionImages[selectedImage]}
