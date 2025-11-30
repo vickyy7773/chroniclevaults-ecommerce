@@ -1071,6 +1071,10 @@ const AuctionPage = () => {
                                 <span className={`text-xs font-bold px-2 py-0.5 rounded ${
                                   lot.status === 'Active'
                                     ? 'bg-green-500 text-white'
+                                    : lot.status === 'Sold'
+                                    ? 'bg-emerald-500 text-white'
+                                    : lot.status === 'Unsold'
+                                    ? 'bg-red-500 text-white'
                                     : lot.status === 'Ended'
                                     ? 'bg-gray-500 text-white'
                                     : 'bg-blue-500 text-white'
@@ -1080,12 +1084,18 @@ const AuctionPage = () => {
                                 <span className={`text-xs font-semibold ${
                                   lot.status === 'Active'
                                     ? 'text-green-700'
+                                    : lot.status === 'Sold'
+                                    ? 'text-emerald-700'
+                                    : lot.status === 'Unsold'
+                                    ? 'text-red-700'
                                     : lot.status === 'Ended'
                                     ? 'text-gray-600'
                                     : 'text-blue-700'
                                 }`}>
                                   {lot.status === 'Active' && '🔴 LIVE'}
-                                  {lot.status === 'Ended' && '✅ SOLD'}
+                                  {lot.status === 'Sold' && '✅ SOLD'}
+                                  {lot.status === 'Unsold' && '❌ UNSOLD'}
+                                  {lot.status === 'Ended' && '✅ ENDED'}
                                   {lot.status === 'Upcoming' && '⏳ UPCOMING'}
                                 </span>
                               </div>
@@ -1094,23 +1104,47 @@ const AuctionPage = () => {
                                 {lot.title}
                               </h4>
 
-                              <div className="flex items-center justify-between text-xs">
-                                <div>
-                                  <span className="text-gray-500">Current:</span>
-                                  <span className="font-bold text-gray-900 ml-1">
-                                    ₹{lot.currentBid.toLocaleString()}
-                                  </span>
+                              <div className="space-y-1">
+                                {/* Starting and Current/Final Price */}
+                                <div className="flex items-center justify-between text-xs">
+                                  <div>
+                                    <span className="text-gray-500">Starting:</span>
+                                    <span className="font-semibold text-gray-700 ml-1">
+                                      ₹{lot.startingPrice.toLocaleString()}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">
+                                      {lot.status === 'Active' || lot.status === 'Upcoming' ? 'Current:' : 'Final:'}
+                                    </span>
+                                    <span className={`font-bold ml-1 ${
+                                      lot.status === 'Sold' ? 'text-emerald-600' :
+                                      lot.status === 'Unsold' ? 'text-red-600' :
+                                      'text-gray-900'
+                                    }`}>
+                                      ₹{lot.currentBid.toLocaleString()}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div>
-                                  <span className="text-gray-500">Bids:</span>
-                                  <span className="font-bold text-gray-900 ml-1">
-                                    {lot.bids?.length || 0}
-                                  </span>
+
+                                {/* Total Bids */}
+                                <div className="flex items-center justify-between text-xs">
+                                  <div>
+                                    <span className="text-gray-500">Total Bids:</span>
+                                    <span className="font-bold text-gray-900 ml-1">
+                                      {lot.bids?.length || 0}
+                                    </span>
+                                  </div>
+                                  {lot.status === 'Unsold' && lot.unsoldReason && (
+                                    <div className="text-red-600 font-semibold">
+                                      {lot.unsoldReason}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
-                              {lot.status === 'Ended' && lot.winner && (
-                                <div className="mt-1 text-xs text-gray-600">
+                              {lot.status === 'Sold' && lot.winner && (
+                                <div className="mt-1 text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded">
                                   <span className="font-semibold">Winner:</span> {lot.winner.name || 'N/A'}
                                 </div>
                               )}
