@@ -710,9 +710,9 @@ const AuctionPage = () => {
       </div>
 
       <div className="max-w-[1920px] mx-auto px-4 py-3">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {/* Left Column - Auction Images & Details */}
-          <div className="lg:col-span-3 space-y-4 sm:space-y-6">
+          <div className="space-y-3">
             {/* Auction Image Gallery */}
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden">
               <div className="relative aspect-square sm:aspect-[4/3] bg-gray-100">
@@ -880,8 +880,8 @@ const AuctionPage = () => {
           </div>
 
           {/* Right Column - Bidding Section */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden lg:sticky lg:top-20">
+          <div>
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-16">
               {/* Time Remaining Header */}
               {auction.status === 'Active' && (
                 <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-4 sm:p-6 text-white">
