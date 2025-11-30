@@ -712,10 +712,10 @@ const AuctionPage = () => {
       <div className="max-w-[1920px] mx-auto px-4 py-3">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {/* Left Column - Auction Images & Details */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* Auction Image Gallery */}
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden">
-              <div className="relative aspect-square sm:aspect-[4/3] bg-gray-100">
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+              <div className="relative aspect-[4/3] bg-gray-100">
                 {auctionImages.length > 0 ? (
                   <img
                     src={auctionImages[selectedImage]}
@@ -724,31 +724,31 @@ const AuctionPage = () => {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Gavel className="w-20 h-20 sm:w-24 sm:h-24 text-gray-300" />
+                    <Gavel className="w-16 h-16 text-gray-300" />
                   </div>
                 )}
 
                 {/* Status Badge on Image */}
-                <div className={`absolute top-3 sm:top-4 left-3 sm:left-4 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm shadow-lg ${
+                <div className={`absolute top-2 left-2 px-2.5 py-1 rounded-full font-bold text-[10px] shadow-lg ${
                   auction.status === 'Active'
                     ? 'bg-green-500 text-white'
                     : auction.status === 'Upcoming'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-500 text-white'
                 }`}>
-                  {auction.status === 'Active' && <span className="inline-block w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>}
+                  {auction.status === 'Active' && <span className="inline-block w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse"></span>}
                   {auction.status}
                 </div>
               </div>
 
               {/* Thumbnail Gallery */}
               {auctionImages.length > 1 && (
-                <div className="p-3 sm:p-4 border-t flex gap-2 overflow-x-auto">
+                <div className="p-2 border-t flex gap-1.5 overflow-x-auto">
                   {auctionImages.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedImage(idx)}
-                      className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      className={`flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${
                         selectedImage === idx ? 'border-accent-600 shadow-lg' : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -760,123 +760,63 @@ const AuctionPage = () => {
             </div>
 
             {/* Auction Information */}
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6">
+            <div className="bg-white rounded-lg shadow-lg p-3">
               {/* FOR LOT BIDDING: Show display lot title */}
               {auction.isLotBidding && auction.lots && displayLot ? (
                 <>
-                  <div className="mb-3 flex items-center gap-2 flex-wrap">
-                    <span className="px-3 py-1 bg-accent-100 text-accent-700 rounded-full text-sm font-bold">
+                  <div className="mb-2 flex items-center gap-1.5 flex-wrap">
+                    <span className="px-2 py-0.5 bg-accent-100 text-accent-700 rounded-full text-[10px] font-bold">
                       Lot {displayLot.lotNumber} of {auction.totalLots}
                     </span>
                     {selectedLotIndex !== null && selectedLotIndex !== (auction.lotNumber - 1) && (
-                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[9px] font-semibold">
                         👁️ Viewing
                       </span>
                     )}
                     {displayLot.status === 'Active' && (
-                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                      <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[9px] font-semibold">
                         🔴 LIVE NOW
                       </span>
                     )}
-                    <span className="text-sm text-gray-500">Sequential Lot Bidding</span>
+                    <span className="text-[10px] text-gray-500">Sequential Lot Bidding</span>
                   </div>
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
+                  <h1 className="text-base font-bold text-gray-900 mb-2">
                     {displayLot.title || auction.title}
                   </h1>
-                  <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
+                  <p className="text-gray-600 text-xs leading-relaxed">
                     {displayLot.description || auction.description}
                   </p>
                 </>
               ) : (
                 <>
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">{auction.title}</h1>
-                  <p className="text-gray-600 text-sm sm:text-base leading-relaxed">{auction.description}</p>
+                  <h1 className="text-base font-bold text-gray-900 mb-2">{auction.title}</h1>
+                  <p className="text-gray-600 text-xs leading-relaxed">{auction.description}</p>
                 </>
               )}
 
               {/* Auction Timeline */}
-              <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-green-600" />
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                  <div className="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-3.5 h-3.5 text-green-600" />
                   </div>
-                  <div>
-                    <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">Start Time</p>
-                    <p className="font-semibold text-gray-900 text-xs sm:text-sm">{formatDate(auction.startTime)}</p>
+                  <div className="min-w-0">
+                    <p className="text-[9px] text-gray-500 uppercase tracking-wide">Start Time</p>
+                    <p className="font-semibold text-gray-900 text-[10px] truncate">{formatDate(auction.startTime)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <Timer className="w-5 h-5 text-red-600" />
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                  <div className="w-7 h-7 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Timer className="w-3.5 h-3.5 text-red-600" />
                   </div>
-                  <div>
-                    <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">End Time</p>
-                    <p className="font-semibold text-gray-900 text-xs sm:text-sm">{formatDate(auction.endTime)}</p>
+                  <div className="min-w-0">
+                    <p className="text-[9px] text-gray-500 uppercase tracking-wide">End Time</p>
+                    <p className="font-semibold text-gray-900 text-[10px] truncate">{formatDate(auction.endTime)}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Bid History */}
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6">
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <History className="w-5 h-5 text-accent-600" />
-                Bid History
-                <span className="ml-auto text-sm font-normal text-gray-500">{auction.bids.length} bids</span>
-              </h3>
-
-              {auction.bids.length === 0 ? (
-                <div className="text-center py-8 sm:py-12">
-                  <Gavel className="w-12 h-12 sm:w-16 sm:h-16 text-gray-200 mx-auto mb-3" />
-                  <p className="text-gray-500 font-medium">No bids yet</p>
-                  <p className="text-gray-400 text-sm">Be the first to place a bid!</p>
-                </div>
-              ) : (
-                <div className="space-y-2 sm:space-y-3 max-h-80 sm:max-h-96 overflow-y-auto pr-2">
-                  {[...auction.bids].reverse().map((bid, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center justify-between p-3 sm:p-4 rounded-xl transition-all ${
-                        index === 0
-                          ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200'
-                          : 'bg-gray-50 hover:bg-gray-100'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          index === 0 ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600'
-                        }`}>
-                          {index === 0 ? <Award className="w-4 h-4 sm:w-5 sm:h-5" /> : <User className="w-4 h-4 sm:w-5 sm:h-5" />}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">
-                            Bidder #{auction.bids.length - index}
-                            {index === 0 && (
-                              <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded-full">
-                                Leading
-                              </span>
-                            )}
-                          </p>
-                          <p className="text-[10px] sm:text-xs text-gray-500">
-                            {new Date(bid.timestamp).toLocaleString('en-IN', {
-                              day: '2-digit',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0 ml-2">
-                        <p className={`font-bold text-sm sm:text-lg ${index === 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                          ₹{bid.amount.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Right Column - Bidding Section */}
@@ -884,62 +824,62 @@ const AuctionPage = () => {
             <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-16">
               {/* Time Remaining Header */}
               {auction.status === 'Active' && (
-                <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-4 sm:p-6 text-white">
-                  <p className="text-white/80 text-xs sm:text-sm uppercase tracking-wide mb-1">Time Remaining</p>
-                  <p className="text-2xl sm:text-3xl lg:text-4xl font-bold font-mono">{timeRemaining}</p>
+                <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-2.5 text-white">
+                  <p className="text-white/80 text-[10px] uppercase tracking-wide mb-0.5">Time Remaining</p>
+                  <p className="text-xl font-bold font-mono">{timeRemaining}</p>
                 </div>
               )}
 
-              <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+              <div className="p-3 space-y-2.5">
                 {/* Current Bid Display */}
-                <div className="text-center py-4 sm:py-6 border-b-2 border-gray-100">
-                  <p className="text-gray-500 text-xs sm:text-sm uppercase tracking-wide mb-2">Current Bid</p>
-                  <p className="text-3xl sm:text-4xl lg:text-5xl font-black text-accent-600">
+                <div className="text-center py-2.5 border-b border-gray-100">
+                  <p className="text-gray-500 text-[10px] uppercase tracking-wide mb-1">Current Bid</p>
+                  <p className="text-2xl font-black text-accent-600">
                     ₹{displayCurrentBid.toLocaleString()}
                   </p>
                 </div>
 
                 {/* Bid Stats Grid */}
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <div className="bg-gray-50 rounded-xl p-3 sm:p-4">
-                    <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">Starting Price</p>
-                    <p className="font-bold text-gray-900 text-sm sm:text-base">₹{displayStartingPrice.toLocaleString()}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gray-50 rounded-lg p-2">
+                    <p className="text-[9px] text-gray-500 uppercase tracking-wide">Starting Price</p>
+                    <p className="font-bold text-gray-900 text-xs">₹{displayStartingPrice.toLocaleString()}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-xl p-3 sm:p-4">
-                    <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">Total Bids</p>
-                    <p className="font-bold text-gray-900 text-sm sm:text-base">{auction.totalBids || 0}</p>
+                  <div className="bg-gray-50 rounded-lg p-2">
+                    <p className="text-[9px] text-gray-500 uppercase tracking-wide">Total Bids</p>
+                    <p className="font-bold text-gray-900 text-xs">{auction.totalBids || 0}</p>
                   </div>
-                  <div className="bg-green-50 rounded-xl p-3 sm:p-4">
-                    <p className="text-[10px] sm:text-xs text-green-600 uppercase tracking-wide">Next Min Bid</p>
-                    <p className="font-bold text-green-700 text-sm sm:text-base">₹{minBid.toLocaleString()}</p>
+                  <div className="bg-green-50 rounded-lg p-2">
+                    <p className="text-[9px] text-green-600 uppercase tracking-wide">Next Min Bid</p>
+                    <p className="font-bold text-green-700 text-xs">₹{minBid.toLocaleString()}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-xl p-3 sm:p-4">
-                    <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide">Increment</p>
-                    <p className="font-bold text-gray-900 text-sm sm:text-base">₹{currentIncrement.toLocaleString()}</p>
+                  <div className="bg-gray-50 rounded-lg p-2">
+                    <p className="text-[9px] text-gray-500 uppercase tracking-wide">Increment</p>
+                    <p className="font-bold text-gray-900 text-xs">₹{currentIncrement.toLocaleString()}</p>
                   </div>
                 </div>
 
                 {/* User Bid Stats */}
                 {user && getUserBidCount() > 0 && (
-                  <div className="bg-accent-50 rounded-xl p-3 sm:p-4">
-                    <p className="text-[10px] sm:text-xs text-accent-600 uppercase tracking-wide">Your Bids</p>
-                    <p className="font-bold text-accent-700 text-sm sm:text-base">{getUserBidCount()} bids placed</p>
+                  <div className="bg-accent-50 rounded-lg p-2">
+                    <p className="text-[9px] text-accent-600 uppercase tracking-wide">Your Bids</p>
+                    <p className="font-bold text-accent-700 text-xs">{getUserBidCount()} bids placed</p>
                   </div>
                 )}
 
                 {/* Winning Status */}
                 {user && auction.status === 'Active' && getUserBidCount() > 0 && (
                   isUserWinning() ? (
-                    <div className="bg-green-100 border-2 border-green-300 rounded-xl p-3 sm:p-4">
-                      <p className="text-green-800 font-bold text-sm sm:text-base flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                    <div className="bg-green-100 border border-green-300 rounded-lg p-2">
+                      <p className="text-green-800 font-bold text-xs flex items-center gap-1.5">
+                        <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
                         You are winning!
                       </p>
                     </div>
                   ) : (
-                    <div className="bg-red-100 border-2 border-red-300 rounded-xl p-3 sm:p-4">
-                      <p className="text-red-800 font-bold text-sm sm:text-base flex items-center gap-2">
-                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    <div className="bg-red-100 border border-red-300 rounded-lg p-2">
+                      <p className="text-red-800 font-bold text-xs flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
                         You are outbid!
                       </p>
                     </div>
@@ -949,9 +889,9 @@ const AuctionPage = () => {
                 {/* Bid Form */}
                 {auction.status === 'Active' ? (
                   user && user.isAuctionVerified ? (
-                    <form onSubmit={handlePlaceBid} className="space-y-3 sm:space-y-4">
+                    <form onSubmit={handlePlaceBid} className="space-y-2">
                       <div>
-                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-[10px] font-semibold text-gray-700 mb-1">
                           Your Bid / Max Reserve (₹)
                         </label>
                         <input
@@ -961,58 +901,58 @@ const AuctionPage = () => {
                           min={minBid}
                           step="50"
                           required
-                          className="w-full px-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-accent-500 focus:border-accent-500 text-lg sm:text-xl font-bold text-center"
+                          className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 text-base font-bold text-center"
                           placeholder={minBid.toString()}
                         />
-                        <p className="text-[10px] sm:text-xs text-gray-500 mt-1 text-center">
-                          Min: ₹{minBid.toLocaleString()} • Enter higher amount to set as max reserve
+                        <p className="text-[9px] text-gray-500 mt-0.5 text-center">
+                          Min: ₹{minBid.toLocaleString()}
                         </p>
                       </div>
 
                       <button
                         type="submit"
                         disabled={submittingBid}
-                        className="w-full bg-gradient-to-r from-accent-600 to-accent-700 hover:from-accent-700 hover:to-accent-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 sm:py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-2 text-base sm:text-lg shadow-lg hover:shadow-xl"
+                        className="w-full bg-gradient-to-r from-accent-600 to-accent-700 hover:from-accent-700 hover:to-accent-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 text-sm shadow-lg hover:shadow-xl"
                       >
                         {submittingBid ? (
                           <>
-                            <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                             <span>Placing Bid...</span>
                           </>
                         ) : (
                           <>
-                            <Gavel className="w-5 h-5" />
+                            <Gavel className="w-4 h-4" />
                             <span>Place Bid</span>
                           </>
                         )}
                       </button>
                     </form>
                   ) : (
-                    <div className="text-center py-6">
-                      <Shield className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-600 font-medium mb-3">
+                    <div className="text-center py-3">
+                      <Shield className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-600 font-medium mb-2 text-xs">
                         {user ? 'Complete auction registration to bid' : 'Login to place bids'}
                       </p>
                       <button
                         onClick={() => navigate(user ? '/auction-registration' : '/authentication')}
-                        className="px-6 py-3 bg-accent-600 text-white rounded-xl font-semibold hover:bg-accent-700 transition-colors"
+                        className="px-4 py-2 bg-accent-600 text-white rounded-lg text-xs font-semibold hover:bg-accent-700 transition-colors"
                       >
                         {user ? 'Register for Auctions' : 'Login / Sign Up'}
                       </button>
                     </div>
                   )
                 ) : auction.status === 'Upcoming' ? (
-                  <div className="text-center py-6 bg-blue-50 rounded-xl">
-                    <Clock className="w-12 h-12 text-blue-400 mx-auto mb-3" />
-                    <p className="text-blue-800 font-bold">Auction hasn't started</p>
-                    <p className="text-blue-600 text-sm mt-1">Check back at start time</p>
+                  <div className="text-center py-3 bg-blue-50 rounded-lg">
+                    <Clock className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                    <p className="text-blue-800 font-bold text-xs">Auction hasn't started</p>
+                    <p className="text-blue-600 text-[10px] mt-0.5">Check back at start time</p>
                   </div>
                 ) : (
-                  <div className="text-center py-6 bg-gray-50 rounded-xl">
-                    <Gavel className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-800 font-bold">Auction Ended</p>
+                  <div className="text-center py-3 bg-gray-50 rounded-lg">
+                    <Gavel className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-800 font-bold text-xs">Auction Ended</p>
                     {auction.winner && (
-                      <p className="text-gray-600 text-sm mt-1">
+                      <p className="text-gray-600 text-[10px] mt-0.5">
                         Winner: <span className="font-semibold">{auction.winner.name}</span>
                       </p>
                     )}
@@ -1020,11 +960,71 @@ const AuctionPage = () => {
                 )}
 
                 {/* Warning */}
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4">
-                  <p className="text-[10px] sm:text-xs text-amber-800 flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2">
+                  <p className="text-[9px] text-amber-800 flex items-start gap-1.5">
+                    <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
                     <span>All bids are final. Review carefully before submitting.</span>
                   </p>
+                </div>
+
+                {/* Bid History */}
+                <div className="border-t border-gray-200 pt-2.5">
+                  <h3 className="text-xs font-bold text-gray-900 mb-2 flex items-center justify-between">
+                    <span>Bid History</span>
+                    <span className="text-[10px] font-normal text-gray-500">{auction.bids.length} bids</span>
+                  </h3>
+
+                  {auction.bids.length === 0 ? (
+                    <div className="text-center py-4">
+                      <Gavel className="w-8 h-8 text-gray-200 mx-auto mb-1.5" />
+                      <p className="text-gray-500 font-medium text-[10px]">No bids yet</p>
+                      <p className="text-gray-400 text-[9px]">Be the first to place a bid!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                      {[...auction.bids].reverse().map((bid, index) => (
+                        <div
+                          key={index}
+                          className={`flex items-center justify-between p-2 rounded-lg transition-all ${
+                            index === 0
+                              ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200'
+                              : 'bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              index === 0 ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600'
+                            }`}>
+                              <User className="w-3 h-3" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-gray-900 text-[10px] truncate">
+                                Bidder #{auction.bids.length - index}
+                                {index === 0 && (
+                                  <span className="ml-1 text-[9px] bg-green-600 text-white px-1.5 py-0.5 rounded-full">
+                                    Leading
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-[9px] text-gray-500">
+                                {new Date(bid.timestamp).toLocaleString('en-IN', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0 ml-2">
+                            <p className={`font-bold text-xs ${index === 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                              ₹{bid.amount.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
               </div>
@@ -1034,19 +1034,19 @@ const AuctionPage = () => {
 
         {/* Horizontal Lots Strip at Bottom */}
         {auction.isLotBidding && auction.lots && auction.lots.length > 0 && (
-          <div className="mt-3 bg-white border-t-2 border-gray-200 rounded-lg shadow-lg overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <span>All Lots ({auction.lots.length})</span>
+          <div className="mt-2 bg-white border-t border-gray-200 rounded-lg shadow overflow-hidden">
+            <div className="px-3 py-2 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-[10px] font-bold text-gray-900">
+                All Lots ({auction.lots.length})
               </h3>
               {/* Lot Progress Indicator */}
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-600">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] text-gray-600">
                   Lot <span className="font-bold text-gray-900">{auction.lotNumber || 1}</span> of <span className="font-bold text-gray-900">{auction.totalLots}</span>
                 </span>
-                <div className="w-32 bg-gray-200 rounded-full h-1.5">
+                <div className="w-24 bg-gray-200 rounded-full h-1">
                   <div
-                    className="bg-gradient-to-r from-accent-500 to-accent-600 h-1.5 rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-accent-500 to-accent-600 h-1 rounded-full transition-all duration-500"
                     style={{
                       width: `${((auction.lotNumber || 1) / auction.totalLots) * 100}%`
                     }}
@@ -1057,24 +1057,24 @@ const AuctionPage = () => {
 
             {/* Horizontal Scrolling Lots */}
             <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-              <div className="flex gap-3 p-4 min-w-min">
+              <div className="flex gap-2 p-2 min-w-min">
                 {auction.lots.map((lot, index) => (
                   <div
                     key={index}
                     onClick={() => handleLotClick(index)}
-                    className={`flex-shrink-0 w-64 rounded-lg p-3 border-2 transition-all cursor-pointer hover:shadow-lg ${
+                    className={`flex-shrink-0 w-48 rounded-lg p-2 border transition-all cursor-pointer hover:shadow-md ${
                       selectedLotIndex === index
-                        ? 'bg-accent-50 border-accent-500 shadow-lg ring-2 ring-accent-300'
+                        ? 'bg-accent-50 border-accent-500 shadow-md ring-1 ring-accent-300'
                         : lot.status === 'Active'
-                        ? 'bg-green-50 border-green-500 shadow-md'
+                        ? 'bg-green-50 border-green-500'
                         : lot.status === 'Ended'
                         ? 'bg-gray-50 border-gray-300'
                         : 'bg-blue-50 border-blue-300'
                     }`}
                   >
-                    <div className="flex gap-3">
+                    <div className="flex gap-2">
                       {/* Lot Image */}
-                      <div className="w-20 h-20 rounded-lg flex-shrink-0 overflow-hidden border-2 border-gray-200 bg-gray-100">
+                      <div className="w-14 h-14 rounded-lg flex-shrink-0 overflow-hidden border border-gray-200 bg-gray-100">
                         {lot.image ? (
                           <img
                             src={lot.image}
@@ -1094,8 +1094,8 @@ const AuctionPage = () => {
 
                       {/* Lot Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                             lot.status === 'Active'
                               ? 'bg-green-500 text-white'
                               : lot.status === 'Sold'
@@ -1108,7 +1108,7 @@ const AuctionPage = () => {
                           }`}>
                             #{lot.lotNumber}
                           </span>
-                          <span className={`text-[10px] font-semibold ${
+                          <span className={`text-[8px] font-semibold ${
                             lot.status === 'Active'
                               ? 'text-green-700'
                               : lot.status === 'Sold'
@@ -1127,15 +1127,15 @@ const AuctionPage = () => {
                           </span>
                         </div>
 
-                        <h4 className="font-semibold text-xs text-gray-900 truncate mb-1.5">
+                        <h4 className="font-semibold text-[10px] text-gray-900 truncate mb-1">
                           {lot.title}
                         </h4>
 
                         <div className="space-y-0.5">
-                          <div className="flex items-center justify-between text-[10px]">
+                          <div className="flex items-center justify-between text-[9px]">
                             <span className="text-gray-500">Start: ₹{lot.startingPrice.toLocaleString()}</span>
                           </div>
-                          <div className="flex items-center justify-between text-[11px]">
+                          <div className="flex items-center justify-between text-[9px]">
                             <span className="text-gray-600 font-medium">
                               {lot.status === 'Active' || lot.status === 'Upcoming' ? 'Current' : 'Final'}
                             </span>
@@ -1147,7 +1147,7 @@ const AuctionPage = () => {
                               ₹{lot.currentBid.toLocaleString()}
                             </span>
                           </div>
-                          <div className="text-[10px] text-gray-500">
+                          <div className="text-[8px] text-gray-500">
                             {lot.bids?.length || 0} bid{(lot.bids?.length || 0) !== 1 ? 's' : ''}
                           </div>
                         </div>
