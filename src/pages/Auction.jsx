@@ -25,6 +25,7 @@ const AuctionPage = () => {
   const [warningMessage, setWarningMessage] = useState('');
   const [nextWarningTime, setNextWarningTime] = useState(null); // Timestamp of next warning
   const [countdown, setCountdown] = useState(''); // Live countdown display
+  const [selectedLotIndex, setSelectedLotIndex] = useState(null); // Track which lot is selected for viewing
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -635,20 +636,31 @@ const AuctionPage = () => {
     ? auction.lots[auction.lotNumber - 1]
     : null;
 
-  // Use current lot's bid or auction's currentBid
-  const displayCurrentBid = currentLot ? currentLot.currentBid : auction.currentBid;
-  const displayStartingPrice = currentLot ? currentLot.startingPrice : auction.startingPrice;
+  // Get the lot to display - either selected lot or current active lot
+  const displayLot = selectedLotIndex !== null && auction.lots
+    ? auction.lots[selectedLotIndex]
+    : currentLot;
+
+  // Use display lot's bid or auction's currentBid
+  const displayCurrentBid = displayLot ? displayLot.currentBid : auction.currentBid;
+  const displayStartingPrice = displayLot ? displayLot.startingPrice : auction.startingPrice;
 
   const currentIncrement = getCurrentIncrement(auction);
   const minBid = displayCurrentBid + currentIncrement;
 
-  // FOR LOT BIDDING: Use current lot's image
+  // FOR LOT BIDDING: Use display lot's image
   let auctionImages;
-  if (auction.isLotBidding && currentLot && currentLot.image) {
-    auctionImages = [currentLot.image];
+  if (auction.isLotBidding && displayLot && displayLot.image) {
+    auctionImages = [displayLot.image];
   } else {
     auctionImages = auction.images?.length > 0 ? auction.images : (auction.image ? [auction.image] : []);
   }
+
+  // Handle lot click - show selected lot details
+  const handleLotClick = (lotIndex) => {
+    setSelectedLotIndex(lotIndex);
+    setSelectedImage(0); // Reset image selection
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
@@ -771,20 +783,30 @@ const AuctionPage = () => {
 
             {/* Auction Information */}
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6">
-              {/* FOR LOT BIDDING: Show current lot title */}
-              {auction.isLotBidding && auction.lots && auction.lotNumber ? (
+              {/* FOR LOT BIDDING: Show display lot title */}
+              {auction.isLotBidding && auction.lots && displayLot ? (
                 <>
-                  <div className="mb-3 flex items-center gap-2">
+                  <div className="mb-3 flex items-center gap-2 flex-wrap">
                     <span className="px-3 py-1 bg-accent-100 text-accent-700 rounded-full text-sm font-bold">
-                      Lot {auction.lotNumber} of {auction.totalLots}
+                      Lot {displayLot.lotNumber} of {auction.totalLots}
                     </span>
+                    {selectedLotIndex !== null && selectedLotIndex !== (auction.lotNumber - 1) && (
+                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                        👁️ Viewing
+                      </span>
+                    )}
+                    {displayLot.status === 'Active' && (
+                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                        🔴 LIVE NOW
+                      </span>
+                    )}
                     <span className="text-sm text-gray-500">Sequential Lot Bidding</span>
                   </div>
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
-                    {auction.lots[auction.lotNumber - 1]?.title || auction.title}
+                    {displayLot.title || auction.title}
                   </h1>
                   <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                    {auction.lots[auction.lotNumber - 1]?.description || auction.description}
+                    {displayLot.description || auction.description}
                   </p>
                 </>
               ) : (
@@ -1039,8 +1061,11 @@ const AuctionPage = () => {
                       {auction.lots.map((lot, index) => (
                         <div
                           key={index}
-                          className={`rounded-xl p-3 border-2 transition-all ${
-                            lot.status === 'Active'
+                          onClick={() => handleLotClick(index)}
+                          className={`rounded-xl p-3 border-2 transition-all cursor-pointer hover:shadow-lg ${
+                            selectedLotIndex === index
+                              ? 'bg-accent-50 border-accent-500 shadow-lg ring-2 ring-accent-300'
+                              : lot.status === 'Active'
                               ? 'bg-green-50 border-green-500 shadow-md'
                               : lot.status === 'Ended'
                               ? 'bg-gray-50 border-gray-300'
