@@ -667,13 +667,22 @@ const AuctionPage = () => {
       {/* TOP BAR */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-[1920px] mx-auto px-4 py-2.5 flex items-center justify-between">
-          <button
-            onClick={() => navigate('/auctions')}
-            className="flex items-center gap-2 text-gray-600 hover:text-accent-600 transition-colors text-sm font-medium"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Auctions</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/auctions')}
+              className="flex items-center gap-2 text-gray-600 hover:text-accent-600 transition-colors text-sm font-medium"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Auctions</span>
+            </button>
+
+            {/* Start Time */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg border border-green-200">
+              <Clock className="w-4 h-4 text-green-600" />
+              <span className="text-xs text-green-600 font-medium">Start:</span>
+              <span className="font-bold text-green-700 text-xs">{formatDate(auction.startTime)}</span>
+            </div>
+          </div>
 
           {user && user.isAuctionVerified && (
             <div className="flex items-center gap-3 text-sm">
@@ -794,18 +803,6 @@ const AuctionPage = () => {
                 </>
               )}
 
-              {/* Auction Timeline */}
-              <div className="mt-3">
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                  <div className="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-3.5 h-3.5 text-green-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[9px] text-gray-500 uppercase tracking-wide">Start Time</p>
-                    <p className="font-semibold text-gray-900 text-[10px] truncate">{formatDate(auction.startTime)}</p>
-                  </div>
-                </div>
-              </div>
             </div>
 
           </div>
