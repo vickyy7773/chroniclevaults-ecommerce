@@ -724,7 +724,7 @@ const AuctionPage = () => {
           <div className="space-y-2">
             {/* Auction Image Gallery */}
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="relative aspect-[4/3] bg-gray-100">
+              <div className="relative aspect-video bg-gray-100">
                 {auctionImages.length > 0 ? (
                   <img
                     src={auctionImages[selectedImage]}
