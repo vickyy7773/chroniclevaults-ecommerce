@@ -809,7 +809,7 @@ const AuctionPage = () => {
 
           {/* Right Column - Bidding Section */}
           <div>
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-16">
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               {/* Time Remaining Header */}
               {auction.status === 'Active' && (
                 <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-2.5 text-white">
