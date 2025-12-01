@@ -1125,10 +1125,8 @@ const AuctionPage = () => {
                           <div className="text-sm text-gray-500">
                             Start: <span className="font-semibold text-gray-700">₹{lot.startingPrice.toLocaleString()}</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600 font-medium">
-                              {lot.status === 'Active' || lot.status === 'Upcoming' ? 'Current' : 'Final'}
-                            </span>
+                          <div className="text-sm text-gray-600 font-medium">
+                            {lot.status === 'Active' || lot.status === 'Upcoming' ? 'Current: ' : 'Final: '}
                             <span className={`font-bold text-base ${
                               lot.status === 'Sold' ? 'text-emerald-600' :
                               lot.status === 'Unsold' ? 'text-red-600' :
