@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Gavel, Clock, TrendingUp, Users, AlertCircle, CheckCircle, History,
-  Coins, User, Hash, Timer, Award, Shield, ArrowLeft
+  Gavel, Clock, TrendingUp, Users, AlertCircle, CheckCircle,
+  Coins, User, Hash, Shield, ArrowLeft
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
@@ -795,7 +795,7 @@ const AuctionPage = () => {
               )}
 
               {/* Auction Timeline */}
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="mt-3">
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                   <div className="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Clock className="w-3.5 h-3.5 text-green-600" />
@@ -803,15 +803,6 @@ const AuctionPage = () => {
                   <div className="min-w-0">
                     <p className="text-[9px] text-gray-500 uppercase tracking-wide">Start Time</p>
                     <p className="font-semibold text-gray-900 text-[10px] truncate">{formatDate(auction.startTime)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                  <div className="w-7 h-7 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Timer className="w-3.5 h-3.5 text-red-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[9px] text-gray-500 uppercase tracking-wide">End Time</p>
-                    <p className="font-semibold text-gray-900 text-[10px] truncate">{formatDate(auction.endTime)}</p>
                   </div>
                 </div>
               </div>
