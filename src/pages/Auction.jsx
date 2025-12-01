@@ -1050,7 +1050,7 @@ const AuctionPage = () => {
                   <div
                     key={index}
                     onClick={() => handleLotClick(index)}
-                    className={`flex-shrink-0 w-64 rounded-lg p-3 border-2 transition-all cursor-pointer hover:shadow-lg h-40 ${
+                    className={`flex-shrink-0 w-80 rounded-lg p-3 border-2 transition-all cursor-pointer hover:shadow-lg h-40 ${
                       selectedLotIndex === index
                         ? 'bg-accent-50 border-accent-500 shadow-lg ring-2 ring-accent-300'
                         : lot.status === 'Active'
@@ -1062,7 +1062,7 @@ const AuctionPage = () => {
                   >
                     <div className="flex gap-3 h-full">
                       {/* Lot Image */}
-                      <div className="w-24 h-full rounded-lg flex-shrink-0 overflow-hidden border-2 border-gray-200 bg-gray-100">
+                      <div className="w-32 h-full rounded-lg flex-shrink-0 overflow-hidden border-2 border-gray-200 bg-gray-100">
                         {lot.image ? (
                           <img
                             src={lot.image}
