@@ -1045,14 +1045,14 @@ const AuctionPage = () => {
 
             {/* Horizontal Scrolling Lots */}
             <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-              <div className="flex gap-2 p-2 min-w-min">
+              <div className="flex gap-3 p-3 min-w-min">
                 {auction.lots.map((lot, index) => (
                   <div
                     key={index}
                     onClick={() => handleLotClick(index)}
-                    className={`flex-shrink-0 w-48 rounded-lg p-2 border transition-all cursor-pointer hover:shadow-md ${
+                    className={`flex-shrink-0 w-64 rounded-lg p-3 border-2 transition-all cursor-pointer hover:shadow-lg h-32 ${
                       selectedLotIndex === index
-                        ? 'bg-accent-50 border-accent-500 shadow-md ring-1 ring-accent-300'
+                        ? 'bg-accent-50 border-accent-500 shadow-lg ring-2 ring-accent-300'
                         : lot.status === 'Active'
                         ? 'bg-green-50 border-green-500'
                         : lot.status === 'Ended'
@@ -1060,9 +1060,9 @@ const AuctionPage = () => {
                         : 'bg-blue-50 border-blue-300'
                     }`}
                   >
-                    <div className="flex gap-2">
+                    <div className="flex gap-3 h-full">
                       {/* Lot Image */}
-                      <div className="w-14 h-14 rounded-lg flex-shrink-0 overflow-hidden border border-gray-200 bg-gray-100">
+                      <div className="w-24 h-full rounded-lg flex-shrink-0 overflow-hidden border-2 border-gray-200 bg-gray-100">
                         {lot.image ? (
                           <img
                             src={lot.image}
@@ -1070,64 +1070,66 @@ const AuctionPage = () => {
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               e.target.onerror = null;
-                              e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23f3f4f6" width="80" height="80"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="10"%3ENo Image%3C/text%3E%3C/svg%3E';
+                              e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="104"%3E%3Crect fill="%23f3f4f6" width="96" height="104"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="12"%3ENo Image%3C/text%3E%3C/svg%3E';
                             }}
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-base text-gray-400">
+                          <div className="w-full h-full flex items-center justify-center text-sm text-gray-400">
                             No Image
                           </div>
                         )}
                       </div>
 
                       {/* Lot Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1 mb-0.5">
-                          <span className={`text-sm font-bold px-1.5 py-0.5 rounded ${
-                            lot.status === 'Active'
-                              ? 'bg-green-500 text-white'
-                              : lot.status === 'Sold'
-                              ? 'bg-emerald-500 text-white'
-                              : lot.status === 'Unsold'
-                              ? 'bg-red-500 text-white'
-                              : lot.status === 'Ended'
-                              ? 'bg-gray-500 text-white'
-                              : 'bg-blue-500 text-white'
-                          }`}>
-                            #{lot.lotNumber}
-                          </span>
-                          <span className={`text-sm font-semibold ${
-                            lot.status === 'Active'
-                              ? 'text-green-700'
-                              : lot.status === 'Sold'
-                              ? 'text-emerald-700'
-                              : lot.status === 'Unsold'
-                              ? 'text-red-700'
-                              : lot.status === 'Ended'
-                              ? 'text-gray-600'
-                              : 'text-blue-700'
-                          }`}>
-                            {lot.status === 'Active' && '🔴 LIVE'}
-                            {lot.status === 'Sold' && '✅ SOLD'}
-                            {lot.status === 'Unsold' && '❌ UNSOLD'}
-                            {lot.status === 'Ended' && '✅ ENDED'}
-                            {lot.status === 'Upcoming' && '⏳ UPCOMING'}
-                          </span>
+                      <div className="flex-1 min-w-0 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className={`text-sm font-bold px-2 py-0.5 rounded ${
+                              lot.status === 'Active'
+                                ? 'bg-green-500 text-white'
+                                : lot.status === 'Sold'
+                                ? 'bg-emerald-500 text-white'
+                                : lot.status === 'Unsold'
+                                ? 'bg-red-500 text-white'
+                                : lot.status === 'Ended'
+                                ? 'bg-gray-500 text-white'
+                                : 'bg-blue-500 text-white'
+                            }`}>
+                              #{lot.lotNumber}
+                            </span>
+                            <span className={`text-sm font-bold ${
+                              lot.status === 'Active'
+                                ? 'text-green-700'
+                                : lot.status === 'Sold'
+                                ? 'text-emerald-700'
+                                : lot.status === 'Unsold'
+                                ? 'text-red-700'
+                                : lot.status === 'Ended'
+                                ? 'text-gray-600'
+                                : 'text-blue-700'
+                            }`}>
+                              {lot.status === 'Active' && '🔴 LIVE'}
+                              {lot.status === 'Sold' && '✅ SOLD'}
+                              {lot.status === 'Unsold' && '❌ UNSOLD'}
+                              {lot.status === 'Ended' && '✅ ENDED'}
+                              {lot.status === 'Upcoming' && '⏳ UPCOMING'}
+                            </span>
+                          </div>
+
+                          <h4 className="font-bold text-base text-gray-900 truncate mb-1">
+                            {lot.title}
+                          </h4>
                         </div>
 
-                        <h4 className="font-semibold text-base text-gray-900 truncate mb-1">
-                          {lot.title}
-                        </h4>
-
-                        <div className="space-y-0.5">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-500">Start: ₹{lot.startingPrice.toLocaleString()}</span>
+                        <div className="space-y-1">
+                          <div className="text-sm text-gray-500">
+                            Start: <span className="font-semibold text-gray-700">₹{lot.startingPrice.toLocaleString()}</span>
                           </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600 font-medium">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600 font-medium">
                               {lot.status === 'Active' || lot.status === 'Upcoming' ? 'Current' : 'Final'}
                             </span>
-                            <span className={`font-bold ${
+                            <span className={`font-bold text-base ${
                               lot.status === 'Sold' ? 'text-emerald-600' :
                               lot.status === 'Unsold' ? 'text-red-600' :
                               'text-gray-900'
