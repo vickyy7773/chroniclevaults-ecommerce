@@ -238,6 +238,15 @@ export const updateOrderStatus = async (req, res) => {
       });
     }
 
+    // Initialize statusHistory if it doesn't exist
+    if (!order.statusHistory || order.statusHistory.length === 0) {
+      order.statusHistory = [{
+        status: 'Order Placed',
+        timestamp: order.createdAt,
+        note: 'Order has been placed'
+      }];
+    }
+
     // Map order status to timeline entries (removed Order Confirmed for Processing)
     const statusTimelineMap = {
       'Pending': 'Order Placed',
