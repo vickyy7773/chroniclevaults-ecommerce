@@ -109,8 +109,8 @@ const OrderManagement = () => {
 
       console.log('Status Update Response:', response);
 
-      // Handle axios response
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response is already unwrapped by interceptor, so response = { success, message, data }
+      const isSuccess = response?.success !== false;
 
       if (isSuccess) {
         // Update local state
@@ -120,7 +120,7 @@ const OrderManagement = () => {
         alert('Order status updated successfully!');
         console.log('✅ Order status updated');
       } else {
-        const errorMsg = response?.data?.message || 'Failed to update order status';
+        const errorMsg = response?.message || 'Failed to update order status';
         alert(errorMsg);
       }
     } catch (error) {
@@ -148,8 +148,8 @@ const OrderManagement = () => {
 
       console.log('Tracking Update Response:', response);
 
-      // Handle axios response
-      const isSuccess = response?.data?.success !== false && response?.status === 200;
+      // Response is already unwrapped by interceptor
+      const isSuccess = response?.success !== false;
 
       if (isSuccess) {
         // Update local state
@@ -162,7 +162,7 @@ const OrderManagement = () => {
         alert('Tracking information updated successfully!');
         console.log('✅ Tracking info updated');
       } else {
-        const errorMsg = response?.data?.message || 'Failed to update tracking information';
+        const errorMsg = response?.message || 'Failed to update tracking information';
         alert(errorMsg);
       }
     } catch (error) {
