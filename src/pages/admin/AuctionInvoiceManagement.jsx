@@ -1,0 +1,410 @@
+import React, { useState, useEffect } from 'react';
+import { FileText, Plus, Edit2, Download, Trash2, DollarSign, Search, Eye, X } from 'lucide-react';
+import { toast } from 'react-toastify';
+import auctionInvoiceService from '../../services/auctionInvoiceService';
+import { auctionService } from '../../services';
+
+const AuctionInvoiceManagement = () => {
+  const [invoices, setInvoices] = useState([]);
+  const [auctions, setAuctions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [formData, setFormData] = useState({
+    auctionId: '',
+    lotNumber: '',
+    buyerId: '',
+    packingForwardingCharges: { amount: 80 },
+    insuranceCharges: { amount: 0, declined: true },
+    companyDetails: {
+      name: 'Chronicle Vaults',
+      gstin: '',
+      pan: '',
+      msme: '',
+      address: '',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      stateCode: '27',
+      phone: '',
+      email: 'info@chroniclevaults.com'
+    }
+  });
+
+  useEffect(() => {
+    fetchInvoices();
+    fetchAuctions();
+  }, []);
+
+  const fetchInvoices = async () => {
+    try {
+      setLoading(true);
+      const response = await auctionInvoiceService.getAllInvoices();
+      setInvoices(response.data.data || []);
+    } catch (error) {
+      toast.error('Failed to fetch invoices');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAuctions = async () => {
+    try {
+      const response = await auctionService.getAllAuctions();
+      setAuctions(response.data.data || []);
+    } catch (error) {
+      console.error('Failed to fetch auctions:', error);
+    }
+  };
+
+  const handleCreateInvoice = async (e) => {
+    e.preventDefault();
+    try {
+      await auctionInvoiceService.createInvoice(formData);
+      toast.success('Invoice created successfully!');
+      setShowCreateModal(false);
+      fetchInvoices();
+      resetForm();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to create invoice');
+    }
+  };
+
+  const handleUpdateInvoice = async (e) => {
+    e.preventDefault();
+    try {
+      await auctionInvoiceService.updateInvoice(selectedInvoice._id, formData);
+      toast.success('Invoice updated successfully!');
+      setShowEditModal(false);
+      fetchInvoices();
+      setSelectedInvoice(null);
+      resetForm();
+    } catch (error) {
+      toast.error('Failed to update invoice');
+    }
+  };
+
+  const handleDeleteInvoice = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this invoice?')) return;
+
+    try {
+      await auctionInvoiceService.deleteInvoice(id);
+      toast.success('Invoice deleted successfully');
+      fetchInvoices();
+    } catch (error) {
+      toast.error('Failed to delete invoice');
+    }
+  };
+
+  const handleDownloadPDF = async (invoice) => {
+    try {
+      // Basic PDF generation - will enhance later
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(generateInvoiceHTML(invoice));
+      printWindow.document.close();
+      printWindow.print();
+    } catch (error) {
+      toast.error('Failed to download PDF');
+    }
+  };
+
+  const generateInvoiceHTML = (invoice) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice ${invoice.invoiceNumber}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .invoice-details { margin: 20px 0; }
+          .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          .table th { background-color: #f2f2f2; }
+          .total { font-weight: bold; font-size: 18px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${invoice.companyDetails.name}</h1>
+          <p>GSTIN: ${invoice.companyDetails.gstin}</p>
+          <h2>Tax Invoice</h2>
+        </div>
+
+        <div class="invoice-details">
+          <p><strong>Invoice No:</strong> ${invoice.invoiceNumber}</p>
+          <p><strong>Date:</strong> ${new Date(invoice.invoiceDate).toLocaleDateString()}</p>
+          <p><strong>Buyer:</strong> ${invoice.buyerDetails.name}</p>
+          <p><strong>Email:</strong> ${invoice.buyerDetails.email}</p>
+          <p><strong>Phone:</strong> ${invoice.buyerDetails.phone}</p>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Lot#</th>
+              <th>Description</th>
+              <th>HSN Code</th>
+              <th>Qty</th>
+              <th>GST %</th>
+              <th>Hammer Price (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>${invoice.lotNumber}</td>
+              <td>${invoice.lotDetails.description}</td>
+              <td>${invoice.lotDetails.hsnCode}</td>
+              <td>${invoice.lotDetails.quantity}</td>
+              <td>${invoice.gst.itemGSTRate}%</td>
+              <td>₹${invoice.lotDetails.hammerPrice.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td colspan="5">Packing & Forwarding Charges</td>
+              <td>₹${invoice.packingForwardingCharges.amount.toLocaleString()}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="text-align: right; margin-top: 20px;">
+          <p>Gross Amount: ₹${invoice.amounts.grossAmount.toLocaleString()}</p>
+          <p>${invoice.gst.type}: ₹${invoice.amounts.totalGST.toLocaleString()}</p>
+          <p>Round Off: ₹${invoice.amounts.roundOff.toFixed(2)}</p>
+          <p class="total">Total Payable: ₹${invoice.amounts.totalPayable.toLocaleString()}</p>
+        </div>
+
+        <div style="margin-top: 50px;">
+          <p><strong>Amount in Words:</strong></p>
+          <p>Rs. ${numberToWords(invoice.amounts.totalPayable)} Only</p>
+        </div>
+
+        <div style="margin-top: 50px; text-align: right;">
+          <p>For ${invoice.companyDetails.name}</p>
+          <br><br>
+          <p>Authorised Signatory</p>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
+  const numberToWords = (num) => {
+    // Simple number to words conversion - basic version
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(num);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      auctionId: '',
+      lotNumber: '',
+      buyerId: '',
+      packingForwardingCharges: { amount: 80 },
+      insuranceCharges: { amount: 0, declined: true },
+      companyDetails: {
+        name: 'Chronicle Vaults',
+        gstin: '',
+        pan: '',
+        msme: '',
+        address: '',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        stateCode: '27',
+        phone: '',
+        email: 'info@chroniclevaults.com'
+      }
+    });
+  };
+
+  const openEditModal = (invoice) => {
+    setSelectedInvoice(invoice);
+    setFormData({
+      buyerDetails: invoice.buyerDetails,
+      billingAddress: invoice.billingAddress,
+      shippingAddress: invoice.shippingAddress,
+      lotDetails: invoice.lotDetails,
+      packingForwardingCharges: invoice.packingForwardingCharges,
+      insuranceCharges: invoice.insuranceCharges,
+      gst: invoice.gst,
+      companyDetails: invoice.companyDetails
+    });
+    setShowEditModal(true);
+  };
+
+  const filteredInvoices = invoices.filter(invoice =>
+    invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    invoice.buyerDetails?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Auction Invoice Management</h1>
+          <p className="text-gray-600 mt-1">Manage auction invoices with GST calculations</p>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+        >
+          <Plus className="w-5 h-5" />
+          Create Invoice
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search by invoice number or buyer name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+      </div>
+
+      {/* Invoices Table */}
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600 mt-4">Loading invoices...</p>
+        </div>
+      ) : filteredInvoices.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-lg border">
+          <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">No invoices found</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice #</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Buyer</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lot #</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">GST Type</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredInvoices.map((invoice) => (
+                <tr key={invoice._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                    {invoice.invoiceNumber}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {new Date(invoice.invoiceDate).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {invoice.buyerDetails?.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    #{invoice.lotNumber}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                    ₹{invoice.amounts?.totalPayable?.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                      {invoice.gst?.type}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      invoice.status === 'Paid' ? 'bg-green-100 text-green-800' :
+                      invoice.status === 'Generated' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {invoice.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => openEditModal(invoice)}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDownloadPDF(invoice)}
+                        className="text-green-600 hover:text-green-900"
+                        title="Download PDF"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteInvoice(invoice._id)}
+                        className="text-red-600 hover:text-red-900"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Create/Edit Modal - Simplified for now, will be detailed in next part */}
+      {(showCreateModal || showEditModal) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">{showEditModal ? 'Edit Invoice' : 'Create Invoice'}</h2>
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setShowEditModal(false);
+                  resetForm();
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={showEditModal ? handleUpdateInvoice : handleCreateInvoice}>
+              {/* Form fields will be added in next iteration */}
+              <p className="text-gray-600 mb-4">Invoice form coming soon...</p>
+
+              <div className="flex justify-end gap-2 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setShowEditModal(false);
+                    resetForm();
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  {showEditModal ? 'Update Invoice' : 'Create Invoice'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AuctionInvoiceManagement;
