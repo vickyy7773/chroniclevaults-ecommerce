@@ -8,7 +8,7 @@ import {
   getInvoicesByAuction,
   markInvoiceAsPaid
 } from '../controllers/auctionInvoiceController.js';
-import { protect, admin } from '../middleware/authMiddleware.js';
+import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
 
