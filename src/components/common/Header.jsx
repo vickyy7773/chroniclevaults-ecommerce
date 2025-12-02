@@ -133,14 +133,14 @@ const Header = ({
       }),
     // Auctions dropdown
     {
-      to: '/auctions',
+      to: '/coming-soon',
       label: 'Auctions',
       icon: Gavel,
       categories: ['Current Auction', 'Upcoming Auction', 'Auction Archive'],
       auctionLinks: {
-        'Current Auction': '/auctions?status=Active',
-        'Upcoming Auction': '/auctions?status=Upcoming',
-        'Auction Archive': '/auctions?status=Ended'
+        'Current Auction': '/coming-soon',
+        'Upcoming Auction': '/coming-soon',
+        'Auction Archive': '/coming-soon'
       }
     }
   ];
@@ -264,7 +264,7 @@ const Header = ({
 
                   {/* Auction Button */}
                   <Link
-                    to="/auctions?status=Active"
+                    to="/coming-soon"
                     className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white transition-all px-3 py-2 rounded-xl font-medium hover:scale-105"
                   >
                     <span className="relative flex h-2 w-2">
