@@ -1,0 +1,225 @@
+import mongoose from 'mongoose';
+
+const auctionInvoiceSchema = new mongoose.Schema({
+  // Invoice Details
+  invoiceNumber: {
+    type: String,
+    unique: true,
+    required: true
+  },
+  saleNumber: {
+    type: Number,
+    required: true
+  },
+  invoiceDate: {
+    type: Date,
+    default: Date.now
+  },
+
+  // Auction & Lot Reference
+  auction: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Auction',
+    required: true
+  },
+  lotNumber: {
+    type: Number,
+    required: true
+  },
+
+  // Buyer Details
+  buyer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  buyerDetails: {
+    name: { type: String, required: true },
+    email: String,
+    phone: String,
+    gstin: String,
+    pan: String,
+    buyerNumber: String
+  },
+
+  // Billing Address
+  billingAddress: {
+    street: String,
+    city: String,
+    state: String,
+    stateCode: String,
+    zipCode: String
+  },
+
+  // Shipping Address
+  shippingAddress: {
+    street: String,
+    city: String,
+    state: String,
+    stateCode: String,
+    zipCode: String
+  },
+
+  // Lot/Product Details
+  lotDetails: {
+    description: { type: String, required: true },
+    detailedDescription: String, // For delivery note
+    hsnCode: { type: String, default: '97050090' },
+    quantity: { type: Number, default: 1 },
+    hammerPrice: { type: Number, required: true }
+  },
+
+  // Charges
+  packingForwardingCharges: {
+    amount: { type: Number, default: 0 },
+    hsnCode: { type: String, default: '99854' }
+  },
+
+  insuranceCharges: {
+    amount: { type: Number, default: 0 },
+    hsnCode: { type: String, default: '99681' },
+    declined: { type: Boolean, default: false }
+  },
+
+  // GST Calculation
+  gst: {
+    type: {
+      type: String,
+      enum: ['IGST', 'CGST+SGST'],
+      required: true
+    },
+    rate: { type: Number, default: 5.00 }, // Percentage
+
+    // For items (lot)
+    itemGSTRate: { type: Number, default: 5.00 },
+    itemGSTAmount: Number,
+
+    // For packing & forwarding
+    packingGSTRate: { type: Number, default: 18.00 },
+    packingGSTAmount: Number,
+
+    // Total GST
+    totalGST: Number,
+
+    // CGST & SGST (if applicable)
+    cgst: { type: Number, default: 0 },
+    sgst: { type: Number, default: 0 }
+  },
+
+  // Amount Summary
+  amounts: {
+    grossAmount: Number,
+    totalGST: Number,
+    roundOff: Number,
+    totalPayable: Number
+  },
+
+  // Payment Status
+  isPaid: {
+    type: Boolean,
+    default: false
+  },
+  paidAt: Date,
+  paymentMode: String,
+
+  // Shipping Details
+  shipping: {
+    transportMode: String,
+    vehicleNumber: String,
+    dateOfSupply: Date,
+    placeOfSupply: String
+  },
+
+  // Company Details (Chronicle Vaults)
+  companyDetails: {
+    name: { type: String, default: 'Chronicle Vaults' },
+    gstin: String,
+    pan: String,
+    msme: String,
+    address: String,
+    city: String,
+    state: String,
+    stateCode: String,
+    phone: String,
+    email: String,
+    bankDetails: {
+      bankName: String,
+      accountNumber: String,
+      ifsc: String,
+      branch: String
+    }
+  },
+
+  // Status
+  status: {
+    type: String,
+    enum: ['Draft', 'Generated', 'Sent', 'Paid', 'Cancelled'],
+    default: 'Draft'
+  },
+
+  // Notes
+  notes: String,
+  termsAndConditions: String
+
+}, {
+  timestamps: true
+});
+
+// Auto-generate invoice number
+auctionInvoiceSchema.pre('save', async function(next) {
+  if (!this.invoiceNumber) {
+    const count = await mongoose.model('AuctionInvoice').countDocuments();
+    const saleNum = this.saleNumber || (count + 1);
+    this.saleNumber = saleNum;
+    this.invoiceNumber = `B/SALE${saleNum}/${Math.floor(Math.random() * 1000)}`;
+  }
+  next();
+});
+
+// Calculate GST and amounts before saving
+auctionInvoiceSchema.pre('save', function(next) {
+  const hammerPrice = this.lotDetails.hammerPrice;
+  const packingCharges = this.packingForwardingCharges.amount;
+
+  // Calculate item GST
+  this.gst.itemGSTAmount = (hammerPrice * this.gst.itemGSTRate) / 100;
+
+  // Calculate packing GST
+  if (packingCharges > 0) {
+    this.gst.packingGSTAmount = (packingCharges * this.gst.packingGSTRate) / 100;
+  } else {
+    this.gst.packingGSTAmount = 0;
+  }
+
+  // Total GST
+  this.gst.totalGST = this.gst.itemGSTAmount + this.gst.packingGSTAmount;
+
+  // If CGST+SGST, split equally
+  if (this.gst.type === 'CGST+SGST') {
+    this.gst.cgst = this.gst.totalGST / 2;
+    this.gst.sgst = this.gst.totalGST / 2;
+  }
+
+  // Calculate amounts
+  this.amounts.grossAmount = hammerPrice + packingCharges;
+  this.amounts.totalGST = this.gst.totalGST;
+
+  const subtotal = this.amounts.grossAmount + this.amounts.totalGST;
+  this.amounts.roundOff = Math.round(subtotal) - subtotal;
+  this.amounts.totalPayable = Math.round(subtotal);
+
+  next();
+});
+
+// Virtual for buyer state comparison
+auctionInvoiceSchema.virtual('isInterstate').get(function() {
+  return this.billingAddress.stateCode !== this.companyDetails.stateCode;
+});
+
+// Index for faster queries
+auctionInvoiceSchema.index({ invoiceNumber: 1 });
+auctionInvoiceSchema.index({ buyer: 1 });
+auctionInvoiceSchema.index({ auction: 1, lotNumber: 1 });
+auctionInvoiceSchema.index({ status: 1 });
+
+export default mongoose.model('AuctionInvoice', auctionInvoiceSchema);
