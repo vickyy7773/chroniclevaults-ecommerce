@@ -107,7 +107,7 @@ export const getOrderById = async (req, res) => {
 // @access  Private
 export const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user.id }).sort({ createdAt: -1 });
+    const orders = await Order.find({ user: req.user.id, isPaid: true }).sort({ createdAt: -1 });
 
     // Initialize statusHistory for orders that don't have it
     for (const order of orders) {
