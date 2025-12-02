@@ -377,8 +377,136 @@ const AuctionInvoiceManagement = () => {
             </div>
 
             <form onSubmit={showEditModal ? handleUpdateInvoice : handleCreateInvoice}>
-              {/* Form fields will be added in next iteration */}
-              <p className="text-gray-600 mb-4">Invoice form coming soon...</p>
+              {/* Auction Selection */}
+              {showCreateModal && (
+                <>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Auction</label>
+                    <select
+                      value={formData.auctionId}
+                      onChange={(e) => setFormData({ ...formData, auctionId: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="">Select an auction...</option>
+                      {auctions.map(auction => (
+                        <option key={auction._id} value={auction._id}>
+                          {auction.title} - {auction.status}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Lot Number</label>
+                    <input
+                      type="number"
+                      value={formData.lotNumber}
+                      onChange={(e) => setFormData({ ...formData, lotNumber: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter lot number"
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Packing & Forwarding Charges (₹)</label>
+                    <input
+                      type="number"
+                      value={formData.packingForwardingCharges.amount}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        packingForwardingCharges: { ...formData.packingForwardingCharges, amount: parseFloat(e.target.value) || 0 }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                      placeholder="80"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Company GSTIN</label>
+                    <input
+                      type="text"
+                      value={formData.companyDetails.gstin}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        companyDetails: { ...formData.companyDetails, gstin: e.target.value }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                      placeholder="27XXXXX0000X1ZX"
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Company PAN</label>
+                    <input
+                      type="text"
+                      value={formData.companyDetails.pan}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        companyDetails: { ...formData.companyDetails, pan: e.target.value }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                      placeholder="XXXXX0000X"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
+              {showEditModal && selectedInvoice && (
+                <>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Invoice Number</label>
+                    <input
+                      type="text"
+                      value={selectedInvoice.invoiceNumber}
+                      disabled
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Lot Description</label>
+                    <input
+                      type="text"
+                      value={formData.lotDetails?.description || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        lotDetails: { ...formData.lotDetails, description: e.target.value }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Hammer Price (₹)</label>
+                    <input
+                      type="number"
+                      value={formData.lotDetails?.hammerPrice || 0}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        lotDetails: { ...formData.lotDetails, hammerPrice: parseFloat(e.target.value) || 0 }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Packing & Forwarding Charges (₹)</label>
+                    <input
+                      type="number"
+                      value={formData.packingForwardingCharges?.amount || 0}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        packingForwardingCharges: { ...formData.packingForwardingCharges, amount: parseFloat(e.target.value) || 0 }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="flex justify-end gap-2 mt-6">
                 <button
