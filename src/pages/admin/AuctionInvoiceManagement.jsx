@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Plus, Edit2, Download, Trash2, DollarSign, Search, Eye, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import auctionInvoiceService from '../../services/auctionInvoiceService';
-import { auctionService } from '../../services';
+import api from '../../utils/api';
 
 const AuctionInvoiceManagement = () => {
   const [invoices, setInvoices] = useState([]);
@@ -52,7 +52,7 @@ const AuctionInvoiceManagement = () => {
 
   const fetchAuctions = async () => {
     try {
-      const response = await auctionService.getAllAuctions();
+      const response = await api.get('/auctions');
       setAuctions(response.data.data || []);
     } catch (error) {
       console.error('Failed to fetch auctions:', error);
