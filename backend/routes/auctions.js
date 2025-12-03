@@ -7,7 +7,8 @@ import {
   deleteAuction,
   placeBid,
   getUserBids,
-  setReserveBidder
+  setReserveBidder,
+  addBulkLots
 } from '../controllers/auctionController.js';
 import { protect, admin } from '../middleware/auth.js';
 
@@ -26,5 +27,6 @@ router.post('/', protect, admin, createAuction);
 router.put('/:id', protect, admin, updateAuction);
 router.delete('/:id', protect, admin, deleteAuction);
 router.put('/:id/reserve-bidder', protect, admin, setReserveBidder);
+router.post('/:id/bulk-lots', protect, admin, addBulkLots);
 
 export default router;

@@ -1558,3 +1558,86 @@ export const setReserveBidder = async (req, res) => {
     });
   }
 };
+
+// @desc    Add multiple lots to an auction (bulk upload)
+// @route   POST /api/auctions/:id/bulk-lots
+// @access  Admin
+export const addBulkLots = async (req, res) => {
+  try {
+    const { lots } = req.body;
+
+    if (!lots || !Array.isArray(lots) || lots.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Lots array is required and must not be empty'
+      });
+    }
+
+    const auction = await Auction.findById(req.params.id);
+
+    if (!auction) {
+      return res.status(404).json({
+        success: false,
+        message: 'Auction not found'
+      });
+    }
+
+    // Validate that this is a lot bidding auction
+    if (!auction.isLotBidding) {
+      return res.status(400).json({
+        success: false,
+        message: 'This auction is not configured for lot bidding'
+      });
+    }
+
+    // Get current max lot number
+    const currentMaxLotNumber = auction.lots && auction.lots.length > 0
+      ? Math.max(...auction.lots.map(lot => lot.lotNumber))
+      : 0;
+
+    // Prepare lots with validated data
+    const newLots = lots.map((lot, index) => ({
+      lotNumber: lot.lotNumber || (currentMaxLotNumber + index + 1),
+      title: lot.title,
+      description: lot.description,
+      image: lot.image,
+      startingPrice: lot.startingPrice,
+      currentBid: lot.startingPrice, // Initialize with starting price
+      reservePrice: lot.reservePrice || 0,
+      productId: lot.productId || null,
+      bids: [],
+      winner: null,
+      status: 'Upcoming',
+      unsoldReason: null,
+      startTime: null,
+      endTime: null
+    }));
+
+    // Add new lots to auction
+    if (!auction.lots) {
+      auction.lots = [];
+    }
+    auction.lots.push(...newLots);
+
+    // Update total lots count
+    auction.totalLots = auction.lots.length;
+
+    await auction.save();
+
+    res.json({
+      success: true,
+      message: `Successfully added ${newLots.length} lots to auction`,
+      data: {
+        auction,
+        addedLots: newLots
+      }
+    });
+  } catch (error) {
+    console.error('Bulk lot upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to add lots to auction',
+      error: error.message
+    });
+  }
+};
