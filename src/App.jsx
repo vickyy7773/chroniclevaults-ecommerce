@@ -51,6 +51,7 @@ const CategoryManagement = lazy(() => import('./pages/admin/CategoryManagement')
 const AddEditCategory = lazy(() => import('./pages/admin/AddEditCategory'));
 const ReviewManagement = lazy(() => import('./pages/admin/ReviewManagement'));
 const CustomerManagement = lazy(() => import('./pages/admin/CustomerManagement'));
+const VendorManagement = lazy(() => import('./pages/admin/VendorManagement'));
 const SliderManagement = lazy(() => import('./pages/admin/SliderManagement'));
 const BannerManagement = lazy(() => import('./pages/admin/BannerManagement'));
 const CouponManagement = lazy(() => import('./pages/admin/CouponManagement'));
@@ -661,6 +662,7 @@ const AppContent = () => {
               <Route path="filter-options" element={<FilterOptionsManagement />} />
               <Route path="reviews" element={<ReviewManagement />} />
               <Route path="customers" element={<CustomerManagement />} />
+              <Route path="vendors" element={<VendorManagement />} />
               <Route path="sliders" element={<SliderManagement />} />
               <Route path="banners" element={<BannerManagement />} />
               <Route path="coupons" element={<CouponManagement />} />

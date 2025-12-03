@@ -22,7 +22,8 @@ import {
   Activity,
   Gavel,
   FileText,
-  Upload
+  Upload,
+  Building2
 } from 'lucide-react';
 import usePermissions from '../../hooks/usePermissions';
 import posterImage from '../../assets/poster.jpg';
@@ -98,6 +99,13 @@ const AdminLayout = () => {
       label: 'Customers',
       color: 'from-accent-500 to-accent-600',
       resource: 'users'
+    },
+    {
+      path: '/admin/vendors',
+      icon: Building2,
+      label: 'Vendors',
+      color: 'from-amber-500 to-orange-600',
+      resource: 'users' // Tied to users permission
     },
     {
       path: '/admin/sliders',
