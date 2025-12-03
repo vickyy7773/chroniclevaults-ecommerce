@@ -104,6 +104,7 @@ const AuctionManagement = () => {
           description: '',
           productId: '',
           image: '',
+          vendorId: '',
           startingPrice: '',
           status: 'Upcoming'
         }
@@ -426,6 +427,22 @@ const AuctionManagement = () => {
                     </span>
                     <span className="font-semibold">{auction.totalBids || 0}</span>
                   </div>
+                  {auction.isLotBidding && auction.lots && auction.lots.length > 0 && (
+                    <div className="flex items-start justify-between text-sm">
+                      <span className="text-gray-600">Vendors:</span>
+                      <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
+                        {Array.from(new Set(auction.lots.map(lot => lot.vendorId).filter(Boolean))).length > 0 ? (
+                          Array.from(new Set(auction.lots.map(lot => lot.vendorId).filter(Boolean))).map((vendorId, idx) => (
+                            <span key={idx} className="inline-flex items-center px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-md text-xs font-semibold">
+                              {vendorId}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-gray-500 italic">No vendors</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t pt-3 mb-3">
@@ -791,6 +808,20 @@ const AuctionManagement = () => {
                                     />
                                     <p className="text-xs text-gray-500 mt-1">Min bid to sell</p>
                                   </div>
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Vendor ID
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={lot.vendorId || ''}
+                                    onChange={(e) => handleLotChange(index, 'vendorId', e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                    placeholder="e.g., VEN001 (optional)"
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">Vendor identifier for tracking (admin only)</p>
                                 </div>
 
                                 <div>
