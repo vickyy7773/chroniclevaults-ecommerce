@@ -59,6 +59,7 @@ const BlogManagement = lazy(() => import('./pages/admin/BlogManagement'));
 const AuctionManagement = lazy(() => import('./pages/admin/AuctionManagement'));
 const AuctionRegistrationManagement = lazy(() => import('./pages/admin/AuctionRegistrationManagement'));
 const AuctionInvoiceManagement = lazy(() => import('./pages/admin/AuctionInvoiceManagement'));
+const ImageUploadManager = lazy(() => import('./pages/admin/ImageUploadManager'));
 
 // Auction Pages
 const Auctions = lazy(() => import('./pages/Auctions'));
@@ -668,6 +669,7 @@ const AppContent = () => {
               <Route path="auctions" element={<AuctionManagement />} />
               <Route path="auction-registrations" element={<AuctionRegistrationManagement />} />
               <Route path="auction-invoices" element={<AuctionInvoiceManagement />} />
+              <Route path="image-upload" element={<ImageUploadManager />} />
               <Route path="profile" element={<ProfileManagement />} />
               <Route path="users-roles" element={<UserRoleManagement />} />
               {/* Keep old routes for backward compatibility */}

@@ -30,7 +30,8 @@
       "Bash(ssh root@72.60.202.163 \"pm2 logs chroniclevaults-api --lines 100 --nostream | grep -i ''phone'' | tail -10\")",
       "Bash(ssh root@72.60.202.163:*)",
       "Bash(temp_auctions.txt)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []
