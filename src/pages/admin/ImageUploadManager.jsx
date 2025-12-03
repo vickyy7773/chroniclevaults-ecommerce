@@ -40,7 +40,12 @@ const ImageUploadManager = () => {
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('https://chroniclevaults.com/api/upload', {
+      // Use environment-aware API URL
+      const API_URL = import.meta.env.PROD
+        ? 'https://chroniclevaults.com/api'
+        : 'http://localhost:5000/api';
+
+      const response = await fetch(`${API_URL}/upload/single`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -49,7 +54,9 @@ const ImageUploadManager = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.message || errorData.error || `Upload failed with status ${response.status}`;
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();
@@ -61,8 +68,8 @@ const ImageUploadManager = () => {
       return {
         success: true,
         id: Date.now() + index,
-        filename: file.name,
-        url: data.url,
+        filename: data.filename || file.name,
+        url: data.imageUrl,
         size: (file.size / 1024).toFixed(2), // Size in KB
         uploadedAt: new Date().toISOString()
       };
