@@ -17,7 +17,6 @@ const AuctionManagement = () => {
     image: '',
     startingPrice: '',
     reservePrice: '',
-    reserveBidder: '',
     startTime: '',
     endTime: '',
     isLotBidding: false,
@@ -252,7 +251,6 @@ const AuctionManagement = () => {
       image: auction.image,
       startingPrice: auction.startingPrice,
       reservePrice: auction.reservePrice || '',
-      reserveBidder: auction.reserveBidder?._id || '',
       startTime: formatDateTimeLocal(startTimeIST),
       endTime: endTimeIST ? formatDateTimeLocal(endTimeIST) : '',
       isLotBidding: auction.isLotBidding || false,
@@ -838,25 +836,6 @@ const AuctionManagement = () => {
                   )}
 
                   {/* Common Fields */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Reserve Bidder (Optional)
-                    </label>
-                    <select
-                      name="reserveBidder"
-                      value={formData.reserveBidder}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                    >
-                      <option value="">No Reserve Bidder</option>
-                      {customers.map(customer => (
-                        <option key={customer._id} value={customer._id}>
-                          {customer.name} ({customer.email})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Start Date & Time
