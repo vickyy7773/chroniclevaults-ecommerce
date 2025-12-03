@@ -27,10 +27,10 @@ const BulkLotUpload = () => {
 
   // Download CSV template
   const downloadTemplate = () => {
-    const csvContent = 'Lot Number,Title,Description,Image URL,Starting Price,Reserve Price\n' +
-      '1,Ancient Roman Coin,Rare silver denarius from 100 AD,https://example.com/image1.jpg,5000,7000\n' +
-      '2,Gold British Sovereign,1885 Victoria gold sovereign,https://example.com/image2.jpg,15000,20000\n' +
-      '3,Indian Copper Coin,East India Company 1/4 Anna,https://example.com/image3.jpg,2000,3000';
+    const csvContent = 'Lot Number,Title,Description,Image URL,Vendor ID,Starting Price,Reserve Price\n' +
+      '1,Ancient Roman Coin,Rare silver denarius from 100 AD,https://example.com/image1.jpg,VEN001,5000,7000\n' +
+      '2,Gold British Sovereign,1885 Victoria gold sovereign,https://example.com/image2.jpg,VEN002,15000,20000\n' +
+      '3,Indian Copper Coin,East India Company 1/4 Anna,https://example.com/image3.jpg,VEN001,2000,3000';
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -61,9 +61,10 @@ const BulkLotUpload = () => {
         title: values[1]?.trim() || '',
         description: values[2]?.trim() || '',
         image: values[3]?.trim() || '',
-        startingPrice: parseFloat(values[4]) || 0,
-        reservePrice: parseFloat(values[5]) || 0,
-        currentBid: parseFloat(values[4]) || 0, // Initialize with starting price
+        vendorId: values[4]?.trim() || null,
+        startingPrice: parseFloat(values[5]) || 0,
+        reservePrice: parseFloat(values[6]) || 0,
+        currentBid: parseFloat(values[5]) || 0, // Initialize with starting price
         status: 'Upcoming'
       };
 
@@ -336,6 +337,9 @@ const BulkLotUpload = () => {
                     Description
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
+                    Vendor ID
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
                     Starting Price
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
@@ -391,6 +395,11 @@ const BulkLotUpload = () => {
                           {lot.description || '-'}
                         </p>
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-md text-xs font-semibold">
+                        {lot.vendorId || 'N/A'}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-gray-900 dark:text-white font-semibold">
                       ₹{lot.startingPrice?.toLocaleString() || 0}

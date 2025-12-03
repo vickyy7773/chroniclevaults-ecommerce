@@ -152,6 +152,10 @@ const auctionSchema = new mongoose.Schema({
     title: String,
     description: String,
     image: String,
+    vendorId: {
+      type: String,
+      default: null // Vendor ID for tracking lot ownership (admin only)
+    },
     startingPrice: Number,
     currentBid: Number,
     reservePrice: {

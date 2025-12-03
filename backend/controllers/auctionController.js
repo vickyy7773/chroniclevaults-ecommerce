@@ -1601,6 +1601,7 @@ export const addBulkLots = async (req, res) => {
       title: lot.title,
       description: lot.description,
       image: lot.image,
+      vendorId: lot.vendorId || null, // Vendor ID for admin tracking
       startingPrice: lot.startingPrice,
       currentBid: lot.startingPrice, // Initialize with starting price
       reservePrice: lot.reservePrice || 0,
