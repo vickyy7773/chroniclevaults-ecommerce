@@ -20,7 +20,9 @@ import {
   UserCog,
   Filter,
   Activity,
-  Gavel
+  Gavel,
+  FileText,
+  Upload
 } from 'lucide-react';
 import usePermissions from '../../hooks/usePermissions';
 import posterImage from '../../assets/poster.jpg';
@@ -122,19 +124,17 @@ const AdminLayout = () => {
       ]
     },
     {
-      path: '/admin/auctions',
-      icon: Gavel,
       label: 'Auctions',
-      color: 'from-orange-500 to-red-500',
-      resource: 'products' // Tied to products permission
-    },
-    {
-      path: '/admin/auction-registrations',
-      icon: Shield,
-      label: 'Auction Registrations',
-      color: 'from-blue-500 to-indigo-600',
-      resource: 'users', // Admin needs user management permission
-      superAdminOnly: false
+      icon: Gavel,
+      color: 'from-orange-500 to-red-600',
+      resource: 'products', // Tied to products permission
+      submenu: [
+        { path: '/admin/auctions', label: 'Auction Management' },
+        { path: '/admin/auction-registrations', label: 'Registrations' },
+        { path: '/admin/auction-invoices', label: 'Invoices' },
+        { path: '/admin/image-upload', label: 'Image Upload' },
+        { path: '/admin/bulk-lot-upload', label: 'Bulk Lot Upload' }
+      ]
     },
     {
       path: '/admin/profile',
