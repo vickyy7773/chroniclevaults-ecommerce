@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 const vendorSchema = new mongoose.Schema({
   vendorCode: {
     type: String,
-    required: [true, 'Please provide a vendor code'],
     unique: true,
     trim: true,
     uppercase: true

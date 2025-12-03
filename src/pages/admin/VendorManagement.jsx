@@ -122,8 +122,10 @@ const VendorManagement = () => {
         await api.put(`/vendors/${selectedVendor._id}`, formData);
         toast.success('Vendor updated successfully');
       } else {
-        await api.post('/vendors', formData);
-        toast.success('Vendor created successfully');
+        // Remove vendorCode for new vendors (will be auto-generated)
+        const { vendorCode, ...dataToSend } = formData;
+        await api.post('/vendors', dataToSend);
+        toast.success('Vendor created successfully with auto-generated code');
       }
 
       setShowModal(false);
@@ -421,19 +423,22 @@ const VendorManagement = () => {
                 <div>
                   <h3 className="text-lg font-semibold mb-3 text-gray-900">Basic Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Vendor Code
-                      </label>
-                      <input
-                        type="text"
-                        name="vendorCode"
-                        value={formData.vendorCode}
-                        onChange={handleInputChange}
-                        placeholder="Auto-generated if empty"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                      />
-                    </div>
+                    {selectedVendor && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Vendor Code
+                        </label>
+                        <input
+                          type="text"
+                          name="vendorCode"
+                          value={formData.vendorCode}
+                          readOnly
+                          disabled
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Auto-generated (cannot be changed)</p>
+                      </div>
+                    )}
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
