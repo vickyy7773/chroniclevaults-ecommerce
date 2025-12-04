@@ -45,12 +45,19 @@ const AuctionManagement = () => {
         // Check if data is not too old (within 10 minutes)
         const age = Date.now() - new Date(timestamp).getTime();
         if (age < 10 * 60 * 1000) {
+          // Process lots to set imageInputType to 'url' for lots with image URLs
+          const processedLots = lots.map(lot => ({
+            ...lot,
+            // If lot has an image URL (from CSV), set imageInputType to 'url'
+            imageInputType: lot.image ? 'url' : 'file'
+          }));
+
           // Set form data with pre-filled lots
           setFormData(prev => ({
             ...prev,
             isLotBidding: true, // Auto-enable lot bidding
-            lots: lots,
-            totalLots: lots.length
+            lots: processedLots,
+            totalLots: processedLots.length
           }));
 
           // Open the create auction modal
