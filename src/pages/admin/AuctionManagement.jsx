@@ -985,14 +985,18 @@ const AuctionManagement = () => {
                                 </div>
 
                                 {lot.image && (
-                                  <div>
+                                  <div className="mt-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                      Image Preview
+                                      Image Preview Lot {index + 1}
                                     </label>
                                     <img
                                       src={lot.image}
                                       alt={`Lot ${index + 1}`}
                                       className="w-full h-32 object-cover rounded-lg border border-gray-300"
+                                      onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="14"%3EInvalid Image%3C/text%3E%3C/svg%3E';
+                                      }}
                                     />
                                   </div>
                                 )}
