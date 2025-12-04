@@ -1642,3 +1642,29 @@ export const addBulkLots = async (req, res) => {
     });
   }
 };
+
+// Get price realization data for ended lot bidding auctions
+export const getPriceRealization = async (req, res) => {
+  try {
+    // Fetch all ended lot bidding auctions
+    const auctions = await Auction.find({
+      isLotBidding: true,
+      status: 'Ended'
+    })
+    .select('title startTime endTime status lots createdAt')
+    .sort({ endTime: -1 }) // Newest first
+    .lean();
+
+    res.json({
+      success: true,
+      auctions: auctions
+    });
+  } catch (error) {
+    console.error('Price realization error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch price realization data',
+      error: error.message
+    });
+  }
+};

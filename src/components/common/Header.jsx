@@ -136,11 +136,12 @@ const Header = ({
       to: '/coming-soon',
       label: 'Auctions',
       icon: Gavel,
-      categories: ['Current Auction', 'Upcoming Auction', 'Auction Archive'],
+      categories: ['Current Auction', 'Upcoming Auction', 'Auction Archive', 'Price Realization'],
       auctionLinks: {
         'Current Auction': '/coming-soon',
         'Upcoming Auction': '/coming-soon',
-        'Auction Archive': '/coming-soon'
+        'Auction Archive': '/coming-soon',
+        'Price Realization': '/price-realization'
       }
     }
   ];
