@@ -26,6 +26,7 @@ const AuctionManagement = () => {
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [imageInputType, setImageInputType] = useState('file'); // 'file' or 'url'
   const [customers, setCustomers] = useState([]);
 
   useEffect(() => {
@@ -621,21 +622,72 @@ const AuctionManagement = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Upload Image
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Auction Image
                         </label>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                        />
-                        {imagePreview && (
+
+                        {/* Image Input Type Selector */}
+                        <div className="flex gap-4 mb-2">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="imageInputType"
+                              checked={imageInputType === 'file'}
+                              onChange={() => setImageInputType('file')}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">File Upload</span>
+                          </label>
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="imageInputType"
+                              checked={imageInputType === 'url'}
+                              onChange={() => setImageInputType('url')}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">Image URL</span>
+                          </label>
+                        </div>
+
+                        {/* Conditional Input Based on Selection */}
+                        {imageInputType === 'file' ? (
+                          <>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageChange}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Upload an image file directly</p>
+                          </>
+                        ) : (
+                          <>
+                            <input
+                              type="text"
+                              name="image"
+                              value={formData.image || ''}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                              placeholder="https://chroniclevaults.com/api/uploads/img-123456.jpg"
+                            />
+                            <p className="text-xs text-blue-600 mt-1">
+                              💡 Use Image Upload Manager to upload images and paste URL here
+                            </p>
+                          </>
+                        )}
+
+                        {/* Image Preview */}
+                        {(imagePreview || (imageInputType === 'url' && formData.image)) && (
                           <div className="mt-2">
                             <img
-                              src={imagePreview}
+                              src={imageInputType === 'file' ? imagePreview : formData.image}
                               alt="Preview"
                               className="w-full h-48 object-cover rounded-lg border border-gray-300"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="14"%3EInvalid Image%3C/text%3E%3C/svg%3E';
+                              }}
                             />
                           </div>
                         )}
@@ -861,25 +913,68 @@ const AuctionManagement = () => {
                                 </div>
 
                                 <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Lot Image
                                   </label>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => {
-                                      const file = e.target.files[0];
-                                      if (file) {
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => {
-                                          handleLotChange(index, 'image', reader.result);
-                                        };
-                                        reader.readAsDataURL(file);
-                                      }
-                                    }}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                                  />
-                                  <p className="text-xs text-gray-500 mt-1">Upload an image for this lot</p>
+
+                                  {/* Image Input Type Selector */}
+                                  <div className="flex gap-4 mb-2">
+                                    <label className="flex items-center cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name={`imageType-${index}`}
+                                        checked={lot.imageInputType === 'file' || !lot.imageInputType}
+                                        onChange={() => handleLotChange(index, 'imageInputType', 'file')}
+                                        className="mr-2"
+                                      />
+                                      <span className="text-sm">File Upload</span>
+                                    </label>
+                                    <label className="flex items-center cursor-pointer">
+                                      <input
+                                        type="radio"
+                                        name={`imageType-${index}`}
+                                        checked={lot.imageInputType === 'url'}
+                                        onChange={() => handleLotChange(index, 'imageInputType', 'url')}
+                                        className="mr-2"
+                                      />
+                                      <span className="text-sm">Image URL</span>
+                                    </label>
+                                  </div>
+
+                                  {/* Conditional Input Based on Selection */}
+                                  {(lot.imageInputType === 'file' || !lot.imageInputType) ? (
+                                    <>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                          const file = e.target.files[0];
+                                          if (file) {
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => {
+                                              handleLotChange(index, 'image', reader.result);
+                                            };
+                                            reader.readAsDataURL(file);
+                                          }
+                                        }}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                      />
+                                      <p className="text-xs text-gray-500 mt-1">Upload an image file directly</p>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <input
+                                        type="text"
+                                        value={lot.image || ''}
+                                        onChange={(e) => handleLotChange(index, 'image', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                        placeholder="https://chroniclevaults.com/api/uploads/img-123456.jpg"
+                                      />
+                                      <p className="text-xs text-blue-600 mt-1">
+                                        💡 Use Image Upload Manager to upload images and paste URL here
+                                      </p>
+                                    </>
+                                  )}
                                 </div>
 
                                 {lot.image && (
