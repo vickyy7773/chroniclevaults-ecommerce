@@ -302,10 +302,12 @@ export const endCurrentLot = async (auctionId, io) => {
         auction.lots[nextLotIndex].status = 'Active';
         auction.lots[nextLotIndex].startTime = new Date(Date.now() + 3000); // 3-second pause
 
-        // Reset warning count and clear lastBidTime for new lot
-        auction.warningCount = 0;
-        auction.lastBidTime = null; // CRITICAL: Must be null so 60s no-bid timer triggers
-        auction.currentLotStartTime = new Date(Date.now() + 3000); // Set lot start time for 60s timer
+        // Reset timer for new lot
+        auction.callNumber = 1;
+        auction.phaseTimer = 10;
+        auction.phaseStartTime = null;
+        auction.lastBidTime = null;
+        auction.currentLotStartTime = new Date(Date.now() + 3000);
 
         console.log(`🚀 Starting LOT ${auction.lotNumber} in 3 seconds`);
 
@@ -331,10 +333,10 @@ export const endCurrentLot = async (auctionId, io) => {
               return;
             }
 
-            // Restart Going Going Gone timer for new lot
-            if (auction.isGoingGoingGoneEnabled) {
-              startGoingGoingGoneTimer(auctionId, io);
-              console.log(`⏰ [GEN ${capturedGen}] Started timer for newly activated Lot ${auction.lotNumber}`);
+            // Restart 3-phase timer for new lot
+            if (auction.isThreePhaseTimerEnabled) {
+              startThreePhaseTimer(auctionId, io);
+              console.log(`⏰ [GEN ${capturedGen}] Started 3-phase timer for newly activated Lot ${auction.lotNumber}`);
             }
           }, 3000);
         }
@@ -372,8 +374,8 @@ const getTimerKey = (auctionId, lotNumber) => {
   return `${auctionId}-L${lotNumber}`;
 };
 
-// Start Going, Going, Gone timer for a specific lot
-export const startGoingGoingGoneTimer = async (auctionId, io) => {
+// Start 3-Phase Timer (30 seconds total: 10s per phase)
+export const startThreePhaseTimer = async (auctionId, io) => {
   // Fetch auction to get current lot number
   const auction = await Auction.findById(auctionId);
   if (!auction || !auction.isLotBidding) {
@@ -395,26 +397,37 @@ export const startGoingGoingGoneTimer = async (auctionId, io) => {
     console.log(`🧹 Cleared existing timer (gen ${existingTimer.generation}) for ${timerKey}`);
   }
 
-  const checkAndAnnounce = async () => {
-    // FIRST: Check if this callback is still valid (not superseded by newer timer)
+  // Initialize phase if not set
+  if (!auction.callNumber) {
+    auction.callNumber = 1;
+  }
+  if (!auction.phaseStartTime) {
+    auction.phaseStartTime = new Date();
+  }
+  if (auction.phaseTimer === undefined) {
+    auction.phaseTimer = 10;
+  }
+  await auction.save();
+
+  const tickPhase = async () => {
+    // Check if this callback is still valid
     const currentActiveGen = timerGeneration.get(timerKey);
     if (currentActiveGen !== currentGen) {
-      console.log(`⚠️  Timer callback gen ${currentGen} superseded by gen ${currentActiveGen} for ${timerKey}, skipping execution`);
+      console.log(`⚠️  Timer callback gen ${currentGen} superseded by gen ${currentActiveGen} for ${timerKey}`);
       return;
     }
 
     try {
       const auction = await Auction.findById(auctionId);
 
-      if (!auction || auction.status !== 'Active' || !auction.isGoingGoingGoneEnabled) {
-        // Auction ended or disabled, clear timer
-        console.log(`⏹️  Auction ${auctionId} ended or disabled, stopping timer (gen ${currentGen}) for ${timerKey}`);
+      if (!auction || auction.status !== 'Active' || !auction.isThreePhaseTimerEnabled) {
+        console.log(`⏹️  Auction ${auctionId} ended or timer disabled, stopping timer for ${timerKey}`);
         auctionTimers.delete(timerKey);
         timerGeneration.delete(timerKey);
         return;
       }
 
-      // Verify we're still on the same lot (prevent old lot timers from affecting new lot)
+      // Verify we're still on the same lot
       const currentLotNum = auction.lotNumber || 1;
       if (currentLotNum !== lotNumber) {
         console.log(`⚠️  Lot changed from ${lotNumber} to ${currentLotNum}, stopping timer for ${timerKey}`);
@@ -423,170 +436,52 @@ export const startGoingGoingGoneTimer = async (auctionId, io) => {
         return;
       }
 
-      // Check if there are any bids
-      let hasBids = false;
-      if (auction.isLotBidding) {
-        // For lot bidding, check current lot's bids
-        const currentLotIndex = (auction.lotNumber || 1) - 1;
-        if (auction.lots && auction.lots[currentLotIndex]) {
-          hasBids = auction.lots[currentLotIndex].bids && auction.lots[currentLotIndex].bids.length > 0;
-        }
-      } else {
-        // For normal auctions, check main bids array
-        hasBids = auction.bids && auction.bids.length > 0;
-      }
-
-      // Check if we need to trigger the 1-minute no-bid warning
-      // Only do this if warningCount is 0 (sequence hasn't started yet)
-      if (!auction.lastBidTime && !hasBids && auction.warningCount === 0) {
-        // No bids yet - check how long lot has been active
-        const now = new Date();
-        let lotStartTime;
-
-        if (auction.isLotBidding) {
-          lotStartTime = new Date(auction.currentLotStartTime);
-        } else {
-          lotStartTime = new Date(auction.startTime);
-        }
-
-        const timeSinceLotStart = now - lotStartTime;
-        const oneMinute = 60000; // 60 seconds
-
-        if (timeSinceLotStart >= oneMinute) {
-          // 1 minute has passed with no bids - start Going Gone sequence
-          if (true) { // Always true now since we checked warningCount above
-            console.log(`⏰ 1 minute passed with NO BIDS for auction ${auctionId} - Starting Going Gone sequence`);
-
-            // Set warning count to 1 and trigger GOING ONCE
-            auction.warningCount = 1;
-            auction.lastBidTime = now; // Set a fake lastBidTime to trigger the sequence
-            await auction.save();
-
-            const nextWarningTime = Date.now() + 30000; // 30 seconds from now
-            io.to(`auction-${auctionId}`).emit('auction-warning', {
-              auctionId: auctionId.toString(),
-              message: 'GOING ONCE! 🔨 (No bids received)',
-              warning: 1,
-              timeSinceLastBid: 0,
-              nextWarningTime // Send when next warning will occur
-            });
-            console.log(`🔨 Auction ${auctionId}: GOING ONCE! (No bids)`);
-
-            // Schedule GOING TWICE in 30 seconds
-            const timerId = setTimeout(checkAndAnnounce, 30000);
-            auctionTimers.set(timerKey, { timerId, generation: currentGen });
-          }
-          return;
-        } else {
-          // Not yet 1 minute - check again in 10 seconds
-          const remainingTime = oneMinute - timeSinceLotStart;
-          const nextCheckTime = Math.min(remainingTime + 1000, 10000); // Check in 10 seconds or when 1 minute hits
-
-          console.log(`⏰ No bids yet for ${timerKey}, checking again in ${nextCheckTime/1000} sec`);
-
-          const timerId = setTimeout(checkAndAnnounce, nextCheckTime);
-          auctionTimers.set(timerKey, { timerId, generation: currentGen });
-          return;
-        }
-      }
-
       const now = new Date();
-      const timeSinceLastBid = now - new Date(auction.lastBidTime);
-      const thirtySeconds = 30000;
+      const phaseStartTime = new Date(auction.phaseStartTime);
+      const elapsedSeconds = Math.floor((now - phaseStartTime) / 1000);
+      const remainingSeconds = Math.max(0, 10 - elapsedSeconds);
 
-      // IMPORTANT: Only use 30s timer if there has been at least ONE actual bid
-      // For lot bidding, check current lot's bids; for regular auctions, check main bids
-      let hasActualBids = false;
-      if (auction.isLotBidding) {
-        const currentLotIndex = (auction.lotNumber || 1) - 1;
-        const currentLot = auction.lots && auction.lots[currentLotIndex];
-        hasActualBids = currentLot && currentLot.bids && currentLot.bids.length > 0;
-        console.log(`🔍 [${timerKey}] Lot bidding check: lotIndex=${currentLotIndex}, hasBids=${hasActualBids}, bidsCount=${currentLot?.bids?.length || 0}`);
-      } else {
-        hasActualBids = auction.bids && auction.bids.length > 0;
-        console.log(`🔍 [${timerKey}] Regular auction check: hasBids=${hasActualBids}, bidsCount=${auction.bids?.length || 0}`);
-      }
+      // Update phaseTimer
+      auction.phaseTimer = remainingSeconds;
 
-      if (!hasActualBids && auction.warningCount === 0) {
-        // No bids yet AND warning sequence hasn't started - skip 30s check
-        // The 1-minute no-bid logic above should handle this case
-        console.log(`⏰ [${timerKey}] [GEN ${currentGen}] Has lastBidTime but no actual bids - skipping 30s check`);
-        const timerId = setTimeout(checkAndAnnounce, 10000); // Check again in 10 seconds
-        auctionTimers.set(timerKey, { timerId, generation: currentGen });
-        return;
-      }
-      // If warningCount >= 1, continue progression even without bids (GOING ONCE → TWICE → UNSOLD)
+      // Emit timer update
+      const phaseMessages = {
+        1: 'Going Once',
+        2: 'Going Twice',
+        3: auction.lots[currentLotNum - 1]?.bids?.length > 0 ? 'SOLD' : 'UNSOLD'
+      };
 
-      console.log(`⏱️  [${timerKey}] [GEN ${currentGen}] Time check: timeSinceLastBid=${Math.floor(timeSinceLastBid/1000)}s, warningCount=${auction.warningCount}`);
+      io.to(`auction-${auctionId}`).emit('auction-phase-tick', {
+        auctionId: auctionId.toString(),
+        callNumber: auction.callNumber,
+        phaseTimer: remainingSeconds,
+        phaseMessage: phaseMessages[auction.callNumber]
+      });
 
-      if (timeSinceLastBid >= thirtySeconds) {
-        // Check current warning count and emit appropriate message
-        console.log(`✅ [${timerKey}] [GEN ${currentGen}] 30s passed! warningCount=${auction.warningCount}`);
+      console.log(`⏱️  [${timerKey}] Phase ${auction.callNumber}: ${remainingSeconds}s remaining`);
 
-        if (auction.warningCount === 0) {
-          // GOING ONCE!
-          auction.warningCount = 1;
-          await auction.save();
-          const nextWarningTime = Date.now() + 30000; // 30 seconds from now
-          io.to(`auction-${auctionId}`).emit('auction-warning', {
-            auctionId: auctionId.toString(),
-            message: 'GOING ONCE! 🔨',
-            warning: 1,
-            timeSinceLastBid,
-            nextWarningTime // Send when next warning will occur
-          });
-          console.log(`🔨 [${timerKey}] [GEN ${currentGen}] GOING ONCE! (timeSinceLastBid: ${Math.floor(timeSinceLastBid/1000)}s)`);
-
-          // Schedule next check in 30 seconds
-          const timerId = setTimeout(checkAndAnnounce, 30000);
-          auctionTimers.set(timerKey, { timerId, generation: currentGen });
-          console.log(`   ⏰ [${timerKey}] [GEN ${currentGen}] Scheduled GOING TWICE check in 30s`);
-
-        } else if (auction.warningCount === 1) {
-          // GOING TWICE!
-          auction.warningCount = 2;
+      // Check if phase is complete
+      if (remainingSeconds <= 0) {
+        // Phase completed, move to next phase
+        if (auction.callNumber < 3) {
+          // Move to next phase
+          auction.callNumber++;
+          auction.phaseTimer = 10;
+          auction.phaseStartTime = new Date();
           await auction.save();
 
-          // Check if there are any bids on current lot
-          const currentLot = auction.lots.find(lot => lot.lotNumber === auction.lotNumber);
-          const lotHasBids = currentLot && currentLot.bids && currentLot.bids.length > 0;
-          const message = lotHasBids ? 'GOING TWICE! 🔨🔨' : 'GOING TWICE! 🔨🔨 (No bids received)';
+          console.log(`🔄 [${timerKey}] Moving to Phase ${auction.callNumber}`);
 
-          const nextWarningTime = Date.now() + 30000; // 30 seconds from now
-          io.to(`auction-${auctionId}`).emit('auction-warning', {
-            auctionId: auctionId.toString(),
-            message: message,
-            warning: 2,
-            timeSinceLastBid,
-            nextWarningTime // Send when next warning will occur
-          });
-          console.log(`🔨🔨 [${timerKey}] [GEN ${currentGen}] ${message} (timeSinceLastBid: ${Math.floor(timeSinceLastBid/1000)}s)`);
-
-          // Schedule next check in 30 seconds
-          const timerId = setTimeout(checkAndAnnounce, 30000);
+          // Continue ticking
+          const timerId = setTimeout(tickPhase, 1000);
           auctionTimers.set(timerKey, { timerId, generation: currentGen });
-          console.log(`   ⏰ [${timerKey}] [GEN ${currentGen}] Scheduled SOLD/UNSOLD check in 30s`);
+        } else {
+          // Phase 3 complete - end lot
+          console.log(`🎯 [${timerKey}] Phase 3 complete - ending lot`);
 
-        } else if (auction.warningCount >= 2) {
-          // SOLD/UNSOLD! - End lot or close auction
-          auction.warningCount = 3;
-          console.log(`🎯 Auction ${auctionId}: Ending after 3 warnings...`);
-
-          // Check if this is lot bidding
           if (auction.isLotBidding) {
-            // End current lot (will determine SOLD or UNSOLD)
             await endCurrentLot(auctionId, io);
           } else {
-            // Regular auction - emit SOLD and close it
-            io.to(`auction-${auctionId}`).emit('auction-warning', {
-              auctionId: auctionId.toString(),
-              message: 'SOLD! 🎉',
-              warning: 3,
-              final: true,
-              timeSinceLastBid
-            });
-            console.log(`🎉 Auction ${auctionId}: SOLD!`);
-
             auction.status = 'Ended';
             await auction.updateStatus();
             await auction.save();
@@ -594,70 +489,70 @@ export const startGoingGoingGoneTimer = async (auctionId, io) => {
 
           // Clear timer
           auctionTimers.delete(timerKey);
+          timerGeneration.delete(timerKey);
         }
       } else {
-        // Not enough time has passed yet, check again later
-        const remainingTime = thirtySeconds - timeSinceLastBid;
+        await auction.save();
 
-        // Clear any existing timer before scheduling new check
-        if (auctionTimers.has(timerKey)) {
-          const existingTimer = auctionTimers.get(timerKey);
-          clearTimeout(existingTimer.timerId);
-        }
-
-        const timerId = setTimeout(checkAndAnnounce, remainingTime);
+        // Continue ticking every second
+        const timerId = setTimeout(tickPhase, 1000);
         auctionTimers.set(timerKey, { timerId, generation: currentGen });
       }
     } catch (error) {
-      console.error(`Going, Going, Gone timer error for ${timerKey}:`, error);
+      console.error(`Three-phase timer error for ${timerKey}:`, error);
       auctionTimers.delete(timerKey);
       timerGeneration.delete(timerKey);
     }
   };
 
-  // Start the timer - first check in 30 seconds
-  const timerId = setTimeout(checkAndAnnounce, 30000);
+  // Start the timer
+  const timerId = setTimeout(tickPhase, 1000);
   auctionTimers.set(timerKey, { timerId, generation: currentGen });
-  console.log(`⏰ [${timerKey}] [GEN ${currentGen}] Started Going, Going, Gone timer - first check in 30s`);
+  console.log(`⏰ [${timerKey}] [GEN ${currentGen}] Started 3-phase timer (Phase ${auction.callNumber})`);
 };
 
-// Reset timer when new bid is placed
-export const resetGoingGoingGoneTimer = async (auctionId, io) => {
+// Reset phase timer when new bid is placed (stays in same phase)
+export const resetPhaseTimer = async (auctionId, io) => {
   try {
     const auction = await Auction.findById(auctionId);
 
-    if (auction && auction.isGoingGoingGoneEnabled && auction.isLotBidding) {
+    if (auction && auction.isThreePhaseTimerEnabled && auction.isLotBidding) {
       const lotNumber = auction.lotNumber || 1;
       const timerKey = getTimerKey(auctionId, lotNumber);
 
       // Get current generation before clearing
       const oldGen = timerGeneration.get(timerKey) || 0;
 
-      // FIRST: Clear existing timer completely before resetting
+      // Clear existing timer
       const existingTimer = auctionTimers.get(timerKey);
       if (existingTimer) {
         clearTimeout(existingTimer.timerId);
-        console.log(`🧹 [${timerKey}] [GEN ${oldGen}] Cleared existing timer for reset`);
+        console.log(`🧹 [${timerKey}] [GEN ${oldGen}] Cleared existing timer for phase reset`);
       }
 
-      // Reset warning count
-      auction.warningCount = 0;
+      // Reset phase timer to 10 seconds (stay in same phase)
+      auction.phaseTimer = 10;
+      auction.phaseStartTime = new Date();
       auction.lastBidTime = new Date();
       await auction.save();
 
       // Emit reset event
-      io.to(`auction-${auctionId}`).emit('auction-warning-reset', {
+      io.to(`auction-${auctionId}`).emit('auction-phase-reset', {
         auctionId: auctionId.toString(),
-        message: 'New bid! Timer reset.'
+        callNumber: auction.callNumber,
+        phaseTimer: 10,
+        message: 'New bid! Phase timer reset to 10 seconds.'
       });
 
-      // Restart timer AFTER clearing old one (this will increment generation)
-      await startGoingGoingGoneTimer(auctionId, io);
+      console.log(`🔄 [${timerKey}] Phase ${auction.callNumber} timer reset to 10 seconds`);
+
+      // Restart timer (this will increment generation)
+      await startThreePhaseTimer(auctionId, io);
       const newGen = timerGeneration.get(timerKey);
-      console.log(`🔄 [${timerKey}] Reset timer: gen ${oldGen} → ${newGen}`);
+      console.log(`🔄 [${timerKey}] Resumed timer: gen ${oldGen} → ${newGen}`);
     }
   } catch (error) {
-    console.error('Reset timer error:', error);
+    console.error('Reset phase timer error:', error);
   }
 };
 
@@ -700,8 +595,10 @@ export const startNextLot = async (auctionId, io) => {
 
       // Update main auction fields to reflect current lot
       auction.currentBid = auction.lots[nextLotNum - 1].currentBid;
-      auction.warningCount = 0;
-      auction.lastBidTime = null; // CRITICAL: Must be null for new lot to trigger 60s timer!
+      auction.callNumber = 1;
+      auction.phaseTimer = 10;
+      auction.phaseStartTime = null;
+      auction.lastBidTime = null;
 
       await auction.save();
 
@@ -796,13 +693,13 @@ export const getAuctionById = async (req, res) => {
     await auction.updateStatus();
     await auction.save();
 
-    // Start Going, Going, Gone timer if auction is active (LOT-BASED ONLY)
+    // Start 3-phase timer if auction is active (LOT-BASED ONLY)
     const io = req.app.get('io');
-    if (io && auction.status === 'Active' && auction.isGoingGoingGoneEnabled && auction.isLotBidding) {
+    if (io && auction.status === 'Active' && auction.isThreePhaseTimerEnabled && auction.isLotBidding) {
       const lotNumber = auction.lotNumber || 1;
       const timerKey = getTimerKey(auction._id.toString(), lotNumber);
       if (!auctionTimers.has(timerKey)) {
-        startGoingGoingGoneTimer(auction._id, io);
+        startThreePhaseTimer(auction._id, io);
       }
     }
 
@@ -840,7 +737,7 @@ export const createAuction = async (req, res) => {
       lots,
       totalLots,
       lotDuration,
-      isGoingGoingGoneEnabled
+      isThreePhaseTimerEnabled
     } = req.body;
 
     // Validate product exists (if productId is provided and valid)
@@ -905,8 +802,8 @@ export const createAuction = async (req, res) => {
       reserveBidder: reserveBidder && reserveBidder.trim() !== '' ? reserveBidder : null,
       incrementSlabs: defaultSlabs,
       startTime: new Date(startTime),
-      // endTime removed - auction duration is now based on bidding activity via Going Gone timer
-      isGoingGoingGoneEnabled: isGoingGoingGoneEnabled || false
+      // endTime removed - auction duration is now based on bidding activity via 3-phase timer
+      isThreePhaseTimerEnabled: isThreePhaseTimerEnabled !== undefined ? isThreePhaseTimerEnabled : true
     };
 
     // If lot bidding, add lot-specific fields
@@ -955,12 +852,12 @@ export const createAuction = async (req, res) => {
 
     const savedAuction = await auction.save();
 
-    // Start Going Going Gone timer if enabled and auction is active
+    // Start 3-phase timer if enabled and auction is active
     const io = req.app.get('io');
-    console.log(`🔍 Timer Check - io: ${!!io}, isGoingGoingGoneEnabled: ${savedAuction.isGoingGoingGoneEnabled}, status: ${savedAuction.status}`);
-    if (io && savedAuction.isGoingGoingGoneEnabled && savedAuction.status === 'Active') {
-      startGoingGoingGoneTimer(savedAuction._id, io);
-      console.log(`⏰ Started Going Going Gone timer for newly created auction ${savedAuction._id}`);
+    console.log(`🔍 Timer Check - io: ${!!io}, isThreePhaseTimerEnabled: ${savedAuction.isThreePhaseTimerEnabled}, status: ${savedAuction.status}`);
+    if (io && savedAuction.isThreePhaseTimerEnabled && savedAuction.status === 'Active') {
+      startThreePhaseTimer(savedAuction._id, io);
+      console.log(`⏰ Started 3-phase timer for newly created auction ${savedAuction._id}`);
     } else {
       console.log(`⚠️  Timer NOT started for auction ${savedAuction._id}`);
     }
@@ -1450,8 +1347,8 @@ export const placeBid = async (req, res) => {
         } : null
       });
 
-      // Reset Going, Going, Gone timer on new bid
-      await resetGoingGoingGoneTimer(auction._id, io);
+      // Reset 3-phase timer on new bid (stays in same phase)
+      await resetPhaseTimer(auction._id, io);
     }
 
     res.json({

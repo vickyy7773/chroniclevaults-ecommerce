@@ -116,15 +116,23 @@ const auctionSchema = new mongoose.Schema({
   },
   lastBidTime: {
     type: Date,
-    default: null // Track when last bid was placed for Going, Going, Gone timer
+    default: null // Track when last bid was placed for 3-phase timer
   },
-  warningCount: {
+  callNumber: {
     type: Number,
-    default: 0 // 0 = no warning, 1 = going once, 2 = going twice, 3 = sold
+    default: 1 // Current phase: 1 = "Going Once", 2 = "Going Twice", 3 = "SOLD/UNSOLD"
   },
-  isGoingGoingGoneEnabled: {
+  phaseTimer: {
+    type: Number,
+    default: 10 // 10-second countdown within current phase
+  },
+  phaseStartTime: {
+    type: Date,
+    default: null // When current phase started
+  },
+  isThreePhaseTimerEnabled: {
     type: Boolean,
-    default: true // Enable/disable Going, Going, Gone feature per auction
+    default: true // Enable/disable 3-phase (30-second) timer per auction
   },
   // Sequential Lot Bidding Fields (isLotBidding is defined earlier for conditional image validation)
   lotNumber: {

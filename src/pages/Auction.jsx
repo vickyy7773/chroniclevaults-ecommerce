@@ -21,10 +21,9 @@ const AuctionPage = () => {
   const [submittingBid, setSubmittingBid] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState('');
   const [selectedImage, setSelectedImage] = useState(0);
-  const [goingWarning, setGoingWarning] = useState(0);
-  const [warningMessage, setWarningMessage] = useState('');
-  const [nextWarningTime, setNextWarningTime] = useState(null); // Timestamp of next warning
-  const [countdown, setCountdown] = useState(''); // Live countdown display
+  const [callNumber, setCallNumber] = useState(0); // Phase: 1, 2, or 3
+  const [phaseMessage, setPhaseMessage] = useState(''); // Going Once, Going Twice, SOLD/UNSOLD
+  const [phaseTimer, setPhaseTimer] = useState(0); // 10-second countdown per phase
   const [selectedLotIndex, setSelectedLotIndex] = useState(null); // Track which lot is selected for viewing
 
   useEffect(() => {
@@ -205,68 +204,66 @@ const AuctionPage = () => {
     };
   }, [user]);
 
-  // Going, Going, Gone warning listener
+  // 3-Phase Timer listener
   useEffect(() => {
     if (!socketRef.current || !auction) return;
 
-    const handleAuctionWarning = (data) => {
-      console.log('🔔 AUCTION WARNING:', data);
+    const handlePhaseTick = (data) => {
+      console.log('🔔 PHASE TICK:', data);
 
       if (data.auctionId === auction._id) {
-        setGoingWarning(data.warning);
-        setWarningMessage(data.message);
+        setCallNumber(data.callNumber);
+        setPhaseMessage(data.phaseMessage);
+        setPhaseTimer(data.phaseTimer);
 
-        // Store next warning time for countdown
-        if (data.nextWarningTime) {
-          setNextWarningTime(data.nextWarningTime);
-        }
-
-        if (data.warning === 1) {
-          toast.warning(`⚠️ ${data.message} Place your bid now!`, {
-            autoClose: 5000,
+        // Show toast on phase change
+        if (data.callNumber === 1 && data.phaseTimer === 10) {
+          toast.warning(`⚠️ Going Once! Place your bid now!`, {
+            autoClose: 3000,
             position: 'top-center'
           });
-        } else if (data.warning === 2) {
-          toast.error(`🚨 ${data.message} Last chance to bid!`, {
-            autoClose: 5000,
+        } else if (data.callNumber === 2 && data.phaseTimer === 10) {
+          toast.error(`🚨 Going Twice! Last chance to bid!`, {
+            autoClose: 3000,
             position: 'top-center'
           });
-        } else if (data.final) {
-          // Show appropriate message based on whether lot was SOLD or UNSOLD
-          if (data.message.includes('UNSOLD')) {
-            toast.warning(`❌ ${data.message}`, {
-              autoClose: 1000,
+        } else if (data.callNumber === 3 && data.phaseTimer === 10) {
+          // Phase 3 started
+          if (data.phaseMessage === 'SOLD') {
+            toast.success(`🎉 SOLD!`, {
+              autoClose: 2000,
               position: 'top-center'
             });
           } else {
-            toast.success(`🎉 ${data.message}`, {
-              autoClose: 1000,
+            toast.warning(`❌ UNSOLD`, {
+              autoClose: 2000,
               position: 'top-center'
             });
           }
+        }
 
-          // Auto-dismiss SOLD/UNSOLD overlay after 3 seconds
+        // When phase 3 ends (timer = 0), refresh auction
+        if (data.callNumber === 3 && data.phaseTimer === 0) {
           setTimeout(() => {
-            setGoingWarning(0);
-            setWarningMessage('');
-          }, 3000);
-
-          // Refresh auction data
-          setTimeout(() => {
+            setCallNumber(0);
+            setPhaseMessage('');
+            setPhaseTimer(0);
             fetchAuction();
           }, 1000);
         }
       }
     };
 
-    const handleWarningReset = (data) => {
-      console.log('🔄 WARNING RESET:', data);
+    const handlePhaseReset = (data) => {
+      console.log('🔄 PHASE RESET:', data);
 
       if (data.auctionId === auction._id) {
-        setGoingWarning(0);
-        setWarningMessage('');
-        setNextWarningTime(null); // Clear countdown when warning resets
-        setCountdown('');
+        setCallNumber(data.callNumber);
+        setPhaseTimer(data.phaseTimer);
+        toast.info(`New bid! Timer reset to ${data.phaseTimer}s`, {
+          autoClose: 2000,
+          position: 'top-center'
+        });
       }
     };
 
@@ -274,24 +271,23 @@ const AuctionPage = () => {
       console.log('📦 LOT CHANGED:', data);
 
       if (data.auctionId === auction._id) {
-        // Dismiss any active toasts (like SOLD message)
+        // Dismiss any active toasts
         toast.dismiss();
 
-        // Reset warning overlay (hide SOLD screen)
-        setGoingWarning(0);
-        setWarningMessage('');
-        setNextWarningTime(null);
-        setCountdown('');
+        // Reset timer state for new lot
+        setCallNumber(0);
+        setPhaseMessage('');
+        setPhaseTimer(0);
 
-        // CRITICAL: Update auction with new lot timer values immediately
-        // Don't call fetchAuction() - it will overwrite these values!
+        // Update auction with new lot values
         if (data.currentLotStartTime !== undefined && data.lastBidTime !== undefined) {
           setAuction(prev => ({
             ...prev,
             currentLotStartTime: data.currentLotStartTime,
             lastBidTime: data.lastBidTime,
             lotNumber: data.lotNumber,
-            warningCount: 0 // Reset warning count for new lot
+            callNumber: 1, // Reset to phase 1 for new lot
+            phaseTimer: 10
           }));
 
           console.log(`✅ Updated auction state for Lot ${data.lotNumber}:`, {
@@ -306,7 +302,7 @@ const AuctionPage = () => {
           position: 'top-center'
         });
 
-        // Fetch full auction data after a delay to get complete lot info
+        // Fetch full auction data after a delay
         setTimeout(() => {
           fetchAuction();
         }, 1000);
@@ -327,22 +323,22 @@ const AuctionPage = () => {
       }
     };
 
-    socketRef.current.off('auction-warning', handleAuctionWarning);
-    socketRef.current.off('auction-warning-reset', handleWarningReset);
+    socketRef.current.off('auction-phase-tick', handlePhaseTick);
+    socketRef.current.off('auction-phase-reset', handlePhaseReset);
     socketRef.current.off('lot-changed', handleLotChanged);
-    socketRef.current.off('lot-started', handleLotChanged); // Also listen to lot-started
+    socketRef.current.off('lot-started', handleLotChanged);
     socketRef.current.off('auction-completed', handleAuctionCompleted);
 
-    socketRef.current.on('auction-warning', handleAuctionWarning);
-    socketRef.current.on('auction-warning-reset', handleWarningReset);
+    socketRef.current.on('auction-phase-tick', handlePhaseTick);
+    socketRef.current.on('auction-phase-reset', handlePhaseReset);
     socketRef.current.on('lot-changed', handleLotChanged);
-    socketRef.current.on('lot-started', handleLotChanged); // Also listen to lot-started
+    socketRef.current.on('lot-started', handleLotChanged);
     socketRef.current.on('auction-completed', handleAuctionCompleted);
 
     return () => {
       if (socketRef.current) {
-        socketRef.current.off('auction-warning', handleAuctionWarning);
-        socketRef.current.off('auction-warning-reset', handleWarningReset);
+        socketRef.current.off('auction-phase-tick', handlePhaseTick);
+        socketRef.current.off('auction-phase-reset', handlePhaseReset);
         socketRef.current.off('lot-changed', handleLotChanged);
         socketRef.current.off('lot-started', handleLotChanged);
         socketRef.current.off('auction-completed', handleAuctionCompleted);
@@ -356,38 +352,6 @@ const AuctionPage = () => {
     }
   }, [id]);
 
-  // Countdown timer - updates every 100ms for smooth seconds.milliseconds display
-  useEffect(() => {
-    if (!nextWarningTime || goingWarning === 3) {
-      setCountdown('');
-      return;
-    }
-
-    const updateCountdown = () => {
-      const now = Date.now();
-      const remaining = nextWarningTime - now;
-
-      if (remaining <= 0) {
-        setCountdown('0.0s');
-        return;
-      }
-
-      const totalSeconds = remaining / 1000;
-      const seconds = Math.floor(totalSeconds);
-      const milliseconds = Math.floor((totalSeconds - seconds) * 10); // Get first decimal place
-
-      setCountdown(`${seconds}.${milliseconds}s`);
-    };
-
-    // Update immediately
-    updateCountdown();
-
-    // Then update every 100ms
-    const interval = setInterval(updateCountdown, 100);
-
-    return () => clearInterval(interval);
-  }, [nextWarningTime, goingWarning]);
-
   useEffect(() => {
     if (auction && auction.status === 'Active') {
       const timer = setInterval(() => {
@@ -395,7 +359,7 @@ const AuctionPage = () => {
       }, 100); // Update every 100ms for smooth countdown
       return () => clearInterval(timer);
     }
-  }, [auction, countdown, goingWarning]); // Include countdown and goingWarning to prevent stale closure
+  }, [auction, phaseTimer, callNumber]); // Include phaseTimer and callNumber to prevent stale closure
 
   const fetchAuction = async () => {
     try {
@@ -427,62 +391,44 @@ const AuctionPage = () => {
 
   const updateTimeRemaining = () => {
     if (!auction) return;
-    const now = new Date();
 
-    // FOR LOT BIDDING: Show different timers based on state
+    // FOR LOT BIDDING: Show phase timer if active
     if (auction.isLotBidding) {
-      // Priority 1: If we have countdown from warning timer (GOING ONCE/TWICE), show that
-      if (countdown) {
-        setTimeRemaining(countdown);
+      // Priority 1: If phase timer is active, show it with phase message
+      if (callNumber > 0 && phaseTimer !== undefined) {
+        const phaseLabels = {
+          1: 'Going Once',
+          2: 'Going Twice',
+          3: phaseMessage || 'Final'
+        };
+
+        setTimeRemaining(`${phaseLabels[callNumber]}: ${phaseTimer}s`);
         return;
       }
 
-      // Priority 2: Show timer countdown
-      // LOGIC: First timer = 1 minute (60s), After first bid = 30s timer
-
-      // Check if current lot has bids (for lot bidding, bids are in lots array)
+      // Priority 2: Show normal countdown (waiting for first bid or between bids)
+      const now = new Date();
       const currentLotIndex = (auction.lotNumber || 1) - 1;
       const currentLot = auction.lots && auction.lots[currentLotIndex];
       const hasBids = currentLot && currentLot.bids && currentLot.bids.length > 0;
 
       if (hasBids && auction.lastBidTime) {
-        // After first bid: 30-second timer (resets on each new bid)
-        const timeSinceLastBid = now - new Date(auction.lastBidTime);
-        const thirtySeconds = 30000; // 30 seconds in ms
-
-        const remaining = Math.max(0, thirtySeconds - timeSinceLastBid);
-
-        // If warning is active (GOING ONCE/TWICE), the countdown will take over
-        // So we don't need to show 0.0s - just let the warning countdown show
-        if (remaining === 0 && goingWarning > 0) {
-          // Warning active, countdown will handle display
-          return;
-        }
-
-        const seconds = Math.floor(remaining / 1000);
-        const milliseconds = Math.floor((remaining % 1000) / 100);
-
-        setTimeRemaining(`${seconds}.${milliseconds}s`);
+        // Show simple "Waiting for bids..." when timer hasn't started
+        setTimeRemaining('Waiting for bids...');
         return;
       } else if (auction.currentLotStartTime) {
-        // Before first bid: 1-minute timer
-        const timeSinceLotStart = now - new Date(auction.currentLotStartTime);
-        const oneMinute = 60000; // 60 seconds in ms
-
-        const remaining = Math.max(0, oneMinute - timeSinceLotStart);
-        const seconds = Math.floor(remaining / 1000);
-        const milliseconds = Math.floor((remaining % 1000) / 100);
-
-        setTimeRemaining(`${seconds}.${milliseconds}s`);
+        // Before first bid: show waiting message
+        setTimeRemaining('Place a bid to start timer');
         return;
       }
 
-      // Fallback - if no timer available
+      // Fallback
       setTimeRemaining('Starting soon...');
       return;
     }
 
     // For regular auctions, use endTime
+    const now = new Date();
     const endTime = new Date(auction.endTime);
     const diff = endTime - now;
 
