@@ -229,7 +229,7 @@ const BulkLotUpload = () => {
   // Upload lots to auction
   const handleUploadLots = async () => {
     if (!selectedAuctionId) {
-      toast.error('Please select an auction');
+      toast.error('Please select an auction or choose "Create New Auction"');
       return;
     }
 
@@ -247,11 +247,28 @@ const BulkLotUpload = () => {
 
     setUploading(true);
     try {
-      const response = await api.post(`/auctions/${selectedAuctionId}/bulk-lots`, {
-        lots: validLots
-      });
+      // Check if user wants to create new auction
+      if (selectedAuctionId === 'CREATE_NEW') {
+        // Create new auction with lot bidding enabled
+        const newAuction = {
+          title: `Auction - ${new Date().toLocaleDateString()}`,
+          description: `Bulk auction created with ${validLots.length} lots`,
+          startTime: new Date().toISOString(),
+          endTime: null,
+          status: 'Upcoming',
+          isLotBidding: true, // Automatically enable lot bidding
+          lots: validLots
+        };
 
-      toast.success(`Successfully added ${validLots.length} lots to auction!`);
+        const response = await api.post('/auctions', newAuction);
+        toast.success(`Successfully created new auction with ${validLots.length} lots!`);
+      } else {
+        // Add lots to existing auction
+        const response = await api.post(`/auctions/${selectedAuctionId}/bulk-lots`, {
+          lots: validLots
+        });
+        toast.success(`Successfully added ${validLots.length} lots to auction!`);
+      }
 
       // Reset form and clear localStorage
       setCsvFile(null);
@@ -326,12 +343,22 @@ const BulkLotUpload = () => {
             disabled={uploading}
           >
             <option value="">Select an auction...</option>
-            {auctions.map(auction => (
-              <option key={auction._id} value={auction._id}>
-                {auction.title} - {auction.status} {auction.isLotBidding ? '(Lot Bidding)' : ''}
-              </option>
-            ))}
+            <option value="CREATE_NEW" className="font-semibold text-green-600">
+              ✨ Create New Auction (Auto lot bidding enabled)
+            </option>
+            <optgroup label="Existing Auctions">
+              {auctions.map(auction => (
+                <option key={auction._id} value={auction._id}>
+                  {auction.title} - {auction.status} {auction.isLotBidding ? '(Lot Bidding)' : ''}
+                </option>
+              ))}
+            </optgroup>
           </select>
+          {selectedAuctionId === 'CREATE_NEW' && (
+            <p className="text-sm text-green-600 dark:text-green-400 mt-2 font-medium">
+              ✓ Will create a new auction with lot bidding automatically enabled
+            </p>
+          )}
         </div>
 
         {/* File Input */}
