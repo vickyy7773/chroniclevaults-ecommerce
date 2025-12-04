@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Upload, Download, FileSpreadsheet, CheckCircle, AlertCircle, Trash2, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 
 const BulkLotUpload = () => {
+  const navigate = useNavigate();
   const [csvFile, setCsvFile] = useState(null);
   const [parsedLots, setParsedLots] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -249,33 +251,38 @@ const BulkLotUpload = () => {
     try {
       // Check if user wants to create new auction
       if (selectedAuctionId === 'CREATE_NEW') {
-        // Create new auction with lot bidding enabled
-        const newAuction = {
-          title: `Auction - ${new Date().toLocaleDateString()}`,
-          description: `Bulk auction created with ${validLots.length} lots`,
-          startTime: new Date().toISOString(),
-          endTime: null,
-          status: 'Upcoming',
-          isLotBidding: true, // Automatically enable lot bidding
-          lots: validLots
-        };
+        // Save lots to localStorage and redirect to Auction Management
+        localStorage.setItem('newAuctionLots', JSON.stringify({
+          lots: validLots,
+          timestamp: new Date().toISOString()
+        }));
 
-        const response = await api.post('/auctions', newAuction);
-        toast.success(`Successfully created new auction with ${validLots.length} lots!`);
+        toast.success(`${validLots.length} lots ready! Redirecting to create auction...`);
+
+        // Clear current bulk upload data
+        setCsvFile(null);
+        setParsedLots([]);
+        setSelectedAuctionId('');
+        localStorage.removeItem('bulkLotUpload');
+
+        // Redirect to Auction Management page
+        setTimeout(() => {
+          navigate('/admin/auctions');
+        }, 1000);
       } else {
         // Add lots to existing auction
         const response = await api.post(`/auctions/${selectedAuctionId}/bulk-lots`, {
           lots: validLots
         });
         toast.success(`Successfully added ${validLots.length} lots to auction!`);
-      }
 
-      // Reset form and clear localStorage
-      setCsvFile(null);
-      setParsedLots([]);
-      setSelectedAuctionId('');
-      localStorage.removeItem('bulkLotUpload');
-      document.getElementById('csv-file-input').value = '';
+        // Reset form and clear localStorage
+        setCsvFile(null);
+        setParsedLots([]);
+        setSelectedAuctionId('');
+        localStorage.removeItem('bulkLotUpload');
+        document.getElementById('csv-file-input').value = '';
+      }
     } catch (error) {
       console.error('Bulk upload error:', error);
       const errorMsg = error.response?.data?.message || error.message || 'Failed to upload lots';

@@ -34,6 +34,42 @@ const AuctionManagement = () => {
     fetchProducts();
   }, [viewMode]);
 
+  // Check for pre-filled lots from Bulk Upload
+  useEffect(() => {
+    const savedLots = localStorage.getItem('newAuctionLots');
+    if (savedLots) {
+      try {
+        const { lots, timestamp } = JSON.parse(savedLots);
+
+        // Check if data is not too old (within 10 minutes)
+        const age = Date.now() - new Date(timestamp).getTime();
+        if (age < 10 * 60 * 1000) {
+          // Set form data with pre-filled lots
+          setFormData(prev => ({
+            ...prev,
+            isLotBidding: true, // Auto-enable lot bidding
+            lots: lots,
+            totalLots: lots.length
+          }));
+
+          // Open the create auction modal
+          setShowModal(true);
+          setSelectedAuction(null);
+
+          toast.success(`${lots.length} lots loaded from bulk upload! Review and create auction.`, {
+            autoClose: 5000
+          });
+        }
+
+        // Clear the saved lots data
+        localStorage.removeItem('newAuctionLots');
+      } catch (error) {
+        console.error('Error loading pre-filled lots:', error);
+        localStorage.removeItem('newAuctionLots');
+      }
+    }
+  }, []);
+
   const fetchProducts = async () => {
     try {
       const response = await api.get('/products');
