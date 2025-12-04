@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TrendingUp, Calendar, Award, DollarSign, ArrowLeft, Search } from 'lucide-react';
 import { toast } from 'react-toastify';
-import api from '../services/index';
+import api from '../utils/api';
 
 const PriceRealization = () => {
   const { auctionId } = useParams();
