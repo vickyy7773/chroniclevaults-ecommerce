@@ -653,7 +653,8 @@ const AuctionPage = () => {
   if (auction.isLotBidding && displayLot && displayLot.image) {
     auctionImages = [displayLot.image];
   } else {
-    auctionImages = auction.images?.length > 0 ? auction.images : (auction.image ? [auction.image] : []);
+    // Fix: Backend uses auction.image (singular), not auction.images (plural)
+    auctionImages = auction.image ? [auction.image] : [];
   }
 
   // Handle lot click - show selected lot details
