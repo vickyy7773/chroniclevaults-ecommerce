@@ -82,6 +82,89 @@ router.post('/video', uploadVideo.single('video'), (req, res) => {
   }
 });
 
+// Get list of all uploaded images
+router.get('/list', async (req, res) => {
+  try {
+    const uploadsDir = path.join(__dirname, '..', 'uploads');
+
+    // Ensure uploads directory exists
+    if (!fs.existsSync(uploadsDir)) {
+      return res.status(200).json({ images: [] });
+    }
+
+    // Read all files from uploads directory
+    const files = fs.readdirSync(uploadsDir);
+
+    // Get file details
+    const imageFiles = files
+      .filter(file => {
+        // Filter only image files
+        const ext = path.extname(file).toLowerCase();
+        return ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
+      })
+      .map(file => {
+        const filePath = path.join(uploadsDir, file);
+        const stats = fs.statSync(filePath);
+        const protocol = req.get('host').includes('chroniclevaults.com') ? 'https' : req.protocol;
+
+        return {
+          filename: file,
+          url: `${protocol}://${req.get('host')}/uploads/${file}`,
+          size: (stats.size / 1024).toFixed(2), // KB
+          uploadedAt: stats.birthtime,
+          modifiedAt: stats.mtime
+        };
+      })
+      .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)); // Sort by newest first
+
+    res.status(200).json({
+      success: true,
+      count: imageFiles.length,
+      images: imageFiles
+    });
+  } catch (error) {
+    console.error('List images error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error listing images',
+      error: error.message
+    });
+  }
+});
+
+// Delete uploaded image
+router.delete('/:filename', async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const uploadsDir = path.join(__dirname, '..', 'uploads');
+    const filePath = path.join(uploadsDir, filename);
+
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Image not found'
+      });
+    }
+
+    // Delete the file
+    fs.unlinkSync(filePath);
+
+    res.status(200).json({
+      success: true,
+      message: 'Image deleted successfully',
+      filename
+    });
+  } catch (error) {
+    console.error('Delete image error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting image',
+      error: error.message
+    });
+  }
+});
+
 // Base64 image upload (for auction images)
 router.post('/base64', async (req, res) => {
   try {
