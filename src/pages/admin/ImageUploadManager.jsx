@@ -1,11 +1,49 @@
-import { useState } from 'react';
-import { Upload, Copy, Trash2, Image as ImageIcon, Download, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Upload, Copy, Trash2, Image as ImageIcon, Download, CheckCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const ImageUploadManager = () => {
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // API URL
+  const API_URL = import.meta.env.PROD
+    ? 'https://chroniclevaults.com/api'
+    : 'http://localhost:5000/api';
+
+  // Fetch all uploaded images from database
+  const fetchImages = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/upload/list`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch images');
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setUploadedImages(data.images);
+      }
+    } catch (error) {
+      console.error('Error fetching images:', error);
+      toast.error('Failed to load images from database');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load images on component mount
+  useEffect(() => {
+    fetchImages();
+  }, []);
 
   // Handle multiple file selection
   const handleFileSelect = async (e) => {
@@ -19,11 +57,13 @@ const ImageUploadManager = () => {
       const uploadPromises = files.map((file, index) => uploadSingleImage(file, index, files.length));
       const results = await Promise.all(uploadPromises);
 
-      // Add successfully uploaded images to state
+      // Count successful uploads
       const successfulUploads = results.filter(r => r.success);
-      setUploadedImages(prev => [...prev, ...successfulUploads]);
 
-      toast.success(`${successfulUploads.length} images uploaded successfully!`);
+      toast.success(`${successfulUploads.length} images uploaded and saved to database!`);
+
+      // Refetch all images from database
+      await fetchImages();
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Failed to upload some images');
@@ -96,18 +136,42 @@ const ImageUploadManager = () => {
     toast.success(`${uploadedImages.length} URLs copied to clipboard!`);
   };
 
-  // Delete image from list (not from server)
-  const handleDeleteImage = (id) => {
-    setUploadedImages(prev => prev.filter(img => img.id !== id));
-    toast.info('Image removed from list');
+  // Delete image from database and server
+  const handleDeleteImage = async (filename) => {
+    if (!confirm(`Are you sure you want to delete "${filename}"? This will remove it from database and server permanently.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/upload/${filename}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete image');
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success('Image deleted from database and server');
+        // Refetch images to update the list
+        await fetchImages();
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete image');
+    }
   };
 
-  // Clear all images
-  const handleClearAll = () => {
-    if (confirm(`Are you sure you want to clear all ${uploadedImages.length} images?`)) {
-      setUploadedImages([]);
-      toast.info('All images cleared');
-    }
+  // Refresh images list
+  const handleRefresh = async () => {
+    toast.info('Refreshing image list...');
+    await fetchImages();
+    toast.success('Image list refreshed!');
   };
 
   // Download URLs as CSV
@@ -146,31 +210,34 @@ const ImageUploadManager = () => {
             <Upload className="w-5 h-5 text-amber-600" />
             Upload Images
           </h2>
-          {uploadedImages.length > 0 && (
-            <div className="flex gap-2">
-              <button
-                onClick={handleCopyAllURLs}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
-              >
-                <Copy className="w-4 h-4" />
-                Copy All URLs
-              </button>
-              <button
-                onClick={handleDownloadCSV}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Download CSV
-              </button>
-              <button
-                onClick={handleClearAll}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
-              >
-                <Trash2 className="w-4 h-4" />
-                Clear All
-              </button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            {uploadedImages.length > 0 && (
+              <>
+                <button
+                  onClick={handleCopyAllURLs}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copy All URLs
+                </button>
+                <button
+                  onClick={handleDownloadCSV}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download CSV
+                </button>
+              </>
+            )}
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {/* File Input */}
@@ -290,9 +357,9 @@ const ImageUploadManager = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
-                        onClick={() => handleDeleteImage(image.id)}
+                        onClick={() => handleDeleteImage(image.filename)}
                         className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 rounded-lg transition-colors"
-                        title="Delete"
+                        title="Delete from database and server"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -305,12 +372,22 @@ const ImageUploadManager = () => {
         </div>
       )}
 
+      {/* Loading State */}
+      {loading && uploadedImages.length === 0 && (
+        <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-100 dark:border-gray-800">
+          <RefreshCw className="w-16 h-16 mx-auto text-amber-600 mb-4 animate-spin" />
+          <p className="text-gray-500 dark:text-gray-400 font-medium">
+            Loading images from database...
+          </p>
+        </div>
+      )}
+
       {/* Empty State */}
-      {uploadedImages.length === 0 && !uploading && (
+      {!loading && uploadedImages.length === 0 && !uploading && (
         <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-100 dark:border-gray-800">
           <ImageIcon className="w-16 h-16 mx-auto text-gray-400 mb-4" />
           <p className="text-gray-500 dark:text-gray-400 font-medium">
-            No images uploaded yet. Click the upload button above to get started.
+            No auction images in database yet. Upload images above to get started.
           </p>
         </div>
       )}

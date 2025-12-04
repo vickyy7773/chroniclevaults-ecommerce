@@ -1,6 +1,7 @@
 import express from 'express';
 import upload, { uploadVideo } from '../middleware/upload.js';
 import imageCompression from '../middleware/imageCompression.js';
+import UploadedImage from '../models/UploadedImage.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -21,13 +22,29 @@ router.post('/single', upload.single('image'), async (req, res) => {
     const filePath = path.join(__dirname, '..', 'uploads', req.file.filename);
     await imageCompression.compressImage(filePath, { quality: 85 });
 
+    // Get file stats after compression
+    const stats = fs.statSync(filePath);
+
     // Return the full URL including backend domain (force HTTPS for production)
     const protocol = req.get('host').includes('chroniclevaults.com') ? 'https' : req.protocol;
     const imageUrl = `${protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+
+    // Save image metadata to database
+    const uploadedImage = await UploadedImage.create({
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      url: imageUrl,
+      size: stats.size,
+      mimeType: req.file.mimetype,
+      uploadedBy: req.user?._id, // If user is authenticated
+      purpose: 'auction' // Default purpose for Image Upload Manager
+    });
+
     res.status(200).json({
       message: 'Image uploaded and optimized successfully',
       imageUrl: imageUrl,
-      filename: req.file.filename
+      filename: req.file.filename,
+      imageId: uploadedImage._id
     });
   } catch (error) {
     res.status(500).json({ message: 'Error uploading image', error: error.message });
@@ -82,40 +99,25 @@ router.post('/video', uploadVideo.single('video'), (req, res) => {
   }
 });
 
-// Get list of all uploaded images
+// Get list of all uploaded images from database
 router.get('/list', async (req, res) => {
   try {
-    const uploadsDir = path.join(__dirname, '..', 'uploads');
+    // Fetch all uploaded images from database, sorted by newest first
+    const images = await UploadedImage.find({ purpose: 'auction' })
+      .sort({ createdAt: -1 })
+      .select('filename originalName url size mimeType createdAt isUsed')
+      .lean();
 
-    // Ensure uploads directory exists
-    if (!fs.existsSync(uploadsDir)) {
-      return res.status(200).json({ images: [] });
-    }
-
-    // Read all files from uploads directory
-    const files = fs.readdirSync(uploadsDir);
-
-    // Get file details
-    const imageFiles = files
-      .filter(file => {
-        // Filter only image files
-        const ext = path.extname(file).toLowerCase();
-        return ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
-      })
-      .map(file => {
-        const filePath = path.join(uploadsDir, file);
-        const stats = fs.statSync(filePath);
-        const protocol = req.get('host').includes('chroniclevaults.com') ? 'https' : req.protocol;
-
-        return {
-          filename: file,
-          url: `${protocol}://${req.get('host')}/uploads/${file}`,
-          size: (stats.size / 1024).toFixed(2), // KB
-          uploadedAt: stats.birthtime,
-          modifiedAt: stats.mtime
-        };
-      })
-      .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)); // Sort by newest first
+    // Transform data for frontend
+    const imageFiles = images.map(img => ({
+      id: img._id,
+      filename: img.filename,
+      originalName: img.originalName,
+      url: img.url,
+      size: (img.size / 1024).toFixed(2), // Convert to KB
+      uploadedAt: img.createdAt,
+      isUsed: img.isUsed
+    }));
 
     res.status(200).json({
       success: true,
@@ -139,16 +141,23 @@ router.delete('/:filename', async (req, res) => {
     const uploadsDir = path.join(__dirname, '..', 'uploads');
     const filePath = path.join(uploadsDir, filename);
 
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
+    // Find image in database
+    const imageDoc = await UploadedImage.findOne({ filename });
+
+    if (!imageDoc) {
       return res.status(404).json({
         success: false,
-        message: 'Image not found'
+        message: 'Image not found in database'
       });
     }
 
-    // Delete the file
-    fs.unlinkSync(filePath);
+    // Delete the physical file if it exists
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Delete from database
+    await UploadedImage.deleteOne({ filename });
 
     res.status(200).json({
       success: true,
@@ -200,14 +209,29 @@ router.post('/base64', async (req, res) => {
     // Compress the image
     await imageCompression.compressImage(filePath, { quality: 85 });
 
+    // Get file stats after compression
+    const stats = fs.statSync(filePath);
+
     // Return the full URL
     const protocol = req.get('host').includes('chroniclevaults.com') ? 'https' : req.protocol;
     const imageUrl = `${protocol}://${req.get('host')}/uploads/${filename}`;
 
+    // Save image metadata to database
+    const uploadedImage = await UploadedImage.create({
+      filename: filename,
+      originalName: filename,
+      url: imageUrl,
+      size: stats.size,
+      mimeType: `image/${imageType}`,
+      uploadedBy: req.user?._id,
+      purpose: 'auction'
+    });
+
     res.status(200).json({
       message: 'Image uploaded and optimized successfully',
       imageUrl: imageUrl,
-      filename: filename
+      filename: filename,
+      imageId: uploadedImage._id
     });
   } catch (error) {
     console.error('Base64 upload error:', error);
