@@ -9,6 +9,31 @@ const BulkLotUpload = () => {
   const [uploading, setUploading] = useState(false);
   const [selectedAuctionId, setSelectedAuctionId] = useState('');
   const [auctions, setAuctions] = useState([]);
+  const [uploadingImage, setUploadingImage] = useState(null);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('bulkLotUpload');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        setParsedLots(data.parsedLots || []);
+        setSelectedAuctionId(data.selectedAuctionId || '');
+      } catch (error) {
+        console.error('Failed to load saved data:', error);
+      }
+    }
+  }, []);
+
+  // Save to localStorage whenever data changes
+  useEffect(() => {
+    if (parsedLots.length > 0 || selectedAuctionId) {
+      localStorage.setItem('bulkLotUpload', JSON.stringify({
+        parsedLots,
+        selectedAuctionId
+      }));
+    }
+  }, [parsedLots, selectedAuctionId]);
 
   // Fetch auctions on component mount
   useEffect(() => {
@@ -135,6 +160,66 @@ const BulkLotUpload = () => {
     reader.readAsText(file);
   };
 
+  // Handle image upload for individual lot
+  const handleImageUpload = async (index, file) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size should not exceed 5MB');
+      return;
+    }
+
+    setUploadingImage(index);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const uploadResponse = await api.post('/upload/base64', {
+            image: reader.result
+          });
+
+          // Update lot image
+          setParsedLots(prev => {
+            const updated = [...prev];
+            updated[index].image = uploadResponse.imageUrl;
+
+            // Re-validate lot
+            const lot = updated[index];
+            const errors = [];
+            if (!lot.title) errors.push('Title is required');
+            if (!lot.description) errors.push('Description is required');
+            if (!lot.image) errors.push('Image URL is required');
+            if (lot.startingPrice <= 0) errors.push('Starting price must be greater than 0');
+
+            updated[index].errors = errors;
+            updated[index].isValid = errors.length === 0;
+
+            return updated;
+          });
+
+          toast.success('Image uploaded successfully');
+        } catch (error) {
+          console.error('Upload error:', error);
+          toast.error('Failed to upload image');
+        } finally {
+          setUploadingImage(null);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('File read error:', error);
+      toast.error('Failed to read file');
+      setUploadingImage(null);
+    }
+  };
+
   // Remove lot from preview
   const handleRemoveLot = (index) => {
     setParsedLots(prev => prev.filter((_, i) => i !== index));
@@ -168,10 +253,11 @@ const BulkLotUpload = () => {
 
       toast.success(`Successfully added ${validLots.length} lots to auction!`);
 
-      // Reset form
+      // Reset form and clear localStorage
       setCsvFile(null);
       setParsedLots([]);
       setSelectedAuctionId('');
+      localStorage.removeItem('bulkLotUpload');
       document.getElementById('csv-file-input').value = '';
     } catch (error) {
       console.error('Bulk upload error:', error);
@@ -367,19 +453,41 @@ const BulkLotUpload = () => {
                       {lot.lotNumber}
                     </td>
                     <td className="px-4 py-3">
-                      {lot.image ? (
-                        <img
-                          src={lot.image}
-                          alt={lot.title}
-                          className="w-12 h-12 object-cover rounded border-2 border-gray-200 dark:border-gray-700"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div className="hidden w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded items-center justify-center">
-                        <AlertCircle className="w-6 h-6 text-gray-400" />
+                      <div className="flex items-center gap-2">
+                        {lot.image ? (
+                          <img
+                            src={lot.image}
+                            alt={lot.title}
+                            className="w-12 h-12 object-cover rounded border-2 border-gray-200 dark:border-gray-700"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                            <AlertCircle className="w-6 h-6 text-gray-400" />
+                          </div>
+                        )}
+                        <label
+                          htmlFor={`image-upload-${index}`}
+                          className={`cursor-pointer p-1.5 rounded-lg transition-colors ${
+                            uploadingImage === index
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                          }`}
+                          title="Upload image"
+                        >
+                          <Upload className="w-4 h-4" />
+                          <input
+                            id={`image-upload-${index}`}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(index, e.target.files[0])}
+                            disabled={uploadingImage === index}
+                            className="hidden"
+                          />
+                        </label>
                       </div>
                     </td>
                     <td className="px-4 py-3">
