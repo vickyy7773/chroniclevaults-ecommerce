@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Edit2, Download, Trash2, DollarSign, Search, Eye, X, Filter } from 'lucide-react';
+import { FileText, Edit2, Download, Trash2, DollarSign, Search, Eye, X, Filter } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useSearchParams } from 'react-router-dom';
 import auctionInvoiceService from '../../services/auctionInvoiceService';
@@ -12,7 +12,6 @@ const AuctionInvoiceManagement = () => {
   const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [formData, setFormData] = useState({
@@ -59,19 +58,6 @@ const AuctionInvoiceManagement = () => {
       setAuctions(response.data.data || []);
     } catch (error) {
       console.error('Failed to fetch auctions:', error);
-    }
-  };
-
-  const handleCreateInvoice = async (e) => {
-    e.preventDefault();
-    try {
-      await auctionInvoiceService.createInvoice(formData);
-      toast.success('Invoice created successfully!');
-      setShowCreateModal(false);
-      fetchInvoices();
-      resetForm();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create invoice');
     }
   };
 
@@ -252,15 +238,8 @@ const AuctionInvoiceManagement = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Auction Invoice Management</h1>
-          <p className="text-gray-600 mt-1">Manage auction invoices with GST calculations</p>
+          <p className="text-gray-600 mt-1">View and edit automatically generated auction invoices</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-        >
-          <Plus className="w-5 h-5" />
-          Create Invoice
-        </button>
       </div>
 
       {/* Search */}
@@ -391,15 +370,14 @@ const AuctionInvoiceManagement = () => {
         </div>
       )}
 
-      {/* Create/Edit Modal - Simplified for now, will be detailed in next part */}
-      {(showCreateModal || showEditModal) && (
+      {/* Edit Invoice Modal */}
+      {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">{showEditModal ? 'Edit Invoice' : 'Create Invoice'}</h2>
+              <h2 className="text-2xl font-bold">Edit Invoice</h2>
               <button
                 onClick={() => {
-                  setShowCreateModal(false);
                   setShowEditModal(false);
                   resetForm();
                 }}
@@ -409,86 +387,8 @@ const AuctionInvoiceManagement = () => {
               </button>
             </div>
 
-            <form onSubmit={showEditModal ? handleUpdateInvoice : handleCreateInvoice}>
-              {/* Auction Selection */}
-              {showCreateModal && (
-                <>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Auction</label>
-                    <select
-                      value={formData.auctionId}
-                      onChange={(e) => setFormData({ ...formData, auctionId: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Select an auction...</option>
-                      {auctions.map(auction => (
-                        <option key={auction._id} value={auction._id}>
-                          {auction.title} - {auction.status}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Lot Number</label>
-                    <input
-                      type="number"
-                      value={formData.lotNumber}
-                      onChange={(e) => setFormData({ ...formData, lotNumber: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter lot number"
-                      required
-                    />
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Packing & Forwarding Charges (₹)</label>
-                    <input
-                      type="number"
-                      value={formData.packingForwardingCharges.amount}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        packingForwardingCharges: { ...formData.packingForwardingCharges, amount: parseFloat(e.target.value) || 0 }
-                      })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                      placeholder="80"
-                    />
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Company GSTIN</label>
-                    <input
-                      type="text"
-                      value={formData.companyDetails.gstin}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        companyDetails: { ...formData.companyDetails, gstin: e.target.value }
-                      })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                      placeholder="27XXXXX0000X1ZX"
-                      required
-                    />
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Company PAN</label>
-                    <input
-                      type="text"
-                      value={formData.companyDetails.pan}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        companyDetails: { ...formData.companyDetails, pan: e.target.value }
-                      })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                      placeholder="XXXXX0000X"
-                      required
-                    />
-                  </div>
-                </>
-              )}
-
-              {showEditModal && selectedInvoice && (
+            <form onSubmit={handleUpdateInvoice}>
+              {selectedInvoice && (
                 <>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Invoice Number</label>
@@ -557,7 +457,7 @@ const AuctionInvoiceManagement = () => {
                   type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
-                  {showEditModal ? 'Update Invoice' : 'Create Invoice'}
+                  Update Invoice
                 </button>
               </div>
             </form>
