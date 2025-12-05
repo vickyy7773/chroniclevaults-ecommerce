@@ -31,7 +31,7 @@ const PriceRealization = () => {
     try {
       setLoading(true);
       const response = await api.get('/auctions/price-realization');
-      setAuctions(response.data.auctions || []);
+      setAuctions(response.auctions || []);
     } catch (error) {
       console.error('Error fetching price realization data:', error);
       toast.error('Failed to load auction results');
