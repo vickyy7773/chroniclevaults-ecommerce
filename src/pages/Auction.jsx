@@ -787,6 +787,21 @@ const AuctionPage = () => {
                     <p className="text-sm text-gray-500 uppercase tracking-wide">Increment</p>
                     <p className="font-bold text-gray-900 text-sm">₹{currentIncrement.toLocaleString()}</p>
                   </div>
+                  {/* Reserve Price - LOT BIDDING ONLY */}
+                  {auction.isLotBidding && displayLot && displayLot.reservePrice > 0 && (
+                    <div className="col-span-2 bg-orange-50 border border-orange-200 rounded-lg p-2">
+                      <p className="text-sm text-orange-600 uppercase tracking-wide flex items-center gap-1">
+                        <Shield className="w-3 h-3" />
+                        Reserve Price (Min to Sell)
+                      </p>
+                      <p className="font-bold text-orange-700 text-sm">₹{displayLot.reservePrice.toLocaleString()}</p>
+                      <p className="text-xs text-orange-600 mt-0.5">
+                        {displayCurrentBid >= displayLot.reservePrice
+                          ? '✅ Reserve met - Will sell if no higher bid'
+                          : '⚠️ Reserve not met - Won\'t sell below this'}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* User Bid Stats */}
@@ -1067,6 +1082,16 @@ const AuctionPage = () => {
                           <div className="text-sm text-gray-500">
                             Start: <span className="font-semibold text-gray-700">₹{lot.startingPrice.toLocaleString()}</span>
                           </div>
+                          {lot.reservePrice > 0 && (
+                            <div className="text-sm text-orange-600 font-medium">
+                              Reserve: <span className="font-semibold">₹{lot.reservePrice.toLocaleString()}</span>
+                              {(lot.status === 'Sold' || lot.status === 'Unsold') && (
+                                <span className="ml-1">
+                                  {lot.currentBid >= lot.reservePrice ? '✅' : '❌'}
+                                </span>
+                              )}
+                            </div>
+                          )}
                           <div className="text-sm text-gray-600 font-medium">
                             {lot.status === 'Active' || lot.status === 'Upcoming' ? 'Current: ' : 'Final: '}
                             <span className={`font-bold text-base ${
