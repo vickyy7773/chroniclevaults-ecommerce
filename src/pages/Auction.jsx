@@ -156,11 +156,6 @@ const AuctionPage = () => {
 
       setAuction(data.auction);
 
-      // Reset warning countdown when new bid is placed
-      setGoingWarning(0);
-      setNextWarningTime(null);
-      setCountdown('');
-
       const currentIncrement = getCurrentIncrement(data.auction);
       const suggestedBid = data.auction.currentBid + currentIncrement;
       setBidAmount(suggestedBid.toString());
