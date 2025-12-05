@@ -12,6 +12,12 @@ const AuctionInvoiceManagement = () => {
   const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Filter states
+  const [selectedAuctionFilter, setSelectedAuctionFilter] = useState(auctionFilter || '');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [formData, setFormData] = useState({
@@ -242,21 +248,20 @@ const AuctionInvoiceManagement = () => {
     const matchesSearch = invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.buyerDetails?.name?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Filter by auction ID if present in URL
-    // Handle both populated (object) and non-populated (string) auction field
+    // Filter by auction ID (from URL or dropdown)
     const auctionId = typeof invoice.auction === 'object' ? invoice.auction?._id : invoice.auction;
-    const matchesAuction = auctionFilter ? auctionId === auctionFilter : true;
+    const activeAuctionFilter = selectedAuctionFilter || auctionFilter;
+    const matchesAuction = activeAuctionFilter ? auctionId === activeAuctionFilter : true;
 
-    console.log('📋 Invoice filter check:', {
-      invoiceNumber: invoice.invoiceNumber,
-      auctionId,
-      auctionFilter,
-      matchesSearch,
-      matchesAuction,
-      passes: matchesSearch && matchesAuction
-    });
+    // Filter by status
+    const matchesStatus = statusFilter ? invoice.status === statusFilter : true;
 
-    return matchesSearch && matchesAuction;
+    // Filter by date range
+    const invoiceDate = new Date(invoice.invoiceDate);
+    const matchesDateFrom = dateFrom ? invoiceDate >= new Date(dateFrom) : true;
+    const matchesDateTo = dateTo ? invoiceDate <= new Date(dateTo) : true;
+
+    return matchesSearch && matchesAuction && matchesStatus && matchesDateFrom && matchesDateTo;
   });
 
   console.log('✅ Filtered result:', filteredInvoices.length, 'invoices');
@@ -271,42 +276,106 @@ const AuctionInvoiceManagement = () => {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search by invoice number or buyer name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+      {/* Filters Section */}
+      <div className="mb-6 bg-white p-4 rounded-lg border">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Search */}
+          <div className="lg:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Invoice # or Buyer name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Auction Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Auction</label>
+            <select
+              value={selectedAuctionFilter}
+              onChange={(e) => setSelectedAuctionFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Auctions</option>
+              {auctions.filter(a => a.isLotBidding && a.status === 'Ended').map(auction => (
+                <option key={auction._id} value={auction._id}>
+                  {auction.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Status</option>
+              <option value="Generated">Generated</option>
+              <option value="Sent">Sent</option>
+              <option value="Paid">Paid</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          {/* Date Range */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
         </div>
 
-        {/* Active Filter Badge */}
-        {auctionFilter && (
-          <div className="mt-3 flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">
-              <Filter className="w-4 h-4" />
-              <span className="text-sm font-medium">
-                Filtered by Auction: {auctions.find(a => a._id === auctionFilter)?.title || auctionFilter.slice(-6)}
-              </span>
-              <button
-                onClick={() => {
-                  searchParams.delete('auction');
-                  setSearchParams(searchParams);
-                }}
-                className="ml-2 hover:bg-blue-200 rounded-full p-1 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <span className="text-sm text-gray-600">
-              Showing {filteredInvoices.length} invoice{filteredInvoices.length !== 1 ? 's' : ''}
-            </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-3">
+          <div className="lg:col-span-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
           </div>
-        )}
+
+          {/* Clear Filters Button */}
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedAuctionFilter('');
+                setStatusFilter('');
+                setDateFrom('');
+                setDateTo('');
+                searchParams.delete('auction');
+                setSearchParams(searchParams);
+              }}
+              className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              Clear Filters
+            </button>
+          </div>
+        </div>
+
+        {/* Results Count */}
+        <div className="mt-3 pt-3 border-t">
+          <span className="text-sm text-gray-600">
+            Showing <span className="font-semibold text-gray-900">{filteredInvoices.length}</span> of <span className="font-semibold text-gray-900">{invoices.length}</span> invoice{invoices.length !== 1 ? 's' : ''}
+          </span>
+        </div>
       </div>
 
       {/* Invoices Table */}
