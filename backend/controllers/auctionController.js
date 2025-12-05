@@ -1,6 +1,7 @@
 import Auction from '../models/Auction.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
+import AuctionInvoice from '../models/AuctionInvoice.js';
 
 // ============================================
 // HELPER FUNCTIONS FOR PER-LOT COIN MANAGEMENT
@@ -138,6 +139,157 @@ export const deductFrozenCoins = async (userId, auctionId, lotNumber, amount) =>
   }
 };
 
+// Indian state codes mapping for invoice generation
+const STATE_CODES = {
+  'Andhra Pradesh': '37',
+  'Arunachal Pradesh': '12',
+  'Assam': '18',
+  'Bihar': '10',
+  'Chhattisgarh': '22',
+  'Goa': '30',
+  'Gujarat': '24',
+  'Haryana': '06',
+  'Himachal Pradesh': '02',
+  'Jharkhand': '20',
+  'Karnataka': '29',
+  'Kerala': '32',
+  'Madhya Pradesh': '23',
+  'Maharashtra': '27',
+  'Manipur': '14',
+  'Meghalaya': '17',
+  'Mizoram': '15',
+  'Nagaland': '13',
+  'Odisha': '21',
+  'Punjab': '03',
+  'Rajasthan': '08',
+  'Sikkim': '11',
+  'Tamil Nadu': '33',
+  'Telangana': '36',
+  'Tripura': '16',
+  'Uttar Pradesh': '09',
+  'Uttarakhand': '05',
+  'West Bengal': '19',
+  'Delhi': '07',
+  'Jammu and Kashmir': '01',
+  'Ladakh': '38',
+  'Puducherry': '34',
+  'Chandigarh': '04',
+  'Dadra and Nagar Haveli and Daman and Diu': '26',
+  'Lakshadweep': '31',
+  'Andaman and Nicobar Islands': '35'
+};
+
+/**
+ * Automatically generate invoice for a sold lot
+ * @param {String} auctionId - Auction's ObjectId
+ * @param {Number} lotNumber - Lot number
+ * @param {Object} lot - Lot object
+ * @param {String} winnerId - Winner's ObjectId
+ */
+export const autoGenerateInvoice = async (auctionId, lotNumber, lot, winnerId) => {
+  try {
+    console.log(`📄 Auto-generating invoice for auction ${auctionId}, lot ${lotNumber}`);
+
+    // Get buyer details
+    const buyer = await User.findById(winnerId);
+    if (!buyer) {
+      console.error(`❌ Buyer not found for invoice generation: ${winnerId}`);
+      return { success: false, message: 'Buyer not found' };
+    }
+
+    // Determine billing address state code
+    const buyerState = buyer.address?.state || 'Maharashtra';
+    const buyerStateCode = STATE_CODES[buyerState] || '27';
+
+    // Company details (default for Chronicle Vaults)
+    const defaultCompanyDetails = {
+      name: 'Chronicle Vaults',
+      gstin: '27XXXXX0000X1ZX',
+      pan: 'XXXXX0000X',
+      msme: 'MH-XX-XXXXXXX',
+      address: 'Mumbai',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      stateCode: '27',
+      phone: '+91-XXXXXXXXXX',
+      email: 'info@chroniclevaults.com',
+      bankDetails: {
+        bankName: 'Bank Name',
+        accountNumber: 'XXXXXXXXXXXX',
+        ifsc: 'XXXXXX',
+        branch: 'Mumbai'
+      }
+    };
+
+    // Determine GST type (IGST for interstate, CGST+SGST for intrastate)
+    const isInterstate = buyerStateCode !== defaultCompanyDetails.stateCode;
+    const gstType = isInterstate ? 'IGST' : 'CGST+SGST';
+
+    // Create invoice
+    const invoice = await AuctionInvoice.create({
+      auction: auctionId,
+      lotNumber,
+      buyer: buyer._id,
+      buyerDetails: {
+        name: buyer.name,
+        email: buyer.email,
+        phone: buyer.phone,
+        gstin: buyer.gstin || '',
+        pan: buyer.pan || '',
+        buyerNumber: `BUY${buyer._id.toString().slice(-3).toUpperCase()}`
+      },
+      billingAddress: {
+        street: buyer.address?.street || '',
+        city: buyer.address?.city || '',
+        state: buyerState,
+        stateCode: buyerStateCode,
+        zipCode: buyer.address?.zipCode || ''
+      },
+      shippingAddress: {
+        street: buyer.address?.street || '',
+        city: buyer.address?.city || '',
+        state: buyerState,
+        stateCode: buyerStateCode,
+        zipCode: buyer.address?.zipCode || ''
+      },
+      lotDetails: {
+        description: lot.title,
+        detailedDescription: lot.description,
+        hsnCode: '97050090',
+        quantity: 1,
+        hammerPrice: lot.currentBid
+      },
+      packingForwardingCharges: {
+        amount: 80,
+        hsnCode: '99854'
+      },
+      insuranceCharges: {
+        amount: 0,
+        hsnCode: '99681',
+        declined: true
+      },
+      gst: {
+        type: gstType,
+        rate: 5.00,
+        itemGSTRate: 5.00,
+        packingGSTRate: 18.00
+      },
+      shipping: {
+        transportMode: 'Post/Courier',
+        placeOfSupply: buyerState
+      },
+      companyDetails: defaultCompanyDetails,
+      status: 'Generated'
+    });
+
+    console.log(`✅ Invoice ${invoice.invoiceNumber} auto-generated for lot ${lotNumber}`);
+    return { success: true, invoice };
+  } catch (error) {
+    console.error(`❌ Error auto-generating invoice for lot ${lotNumber}:`, error);
+    return { success: false, message: error.message };
+  }
+};
+
 /**
  * End the current lot and determine if it's SOLD or UNSOLD
  * @param {String} auctionId - Auction's ObjectId
@@ -267,6 +419,9 @@ export const endCurrentLot = async (auctionId, io) => {
             console.log(`🔓 Unfroze coins for non-winner ${bid.user} on lot ${lotNumber}`);
           }
         }
+
+        // Auto-generate invoice for sold lot
+        await autoGenerateInvoice(auctionId, lotNumber, currentLot, winningBid.user);
 
         // Emit final announcement and socket event
         if (io) {
