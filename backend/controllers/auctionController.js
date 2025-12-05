@@ -302,6 +302,9 @@ export const endCurrentLot = async (auctionId, io) => {
         auction.lots[nextLotIndex].status = 'Active';
         auction.lots[nextLotIndex].startTime = new Date(Date.now() + 3000); // 3-second pause
 
+        // Update main auction currentBid to new lot's starting price
+        auction.currentBid = auction.lots[nextLotIndex].currentBid || auction.lots[nextLotIndex].startingPrice;
+
         // Reset timer for new lot
         auction.callNumber = 1;
         auction.phaseTimer = 10;
