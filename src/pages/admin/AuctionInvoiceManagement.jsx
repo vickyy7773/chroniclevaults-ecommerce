@@ -445,7 +445,6 @@ const AuctionInvoiceManagement = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setShowCreateModal(false);
                     setShowEditModal(false);
                     resetForm();
                   }}
