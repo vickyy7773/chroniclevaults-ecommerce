@@ -34,11 +34,6 @@ const AuctionInvoiceManagement = () => {
     }
   });
 
-  useEffect(() => {
-    fetchInvoices();
-    fetchAuctions();
-  }, []);
-
   const fetchInvoices = async () => {
     try {
       console.log('📡 Fetching invoices from API...');
@@ -66,6 +61,12 @@ const AuctionInvoiceManagement = () => {
       console.error('Failed to fetch auctions:', error);
     }
   };
+
+  useEffect(() => {
+    console.log('🚀 Component mounted - calling fetchInvoices...');
+    fetchInvoices();
+    fetchAuctions();
+  }, []);
 
   const handleUpdateInvoice = async (e) => {
     e.preventDefault();
