@@ -41,12 +41,18 @@ const AuctionInvoiceManagement = () => {
 
   const fetchInvoices = async () => {
     try {
+      console.log('📡 Fetching invoices from API...');
       setLoading(true);
       const response = await auctionInvoiceService.getAllInvoices();
+      console.log('📦 API Response:', response);
+      console.log('📊 Response data:', response.data);
+      console.log('📋 Invoices array:', response.data.data);
       setInvoices(response.data.data || []);
+      console.log('✅ Invoices set in state:', response.data.data?.length || 0);
     } catch (error) {
+      console.error('❌ Error fetching invoices:', error);
+      console.error('❌ Error details:', error.response?.data);
       toast.error('Failed to fetch invoices');
-      console.error(error);
     } finally {
       setLoading(false);
     }
