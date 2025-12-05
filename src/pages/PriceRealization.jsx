@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { TrendingUp, Calendar, Award, DollarSign, ArrowLeft, Search } from 'lucide-react';
+import { TrendingUp, Calendar, Award, DollarSign, ArrowLeft, Search, X, Filter } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
 
@@ -11,6 +11,12 @@ const PriceRealization = () => {
   const [selectedAuction, setSelectedAuction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Filter states
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [minSoldPercent, setMinSoldPercent] = useState('');
+  const [sortBy, setSortBy] = useState('date-desc'); // date-desc, date-asc, price-desc, price-asc, sold-desc
 
   // Fetch all ended lot bidding auctions
   useEffect(() => {
@@ -83,15 +89,47 @@ const PriceRealization = () => {
     return `AUC-${id.toString().slice(-6).toUpperCase()}`;
   };
 
-  // Filter auctions based on search term
-  const filteredAuctions = auctions.filter(auction => {
-    const auctionNumber = getAuctionNumber(auction._id);
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      auctionNumber.toLowerCase().includes(searchLower) ||
-      auction.title?.toLowerCase().includes(searchLower)
-    );
-  });
+  // Filter and sort auctions
+  const filteredAuctions = auctions
+    .filter(auction => {
+      // Search filter
+      const auctionNumber = getAuctionNumber(auction._id);
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = auctionNumber.toLowerCase().includes(searchLower) ||
+        auction.title?.toLowerCase().includes(searchLower);
+
+      // Date range filter
+      const auctionDate = new Date(auction.endTime || auction.createdAt);
+      const matchesDateFrom = dateFrom ? auctionDate >= new Date(dateFrom) : true;
+      const matchesDateTo = dateTo ? auctionDate <= new Date(dateTo) : true;
+
+      // Sold percentage filter
+      const stats = calculateStats(auction);
+      const matchesSoldPercent = minSoldPercent
+        ? stats && parseFloat(stats.percentSold) >= parseFloat(minSoldPercent)
+        : true;
+
+      return matchesSearch && matchesDateFrom && matchesDateTo && matchesSoldPercent;
+    })
+    .sort((a, b) => {
+      const statsA = calculateStats(a);
+      const statsB = calculateStats(b);
+
+      switch (sortBy) {
+        case 'date-asc':
+          return new Date(a.endTime || a.createdAt) - new Date(b.endTime || b.createdAt);
+        case 'date-desc':
+          return new Date(b.endTime || b.createdAt) - new Date(a.endTime || a.createdAt);
+        case 'price-asc':
+          return (statsA?.totalHammerPrice || 0) - (statsB?.totalHammerPrice || 0);
+        case 'price-desc':
+          return (statsB?.totalHammerPrice || 0) - (statsA?.totalHammerPrice || 0);
+        case 'sold-desc':
+          return parseFloat(statsB?.percentSold || 0) - parseFloat(statsA?.percentSold || 0);
+        default:
+          return 0;
+      }
+    });
 
   if (loading) {
     return (
@@ -121,17 +159,109 @@ const PriceRealization = () => {
             </p>
           </div>
 
-          {/* Search */}
+          {/* Filters Section */}
           <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search by auction number or title..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-              />
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="w-5 h-5 text-amber-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Search */}
+              <div className="lg:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Auction number or title..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* Date From */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+
+              {/* Date To */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+              {/* Min Sold % */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Min Sold %</label>
+                <input
+                  type="number"
+                  placeholder="e.g., 50"
+                  value={minSoldPercent}
+                  onChange={(e) => setMinSoldPercent(e.target.value)}
+                  min="0"
+                  max="100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+
+              {/* Sort By */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                >
+                  <option value="date-desc">Date (Newest First)</option>
+                  <option value="date-asc">Date (Oldest First)</option>
+                  <option value="price-desc">Hammer Price (High to Low)</option>
+                  <option value="price-asc">Hammer Price (Low to High)</option>
+                  <option value="sold-desc">Sold % (High to Low)</option>
+                </select>
+              </div>
+
+              {/* Spacer */}
+              <div className="lg:col-span-1"></div>
+
+              {/* Clear Filters */}
+              <div className="flex items-end">
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setDateFrom('');
+                    setDateTo('');
+                    setMinSoldPercent('');
+                    setSortBy('date-desc');
+                  }}
+                  className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+
+            {/* Results Count */}
+            <div className="mt-3 pt-3 border-t">
+              <span className="text-sm text-gray-600">
+                Showing <span className="font-semibold text-amber-700">{filteredAuctions.length}</span> of <span className="font-semibold text-gray-900">{auctions.length}</span> auction{auctions.length !== 1 ? 's' : ''}
+              </span>
             </div>
           </div>
 
