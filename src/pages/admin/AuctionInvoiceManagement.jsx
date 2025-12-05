@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Edit2, Download, Trash2, DollarSign, Search, Eye, X } from 'lucide-react';
+import { FileText, Plus, Edit2, Download, Trash2, DollarSign, Search, Eye, X, Filter } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useSearchParams } from 'react-router-dom';
 import auctionInvoiceService from '../../services/auctionInvoiceService';
 import api from '../../utils/api';
 
 const AuctionInvoiceManagement = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const auctionFilter = searchParams.get('auction');
   const [invoices, setInvoices] = useState([]);
   const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -232,10 +235,16 @@ const AuctionInvoiceManagement = () => {
     setShowEditModal(true);
   };
 
-  const filteredInvoices = invoices.filter(invoice =>
-    invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.buyerDetails?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredInvoices = invoices.filter(invoice => {
+    // Filter by search term
+    const matchesSearch = invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.buyerDetails?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Filter by auction ID if present in URL
+    const matchesAuction = auctionFilter ? invoice.auction?._id === auctionFilter || invoice.auction === auctionFilter : true;
+
+    return matchesSearch && matchesAuction;
+  });
 
   return (
     <div className="p-6">
@@ -266,6 +275,30 @@ const AuctionInvoiceManagement = () => {
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
+
+        {/* Active Filter Badge */}
+        {auctionFilter && (
+          <div className="mt-3 flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-lg">
+              <Filter className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                Filtered by Auction: {auctions.find(a => a._id === auctionFilter)?.title || auctionFilter.slice(-6)}
+              </span>
+              <button
+                onClick={() => {
+                  searchParams.delete('auction');
+                  setSearchParams(searchParams);
+                }}
+                className="ml-2 hover:bg-blue-200 rounded-full p-1 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <span className="text-sm text-gray-600">
+              Showing {filteredInvoices.length} invoice{filteredInvoices.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Invoices Table */}

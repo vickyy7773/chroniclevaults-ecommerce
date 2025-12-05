@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Clock, Gavel, Users, TrendingUp, Eye, User, Package, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Clock, Gavel, Users, TrendingUp, Eye, User, Package, X, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 
 const AuctionManagement = () => {
+  const navigate = useNavigate();
   const [auctions, setAuctions] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -527,20 +529,32 @@ const AuctionManagement = () => {
                 )}
 
                 {/* Actions */}
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleEdit(auction)}
-                    className="flex-1 flex items-center justify-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    <span>Edit</span>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(auction._id)}
-                    className="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <div className="flex flex-col space-y-2">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEdit(auction)}
+                      className="flex-1 flex items-center justify-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(auction._id)}
+                      className="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {/* Show "View Invoices" button for ended lot bidding auctions */}
+                  {auction.isLotBidding && auction.status === 'Ended' && (
+                    <button
+                      onClick={() => navigate(`/admin/auction-invoices?auction=${auction._id}`)}
+                      className="w-full flex items-center justify-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>View Invoices</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
