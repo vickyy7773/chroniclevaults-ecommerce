@@ -221,16 +221,37 @@ const AuctionInvoiceManagement = () => {
     setShowEditModal(true);
   };
 
+  // Debug logging
+  console.log('🔍 Invoice filtering:', {
+    totalInvoices: invoices.length,
+    auctionFilter,
+    searchTerm,
+    sampleInvoice: invoices[0]
+  });
+
   const filteredInvoices = invoices.filter(invoice => {
     // Filter by search term
     const matchesSearch = invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.buyerDetails?.name?.toLowerCase().includes(searchTerm.toLowerCase());
 
     // Filter by auction ID if present in URL
-    const matchesAuction = auctionFilter ? invoice.auction?._id === auctionFilter || invoice.auction === auctionFilter : true;
+    // Handle both populated (object) and non-populated (string) auction field
+    const auctionId = typeof invoice.auction === 'object' ? invoice.auction?._id : invoice.auction;
+    const matchesAuction = auctionFilter ? auctionId === auctionFilter : true;
+
+    console.log('📋 Invoice filter check:', {
+      invoiceNumber: invoice.invoiceNumber,
+      auctionId,
+      auctionFilter,
+      matchesSearch,
+      matchesAuction,
+      passes: matchesSearch && matchesAuction
+    });
 
     return matchesSearch && matchesAuction;
   });
+
+  console.log('✅ Filtered result:', filteredInvoices.length, 'invoices');
 
   return (
     <div className="p-6">
