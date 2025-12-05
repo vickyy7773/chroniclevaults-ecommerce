@@ -22,10 +22,10 @@ const auctionInvoiceSchema = new mongoose.Schema({
     ref: 'Auction',
     required: true
   },
-  lotNumber: {
+  lotNumbers: [{
     type: Number,
     required: true
-  },
+  }],
 
   // Buyer Details
   buyer: {
@@ -60,14 +60,15 @@ const auctionInvoiceSchema = new mongoose.Schema({
     zipCode: String
   },
 
-  // Lot/Product Details
-  lotDetails: {
+  // Lot/Product Details (Array for multiple lots)
+  lots: [{
+    lotNumber: { type: Number, required: true },
     description: { type: String, required: true },
     detailedDescription: String, // For delivery note
     hsnCode: { type: String, default: '97050090' },
     quantity: { type: Number, default: 1 },
     hammerPrice: { type: Number, required: true }
-  },
+  }],
 
   // Charges
   packingForwardingCharges: {
@@ -178,11 +179,12 @@ auctionInvoiceSchema.pre('save', async function(next) {
 
 // Calculate GST and amounts before saving
 auctionInvoiceSchema.pre('save', function(next) {
-  const hammerPrice = this.lotDetails.hammerPrice;
+  // Sum all hammer prices from all lots
+  const totalHammerPrice = this.lots.reduce((sum, lot) => sum + (lot.hammerPrice || 0), 0);
   const packingCharges = this.packingForwardingCharges.amount;
 
   // Calculate item GST
-  this.gst.itemGSTAmount = (hammerPrice * this.gst.itemGSTRate) / 100;
+  this.gst.itemGSTAmount = (totalHammerPrice * this.gst.itemGSTRate) / 100;
 
   // Calculate packing GST
   if (packingCharges > 0) {
@@ -201,7 +203,7 @@ auctionInvoiceSchema.pre('save', function(next) {
   }
 
   // Calculate amounts
-  this.amounts.grossAmount = hammerPrice + packingCharges;
+  this.amounts.grossAmount = totalHammerPrice + packingCharges;
   this.amounts.totalGST = this.gst.totalGST;
 
   const subtotal = this.amounts.grossAmount + this.amounts.totalGST;
@@ -219,7 +221,7 @@ auctionInvoiceSchema.virtual('isInterstate').get(function() {
 // Index for faster queries
 auctionInvoiceSchema.index({ invoiceNumber: 1 });
 auctionInvoiceSchema.index({ buyer: 1 });
-auctionInvoiceSchema.index({ auction: 1, lotNumber: 1 });
+auctionInvoiceSchema.index({ auction: 1, buyer: 1 }, { unique: true }); // One invoice per buyer per auction
 auctionInvoiceSchema.index({ status: 1 });
 
 export default mongoose.model('AuctionInvoice', auctionInvoiceSchema);

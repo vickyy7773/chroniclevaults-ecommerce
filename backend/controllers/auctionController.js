@@ -180,7 +180,8 @@ const STATE_CODES = {
 };
 
 /**
- * Automatically generate invoice for a sold lot
+ * Automatically generate or update invoice for a sold lot
+ * One invoice per buyer per auction (consolidates all lots won by same buyer)
  * @param {String} auctionId - Auction's ObjectId
  * @param {Number} lotNumber - Lot number
  * @param {Object} lot - Lot object
@@ -188,7 +189,7 @@ const STATE_CODES = {
  */
 export const autoGenerateInvoice = async (auctionId, lotNumber, lot, winnerId) => {
   try {
-    console.log(`📄 Auto-generating invoice for auction ${auctionId}, lot ${lotNumber}`);
+    console.log(`📄 Processing invoice for auction ${auctionId}, lot ${lotNumber}, buyer ${winnerId}`);
 
     // Get buyer details
     const buyer = await User.findById(winnerId);
@@ -197,93 +198,117 @@ export const autoGenerateInvoice = async (auctionId, lotNumber, lot, winnerId) =
       return { success: false, message: 'Buyer not found' };
     }
 
-    // Determine billing address state code
-    const buyerState = buyer.address?.state || 'Maharashtra';
-    const buyerStateCode = STATE_CODES[buyerState] || '27';
-
-    // Company details (default for Chronicle Vaults)
-    const defaultCompanyDetails = {
-      name: 'Chronicle Vaults',
-      gstin: '27XXXXX0000X1ZX',
-      pan: 'XXXXX0000X',
-      msme: 'MH-XX-XXXXXXX',
-      address: 'Mumbai',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      stateCode: '27',
-      phone: '+91-XXXXXXXXXX',
-      email: 'info@chroniclevaults.com',
-      bankDetails: {
-        bankName: 'Bank Name',
-        accountNumber: 'XXXXXXXXXXXX',
-        ifsc: 'XXXXXX',
-        branch: 'Mumbai'
-      }
-    };
-
-    // Determine GST type (IGST for interstate, CGST+SGST for intrastate)
-    const isInterstate = buyerStateCode !== defaultCompanyDetails.stateCode;
-    const gstType = isInterstate ? 'IGST' : 'CGST+SGST';
-
-    // Create invoice
-    const invoice = await AuctionInvoice.create({
+    // Check if invoice already exists for this auction+buyer
+    let invoice = await AuctionInvoice.findOne({
       auction: auctionId,
-      lotNumber,
-      buyer: buyer._id,
-      buyerDetails: {
-        name: buyer.name,
-        email: buyer.email,
-        phone: buyer.phone,
-        gstin: buyer.gstin || '',
-        pan: buyer.pan || '',
-        buyerNumber: `BUY${buyer._id.toString().slice(-3).toUpperCase()}`
-      },
-      billingAddress: {
-        street: buyer.address?.street || '',
-        city: buyer.address?.city || '',
-        state: buyerState,
-        stateCode: buyerStateCode,
-        zipCode: buyer.address?.zipCode || ''
-      },
-      shippingAddress: {
-        street: buyer.address?.street || '',
-        city: buyer.address?.city || '',
-        state: buyerState,
-        stateCode: buyerStateCode,
-        zipCode: buyer.address?.zipCode || ''
-      },
-      lotDetails: {
-        description: lot.title,
-        detailedDescription: lot.description,
-        hsnCode: '97050090',
-        quantity: 1,
-        hammerPrice: lot.currentBid
-      },
-      packingForwardingCharges: {
-        amount: 80,
-        hsnCode: '99854'
-      },
-      insuranceCharges: {
-        amount: 0,
-        hsnCode: '99681',
-        declined: true
-      },
-      gst: {
-        type: gstType,
-        rate: 5.00,
-        itemGSTRate: 5.00,
-        packingGSTRate: 18.00
-      },
-      shipping: {
-        transportMode: 'Post/Courier',
-        placeOfSupply: buyerState
-      },
-      companyDetails: defaultCompanyDetails,
-      status: 'Generated'
+      buyer: winnerId
     });
 
-    console.log(`✅ Invoice ${invoice.invoiceNumber} auto-generated for lot ${lotNumber}`);
-    return { success: true, invoice };
+    const newLot = {
+      lotNumber,
+      description: lot.title,
+      detailedDescription: lot.description,
+      hsnCode: '97050090',
+      quantity: 1,
+      hammerPrice: lot.currentBid
+    };
+
+    if (invoice) {
+      // Invoice exists - add this lot to the existing invoice
+      console.log(`📝 Adding lot ${lotNumber} to existing invoice ${invoice.invoiceNumber}`);
+
+      invoice.lotNumbers.push(lotNumber);
+      invoice.lots.push(newLot);
+      await invoice.save(); // Pre-save hook will recalculate totals
+
+      console.log(`✅ Lot ${lotNumber} added to invoice ${invoice.invoiceNumber}`);
+      return { success: true, invoice, updated: true };
+    } else {
+      // No invoice exists - create new one
+      console.log(`📄 Creating new invoice for auction ${auctionId}, buyer ${buyer.name}`);
+
+      // Determine billing address state code
+      const buyerState = buyer.address?.state || 'Maharashtra';
+      const buyerStateCode = STATE_CODES[buyerState] || '27';
+
+      // Company details (default for Chronicle Vaults)
+      const defaultCompanyDetails = {
+        name: 'Chronicle Vaults',
+        gstin: '27XXXXX0000X1ZX',
+        pan: 'XXXXX0000X',
+        msme: 'MH-XX-XXXXXXX',
+        address: 'Mumbai',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        stateCode: '27',
+        phone: '+91-XXXXXXXXXX',
+        email: 'info@chroniclevaults.com',
+        bankDetails: {
+          bankName: 'Bank Name',
+          accountNumber: 'XXXXXXXXXXXX',
+          ifsc: 'XXXXXX',
+          branch: 'Mumbai'
+        }
+      };
+
+      // Determine GST type (IGST for interstate, CGST+SGST for intrastate)
+      const isInterstate = buyerStateCode !== defaultCompanyDetails.stateCode;
+      const gstType = isInterstate ? 'IGST' : 'CGST+SGST';
+
+      // Create invoice with first lot
+      invoice = await AuctionInvoice.create({
+        auction: auctionId,
+        lotNumbers: [lotNumber],
+        buyer: buyer._id,
+        buyerDetails: {
+          name: buyer.name,
+          email: buyer.email,
+          phone: buyer.phone,
+          gstin: buyer.gstin || '',
+          pan: buyer.pan || '',
+          buyerNumber: `BUY${buyer._id.toString().slice(-3).toUpperCase()}`
+        },
+        billingAddress: {
+          street: buyer.address?.street || '',
+          city: buyer.address?.city || '',
+          state: buyerState,
+          stateCode: buyerStateCode,
+          zipCode: buyer.address?.zipCode || ''
+        },
+        shippingAddress: {
+          street: buyer.address?.street || '',
+          city: buyer.address?.city || '',
+          state: buyerState,
+          stateCode: buyerStateCode,
+          zipCode: buyer.address?.zipCode || ''
+        },
+        lots: [newLot],
+        packingForwardingCharges: {
+          amount: 80,
+          hsnCode: '99854'
+        },
+        insuranceCharges: {
+          amount: 0,
+          hsnCode: '99681',
+          declined: true
+        },
+        gst: {
+          type: gstType,
+          rate: 5.00,
+          itemGSTRate: 5.00,
+          packingGSTRate: 18.00
+        },
+        shipping: {
+          transportMode: 'Post/Courier',
+          placeOfSupply: buyerState
+        },
+        companyDetails: defaultCompanyDetails,
+        status: 'Generated'
+      });
+
+      console.log(`✅ Invoice ${invoice.invoiceNumber} created for lot ${lotNumber}`);
+      return { success: true, invoice, updated: false };
+    }
   } catch (error) {
     console.error(`❌ Error auto-generating invoice for lot ${lotNumber}:`, error);
     return { success: false, message: error.message };

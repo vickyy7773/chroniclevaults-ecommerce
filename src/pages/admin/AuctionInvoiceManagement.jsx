@@ -148,17 +148,19 @@ const AuctionInvoiceManagement = () => {
             </tr>
           </thead>
           <tbody>
+            ${(invoice.lots || [invoice.lotDetails]).map((lot, idx) => `
+              <tr>
+                <td>${lot.lotNumber || invoice.lotNumbers?.[idx] || invoice.lotNumber || 'N/A'}</td>
+                <td>${lot.description}</td>
+                <td>${lot.hsnCode || '97050090'}</td>
+                <td>${lot.quantity || 1}</td>
+                <td>${invoice.gst.itemGSTRate}%</td>
+                <td>₹${(lot.hammerPrice || 0).toLocaleString()}</td>
+              </tr>
+            `).join('')}
             <tr>
-              <td>${invoice.lotNumber}</td>
-              <td>${invoice.lotDetails.description}</td>
-              <td>${invoice.lotDetails.hsnCode}</td>
-              <td>${invoice.lotDetails.quantity}</td>
-              <td>${invoice.gst.itemGSTRate}%</td>
-              <td>₹${invoice.lotDetails.hammerPrice.toLocaleString()}</td>
-            </tr>
-            <tr>
-              <td colspan="5">Packing & Forwarding Charges</td>
-              <td>₹${invoice.packingForwardingCharges.amount.toLocaleString()}</td>
+              <td colspan="5"><strong>Packing & Forwarding Charges</strong></td>
+              <td><strong>₹${invoice.packingForwardingCharges.amount.toLocaleString()}</strong></td>
             </tr>
           </tbody>
         </table>
@@ -345,8 +347,20 @@ const AuctionInvoiceManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {invoice.buyerDetails?.name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    #{invoice.lotNumber}
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {invoice.lotNumbers && invoice.lotNumbers.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {invoice.lotNumbers.map((num, idx) => (
+                          <span key={idx} className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs">
+                            #{num}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs">
+                        #{invoice.lotNumber || 'N/A'}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                     ₹{invoice.amounts?.totalPayable?.toLocaleString()}
