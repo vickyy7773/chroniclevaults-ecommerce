@@ -41,9 +41,8 @@ const AuctionInvoiceManagement = () => {
       const response = await auctionInvoiceService.getAllInvoices();
       console.log('📦 API Response:', response);
       console.log('📊 Response data:', response.data);
-      console.log('📋 Invoices array:', response.data.data);
-      setInvoices(response.data.data || []);
-      console.log('✅ Invoices set in state:', response.data.data?.length || 0);
+      setInvoices(response.data || []);
+      console.log('✅ Invoices set in state:', response.data?.length || 0);
     } catch (error) {
       console.error('❌ Error fetching invoices:', error);
       console.error('❌ Error details:', error.response?.data);
@@ -56,7 +55,7 @@ const AuctionInvoiceManagement = () => {
   const fetchAuctions = async () => {
     try {
       const response = await api.get('/auctions');
-      setAuctions(response.data.data || []);
+      setAuctions(response.data || []);
     } catch (error) {
       console.error('Failed to fetch auctions:', error);
     }
