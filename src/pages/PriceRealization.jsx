@@ -13,6 +13,7 @@ const PriceRealization = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Filter states
+  const [selectedAuctionFilter, setSelectedAuctionFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [minSoldPercent, setMinSoldPercent] = useState('');
@@ -98,6 +99,9 @@ const PriceRealization = () => {
       const matchesSearch = auctionNumber.toLowerCase().includes(searchLower) ||
         auction.title?.toLowerCase().includes(searchLower);
 
+      // Auction dropdown filter
+      const matchesAuction = selectedAuctionFilter ? auction._id === selectedAuctionFilter : true;
+
       // Date range filter
       const auctionDate = new Date(auction.endTime || auction.createdAt);
       const matchesDateFrom = dateFrom ? auctionDate >= new Date(dateFrom) : true;
@@ -109,7 +113,7 @@ const PriceRealization = () => {
         ? stats && parseFloat(stats.percentSold) >= parseFloat(minSoldPercent)
         : true;
 
-      return matchesSearch && matchesDateFrom && matchesDateTo && matchesSoldPercent;
+      return matchesSearch && matchesAuction && matchesDateFrom && matchesDateTo && matchesSoldPercent;
     })
     .sort((a, b) => {
       const statsA = calculateStats(a);
@@ -166,7 +170,7 @@ const PriceRealization = () => {
               <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               {/* Search */}
               <div className="lg:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
@@ -180,6 +184,23 @@ const PriceRealization = () => {
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                   />
                 </div>
+              </div>
+
+              {/* Auction Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Auction</label>
+                <select
+                  value={selectedAuctionFilter}
+                  onChange={(e) => setSelectedAuctionFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                >
+                  <option value="">All Auctions</option>
+                  {auctions.map(auction => (
+                    <option key={auction._id} value={auction._id}>
+                      {auction.title}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Date From */}
@@ -205,7 +226,7 @@ const PriceRealization = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-3">
               {/* Min Sold % */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Min Sold %</label>
@@ -237,13 +258,14 @@ const PriceRealization = () => {
               </div>
 
               {/* Spacer */}
-              <div className="lg:col-span-1"></div>
+              <div className="lg:col-span-2"></div>
 
               {/* Clear Filters */}
               <div className="flex items-end">
                 <button
                   onClick={() => {
                     setSearchTerm('');
+                    setSelectedAuctionFilter('');
                     setDateFrom('');
                     setDateTo('');
                     setMinSoldPercent('');
