@@ -108,10 +108,10 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
       const data = await response.json();
 
       if (data.success && data.data) {
-        // Filter out current product and limit to 4 products
+        // Filter out current product and limit to 12 products for horizontal scroll
         const filtered = data.data
           .filter(p => p._id !== id)
-          .slice(0, 4);
+          .slice(0, 12);
         setRelatedProducts(filtered);
       }
     } catch (error) {
@@ -822,12 +822,15 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
         {relatedProducts.length > 0 && (
           <div className="mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Related Products</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-              {relatedProducts.map((relatedProduct) => (
+            {/* Horizontal Scrolling Container */}
+            <div className="relative">
+              <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-amber-500 scrollbar-track-gray-200 pb-4">
+                <div className="flex gap-3 sm:gap-4 lg:gap-6">
+                  {relatedProducts.map((relatedProduct) => (
                 <div
                   key={relatedProduct._id}
                   onClick={() => navigate(getProductUrl(relatedProduct))}
-                  className="bg-white rounded-lg sm:rounded-xl shadow-md hover:shadow-xl hover:-translate-y-1 sm:hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden group"
+                  className="flex-shrink-0 w-48 sm:w-56 lg:w-64 bg-white rounded-lg sm:rounded-xl shadow-md hover:shadow-xl hover:-translate-y-1 sm:hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden group"
                 >
                   <div className="relative overflow-hidden">
                     <img
@@ -856,7 +859,9 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                     )}
                   </div>
                 </div>
-              ))}
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
