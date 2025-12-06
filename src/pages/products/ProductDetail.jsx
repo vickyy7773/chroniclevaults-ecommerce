@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Minus, Plus, Truck, Shield, RefreshCw, ChevronLeft, ChevronRight, Share2, Facebook, Twitter, Linkedin, MessageCircle, Copy, Check, X } from 'lucide-react';
 import { API_BASE_URL } from '../../constants/api';
@@ -20,6 +20,9 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [showShareModal, setShowShareModal] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+
+  // Ref for Related Products scroll container
+  const relatedProductsScrollRef = useRef(null);
 
   useEffect(() => {
     fetchProductDetails();
@@ -244,6 +247,17 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
     const media = encodeURIComponent(product?.images?.[0] || '');
     const description = encodeURIComponent(product?.name || 'Product');
     window.open(`https://pinterest.com/pin/create/button/?url=${url}&media=${media}&description=${description}`, '_blank', 'width=600,height=400');
+  };
+
+  // Scroll function for Related Products
+  const scrollRelatedProducts = (direction) => {
+    if (relatedProductsScrollRef.current) {
+      const scrollAmount = 280; // Card width (48-64 responsive) + gap
+      relatedProductsScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
   };
 
 
@@ -824,7 +838,28 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Related Products</h2>
             {/* Horizontal Scrolling Container */}
             <div className="relative">
-              <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-amber-500 scrollbar-track-gray-200 pb-4">
+              {/* Left Arrow Button */}
+              <button
+                onClick={() => scrollRelatedProducts('left')}
+                className="absolute left-0 md:left-2 lg:-left-6 top-1/2 -translate-y-1/2 z-10 p-2 md:p-3 lg:p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 text-white" />
+              </button>
+
+              {/* Right Arrow Button */}
+              <button
+                onClick={() => scrollRelatedProducts('right')}
+                className="absolute right-0 md:right-2 lg:-right-6 top-1/2 -translate-y-1/2 z-10 p-2 md:p-3 lg:p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 transition-all duration-300 group shadow-2xl hover:shadow-amber-500/50 hover:scale-110"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 text-white" />
+              </button>
+
+              <div
+                ref={relatedProductsScrollRef}
+                className="overflow-x-auto scroll-smooth scrollbar-hide pb-4"
+              >
                 <div className="flex gap-3 sm:gap-4 lg:gap-6">
                   {relatedProducts.map((relatedProduct) => (
                 <div
@@ -866,6 +901,16 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
           </div>
         )}
       </div>
+
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };
