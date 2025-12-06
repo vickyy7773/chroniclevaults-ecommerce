@@ -16,6 +16,7 @@ const AuctionInvoiceManagement = () => {
   // Filter states
   const [selectedAuctionFilter, setSelectedAuctionFilter] = useState(auctionFilter || '');
   const [statusFilter, setStatusFilter] = useState('');
+  const [invoiceTypeFilter, setInvoiceTypeFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
@@ -101,9 +102,24 @@ const AuctionInvoiceManagement = () => {
 
   const handleDownloadPDF = async (invoice) => {
     try {
-      // Basic PDF generation - will enhance later
+      let htmlContent;
+
+      // Select the appropriate template based on invoice type
+      switch (invoice.invoiceType) {
+        case 'Vendor':
+          htmlContent = generateVendorInvoiceHTML(invoice);
+          break;
+        case 'ASI':
+          htmlContent = generateASIReportHTML(invoice);
+          break;
+        case 'Customer':
+        default:
+          htmlContent = generateInvoiceHTML(invoice);
+          break;
+      }
+
       const printWindow = window.open('', '_blank');
-      printWindow.document.write(generateInvoiceHTML(invoice));
+      printWindow.document.write(htmlContent);
       printWindow.document.close();
       printWindow.print();
     } catch (error) {
@@ -198,6 +214,299 @@ const AuctionInvoiceManagement = () => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(num);
   };
 
+  const generateASIReportHTML = (invoice) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>ASI Report ${invoice.invoiceNumber}</title>
+        <style>
+          body { font-family: 'Times New Roman', serif; padding: 20px; line-height: 1.6; }
+          .header { text-align: center; margin-bottom: 30px; border: 3px double #333; padding: 20px; }
+          .emblem { font-size: 24px; font-weight: bold; color: #8B4513; }
+          .report-type { background-color: #FF8C00; color: white; padding: 8px 20px; display: inline-block; margin-top: 10px; font-weight: bold; }
+          .section { margin: 25px 0; padding: 15px; border: 1px solid #ddd; }
+          .section-title { font-weight: bold; font-size: 18px; margin-bottom: 15px; color: #8B4513; border-bottom: 2px solid #8B4513; padding-bottom: 5px; }
+          .field-row { display: flex; margin: 10px 0; }
+          .field-label { font-weight: bold; width: 200px; color: #555; }
+          .field-value { flex: 1; }
+          .certification-box { background-color: #FFF8DC; border: 2px solid #DAA520; padding: 20px; margin: 20px 0; }
+          .table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+          .table th, .table td { border: 1px solid #8B4513; padding: 10px; text-align: left; }
+          .table th { background-color: #D2691E; color: white; font-weight: bold; }
+          .stamps { margin-top: 50px; display: flex; justify-content: space-between; }
+          .stamp-box { width: 200px; text-align: center; }
+          .stamp-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; }
+          .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(139, 69, 19, 0.1); z-index: -1; pointer-events: none; }
+        </style>
+      </head>
+      <body>
+        <div class="watermark">CERTIFIED</div>
+
+        <div class="header">
+          <div class="emblem">🏛️ भारतीय पुरातत्व सर्वेक्षण</div>
+          <h1 style="margin: 10px 0;">ARCHAEOLOGICAL SURVEY OF INDIA</h1>
+          <p style="margin: 5px 0;">Ministry of Culture, Government of India</p>
+          <div class="report-type">CERTIFICATION REPORT</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Report Details</div>
+          <div class="field-row">
+            <span class="field-label">Report Number:</span>
+            <span class="field-value">${invoice.invoiceNumber || 'N/A'}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Issue Date:</span>
+            <span class="field-value">${new Date(invoice.invoiceDate).toLocaleDateString()}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Auction Reference:</span>
+            <span class="field-value">${typeof invoice.auction === 'object' ? invoice.auction?.title : 'N/A'}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Auction House:</span>
+            <span class="field-value">Chronicle Vaults</span>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Item(s) Certified</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Lot #</th>
+                <th>Description</th>
+                <th>Period/Dating</th>
+                <th>Category</th>
+                <th>Provenance</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(invoice.lots || []).map(lot => `
+                <tr>
+                  <td>${lot.lotNumber || 'N/A'}</td>
+                  <td>${lot.description || 'N/A'}</td>
+                  <td>${lot.period || 'To be determined'}</td>
+                  <td>${lot.category || 'Antiquity'}</td>
+                  <td>${lot.provenance || 'Private Collection'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Archaeological Assessment</div>
+          <div class="field-row">
+            <span class="field-label">Authentication Status:</span>
+            <span class="field-value" style="color: green; font-weight: bold;">${invoice.asiDetails?.authenticationStatus || 'CERTIFIED AUTHENTIC'}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Heritage Classification:</span>
+            <span class="field-value">${invoice.asiDetails?.heritageClass || 'Non-Protected Antiquity'}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Export Eligibility:</span>
+            <span class="field-value">${invoice.asiDetails?.exportEligible || 'Subject to Approval'}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Examined By:</span>
+            <span class="field-value">${invoice.asiDetails?.examiner || 'Dr. Archaeological Expert'}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Examination Date:</span>
+            <span class="field-value">${invoice.asiDetails?.examinationDate ? new Date(invoice.asiDetails.examinationDate).toLocaleDateString() : new Date(invoice.invoiceDate).toLocaleDateString()}</span>
+          </div>
+        </div>
+
+        <div class="certification-box">
+          <h3 style="text-align: center; margin-top: 0;">OFFICIAL CERTIFICATION</h3>
+          <p style="text-align: justify;">
+            This is to certify that the item(s) listed in this report have been examined by the Archaeological Survey of India
+            and found to be ${invoice.asiDetails?.authenticationStatus || 'authentic antiquities'}. The examination was conducted
+            in accordance with the Antiquities and Art Treasures Act, 1972, and relevant ASI protocols.
+          </p>
+          <p style="text-align: justify;">
+            <strong>Note:</strong> ${invoice.asiDetails?.notes || 'This certification does not constitute permission for export. Separate export permission must be obtained from the competent authority as per the Antiquities and Art Treasures Act, 1972.'}
+          </p>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Legal Compliance</div>
+          <div class="field-row">
+            <span class="field-label">Antiquities Act Compliance:</span>
+            <span class="field-value">✓ Compliant</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Registration Status:</span>
+            <span class="field-value">${invoice.asiDetails?.registrationStatus || 'Registered with ASI'}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Reference No:</span>
+            <span class="field-value">${invoice.asiDetails?.referenceNumber || invoice.invoiceNumber}</span>
+          </div>
+        </div>
+
+        <div class="stamps">
+          <div class="stamp-box">
+            <div class="stamp-line">
+              <p style="margin: 5px 0; font-weight: bold;">Archaeological Expert</p>
+              <p style="margin: 5px 0; font-size: 12px;">${invoice.asiDetails?.examiner || 'Dr. Expert Name'}</p>
+            </div>
+          </div>
+          <div class="stamp-box">
+            <div class="stamp-line">
+              <p style="margin: 5px 0; font-weight: bold;">Director</p>
+              <p style="margin: 5px 0; font-size: 12px;">Archaeological Survey of India</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 40px; padding: 15px; background-color: #FFF8DC; border-left: 4px solid #DAA520; font-size: 11px;">
+          <p style="margin: 5px 0;"><strong>Disclaimer:</strong></p>
+          <p style="margin: 5px 0;">
+            This is a simulated ASI report generated for auction documentation purposes by Chronicle Vaults.
+            For actual ASI certification, items must be submitted to the Archaeological Survey of India offices
+            for official examination and certification.
+          </p>
+          <p style="margin: 5px 0;">
+            Contact: Archaeological Survey of India, Janpath, New Delhi - 110011 | Website: asi.nic.in
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
+  const generateVendorInvoiceHTML = (invoice) => {
+    const commissionRate = invoice.vendorDetails?.commissionRate || 15; // Default 15% commission
+    const totalHammerPrice = (invoice.lots || []).reduce((sum, lot) => sum + (lot.hammerPrice || 0), 0);
+    const commission = totalHammerPrice * (commissionRate / 100);
+    const netPayable = totalHammerPrice - commission;
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Vendor Invoice ${invoice.invoiceNumber}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+          .invoice-type { background-color: #8B5CF6; color: white; padding: 5px 15px; display: inline-block; border-radius: 5px; }
+          .section { margin: 20px 0; }
+          .section-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+          .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+          .detail-item { padding: 5px; }
+          .detail-label { font-weight: bold; color: #555; }
+          .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          .table th, .table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+          .table th { background-color: #8B5CF6; color: white; font-weight: bold; }
+          .table tr:nth-child(even) { background-color: #f9f9f9; }
+          .summary { float: right; width: 400px; margin: 20px 0; }
+          .summary-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #ddd; }
+          .summary-row.total { background-color: #f0f0f0; font-weight: bold; font-size: 18px; border-top: 2px solid #333; }
+          .signature { margin-top: 80px; text-align: right; }
+          .signature-line { border-top: 1px solid #333; width: 200px; margin-left: auto; margin-top: 50px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Chronicle Vaults</h1>
+          <p>GSTIN: ${invoice.companyDetails?.gstin || 'N/A'} | PAN: ${invoice.companyDetails?.pan || 'N/A'}</p>
+          <p>${invoice.companyDetails?.address || ''}, ${invoice.companyDetails?.city || 'Mumbai'}, ${invoice.companyDetails?.state || 'Maharashtra'}</p>
+          <h2><span class="invoice-type">VENDOR INVOICE</span></h2>
+        </div>
+
+        <div class="section">
+          <div class="details-grid">
+            <div>
+              <div class="detail-item">
+                <span class="detail-label">Invoice No:</span> ${invoice.invoiceNumber}
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Invoice Date:</span> ${new Date(invoice.invoiceDate).toLocaleDateString()}
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Auction:</span> ${typeof invoice.auction === 'object' ? invoice.auction?.title : 'N/A'}
+              </div>
+            </div>
+            <div>
+              <div class="detail-item">
+                <span class="detail-label">Vendor/Consignor:</span> ${invoice.vendorDetails?.name || 'N/A'}
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Email:</span> ${invoice.vendorDetails?.email || 'N/A'}
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Phone:</span> ${invoice.vendorDetails?.phone || 'N/A'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Lots Sold</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Lot #</th>
+                <th>Description</th>
+                <th>Buyer</th>
+                <th>Hammer Price (₹)</th>
+                <th>Sold Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(invoice.lots || []).map(lot => `
+                <tr>
+                  <td>${lot.lotNumber || 'N/A'}</td>
+                  <td>${lot.description || 'N/A'}</td>
+                  <td>${lot.buyerName || 'N/A'}</td>
+                  <td>₹${(lot.hammerPrice || 0).toLocaleString()}</td>
+                  <td>${lot.soldDate ? new Date(lot.soldDate).toLocaleDateString() : 'N/A'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="summary">
+          <div class="summary-row">
+            <span>Total Hammer Price:</span>
+            <span>₹${totalHammerPrice.toLocaleString()}</span>
+          </div>
+          <div class="summary-row">
+            <span>Commission (${commissionRate}%):</span>
+            <span>- ₹${commission.toLocaleString()}</span>
+          </div>
+          <div class="summary-row total">
+            <span>Net Payable to Vendor:</span>
+            <span>₹${netPayable.toLocaleString()}</span>
+          </div>
+        </div>
+
+        <div style="clear: both; margin-top: 50px;">
+          <p><strong>Amount in Words:</strong></p>
+          <p>Rs. ${numberToWords(netPayable)} Only</p>
+        </div>
+
+        <div class="signature">
+          <p>For Chronicle Vaults</p>
+          <div class="signature-line"></div>
+          <p>Authorised Signatory</p>
+        </div>
+
+        <div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-left: 4px solid #8B5CF6;">
+          <p style="margin: 0; font-size: 12px; color: #555;">
+            <strong>Note:</strong> This is a vendor settlement invoice. Payment will be processed as per the terms and conditions of the consignment agreement.
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
   const resetForm = () => {
     setFormData({
       auctionId: '',
@@ -256,12 +565,15 @@ const AuctionInvoiceManagement = () => {
     // Filter by status
     const matchesStatus = statusFilter ? invoice.status === statusFilter : true;
 
+    // Filter by invoice type
+    const matchesInvoiceType = invoiceTypeFilter ? invoice.invoiceType === invoiceTypeFilter : true;
+
     // Filter by date range
     const invoiceDate = new Date(invoice.invoiceDate);
     const matchesDateFrom = dateFrom ? invoiceDate >= new Date(dateFrom) : true;
     const matchesDateTo = dateTo ? invoiceDate <= new Date(dateTo) : true;
 
-    return matchesSearch && matchesAuction && matchesStatus && matchesDateFrom && matchesDateTo;
+    return matchesSearch && matchesAuction && matchesStatus && matchesInvoiceType && matchesDateFrom && matchesDateTo;
   });
 
   console.log('✅ Filtered result:', filteredInvoices.length, 'invoices');
@@ -292,6 +604,21 @@ const AuctionInvoiceManagement = () => {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
+          </div>
+
+          {/* Invoice Type Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Type</label>
+            <select
+              value={invoiceTypeFilter}
+              onChange={(e) => setInvoiceTypeFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Types</option>
+              <option value="Customer">Customer Invoice</option>
+              <option value="Vendor">Vendor Invoice</option>
+              <option value="ASI">ASI Report</option>
+            </select>
           </div>
 
           {/* Auction Filter */}
@@ -326,7 +653,9 @@ const AuctionInvoiceManagement = () => {
               <option value="Cancelled">Cancelled</option>
             </select>
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-3">
           {/* Date Range */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
@@ -337,9 +666,6 @@ const AuctionInvoiceManagement = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-3">
           <div className="lg:col-span-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
             <input
@@ -357,6 +683,7 @@ const AuctionInvoiceManagement = () => {
                 setSearchTerm('');
                 setSelectedAuctionFilter('');
                 setStatusFilter('');
+                setInvoiceTypeFilter('');
                 setDateFrom('');
                 setDateTo('');
                 searchParams.delete('auction');
@@ -395,6 +722,7 @@ const AuctionInvoiceManagement = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice #</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Buyer</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lot #</th>
@@ -409,6 +737,15 @@ const AuctionInvoiceManagement = () => {
                 <tr key={invoice._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                     {invoice.invoiceNumber}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      invoice.invoiceType === 'Vendor' ? 'bg-purple-100 text-purple-800' :
+                      invoice.invoiceType === 'ASI' ? 'bg-orange-100 text-orange-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
+                      {invoice.invoiceType || 'Customer'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {new Date(invoice.invoiceDate).toLocaleDateString()}
