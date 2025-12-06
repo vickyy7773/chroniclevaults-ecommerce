@@ -36,8 +36,126 @@ const AdminLayout = () => {
   const [openSubmenus, setOpenSubmenus] = useState({});
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
+  // Search functionality
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+
   // Get user permissions
   const { user, permissions, hasPermission, canAccessMenu, isSuperAdmin } = usePermissions();
+
+  // Search function
+  const handleSearch = async (query) => {
+    setSearchQuery(query);
+
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setSearchLoading(true);
+    setShowSearchResults(true);
+
+    try {
+      // Import API dynamically
+      const { default: api } = await import('../../utils/api');
+
+      const results = [];
+      const searchLower = query.toLowerCase();
+
+      // Search Products (if has permission)
+      if (canAccessMenu('products')) {
+        try {
+          const productsRes = await api.get('/products');
+          const matchedProducts = productsRes.products
+            .filter(p =>
+              p.name?.toLowerCase().includes(searchLower) ||
+              p.productCode?.toLowerCase().includes(searchLower) ||
+              p.description?.toLowerCase().includes(searchLower)
+            )
+            .slice(0, 5)
+            .map(p => ({
+              id: p._id,
+              title: p.name,
+              subtitle: `Code: ${p.productCode || 'N/A'}`,
+              type: 'Product',
+              path: `/admin/products/edit/${p._id}`,
+              icon: 'Package'
+            }));
+          results.push(...matchedProducts);
+        } catch (err) {
+          console.error('Product search error:', err);
+        }
+      }
+
+      // Search Orders (if has permission)
+      if (canAccessMenu('orders')) {
+        try {
+          const ordersRes = await api.get('/orders');
+          const matchedOrders = ordersRes.orders
+            .filter(o =>
+              o.orderNumber?.toLowerCase().includes(searchLower) ||
+              o.customerName?.toLowerCase().includes(searchLower) ||
+              o.customerEmail?.toLowerCase().includes(searchLower)
+            )
+            .slice(0, 5)
+            .map(o => ({
+              id: o._id,
+              title: `Order #${o.orderNumber}`,
+              subtitle: `${o.customerName} - ₹${o.total}`,
+              type: 'Order',
+              path: `/admin/orders`,
+              icon: 'ShoppingCart'
+            }));
+          results.push(...matchedOrders);
+        } catch (err) {
+          console.error('Order search error:', err);
+        }
+      }
+
+      // Search Customers (if has permission)
+      if (canAccessMenu('users')) {
+        try {
+          const customersRes = await api.get('/users/customers');
+          const matchedCustomers = customersRes.customers
+            .filter(c =>
+              c.name?.toLowerCase().includes(searchLower) ||
+              c.email?.toLowerCase().includes(searchLower) ||
+              c.phone?.toLowerCase().includes(searchLower)
+            )
+            .slice(0, 5)
+            .map(c => ({
+              id: c._id,
+              title: c.name,
+              subtitle: c.email,
+              type: 'Customer',
+              path: `/admin/customers`,
+              icon: 'Users'
+            }));
+          results.push(...matchedCustomers);
+        } catch (err) {
+          console.error('Customer search error:', err);
+        }
+      }
+
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Navigate to result
+  const handleResultClick = (result) => {
+    navigate(result.path);
+    setSearchQuery('');
+    setSearchResults([]);
+    setShowSearchResults(false);
+  };
 
   const menuItems = [
     {
@@ -400,15 +518,64 @@ const AdminLayout = () => {
               </button>
 
               {/* Search Bar - Hidden on small mobile, visible on tablet+ */}
-              <div className="hidden sm:block flex-1 max-w-xl">
+              <div className="hidden sm:block flex-1 max-w-xl relative">
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
                     type="text"
-                    placeholder="Search..."
+                    placeholder="Search products, orders, customers..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    onFocus={() => searchQuery.length >= 2 && setShowSearchResults(true)}
+                    onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
                     className="w-full pl-12 pr-4 py-2 lg:py-3 bg-gray-100 dark:bg-gray-800 border-0 rounded-xl focus:ring-2 focus:ring-accent-500 dark:text-white text-gray-900 placeholder-gray-500 font-medium text-sm lg:text-base"
                   />
                 </div>
+
+                {/* Search Results Dropdown */}
+                {showSearchResults && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto z-50">
+                    {searchLoading ? (
+                      <div className="p-4 text-center text-gray-500">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent-600 mx-auto"></div>
+                        <p className="mt-2 text-sm">Searching...</p>
+                      </div>
+                    ) : searchResults.length > 0 ? (
+                      <div className="py-2">
+                        {searchResults.map((result) => (
+                          <button
+                            key={result.id}
+                            onClick={() => handleResultClick(result)}
+                            className="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left flex items-start gap-3"
+                          >
+                            <div className="flex-shrink-0 mt-1">
+                              {result.icon === 'Package' && <Package size={18} className="text-accent-600" />}
+                              {result.icon === 'ShoppingCart' && <ShoppingCart size={18} className="text-green-600" />}
+                              {result.icon === 'Users' && <Users size={18} className="text-blue-600" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                {result.title}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                {result.subtitle}
+                              </p>
+                            </div>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                              {result.type}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-6 text-center text-gray-500">
+                        <Search size={32} className="mx-auto mb-2 text-gray-400" />
+                        <p className="text-sm">No results found for "{searchQuery}"</p>
+                        <p className="text-xs mt-1 text-gray-400">Try different keywords</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
