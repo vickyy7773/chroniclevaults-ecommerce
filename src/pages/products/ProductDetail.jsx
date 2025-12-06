@@ -48,6 +48,14 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
       }
 
       setMediaItems(items);
+
+      // Set quantity to 0 if product is out of stock
+      if (product.inStock === 0) {
+        setQuantity(0);
+      } else if (quantity === 0) {
+        // If stock is available but quantity is 0, set to 1
+        setQuantity(1);
+      }
     }
   }, [product]);
 
@@ -125,8 +133,9 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
 
   const handleQuantityChange = (change) => {
     const newQuantity = quantity + change;
-    const maxStock = product?.inStock || 1;
-    if (newQuantity >= 1 && newQuantity <= maxStock) {
+    const maxStock = product?.inStock || 0;
+    const minQuantity = maxStock === 0 ? 0 : 1; // Allow 0 if out of stock, otherwise min is 1
+    if (newQuantity >= minQuantity && newQuantity <= maxStock) {
       setQuantity(newQuantity);
     }
   };
@@ -597,7 +606,7 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                     <div className="inline-flex items-center border-2 border-gray-300 rounded-lg">
                       <button
                         onClick={() => handleQuantityChange(-1)}
-                        disabled={quantity <= 1}
+                        disabled={quantity <= 0 || (product.inStock > 0 && quantity <= 1)}
                         className="p-2 sm:p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Minus size={18} className="sm:w-5 sm:h-5" />
@@ -605,7 +614,7 @@ const ProductDetail = ({ addToCart, addToWishlist, isInWishlist }) => {
                       <span className="px-4 sm:px-6 py-1.5 sm:py-2 text-base sm:text-lg font-bold border-x-2 border-gray-300 min-w-[50px] sm:min-w-[60px] text-center">{quantity}</span>
                       <button
                         onClick={() => handleQuantityChange(1)}
-                        disabled={quantity >= (product.inStock || 1)}
+                        disabled={quantity >= (product.inStock || 0)}
                         className="p-2 sm:p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Plus size={18} className="sm:w-5 sm:h-5" />
