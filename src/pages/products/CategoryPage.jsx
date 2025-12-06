@@ -300,7 +300,13 @@ const CategoryPage = ({ addToCart = () => {}, addToWishlist = () => {}, isInWish
             {/* Products Count and Sort */}
             <div className="flex items-center justify-between mb-3 md:mb-6 gap-2">
               <p className="text-gray-600 font-medium text-[10px] md:text-sm">
-                {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
+                {filteredProducts.length > 0 ? (
+                  <>
+                    Showing <span className="font-semibold text-gray-900">{startIndex + 1}-{Math.min(endIndex, filteredProducts.length)}</span> of <span className="font-semibold text-gray-900">{filteredProducts.length}</span> {filteredProducts.length === 1 ? 'product' : 'products'}
+                  </>
+                ) : (
+                  '0 products found'
+                )}
               </p>
               <select
                 value={sortBy}
