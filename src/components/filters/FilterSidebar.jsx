@@ -200,38 +200,31 @@ const FilterSidebar = ({
 
         {expandedSection === 'price' && (
           <div className="space-y-3 mt-3">
-            {/* Price Range Display */}
-            <div className="flex items-center justify-between text-sm bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg">
-              <span className="font-semibold text-amber-900">₹{priceRange[0].toLocaleString()}</span>
-              <span className="text-amber-600">—</span>
-              <span className="font-semibold text-amber-900">₹{priceRange[1].toLocaleString()}</span>
-            </div>
-
-            {/* Min Price Slider */}
+            {/* Min Price Input */}
             <div className="space-y-1.5">
-              <label className="text-xs text-slate-600">Min: ₹{priceRange[0].toLocaleString()}</label>
+              <label className="text-xs text-slate-600 font-medium">Minimum Price (₹)</label>
               <input
-                type="range"
+                type="number"
                 min="0"
                 max="1000000"
-                step="10000"
                 value={priceRange[0]}
                 onChange={(e) => handlePriceChange(e.target.value, 0)}
-                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-600 slider"
+                placeholder="Min Price"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
               />
             </div>
 
-            {/* Max Price Slider */}
+            {/* Max Price Input */}
             <div className="space-y-1.5">
-              <label className="text-xs text-slate-600">Max: ₹{priceRange[1].toLocaleString()}</label>
+              <label className="text-xs text-slate-600 font-medium">Maximum Price (₹)</label>
               <input
-                type="range"
+                type="number"
                 min="0"
                 max="1000000"
-                step="10000"
                 value={priceRange[1]}
                 onChange={(e) => handlePriceChange(e.target.value, 1)}
-                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-600 slider"
+                placeholder="Max Price"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
               />
             </div>
           </div>
@@ -455,64 +448,6 @@ const FilterSidebar = ({
 
         .animate-slide-in-left {
           animation: slide-in-left 0.3s ease-out;
-        }
-
-        /* Custom Range Slider Styling */
-        input[type="range"].slider {
-          -webkit-appearance: none;
-          appearance: none;
-        }
-
-        input[type="range"].slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 14px;
-          height: 14px;
-          background: #f59e0b;
-          border: 2px solid white;
-          border-radius: 50%;
-          cursor: pointer;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-          transition: all 0.2s ease;
-        }
-
-        input[type="range"].slider::-webkit-slider-thumb:hover {
-          background: #d97706;
-          transform: scale(1.15);
-        }
-
-        input[type="range"].slider::-moz-range-thumb {
-          width: 14px;
-          height: 14px;
-          background: #f59e0b;
-          border: 2px solid white;
-          border-radius: 50%;
-          cursor: pointer;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-          transition: all 0.2s ease;
-        }
-
-        input[type="range"].slider::-moz-range-thumb:hover {
-          background: #d97706;
-          transform: scale(1.15);
-        }
-
-        input[type="range"].slider::-webkit-slider-runnable-track {
-          background: #e2e8f0;
-          height: 4px;
-          border-radius: 2px;
-        }
-
-        input[type="range"].slider::-moz-range-track {
-          background: #e2e8f0;
-          height: 4px;
-          border-radius: 2px;
-        }
-
-        input[type="range"].slider::-moz-range-progress {
-          background: #f59e0b;
-          height: 4px;
-          border-radius: 2px;
         }
       `}</style>
     </>
