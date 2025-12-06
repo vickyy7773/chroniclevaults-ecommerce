@@ -219,13 +219,13 @@ const VendorManagement = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Active':
-        return 'bg-green-100 text-green-800 border-green-300';
+        return 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-400 border-green-300 dark:border-green-700';
       case 'Inactive':
-        return 'bg-gray-100 text-gray-800 border-gray-300';
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-600';
       case 'Suspended':
-        return 'bg-red-100 text-red-800 border-red-300';
+        return 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-400 border-red-300 dark:border-red-700';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-600';
     }
   };
 
@@ -242,8 +242,8 @@ const VendorManagement = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Vendor Management</h1>
-          <p className="text-gray-600 mt-1">Manage vendor registrations and details</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Vendor Management</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage vendor registrations and details</p>
         </div>
         <button
           onClick={() => {
@@ -262,17 +262,17 @@ const VendorManagement = () => {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
-            type="text"
+            type="text" 
             placeholder="Search by name, code, or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
           />
         </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -287,42 +287,42 @@ const VendorManagement = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-600"></div>
         </div>
       ) : filteredVendors.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
+        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <Building2 className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-          <p className="text-gray-600 text-lg">No vendors found</p>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">No vendors found</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Vendor Code
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Contact
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Commission
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Registration Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredVendors.map((vendor) => (
-                  <tr key={vendor._id} className="hover:bg-gray-50">
+                  <tr key={vendor._id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0">
@@ -331,19 +331,19 @@ const VendorManagement = () => {
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-bold text-gray-900">{vendor.vendorCode}</div>
+                          <div className="text-sm font-bold text-gray-900 dark:text-white">{vendor.vendorCode}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{vendor.name}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">{vendor.name}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 flex items-center mb-1">
+                      <div className="text-sm text-gray-900 dark:text-gray-300 flex items-center mb-1">
                         <Mail className="w-3 h-3 mr-1 text-gray-400" />
                         {vendor.email}
                       </div>
-                      <div className="text-sm text-gray-900 flex items-center">
+                      <div className="text-sm text-gray-900 dark:text-gray-300 flex items-center">
                         <Phone className="w-3 h-3 mr-1 text-gray-400" />
                         {vendor.mobile}
                       </div>
@@ -352,7 +352,7 @@ const VendorManagement = () => {
                       <div className="text-sm font-semibold text-accent-600">{vendor.commissionPercentage}%</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{formatDate(vendor.registrationDate)}</div>
+                      <div className="text-sm text-gray-900 dark:text-gray-300">{formatDate(vendor.registrationDate)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
@@ -369,14 +369,14 @@ const VendorManagement = () => {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleView(vendor)}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                           title="View Details"
                         >
                           <Eye className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleEdit(vendor)}
-                          className="text-indigo-600 hover:text-indigo-900"
+                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
                           title="Edit"
                         >
                           <Edit className="w-5 h-5" />
@@ -401,7 +401,7 @@ const VendorManagement = () => {
       {/* Create/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto my-8">
+          <div className="bg-white dark:bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto my-8">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">
@@ -421,7 +421,7 @@ const VendorManagement = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Basic Information */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-3 text-gray-900">Basic Information</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Basic Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {selectedVendor && (
                       <div>
@@ -429,12 +429,12 @@ const VendorManagement = () => {
                           Vendor Code
                         </label>
                         <input
-                          type="text"
+                          type="text" 
                           name="vendorCode"
                           value={formData.vendorCode}
                           readOnly
                           disabled
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                          className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
                         />
                         <p className="text-xs text-gray-500 mt-1">Auto-generated (cannot be changed)</p>
                       </div>
@@ -445,12 +445,12 @@ const VendorManagement = () => {
                         Name <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="text"
+                        type="text" 
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
                     </div>
 
@@ -459,12 +459,12 @@ const VendorManagement = () => {
                         Email <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="email"
+                        type="email" 
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
                     </div>
 
@@ -473,14 +473,14 @@ const VendorManagement = () => {
                         Mobile Number <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="tel"
+                        type="tel" 
                         name="mobile"
                         value={formData.mobile}
                         onChange={handleInputChange}
                         required
                         pattern="[0-9]{10}"
                         placeholder="10-digit mobile number"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
                     </div>
 
@@ -494,7 +494,7 @@ const VendorManagement = () => {
                         onChange={handleInputChange}
                         required
                         rows={3}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
                     </div>
 
@@ -503,7 +503,7 @@ const VendorManagement = () => {
                         Commission (%) <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="number"
+                        type="number" 
                         name="commissionPercentage"
                         value={formData.commissionPercentage}
                         onChange={handleInputChange}
@@ -511,7 +511,7 @@ const VendorManagement = () => {
                         min="0"
                         max="100"
                         step="0.01"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
                       <p className="text-xs text-gray-500 mt-1">Can be changed for each auction</p>
                     </div>
@@ -520,7 +520,7 @@ const VendorManagement = () => {
 
                 {/* KYC Documents */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-3 text-gray-900">KYC Documents</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">KYC Documents</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -530,7 +530,7 @@ const VendorManagement = () => {
                         type="file"
                         accept="image/*,application/pdf"
                         onChange={(e) => handleFileUpload(e, 'aadharCard')}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
                       {formData.kycDocuments.aadharCard && (
                         <a
@@ -553,7 +553,7 @@ const VendorManagement = () => {
                         type="file"
                         accept="image/*,application/pdf"
                         onChange={(e) => handleFileUpload(e, 'panCard')}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
                       {formData.kycDocuments.panCard && (
                         <a
@@ -572,19 +572,19 @@ const VendorManagement = () => {
 
                 {/* Bank Details */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-3 text-gray-900">Bank Details</h3>
+                  <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Bank Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Account Holder Name <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="text"
+                        type="text" 
                         name="bankDetails.accountHolderName"
                         value={formData.bankDetails.accountHolderName}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
                     </div>
 
@@ -593,12 +593,12 @@ const VendorManagement = () => {
                         Account Number <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="text"
+                        type="text" 
                         name="bankDetails.accountNumber"
                         value={formData.bankDetails.accountNumber}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
                     </div>
 
@@ -607,12 +607,12 @@ const VendorManagement = () => {
                         IFSC Code <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="text"
+                        type="text" 
                         name="bankDetails.ifscCode"
                         value={formData.bankDetails.ifscCode}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
                     </div>
 
@@ -621,12 +621,12 @@ const VendorManagement = () => {
                         Bank Name <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="text"
+                        type="text" 
                         name="bankDetails.bankName"
                         value={formData.bankDetails.bankName}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
                     </div>
 
@@ -635,11 +635,11 @@ const VendorManagement = () => {
                         Branch Name
                       </label>
                       <input
-                        type="text"
+                        type="text" 
                         name="bankDetails.branchName"
                         value={formData.bankDetails.branchName}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
                     </div>
                   </div>
@@ -673,7 +673,7 @@ const VendorManagement = () => {
       {/* View Details Modal */}
       {showViewModal && selectedVendor && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto my-8">
+          <div className="bg-white dark:bg-gray-900 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto my-8">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Vendor Details</h2>
@@ -691,37 +691,37 @@ const VendorManagement = () => {
                   <h3 className="text-lg font-semibold mb-3 text-gray-900 border-b pb-2">Basic Information</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-500">Vendor Code</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Vendor Code</p>
                       <p className="font-semibold text-accent-600">{selectedVendor.vendorCode}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Name</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Name</p>
                       <p className="font-semibold">{selectedVendor.name}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Email</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
                       <p className="font-semibold">{selectedVendor.email}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Mobile</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Mobile</p>
                       <p className="font-semibold">{selectedVendor.mobile}</p>
                     </div>
                     <div className="col-span-2">
-                      <p className="text-sm text-gray-500">Address</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Address</p>
                       <p className="font-semibold">{selectedVendor.address}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Commission</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Commission</p>
                       <p className="font-semibold text-accent-600">{selectedVendor.commissionPercentage}%</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Status</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Status</p>
                       <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedVendor.status)}`}>
                         {selectedVendor.status}
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Registration Date</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Registration Date</p>
                       <p className="font-semibold">{formatDate(selectedVendor.registrationDate)}</p>
                     </div>
                   </div>
@@ -767,24 +767,24 @@ const VendorManagement = () => {
                   <h3 className="text-lg font-semibold mb-3 text-gray-900 border-b pb-2">Bank Details</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-500">Account Holder Name</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Account Holder Name</p>
                       <p className="font-semibold">{selectedVendor.bankDetails.accountHolderName}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Account Number</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Account Number</p>
                       <p className="font-semibold">{selectedVendor.bankDetails.accountNumber}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">IFSC Code</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">IFSC Code</p>
                       <p className="font-semibold">{selectedVendor.bankDetails.ifscCode}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Bank Name</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Bank Name</p>
                       <p className="font-semibold">{selectedVendor.bankDetails.bankName}</p>
                     </div>
                     {selectedVendor.bankDetails.branchName && (
                       <div className="col-span-2">
-                        <p className="text-sm text-gray-500">Branch Name</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Branch Name</p>
                         <p className="font-semibold">{selectedVendor.bankDetails.branchName}</p>
                       </div>
                     )}

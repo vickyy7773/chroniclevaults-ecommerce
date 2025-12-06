@@ -310,7 +310,7 @@ const CategoryManagement = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading categories...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading categories...</p>
         </div>
       </div>
     );
@@ -321,7 +321,7 @@ const CategoryManagement = () => {
         {/* Loading Overlay */}
         {loading && (
           <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div className="bg-white rounded-lg shadow-xl p-6 flex flex-col items-center gap-3">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl p-6 flex flex-col items-center gap-3">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
               <p className="text-gray-700 font-semibold">Reordering categories...</p>
             </div>
@@ -331,7 +331,7 @@ const CategoryManagement = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Category Management</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Category Management</h1>
             <p className="text-gray-600 mt-1">Manage your product categories and subcategories</p>
           </div>
           <Link
@@ -344,17 +344,17 @@ const CategoryManagement = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 border border-gray-200">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
-                type="text"
+                type="text" 
                 placeholder="Search categories..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
               />
             </div>
 
@@ -362,7 +362,7 @@ const CategoryManagement = () => {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent min-w-[200px]"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent min-w-[200px]"
             >
               <option value="all">📁 Main Categories</option>
               <option value="main">📂 Main Only</option>
@@ -397,7 +397,7 @@ const CategoryManagement = () => {
             return (
             <div
               key={category._id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-300 animate-in fade-in slide-in-from-left-4"
+              className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-300 animate-in fade-in slide-in-from-left-4"
             >
               <div className="flex flex-col md:flex-row">
                 {/* Banner Image */}
@@ -505,7 +505,7 @@ const CategoryManagement = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-bold text-gray-900">{category.name}</h3>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">{category.name}</h3>
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                           category.type === 'main'
                             ? 'bg-purple-100 text-purple-700'
@@ -551,18 +551,18 @@ const CategoryManagement = () => {
 
                   <div className="flex flex-wrap gap-4 mb-4">
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="font-semibold text-gray-700">Products:</span>
-                      <span className="text-gray-600">{category.productsCount || 0}</span>
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">Products:</span>
+                      <span className="text-gray-600 dark:text-gray-400">{category.productsCount || 0}</span>
                     </div>
                     {categorySubcategories.length > 0 && (
                       <div className="flex items-center gap-2 text-sm">
-                        <span className="font-semibold text-gray-700">Sub Categories:</span>
-                        <span className="text-gray-600">{categorySubcategories.length}</span>
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">Sub Categories:</span>
+                        <span className="text-gray-600 dark:text-gray-400">{categorySubcategories.length}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="font-semibold text-gray-700">Created:</span>
-                      <span className="text-gray-600">
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">Created:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
                         {new Date(category.createdAt).toLocaleDateString()}
                       </span>
                     </div>

@@ -78,21 +78,21 @@ const ProductManagement = () => {
 
   const DeleteModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">Delete Product</h3>
-        <p className="text-gray-600 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Delete Product</h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
           Are you sure you want to delete "{deleteModal.product?.name}"? This action cannot be undone.
         </p>
         <div className="flex gap-3">
           <button
             onClick={() => setDeleteModal({ show: false, product: null })}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-900 dark:text-white transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={() => handleDelete(deleteModal.product._id)}
-            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             Delete
           </button>
@@ -106,7 +106,7 @@ const ProductManagement = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading products...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading products...</p>
         </div>
       </div>
     );
@@ -197,61 +197,61 @@ const ProductManagement = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
                 {paginatedProducts.map((product) => (
-                  <tr key={product._id} className="hover:bg-blue-50 transition-colors duration-150">
+                  <tr key={product._id} className="hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <img
                           src={product?.images?.[0] || 'https://via.placeholder.com/150'}
                           alt={product?.name || 'Product'}
-                          className="w-14 h-14 rounded-lg object-cover border-2 border-gray-300 shadow-md"
+                          className="w-14 h-14 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600 shadow-md"
                           onError={(e) => {
                             e.target.src = 'https://via.placeholder.com/150?text=No+Image';
                           }}
                         />
                         <div className="ml-4">
-                          <div className="font-bold text-gray-950 text-base leading-tight">{product?.name || 'N/A'}</div>
-                          <div className="text-sm text-gray-800 font-semibold mt-1">{product?.year || '-'}</div>
+                          <div className="font-bold text-gray-950 dark:text-white text-base leading-tight">{product?.name || 'N/A'}</div>
+                          <div className="text-sm text-gray-800 dark:text-gray-400 font-semibold mt-1">{product?.year || '-'}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       {product?.productCode ? (
-                        <span className="text-sm font-mono font-semibold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-md border border-indigo-200">
+                        <span className="text-sm font-mono font-semibold text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/50 px-3 py-1.5 rounded-md border border-indigo-200 dark:border-indigo-700">
                           {product.productCode}
                         </span>
                       ) : (
-                        <span className="text-sm text-gray-400 font-medium">-</span>
+                        <span className="text-sm text-gray-400 dark:text-gray-500 font-medium">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                      <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-700">
                         {product?.category || 'N/A'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-gray-700 font-bold text-base">₹{(product?.costPrice || 0).toLocaleString()}</span>
+                      <span className="text-gray-700 dark:text-gray-300 font-bold text-base">₹{(product?.costPrice || 0).toLocaleString()}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-gray-950 font-extrabold text-lg">₹{(product?.price || 0).toLocaleString()}</span>
+                      <span className="text-gray-950 dark:text-white font-extrabold text-lg">₹{(product?.price || 0).toLocaleString()}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
-                        <span className="text-green-700 font-bold text-base">₹{(product?.profitAmount || 0).toLocaleString()}</span>
-                        <span className="text-xs text-green-600 font-semibold bg-green-50 px-2 py-0.5 rounded-full inline-block w-fit">
+                        <span className="text-green-700 dark:text-green-400 font-bold text-base">₹{(product?.profitAmount || 0).toLocaleString()}</span>
+                        <span className="text-xs text-green-600 dark:text-green-400 font-semibold bg-green-50 dark:bg-green-900/50 px-2 py-0.5 rounded-full inline-block w-fit">
                           {(product?.profitPercentage || 0).toFixed(2)}%
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`font-bold text-base ${(product?.inStock || 0) > 10 ? 'text-green-700 bg-green-50 px-3 py-1 rounded-full' : (product?.inStock || 0) > 0 ? 'text-yellow-700 bg-yellow-50 px-3 py-1 rounded-full' : 'text-red-700 bg-red-50 px-3 py-1 rounded-full'}`}>
+                      <span className={`font-bold text-base ${(product?.inStock || 0) > 10 ? 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/50 px-3 py-1 rounded-full' : (product?.inStock || 0) > 0 ? 'text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/50 px-3 py-1 rounded-full' : 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/50 px-3 py-1 rounded-full'}`}>
                         {product?.inStock || 0}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1.5 text-xs font-bold rounded-full border-2 ${
-                        product?.active ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-800 border-red-300'
+                        product?.active ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-400 border-green-300 dark:border-green-700' : 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-400 border-red-300 dark:border-red-700'
                       }`}>
                         {product?.active ? 'Active' : 'Inactive'}
                       </span>
@@ -260,14 +260,14 @@ const ProductManagement = () => {
                       <div className="flex items-center justify-end gap-2">
                         <Link
                           to={`/admin/products/edit/${product._id}`}
-                          className="p-2.5 text-blue-700 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 hover:border-blue-300"
+                          className="p-2.5 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors border border-blue-200 dark:border-blue-700 hover:border-blue-300 dark:hover:border-blue-600"
                           title="Edit Product"
                         >
                           <Edit size={20} />
                         </Link>
                         <button
                           onClick={() => setDeleteModal({ show: true, product })}
-                          className="p-2.5 text-red-700 hover:bg-red-100 rounded-lg transition-colors border border-red-200 hover:border-red-300"
+                          className="p-2.5 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg transition-colors border border-red-200 dark:border-red-700 hover:border-red-300 dark:hover:border-red-600"
                           title="Delete Product"
                         >
                           <Trash2 size={20} />
@@ -282,14 +282,14 @@ const ProductManagement = () => {
 
           {filteredProducts.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-500 font-medium">No products found</p>
+              <p className="text-gray-500 dark:text-gray-400 font-medium">No products found</p>
             </div>
           )}
         </div>
 
         {/* Stats and Pagination */}
         <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-gray-700 font-medium">
+          <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">
             Showing {startIndex + 1} to {Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length} products
             {filteredProducts.length !== products.length && ` (filtered from ${products.length} total)`}
           </p>
@@ -300,7 +300,7 @@ const ProductManagement = () => {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium text-gray-700"
+                className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium text-gray-700 dark:text-gray-300"
               >
                 Previous
               </button>
@@ -321,7 +321,7 @@ const ProductManagement = () => {
                         className={`px-4 py-2 rounded-lg transition-all font-medium ${
                           currentPage === pageNum
                             ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
-                            : 'bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
+                            : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
                         }`}
                       >
                         {pageNum}
@@ -331,7 +331,7 @@ const ProductManagement = () => {
                     pageNum === currentPage - 2 ||
                     pageNum === currentPage + 2
                   ) {
-                    return <span key={pageNum} className="px-2 py-2 text-gray-500">...</span>;
+                    return <span key={pageNum} className="px-2 py-2 text-gray-500 dark:text-gray-400">...</span>;
                   }
                   return null;
                 })}
@@ -340,7 +340,7 @@ const ProductManagement = () => {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium text-gray-700"
+                className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium text-gray-700 dark:text-gray-300"
               >
                 Next
               </button>

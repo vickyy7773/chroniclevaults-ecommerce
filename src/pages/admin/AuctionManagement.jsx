@@ -377,7 +377,7 @@ const AuctionManagement = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Auction Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Auction Management</h1>
           <p className="text-gray-600 mt-1">Manage live and upcoming auctions</p>
         </div>
         <button
@@ -422,7 +422,7 @@ const AuctionManagement = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {auctions.map((auction) => (
-            <div key={auction._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+            <div key={auction._id} className="bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               {/* Auction Image */}
               <div className="relative h-48 bg-gray-200">
                 {auction.image ? (
@@ -453,16 +453,16 @@ const AuctionManagement = () => {
 
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Current Bid:</span>
+                    <span className="text-gray-600 dark:text-gray-400">Current Bid:</span>
                     <span className="font-bold text-accent-600">₹{auction.currentBid?.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Starting Price:</span>
+                    <span className="text-gray-600 dark:text-gray-400">Starting Price:</span>
                     <span className="font-semibold">₹{auction.startingPrice?.toLocaleString()}</span>
                   </div>
                   {auction.reservePrice && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Reserve Price:</span>
+                      <span className="text-gray-600 dark:text-gray-400">Reserve Price:</span>
                       <span className="font-semibold text-orange-600">₹{auction.reservePrice?.toLocaleString()}</span>
                     </div>
                   )}
@@ -475,7 +475,7 @@ const AuctionManagement = () => {
                   </div>
                   {auction.isLotBidding && auction.lots && auction.lots.length > 0 && (
                     <div className="flex items-start justify-between text-sm">
-                      <span className="text-gray-600">Vendors:</span>
+                      <span className="text-gray-600 dark:text-gray-400">Vendors:</span>
                       <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
                         {Array.from(new Set(auction.lots.map(lot => lot.vendorId).filter(Boolean))).length > 0 ? (
                           Array.from(new Set(auction.lots.map(lot => lot.vendorId).filter(Boolean))).map((vendorId, idx) => (
@@ -497,7 +497,7 @@ const AuctionManagement = () => {
                     <span>Start: {formatDate(auction.startTime)}</span>
                   </div>
                   {auction.endTime && (
-                    <div className="flex items-center text-xs text-gray-600">
+                    <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
                       <Clock className="w-3 h-3 mr-1" />
                       <span>End: {formatDate(auction.endTime)}</span>
                     </div>
@@ -565,7 +565,7 @@ const AuctionManagement = () => {
       {/* Create/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto my-8">
+          <div className="bg-white dark:bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto my-8">
             <div className="p-6">
               <h2 className="text-2xl font-bold mb-4">
                 {selectedAuction ? 'Edit Auction' : 'Create New Auction'}
@@ -601,7 +601,7 @@ const AuctionManagement = () => {
                           name="productId"
                           value={formData.productId}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                         >
                           <option value="">No Product (Standalone Auction)</option>
                           {products.map(product => (
@@ -617,12 +617,12 @@ const AuctionManagement = () => {
                           Title
                         </label>
                         <input
-                          type="text"
+                          type="text" 
                           name="title"
                           value={formData.title}
                           onChange={handleInputChange}
                           required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                           placeholder="Auction title"
                         />
                       </div>
@@ -637,7 +637,7 @@ const AuctionManagement = () => {
                           onChange={handleInputChange}
                           required
                           rows={3}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                           placeholder="Auction description"
                         />
                       </div>
@@ -678,18 +678,18 @@ const AuctionManagement = () => {
                               type="file"
                               accept="image/*"
                               onChange={handleImageChange}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                              className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                             />
                             <p className="text-xs text-gray-500 mt-1">Upload an image file directly</p>
                           </>
                         ) : (
                           <>
                             <input
-                              type="text"
+                              type="text" 
                               name="image"
                               value={formData.image || ''}
                               onChange={handleInputChange}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                              className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                               placeholder="https://chroniclevaults.com/api/uploads/img-123456.jpg"
                             />
                             <p className="text-xs text-blue-600 mt-1">
@@ -720,14 +720,14 @@ const AuctionManagement = () => {
                             Starting Price (₹)
                           </label>
                           <input
-                            type="number"
+                            type="number" 
                             name="startingPrice"
                             value={formData.startingPrice}
                             onChange={handleInputChange}
                             required
                             min="0"
                             step="50"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             placeholder="0"
                           />
                         </div>
@@ -737,13 +737,13 @@ const AuctionManagement = () => {
                             Reserve Price (₹)
                           </label>
                           <input
-                            type="number"
+                            type="number" 
                             name="reservePrice"
                             value={formData.reservePrice}
                             onChange={handleInputChange}
                             min="0"
                             step="50"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             placeholder="Optional"
                           />
                         </div>
@@ -759,12 +759,12 @@ const AuctionManagement = () => {
                           Auction Title
                         </label>
                         <input
-                          type="text"
+                          type="text" 
                           name="title"
                           value={formData.title}
                           onChange={handleInputChange}
                           required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                           placeholder="Overall auction title"
                         />
                       </div>
@@ -779,7 +779,7 @@ const AuctionManagement = () => {
                           onChange={handleInputChange}
                           required
                           rows={2}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                           placeholder="Overall auction description"
                         />
                       </div>
@@ -804,7 +804,7 @@ const AuctionManagement = () => {
                         {formData.lots.length === 0 && (
                           <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                             <Package className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                            <p className="text-gray-600">No lots added yet</p>
+                            <p className="text-gray-600 dark:text-gray-400">No lots added yet</p>
                             <button
                               type="button"
                               onClick={addLot}
@@ -849,7 +849,7 @@ const AuctionManagement = () => {
                                         handleLotChange(index, 'startingPrice', Math.floor(product.price * 0.7));
                                       }
                                     }}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                    className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
                                   >
                                     <option value="">No Product (Manual Entry)</option>
                                     {products.map(product => (
@@ -865,11 +865,11 @@ const AuctionManagement = () => {
                                     Lot Title
                                   </label>
                                   <input
-                                    type="text"
+                                    type="text" 
                                     value={lot.title || ''}
                                     onChange={(e) => handleLotChange(index, 'title', e.target.value)}
                                     required
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                    className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
                                     placeholder={`Lot ${index + 1} title`}
                                   />
                                 </div>
@@ -882,7 +882,7 @@ const AuctionManagement = () => {
                                     value={lot.description || ''}
                                     onChange={(e) => handleLotChange(index, 'description', e.target.value)}
                                     rows={2}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                    className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
                                     placeholder={`Description for lot ${index + 1}`}
                                   />
                                 </div>
@@ -893,12 +893,12 @@ const AuctionManagement = () => {
                                       Starting Price (₹)
                                     </label>
                                     <input
-                                      type="number"
+                                      type="number" 
                                       value={lot.startingPrice || ''}
                                       onChange={(e) => handleLotChange(index, 'startingPrice', e.target.value)}
                                       required
                                       min="0"
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                      className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                       placeholder="0"
                                     />
                                   </div>
@@ -908,11 +908,11 @@ const AuctionManagement = () => {
                                       Reserve Price (₹)
                                     </label>
                                     <input
-                                      type="number"
+                                      type="number" 
                                       value={lot.reservePrice || ''}
                                       onChange={(e) => handleLotChange(index, 'reservePrice', e.target.value)}
                                       min="0"
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                      className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                       placeholder="0 (optional)"
                                     />
                                     <p className="text-xs text-gray-500 mt-1">Min bid to sell</p>
@@ -924,10 +924,10 @@ const AuctionManagement = () => {
                                     Vendor ID
                                   </label>
                                   <input
-                                    type="text"
+                                    type="text" 
                                     value={lot.vendorId || ''}
                                     onChange={(e) => handleLotChange(index, 'vendorId', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                    className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
                                     placeholder="e.g., VEN001 (optional)"
                                   />
                                   <p className="text-xs text-gray-500 mt-1">Vendor identifier for tracking (admin only)</p>
@@ -978,17 +978,17 @@ const AuctionManagement = () => {
                                             reader.readAsDataURL(file);
                                           }
                                         }}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
                                       />
                                       <p className="text-xs text-gray-500 mt-1">Upload an image file directly</p>
                                     </>
                                   ) : (
                                     <>
                                       <input
-                                        type="text"
+                                        type="text" 
                                         value={lot.image || ''}
                                         onChange={(e) => handleLotChange(index, 'image', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
                                         placeholder="https://chroniclevaults.com/api/uploads/img-123456.jpg"
                                       />
                                       <p className="text-xs text-blue-600 mt-1">
@@ -1028,12 +1028,12 @@ const AuctionManagement = () => {
                       Start Date & Time
                     </label>
                     <input
-                      type="datetime-local"
+                      type="datetime-local" 
                       name="startTime"
                       value={formData.startTime}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                      className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                     />
                     <p className="text-sm text-gray-500 mt-1">
                       Auction will end based on bidding activity via Going Gone timer
