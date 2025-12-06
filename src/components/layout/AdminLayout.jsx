@@ -391,8 +391,8 @@ const AdminLayout = () => {
   }, []);
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
-      <div className="flex h-screen bg-gray-100 dark:bg-gray-950">
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gray-950' : 'bg-gray-100'}`}>
+      <div className={`flex h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-950' : 'bg-gray-100'}`}>
         {/* Mobile Overlay */}
         {isMobile && sidebarOpen && (
           <div
@@ -620,14 +620,35 @@ const AdminLayout = () => {
               {/* Dark Mode Toggle */}
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className="p-2 lg:p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className={`relative p-2 lg:p-3 rounded-xl transition-all duration-300 ${
+                  darkMode
+                    ? 'bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30'
+                    : 'bg-gray-100 hover:bg-gray-200 border border-gray-200'
+                }`}
+                title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               >
-                {darkMode ? (
-                  <Sun size={20} className="text-yellow-500" />
-                ) : (
-                  <Moon size={20} className="text-gray-600" />
-                )}
+                <div className="relative">
+                  {darkMode ? (
+                    <Sun size={20} className="text-yellow-500 animate-spin-slow" />
+                  ) : (
+                    <Moon size={20} className="text-gray-600" />
+                  )}
+                </div>
               </button>
+
+              <style>{`
+                @keyframes spin-slow {
+                  from {
+                    transform: rotate(0deg);
+                  }
+                  to {
+                    transform: rotate(360deg);
+                  }
+                }
+                .animate-spin-slow {
+                  animation: spin-slow 20s linear infinite;
+                }
+              `}</style>
 
               {/* Notifications - Hidden on small mobile */}
               <button className="hidden sm:block p-2 lg:p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative">
@@ -664,7 +685,7 @@ const AdminLayout = () => {
           </header>
 
           {/* Content Area */}
-          <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950">
+          <main className={`flex-1 overflow-y-auto transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
             <Outlet />
           </main>
         </div>
