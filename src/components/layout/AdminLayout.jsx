@@ -65,6 +65,41 @@ const AdminLayout = () => {
       const results = [];
       const searchLower = query.toLowerCase();
 
+      // Search Menu Pages
+      const matchedPages = [];
+      visibleMenuItems.forEach(item => {
+        // Search main menu items
+        if (item.label.toLowerCase().includes(searchLower)) {
+          if (item.path) {
+            matchedPages.push({
+              id: item.path,
+              title: item.label,
+              subtitle: 'Navigate to page',
+              type: 'Page',
+              path: item.path,
+              icon: 'Menu'
+            });
+          }
+        }
+
+        // Search submenu items
+        if (item.submenu) {
+          item.submenu.forEach(subItem => {
+            if (subItem.label.toLowerCase().includes(searchLower)) {
+              matchedPages.push({
+                id: subItem.path,
+                title: `${item.label} → ${subItem.label}`,
+                subtitle: 'Navigate to page',
+                type: 'Page',
+                path: subItem.path,
+                icon: 'Menu'
+              });
+            }
+          });
+        }
+      });
+      results.push(...matchedPages.slice(0, 3));
+
       // Search Products (if has permission)
       if (canAccessMenu('products')) {
         try {
@@ -552,6 +587,7 @@ const AdminLayout = () => {
                               {result.icon === 'Package' && <Package size={18} className="text-accent-600" />}
                               {result.icon === 'ShoppingCart' && <ShoppingCart size={18} className="text-green-600" />}
                               {result.icon === 'Users' && <Users size={18} className="text-blue-600" />}
+                              {result.icon === 'Menu' && <ChevronRight size={18} className="text-purple-600" />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
