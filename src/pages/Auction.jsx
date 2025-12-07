@@ -199,6 +199,56 @@ const AuctionPage = () => {
     };
   }, [user]);
 
+  // Real-time coin balance update listener
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    const handleCoinBalanceUpdate = (data) => {
+      console.log('💰 REAL-TIME COIN UPDATE:', data);
+
+      let currentUser = user;
+      if (!currentUser) {
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          try {
+            currentUser = JSON.parse(savedUser);
+          } catch (error) {
+            console.error('Error parsing user from localStorage:', error);
+          }
+        }
+      }
+
+      if (currentUser) {
+        // Update user's coin balance in state
+        const updatedUser = {
+          ...currentUser,
+          auctionCoins: data.auctionCoins,
+          frozenCoins: data.frozenCoins
+        };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+
+        // Show toast notification
+        if (data.reason.includes('refunded') || data.reason.includes('Outbid')) {
+          toast.success(`💰 ${data.reason} - Balance: ₹${data.auctionCoins.toLocaleString()}`, {
+            autoClose: 3000
+          });
+        }
+
+        console.log(`✅ Updated coin balance: ₹${data.auctionCoins.toLocaleString()} (Frozen: ₹${data.frozenCoins.toLocaleString()})`);
+      }
+    };
+
+    socketRef.current.off('coin-balance-updated', handleCoinBalanceUpdate);
+    socketRef.current.on('coin-balance-updated', handleCoinBalanceUpdate);
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off('coin-balance-updated', handleCoinBalanceUpdate);
+      }
+    };
+  }, [user]);
+
   // 3-Phase Timer listener
   useEffect(() => {
     if (!socketRef.current || !auction) return;
