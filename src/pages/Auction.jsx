@@ -465,15 +465,41 @@ const AuctionPage = () => {
       return;
     }
 
-    const currentIncrement = getCurrentIncrement(auction);
-    const minBid = auction.currentBid + currentIncrement;
+    // FOR LOT BIDDING: Use flexible validation (any amount > current bid, divisible by 50)
+    // FOR NORMAL AUCTION: Use increment slab validation
+    let minBid;
+    let maxBid = null;
 
-    // If amount > minBid, treat as max reserve bid
-    const maxBid = amount > minBid ? amount : null;
+    if (auction.isLotBidding) {
+      // LOT BIDDING: Flexible validation
+      const currentLotIndex = (auction.lotNumber || 1) - 1;
+      const currentLot = auction.lots && auction.lots[currentLotIndex];
+      const currentLotBid = currentLot?.currentBid || auction.currentBid;
 
-    if (amount < minBid) {
-      toast.error(`Minimum bid is ₹${minBid.toLocaleString()}`);
-      return;
+      // Must be divisible by 50
+      if (amount % 50 !== 0) {
+        toast.error('Bid amount must be divisible by 50');
+        return;
+      }
+
+      // Must be higher than current lot bid
+      minBid = currentLotBid + 50; // Minimum 50 more than current
+      if (amount < minBid) {
+        toast.error(`Minimum bid is ₹${minBid.toLocaleString()}`);
+        return;
+      }
+    } else {
+      // NORMAL AUCTION: Use increment slab validation
+      const currentIncrement = getCurrentIncrement(auction);
+      minBid = auction.currentBid + currentIncrement;
+
+      // If amount > minBid, treat as max reserve bid
+      maxBid = amount > minBid ? amount : null;
+
+      if (amount < minBid) {
+        toast.error(`Minimum bid is ₹${minBid.toLocaleString()}`);
+        return;
+      }
     }
 
     // If maxBid is set, actual bid is minBid, coin deduction is based on minBid
