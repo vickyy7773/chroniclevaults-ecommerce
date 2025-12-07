@@ -1233,6 +1233,9 @@ export const placeBid = async (req, res) => {
           message: `Cannot place bid. Current lot is ${currentLot.status.toLowerCase()}`
         });
       }
+
+      // Temporarily set auction's currentBid to lot's currentBid for validation
+      auction.currentBid = currentLot.currentBid;
     }
 
     // Validate bid amount
