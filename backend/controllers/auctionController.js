@@ -1147,6 +1147,37 @@ export const deleteAuction = async (req, res) => {
       });
     }
 
+    // IMPORTANT: Unfreeze all coins for this auction before deleting
+    // Find all users with frozen coins for this auction
+    const usersWithFrozenCoins = await User.find({
+      'frozenCoinsPerAuction.auctionId': req.params.id
+    });
+
+    // Unfreeze coins for each user
+    for (const user of usersWithFrozenCoins) {
+      // Filter out all frozen entries for this auction
+      const frozenForThisAuction = user.frozenCoinsPerAuction.filter(
+        f => f.auctionId.toString() === req.params.id.toString()
+      );
+
+      // Calculate total frozen amount for this auction
+      const totalFrozenForAuction = frozenForThisAuction.reduce(
+        (sum, f) => sum + f.amount,
+        0
+      );
+
+      // Remove frozen entries for this auction
+      user.frozenCoinsPerAuction = user.frozenCoinsPerAuction.filter(
+        f => f.auctionId.toString() !== req.params.id.toString()
+      );
+
+      // Decrease total frozen coins
+      user.frozenCoins = Math.max(0, user.frozenCoins - totalFrozenForAuction);
+
+      await user.save();
+      console.log(`Unfroze ${totalFrozenForAuction} coins for user ${user.name} (${user.email}) before deleting auction`);
+    }
+
     await Auction.findByIdAndDelete(req.params.id);
 
     res.json({
