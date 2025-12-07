@@ -8,11 +8,11 @@ import AuctionInvoice from '../models/AuctionInvoice.js';
 // ============================================
 
 /**
- * Freeze coins for a specific lot in an auction
+ * Freeze coins for a specific lot in an auction (REAL-TIME DEDUCTION)
  * @param {String} userId - User's ObjectId
  * @param {String} auctionId - Auction's ObjectId
  * @param {Number} lotNumber - Lot number
- * @param {Number} amount - Amount to freeze
+ * @param {Number} amount - Amount to deduct
  */
 export const freezeCoinsForLot = async (userId, auctionId, lotNumber, amount) => {
   try {
@@ -22,9 +22,8 @@ export const freezeCoinsForLot = async (userId, auctionId, lotNumber, amount) =>
       throw new Error('User not found');
     }
 
-    // Check if user has enough available coins
-    const availableCoins = user.auctionCoins - user.frozenCoins;
-    if (availableCoins < amount) {
+    // Check if user has enough auction coins (real-time check)
+    if (user.auctionCoins < amount) {
       throw new Error('Insufficient auction coins');
     }
 
@@ -34,12 +33,18 @@ export const freezeCoinsForLot = async (userId, auctionId, lotNumber, amount) =>
     );
 
     if (existingFrozen) {
-      // Update existing frozen amount
+      // User is updating their bid on the same lot
       const difference = amount - existingFrozen.amount;
+
+      // Adjust auction coins based on difference
+      user.auctionCoins -= difference;
       existingFrozen.amount = amount;
       user.frozenCoins += difference;
     } else {
-      // Add new frozen entry
+      // New bid - deduct coins immediately (REAL-TIME)
+      user.auctionCoins -= amount;
+
+      // Track frozen amount for this lot
       user.frozenCoinsPerAuction.push({
         auctionId,
         lotNumber,
@@ -57,7 +62,7 @@ export const freezeCoinsForLot = async (userId, auctionId, lotNumber, amount) =>
 };
 
 /**
- * Unfreeze coins for a specific lot in an auction
+ * Unfreeze coins for a specific lot in an auction (REAL-TIME REFUND)
  * @param {String} userId - User's ObjectId
  * @param {String} auctionId - Auction's ObjectId
  * @param {Number} lotNumber - Lot number
@@ -78,6 +83,9 @@ export const unfreezeCoinsForLot = async (userId, auctionId, lotNumber) => {
     if (frozenIndex !== -1) {
       const frozenAmount = user.frozenCoinsPerAuction[frozenIndex].amount;
 
+      // Return coins immediately (REAL-TIME REFUND)
+      user.auctionCoins += frozenAmount;
+
       // Remove from frozenCoinsPerAuction array
       user.frozenCoinsPerAuction.splice(frozenIndex, 1);
 
@@ -96,11 +104,12 @@ export const unfreezeCoinsForLot = async (userId, auctionId, lotNumber) => {
 };
 
 /**
- * Deduct frozen coins from winner (move from frozen to spent)
+ * Confirm frozen coins as spent when lot is WON
+ * Coins were already deducted during bidding, so just clear frozen tracking
  * @param {String} userId - User's ObjectId
  * @param {String} auctionId - Auction's ObjectId
  * @param {Number} lotNumber - Lot number
- * @param {Number} amount - Amount to deduct
+ * @param {Number} amount - Amount that was already deducted
  */
 export const deductFrozenCoins = async (userId, auctionId, lotNumber, amount) => {
   try {
@@ -121,20 +130,23 @@ export const deductFrozenCoins = async (userId, auctionId, lotNumber, amount) =>
       // Remove from frozenCoinsPerAuction array
       user.frozenCoinsPerAuction.splice(frozenIndex, 1);
 
-      // Decrease both frozen coins AND total auction coins
+      // Decrease frozen coins (coins already deducted from auctionCoins during bidding)
       user.frozenCoins = Math.max(0, user.frozenCoins - frozenAmount);
-      user.auctionCoins = Math.max(0, user.auctionCoins - amount);
 
       await user.save();
-      return { success: true, deductedAmount: amount, user };
+      return { success: true, deductedAmount: frozenAmount, user };
     }
 
-    // If no frozen coins found, just deduct from auction coins
-    user.auctionCoins = Math.max(0, user.auctionCoins - amount);
-    await user.save();
-    return { success: true, deductedAmount: amount, user };
+    // If no frozen coins found, deduct directly from auction coins (fallback)
+    if (user.auctionCoins >= amount) {
+      user.auctionCoins -= amount;
+      await user.save();
+      return { success: true, deductedAmount: amount, user };
+    } else {
+      throw new Error('Insufficient auction coins');
+    }
   } catch (error) {
-    console.error('Error deducting frozen coins:', error);
+    console.error('Error confirming frozen coins as spent:', error);
     throw error;
   }
 };
