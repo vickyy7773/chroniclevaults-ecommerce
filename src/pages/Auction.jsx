@@ -77,6 +77,25 @@ const AuctionPage = () => {
     socketRef.current.on('connect', () => {
       console.log('✅ Connected to Socket.io server');
       errorCount = 0;
+
+      // Join user's personal room for coin updates
+      let currentUser = user;
+      if (!currentUser) {
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          try {
+            currentUser = JSON.parse(savedUser);
+          } catch (error) {
+            console.error('Error parsing user from localStorage:', error);
+          }
+        }
+      }
+
+      if (currentUser?._id) {
+        socketRef.current.emit('join-user-room', currentUser._id);
+        console.log(`💰 Joining personal room: user-${currentUser._id}`);
+      }
+
       if (id) {
         socketRef.current.emit('join-auction', id);
       }
@@ -85,6 +104,25 @@ const AuctionPage = () => {
     socketRef.current.on('reconnect', (attemptNumber) => {
       console.log('🔄 Reconnected to Socket.io after', attemptNumber, 'attempts');
       errorCount = 0;
+
+      // Rejoin user's personal room for coin updates
+      let currentUser = user;
+      if (!currentUser) {
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          try {
+            currentUser = JSON.parse(savedUser);
+          } catch (error) {
+            console.error('Error parsing user from localStorage:', error);
+          }
+        }
+      }
+
+      if (currentUser?._id) {
+        socketRef.current.emit('join-user-room', currentUser._id);
+        console.log(`💰 Rejoining personal room: user-${currentUser._id}`);
+      }
+
       if (id) {
         socketRef.current.emit('join-auction', id);
       }
