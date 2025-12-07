@@ -1363,6 +1363,9 @@ export const placeBid = async (req, res) => {
           currentLot.bids.push({
             user: userId,
             amount,
+            maxBid: maxBid,
+            isReserveBidder: false,
+            isAutoBid: false,
             timestamp: new Date()
           });
           currentLot.currentBid = amount;
@@ -1388,6 +1391,9 @@ export const placeBid = async (req, res) => {
           currentLot.bids.push({
             user: userId,
             amount,
+            maxBid: maxBid,
+            isReserveBidder: false,
+            isAutoBid: false,
             timestamp: new Date()
           });
           currentLot.currentBid = amount;
@@ -1415,6 +1421,9 @@ export const placeBid = async (req, res) => {
             currentLot.bids.push({
               user: userId,
               amount: auction.highestReserveBid,
+              maxBid: maxBid,
+              isReserveBidder: false,
+              isAutoBid: true,
               timestamp: new Date()
             });
             currentLot.currentBid = auction.highestReserveBid;
