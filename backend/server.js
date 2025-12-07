@@ -162,6 +162,12 @@ const io = new Server(httpServer, {
 io.on('connection', (socket) => {
   console.log('👤 User connected:', socket.id);
 
+  // Join user's personal room for individual notifications
+  socket.on('join-user-room', (userId) => {
+    socket.join(`user-${userId}`);
+    console.log(`💰 User ${socket.id} joined personal room: user-${userId}`);
+  });
+
   // Join auction room
   socket.on('join-auction', (auctionId) => {
     socket.join(`auction-${auctionId}`);
