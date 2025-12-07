@@ -412,8 +412,20 @@ export const endCurrentLot = async (auctionId, io) => {
 
         // Unfreeze all bidders' coins for this lot
         for (const bid of currentLot.bids) {
-          await unfreezeCoinsForLot(bid.user, auctionId, lotNumber);
+          const unfreezeResult = await unfreezeCoinsForLot(bid.user, auctionId, lotNumber);
           console.log(`🔓 Unfroze coins for bidder ${bid.user} on UNSOLD lot ${lotNumber}`);
+
+          // REAL-TIME: Emit coin balance update to each user individually
+          if (io && unfreezeResult.success && unfreezeResult.user) {
+            io.to(`user-${bid.user.toString()}`).emit('coin-balance-updated', {
+              auctionCoins: unfreezeResult.user.auctionCoins,
+              frozenCoins: unfreezeResult.user.frozenCoins,
+              reason: 'Lot unsold - coins refunded',
+              lotNumber,
+              auctionId: auctionId.toString()
+            });
+            console.log(`💰 Sent real-time coin update to user ${bid.user}: ${unfreezeResult.user.auctionCoins} coins`);
+          }
         }
 
         // Emit final announcement and socket event
@@ -452,8 +464,20 @@ export const endCurrentLot = async (auctionId, io) => {
         // Unfreeze all other bidders' coins
         for (const bid of currentLot.bids) {
           if (bid.user.toString() !== winningBid.user.toString()) {
-            await unfreezeCoinsForLot(bid.user, auctionId, lotNumber);
+            const unfreezeResult = await unfreezeCoinsForLot(bid.user, auctionId, lotNumber);
             console.log(`🔓 Unfroze coins for non-winner ${bid.user} on lot ${lotNumber}`);
+
+            // REAL-TIME: Emit coin balance update to each non-winner
+            if (io && unfreezeResult.success && unfreezeResult.user) {
+              io.to(`user-${bid.user.toString()}`).emit('coin-balance-updated', {
+                auctionCoins: unfreezeResult.user.auctionCoins,
+                frozenCoins: unfreezeResult.user.frozenCoins,
+                reason: 'Lot sold to another bidder - coins refunded',
+                lotNumber,
+                auctionId: auctionId.toString()
+              });
+              console.log(`💰 Sent real-time coin update to non-winner ${bid.user}: ${unfreezeResult.user.auctionCoins} coins`);
+            }
           }
         }
 
@@ -1519,6 +1543,8 @@ export const placeBid = async (req, res) => {
 
       // Unfreeze previous leader's coins (they got outbid)
       if (previousHighestBid && previousHighestBid.user.toString() !== userId.toString()) {
+        const io = req.app.get('io');
+
         if (auction.isLotBidding) {
           // LOT BIDDING: Use per-lot unfreeze
           const lotNumber = auction.lotNumber || 1;
@@ -1527,6 +1553,18 @@ export const placeBid = async (req, res) => {
             console.log(`🔓 LOT ${lotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for outbid user ${previousHighestBid.user}`);
             outbidUserId = previousHighestBid.user.toString();
             outbidUserNewBalance = unfreezeResult.user.auctionCoins;
+
+            // REAL-TIME: Emit coin balance update to outbid user
+            if (io) {
+              io.to(`user-${previousHighestBid.user.toString()}`).emit('coin-balance-updated', {
+                auctionCoins: unfreezeResult.user.auctionCoins,
+                frozenCoins: unfreezeResult.user.frozenCoins,
+                reason: 'Outbid - coins refunded',
+                lotNumber,
+                auctionId: auction._id.toString()
+              });
+              console.log(`💰 Sent real-time coin update to outbid user ${previousHighestBid.user}: ${unfreezeResult.user.auctionCoins} coins`);
+            }
           }
         } else {
           // NORMAL AUCTION: Use old freeze/unfreeze logic
@@ -1542,6 +1580,17 @@ export const placeBid = async (req, res) => {
             // Store outbid user info to send via Socket.io
             outbidUserId = previousLeader._id.toString();
             outbidUserNewBalance = previousLeader.auctionCoins;
+
+            // REAL-TIME: Emit coin balance update to outbid user
+            if (io) {
+              io.to(`user-${previousLeader._id.toString()}`).emit('coin-balance-updated', {
+                auctionCoins: previousLeader.auctionCoins,
+                frozenCoins: previousLeader.frozenCoins,
+                reason: 'Outbid - coins refunded',
+                auctionId: auction._id.toString()
+              });
+              console.log(`💰 Sent real-time coin update to outbid user ${previousLeader._id}: ${previousLeader.auctionCoins} coins`);
+            }
           }
         }
       }
@@ -1566,12 +1615,39 @@ export const placeBid = async (req, res) => {
       const updatedUser = await User.findById(userId);
       user.auctionCoins = updatedUser.auctionCoins;
       user.frozenCoins = updatedUser.frozenCoins;
+
+      // REAL-TIME: Emit coin balance update to current bidder
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`user-${userId.toString()}`).emit('coin-balance-updated', {
+          auctionCoins: updatedUser.auctionCoins,
+          frozenCoins: updatedUser.frozenCoins,
+          reason: 'Bid placed - coins deducted',
+          lotNumber,
+          auctionId: auction._id.toString(),
+          bidAmount: freezeAmount
+        });
+        console.log(`💰 Sent real-time coin update to bidder ${userId}: ${updatedUser.auctionCoins} coins`);
+      }
     } else {
       // NORMAL AUCTION: Use old freeze logic
       user.auctionCoins -= freezeAmount;
       user.frozenCoins = freezeAmount;
       await user.save();
       console.log(`🔒 Froze ${freezeAmount} coins for user ${user._id}. Available: ${user.auctionCoins}, Frozen: ${user.frozenCoins}`);
+
+      // REAL-TIME: Emit coin balance update to current bidder
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`user-${userId.toString()}`).emit('coin-balance-updated', {
+          auctionCoins: user.auctionCoins,
+          frozenCoins: user.frozenCoins,
+          reason: 'Bid placed - coins deducted',
+          auctionId: auction._id.toString(),
+          bidAmount: freezeAmount
+        });
+        console.log(`💰 Sent real-time coin update to bidder ${userId}: ${user.auctionCoins} coins`);
+      }
     }
 
     // Populate the latest bid user info
