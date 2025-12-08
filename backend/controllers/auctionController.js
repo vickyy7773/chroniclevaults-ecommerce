@@ -1415,6 +1415,9 @@ export const placeBid = async (req, res) => {
         if (auction.highestReserveBid && auction.highestReserveBid > amount) {
           previousReserveBidAmount = auction.highestReserveBid;
 
+          // Get the increment for the next bid
+          const increment = auction.getCurrentIncrement();
+
           // Auto-increment to the previous reserve bid amount
           if (auction.isLotBidding && currentLot) {
             // LOT BIDDING: Auto-bid in current lot
@@ -1439,6 +1442,34 @@ export const placeBid = async (req, res) => {
           }
 
           auction.currentBid = auction.highestReserveBid;
+          auction.totalBids = auction.bids.length;
+
+          // NOW: Auto-bid ONE MORE INCREMENT to make new bidder win
+          const finalBidAmount = auction.highestReserveBid + increment;
+
+          if (auction.isLotBidding && currentLot) {
+            // LOT BIDDING: Place final winning auto-bid
+            currentLot.bids.push({
+              user: userId,
+              amount: finalBidAmount,
+              maxBid: maxBid,
+              isReserveBidder: false,
+              isAutoBid: true,
+              timestamp: new Date()
+            });
+            currentLot.currentBid = finalBidAmount;
+          } else {
+            // NORMAL AUCTION: Place final winning auto-bid
+            auction.bids.push({
+              user: userId,
+              amount: finalBidAmount,
+              maxBid: maxBid,
+              isReserveBidder: false,
+              isAutoBid: true
+            });
+          }
+
+          auction.currentBid = finalBidAmount;
           auction.totalBids = auction.bids.length;
           autoBidTriggered = true;
         }
