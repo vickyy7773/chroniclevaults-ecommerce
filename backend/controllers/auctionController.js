@@ -1302,9 +1302,9 @@ export const placeBid = async (req, res) => {
       }
 
       // For LOT BIDDING: Use increment slab validation
-      // Temporarily set auction.currentBid to currentLot.currentBid for validation
+      // Temporarily set auction.currentBid to currentLot.currentBid (or startingPrice if no bids)
       const originalCurrentBid = auction.currentBid;
-      auction.currentBid = currentLot.currentBid;
+      auction.currentBid = currentLot.currentBid || currentLot.startingPrice || 0;
       const validation = auction.validateBid(amount);
       auction.currentBid = originalCurrentBid; // Restore original value
 
