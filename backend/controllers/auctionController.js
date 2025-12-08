@@ -1490,6 +1490,9 @@ export const placeBid = async (req, res) => {
               currentLot.bids.push({
                 user: auction.reserveBidder,
                 amount: autoBidAmount,
+                maxBid: auction.highestReserveBid,
+                isReserveBidder: true,
+                isAutoBid: true,
                 timestamp: new Date()
               });
               currentLot.currentBid = autoBidAmount;
