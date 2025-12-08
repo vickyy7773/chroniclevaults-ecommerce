@@ -1301,26 +1301,21 @@ export const placeBid = async (req, res) => {
         });
       }
 
-      // For LOT BIDDING: Use flexible validation (no increment slabs)
-      // User can bid any amount > current bid, as long as it's divisible by 50
+      // For LOT BIDDING: Use increment slab validation
+      // Temporarily set auction.currentBid to currentLot.currentBid for validation
+      const originalCurrentBid = auction.currentBid;
+      auction.currentBid = currentLot.currentBid;
+      const validation = auction.validateBid(amount);
+      auction.currentBid = originalCurrentBid; // Restore original value
 
-      // Check if bid is divisible by 50
-      if (amount % 50 !== 0) {
+      if (!validation.valid) {
         return res.status(400).json({
           success: false,
-          message: 'Bid amount must be divisible by 50'
-        });
-      }
-
-      // Check if bid is higher than current lot bid
-      if (amount <= currentLot.currentBid) {
-        return res.status(400).json({
-          success: false,
-          message: `Bid must be higher than current bid of ₹${currentLot.currentBid.toLocaleString()}`
+          message: validation.message
         });
       }
     } else {
-      // For NORMAL AUCTION: Use strict increment slab validation
+      // For NORMAL AUCTION: Use increment slab validation
       const validation = auction.validateBid(amount);
       if (!validation.valid) {
         return res.status(400).json({

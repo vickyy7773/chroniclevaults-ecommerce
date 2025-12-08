@@ -559,19 +559,20 @@ const AuctionPage = () => {
     let maxBid = null;
 
     if (auction.isLotBidding) {
-      // LOT BIDDING: Flexible validation
+      // LOT BIDDING: Use increment slab validation
       const currentLotIndex = (auction.lotNumber || 1) - 1;
       const currentLot = auction.lots && auction.lots[currentLotIndex];
       const currentLotBid = currentLot?.currentBid || auction.currentBid;
+
+      // Get current increment based on slab
+      const currentIncrement = getCurrentIncrement(auction);
+      minBid = currentLotBid + currentIncrement;
 
       // Must be divisible by 50
       if (amount % 50 !== 0) {
         toast.error('Bid amount must be divisible by 50');
         return;
       }
-
-      // Must be higher than current lot bid
-      minBid = currentLotBid + 50; // Minimum 50 more than current
 
       // If amount > minBid, treat as max reserve bid
       maxBid = amount > minBid ? amount : null;
