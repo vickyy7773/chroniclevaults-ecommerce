@@ -461,8 +461,8 @@ const AuctionPage = () => {
     }
   };
 
-  const getCurrentIncrement = (auctionData) => {
-    const currentBid = auctionData.currentBid;
+  const getCurrentIncrement = (auctionData, currentBidValue = null) => {
+    const currentBid = currentBidValue !== null ? currentBidValue : auctionData.currentBid;
     const slabs = auctionData.incrementSlabs || [];
     for (let slab of slabs) {
       if (currentBid >= slab.minPrice && currentBid < slab.maxPrice) {
@@ -564,8 +564,8 @@ const AuctionPage = () => {
       const currentLot = auction.lots && auction.lots[currentLotIndex];
       const currentLotBid = currentLot?.currentBid || auction.currentBid;
 
-      // Get current increment based on slab
-      const currentIncrement = getCurrentIncrement(auction);
+      // Get current increment based on slab (pass currentLotBid for correct calculation)
+      const currentIncrement = getCurrentIncrement(auction, currentLotBid);
       minBid = currentLotBid + currentIncrement;
 
       // Must be divisible by 50
