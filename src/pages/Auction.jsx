@@ -572,6 +572,10 @@ const AuctionPage = () => {
 
       // Must be higher than current lot bid
       minBid = currentLotBid + 50; // Minimum 50 more than current
+
+      // If amount > minBid, treat as max reserve bid
+      maxBid = amount > minBid ? amount : null;
+
       if (amount < minBid) {
         toast.error(`Minimum bid is ₹${minBid.toLocaleString()}`);
         return;
