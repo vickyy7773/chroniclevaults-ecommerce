@@ -164,31 +164,56 @@ const AuctionCatalog = () => {
                 />
               </div>
 
-              {/* Quick Auction Info Card */}
-              <div className="bg-gradient-to-br from-accent-50 to-accent-100 rounded-lg shadow-md p-4 border-2 border-accent-200">
-                <h3 className="text-lg font-bold text-accent-900 mb-3">Quick Info</h3>
+              {/* Auction Highlights */}
+              <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-accent-50 rounded-lg shadow-lg p-4 border-2 border-amber-400 relative overflow-hidden">
+                {/* Decorative corner ribbon */}
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-accent-600 to-amber-600 transform rotate-45 translate-x-10 -translate-y-10"></div>
+
+                <h3 className="text-lg font-bold text-amber-900 mb-4 flex items-center gap-2">
+                  <Gavel className="w-5 h-5 text-amber-700" />
+                  Why Join This Auction?
+                </h3>
+
                 <div className="space-y-3">
-                  <div>
-                    <p className="text-xs text-gray-600">Date</p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {formatDateOnly(auction.startTime)}
-                    </p>
+                  {/* Highlight 1 */}
+                  <div className="flex items-start gap-3 bg-white/70 rounded-lg p-2 backdrop-blur-sm">
+                    <div className="w-8 h-8 bg-gradient-to-br from-accent-600 to-accent-700 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-white font-bold text-xs">✓</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Rare Collection</p>
+                      <p className="text-xs text-gray-600">{auction.lots?.length || 0} authentic numismatic treasures</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-600">Location</p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {auction.venue?.city}, {auction.venue?.state}
-                    </p>
+
+                  {/* Highlight 2 */}
+                  <div className="flex items-start gap-3 bg-white/70 rounded-lg p-2 backdrop-blur-sm">
+                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-white font-bold text-xs">✓</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Live & Online</p>
+                      <p className="text-xs text-gray-600">Bid from anywhere, real-time</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-600">Total Lots</p>
-                    <p className="text-2xl font-bold text-accent-700">{auction.lots?.length || 0}</p>
+
+                  {/* Highlight 3 */}
+                  <div className="flex items-start gap-3 bg-white/70 rounded-lg p-2 backdrop-blur-sm">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-white font-bold text-xs">✓</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Expert Verified</p>
+                      <p className="text-xs text-gray-600">Authenticated by specialists</p>
+                    </div>
                   </div>
+
+                  {/* CTA Button */}
                   <button
                     onClick={() => navigate(`/auction/${id}`)}
-                    className="w-full mt-2 px-3 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold"
+                    className="w-full mt-3 px-4 py-2.5 bg-gradient-to-r from-accent-600 to-amber-600 text-white rounded-lg hover:from-accent-700 hover:to-amber-700 transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
-                    Start Bidding
+                    🔨 Start Bidding Now
                   </button>
                 </div>
               </div>
