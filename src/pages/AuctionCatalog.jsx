@@ -14,10 +14,40 @@ const AuctionCatalog = () => {
   const [auction, setAuction] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(null);
 
   useEffect(() => {
     fetchAuctionCatalog();
   }, [id]);
+
+  // Countdown Timer Effect
+  useEffect(() => {
+    if (!auction?.startTime) return;
+
+    const calculateTimeLeft = () => {
+      const difference = new Date(auction.startTime) - new Date();
+
+      if (difference > 0) {
+        return {
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60)
+        };
+      }
+      return null;
+    };
+
+    // Initial calculation
+    setTimeLeft(calculateTimeLeft());
+
+    // Update every second
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [auction]);
 
   const fetchAuctionCatalog = async () => {
     try {
@@ -194,8 +224,8 @@ const AuctionCatalog = () => {
                     </div>
 
                     {/* Total Lots */}
-                    <div className="bg-white/80 rounded-lg p-5 shadow-md backdrop-blur-sm border border-amber-200 min-h-[100px] flex items-center">
-                      <div className="flex items-center gap-4 w-full">
+                    <div className="bg-white/80 rounded-lg p-5 shadow-md backdrop-blur-sm border border-amber-200 min-h-[100px]">
+                      <div className="flex items-center gap-4 mb-3">
                         <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0">
                           <span className="text-2xl font-bold text-white">{auction.lots?.length || 0}</span>
                         </div>
@@ -204,6 +234,38 @@ const AuctionCatalog = () => {
                           <p className="text-base font-bold text-gray-900">Numismatic Treasures</p>
                         </div>
                       </div>
+                      {/* Live Countdown Timer */}
+                      {timeLeft && (
+                        <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-lg p-3 border border-red-200">
+                          <p className="text-xs text-gray-600 font-medium mb-2 text-center">Auction Starts In</p>
+                          <div className="grid grid-cols-4 gap-2">
+                            <div className="text-center">
+                              <div className="bg-white rounded-md py-1 px-1 border border-red-300">
+                                <p className="text-lg font-bold text-red-600">{timeLeft.days}</p>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">Days</p>
+                            </div>
+                            <div className="text-center">
+                              <div className="bg-white rounded-md py-1 px-1 border border-orange-300">
+                                <p className="text-lg font-bold text-orange-600">{String(timeLeft.hours).padStart(2, '0')}</p>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">Hours</p>
+                            </div>
+                            <div className="text-center">
+                              <div className="bg-white rounded-md py-1 px-1 border border-amber-300">
+                                <p className="text-lg font-bold text-amber-600">{String(timeLeft.minutes).padStart(2, '0')}</p>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">Mins</p>
+                            </div>
+                            <div className="text-center">
+                              <div className="bg-white rounded-md py-1 px-1 border border-green-300">
+                                <p className="text-lg font-bold text-green-600">{String(timeLeft.seconds).padStart(2, '0')}</p>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">Secs</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Why Join */}
