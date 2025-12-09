@@ -178,15 +178,17 @@ const AuctionCatalog = () => {
                       </div>
                     </div>
 
-                    {/* Venue */}
+                    {/* Website */}
                     <div className="bg-white/80 rounded-lg p-5 shadow-md backdrop-blur-sm border border-amber-200 min-h-[100px] flex items-center">
                       <div className="flex items-center gap-4 w-full">
                         <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
-                          <MapPin className="w-7 h-7 text-white" />
+                          <Gavel className="w-7 h-7 text-white" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600 font-medium mb-1">Venue</p>
-                          <p className="text-base font-bold text-gray-900">{auction.venue?.city}, {auction.venue?.state}</p>
+                          <p className="text-sm text-gray-600 font-medium mb-1">Visit Our Website</p>
+                          <a href="https://chroniclevaults.com" target="_blank" rel="noopener noreferrer" className="text-base font-bold text-blue-600 hover:text-blue-700 hover:underline">
+                            chroniclevaults.com
+                          </a>
                         </div>
                       </div>
                     </div>
