@@ -186,19 +186,27 @@ const AuctionCatalog = () => {
                         <p className="text-sm text-gray-600">{auction.venue.contactPhone}</p>
                       </div>
                     )}
-                    <div className="text-sm text-gray-500 mt-2 space-y-2">
-                      <p className="font-medium">
-                        Join us for Live Bidding starting at {new Date(auction.startTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} on auction day.
-                      </p>
-                      <p>
-                        Bid from anywhere using our online platform, or experience the excitement live at the venue. Both online and floor bids are accepted simultaneously in real-time.
-                      </p>
-                      <p className="text-xs italic">
-                        View lots during the preview period and register in advance for a seamless bidding experience.
-                      </p>
-                    </div>
                   </div>
                 )}
+
+                {/* Bidding Information - Always Visible */}
+                <div className="border-l-4 border-green-600 pl-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Gavel className="w-5 h-5 text-green-600" />
+                    <p className="text-sm text-gray-600 font-medium">Bidding Information</p>
+                  </div>
+                  <div className="text-sm text-gray-500 space-y-2">
+                    <p className="font-medium">
+                      Join us for Live Bidding starting at {new Date(auction.startTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} on auction day.
+                    </p>
+                    <p>
+                      Bid from anywhere using our online platform, or experience the excitement live at the venue. Both online and floor bids are accepted simultaneously in real-time.
+                    </p>
+                    <p className="text-xs italic">
+                      View lots during the preview period and register in advance for a seamless bidding experience.
+                    </p>
+                  </div>
+                </div>
 
                 {/* Lot Viewing */}
                 {auction.lotViewing && auction.lotViewing.length > 0 && (
