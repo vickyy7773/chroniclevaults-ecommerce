@@ -21,6 +21,13 @@ const AuctionInvoiceManagement = () => {
   const [dateTo, setDateTo] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  // New states for enhanced features
+  const [customers, setCustomers] = useState([]);
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [showSplitModal, setShowSplitModal] = useState(false);
+  const [selectedLots, setSelectedLots] = useState([]);
+
   const [formData, setFormData] = useState({
     auctionId: '',
     lotNumber: '',
@@ -68,10 +75,20 @@ const AuctionInvoiceManagement = () => {
     }
   };
 
+  const fetchCustomers = async () => {
+    try {
+      const response = await api.get('/users/customers');
+      setCustomers(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch customers:', error);
+    }
+  };
+
   useEffect(() => {
     console.log('🚀 Component mounted - calling fetchInvoices...');
     fetchInvoices();
     fetchAuctions();
+    fetchCustomers();
   }, []);
 
   const handleUpdateInvoice = async (e) => {
@@ -97,6 +114,86 @@ const AuctionInvoiceManagement = () => {
       fetchInvoices();
     } catch (error) {
       toast.error('Failed to delete invoice');
+    }
+  };
+
+  const handleCustomerSelect = (customer) => {
+    setFormData({
+      ...formData,
+      buyerId: customer._id,
+      buyerDetails: {
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone || '',
+        gstin: customer.gstin || '',
+        pan: customer.pan || ''
+      },
+      billingAddress: {
+        street: customer.address?.street || '',
+        city: customer.address?.city || '',
+        state: customer.address?.state || 'Maharashtra',
+        stateCode: customer.address?.stateCode || '27',
+        zipCode: customer.address?.zipCode || ''
+      },
+      shippingAddress: {
+        street: customer.address?.street || '',
+        city: customer.address?.city || '',
+        state: customer.address?.state || 'Maharashtra',
+        stateCode: customer.address?.stateCode || '27',
+        zipCode: customer.address?.zipCode || ''
+      }
+    });
+    setCustomerSearch(customer.name);
+  };
+
+  const handleSplitInvoice = async () => {
+    if (selectedLots.length === 0) {
+      toast.error('Please select at least one lot to split');
+      return;
+    }
+
+    if (selectedLots.length === selectedInvoice.lots.length) {
+      toast.error('Cannot split all lots - at least one lot must remain in original invoice');
+      return;
+    }
+
+    try {
+      // Create new invoice with selected lots
+      const newInvoiceLots = selectedInvoice.lots.filter(lot =>
+        selectedLots.includes(lot.lotNumber)
+      );
+
+      const newInvoiceData = {
+        ...selectedInvoice,
+        lots: newInvoiceLots,
+        lotNumbers: selectedLots
+      };
+
+      // Remove _id and invoiceNumber to create new invoice
+      delete newInvoiceData._id;
+      delete newInvoiceData.invoiceNumber;
+      delete newInvoiceData.saleNumber;
+
+      await auctionInvoiceService.createInvoice(newInvoiceData);
+
+      // Update original invoice to remove split lots
+      const remainingLots = selectedInvoice.lots.filter(lot =>
+        !selectedLots.includes(lot.lotNumber)
+      );
+      const remainingLotNumbers = remainingLots.map(l => l.lotNumber);
+
+      await auctionInvoiceService.updateInvoice(selectedInvoice._id, {
+        lots: remainingLots,
+        lotNumbers: remainingLotNumbers
+      });
+
+      toast.success('Invoice split successfully!');
+      setShowSplitModal(false);
+      setSelectedLots([]);
+      fetchInvoices();
+    } catch (error) {
+      console.error('Split invoice error:', error);
+      toast.error('Failed to split invoice');
     }
   };
 
@@ -820,12 +917,13 @@ const AuctionInvoiceManagement = () => {
       {/* Edit Invoice Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Edit Invoice</h2>
               <button
                 onClick={() => {
                   setShowEditModal(false);
+                  setCustomerSearch('');
                   resetForm();
                 }}
                 className="text-gray-500 hover:text-gray-700"
@@ -837,47 +935,105 @@ const AuctionInvoiceManagement = () => {
             <form onSubmit={handleUpdateInvoice}>
               {selectedInvoice && (
                 <>
+                  {/* Customer Search */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Invoice Number</label>
-                    <input
-                      type="text"
-                      value={selectedInvoice.invoiceNumber}
-                      disabled
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Search Customer or Auction ID
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="text"
+                        placeholder="Search by customer name, email, or auction ID..."
+                        value={customerSearch}
+                        onChange={(e) => setCustomerSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    {/* Customer Dropdown */}
+                    {customerSearch && (
+                      <div className="mt-2 max-h-48 overflow-y-auto border border-gray-300 rounded-lg bg-white shadow-lg">
+                        {customers
+                          .filter(c =>
+                            c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                            c.email?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                            c._id?.includes(customerSearch)
+                          )
+                          .slice(0, 10)
+                          .map(customer => (
+                            <div
+                              key={customer._id}
+                              onClick={() => handleCustomerSelect(customer)}
+                              className="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
+                            >
+                              <div className="font-medium">{customer.name}</div>
+                              <div className="text-sm text-gray-600">{customer.email}</div>
+                              <div className="text-xs text-gray-500">Phone: {customer.phone || 'N/A'}</div>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Lot Description</label>
-                    <input
-                      type="text"
-                      value={formData.lotDetails?.description || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        lotDetails: { ...formData.lotDetails, description: e.target.value }
-                      })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Invoice Number</label>
+                      <input
+                        type="text"
+                        value={selectedInvoice.invoiceNumber}
+                        disabled
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Buyer Name</label>
+                      <input
+                        type="text"
+                        value={formData.buyerDetails?.name || selectedInvoice.buyerDetails?.name || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          buyerDetails: { ...formData.buyerDetails, name: e.target.value }
+                        })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
                   </div>
 
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Hammer Price (₹)</label>
-                    <input
-                      type="number"
-                      value={formData.lotDetails?.hammerPrice || 0}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        lotDetails: { ...formData.lotDetails, hammerPrice: parseFloat(e.target.value) || 0 }
-                      })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={formData.buyerDetails?.email || selectedInvoice.buyerDetails?.email || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          buyerDetails: { ...formData.buyerDetails, email: e.target.value }
+                        })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                      <input
+                        type="text"
+                        value={formData.buyerDetails?.phone || selectedInvoice.buyerDetails?.phone || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          buyerDetails: { ...formData.buyerDetails, phone: e.target.value }
+                        })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
                   </div>
 
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Packing & Forwarding Charges (₹)</label>
                     <input
                       type="number"
-                      value={formData.packingForwardingCharges?.amount || 0}
+                      value={formData.packingForwardingCharges?.amount || selectedInvoice.packingForwardingCharges?.amount || 0}
                       onChange={(e) => setFormData({
                         ...formData,
                         packingForwardingCharges: { ...formData.packingForwardingCharges, amount: parseFloat(e.target.value) || 0 }
@@ -885,28 +1041,157 @@ const AuctionInvoiceManagement = () => {
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
+
+                  {/* Lots Display */}
+                  {selectedInvoice.lots && selectedInvoice.lots.length > 0 && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Invoice Lots ({selectedInvoice.lots.length})
+                      </label>
+                      <div className="border border-gray-300 rounded-lg p-3 bg-gray-50">
+                        {selectedInvoice.lots.map((lot, idx) => (
+                          <div key={idx} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                            <div>
+                              <span className="font-medium">Lot #{lot.lotNumber}</span>
+                              <span className="text-sm text-gray-600 ml-2">{lot.description}</span>
+                            </div>
+                            <span className="font-semibold text-green-600">₹{lot.hammerPrice?.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
 
-              <div className="flex justify-end gap-2 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowEditModal(false);
-                    resetForm();
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Update Invoice
-                </button>
+              <div className="flex justify-between gap-2 mt-6">
+                <div>
+                  {selectedInvoice && selectedInvoice.lots && selectedInvoice.lots.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSplitModal(true)}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
+                    >
+                      <Filter className="w-4 h-4" />
+                      Split Invoice
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setCustomerSearch('');
+                      resetForm();
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Update Invoice
+                  </button>
+                </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Split Invoice Modal */}
+      {showSplitModal && selectedInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Split Invoice</h2>
+              <button
+                onClick={() => {
+                  setShowSplitModal(false);
+                  setSelectedLots([]);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-4">
+                Select lots to move to a new invoice. The selected lots will be removed from this invoice
+                and a new invoice will be created for them.
+              </p>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Current Invoice:</strong> {selectedInvoice.invoiceNumber}<br />
+                  <strong>Total Lots:</strong> {selectedInvoice.lots?.length || 0}<br />
+                  <strong>Selected for Split:</strong> {selectedLots.length}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                {selectedInvoice.lots?.map((lot) => (
+                  <div
+                    key={lot.lotNumber}
+                    className={`border rounded-lg p-3 cursor-pointer transition-colors ${
+                      selectedLots.includes(lot.lotNumber)
+                        ? 'bg-purple-50 border-purple-500'
+                        : 'bg-white border-gray-300 hover:border-purple-300'
+                    }`}
+                    onClick={() => {
+                      if (selectedLots.includes(lot.lotNumber)) {
+                        setSelectedLots(selectedLots.filter(l => l !== lot.lotNumber));
+                      } else {
+                        setSelectedLots([...selectedLots, lot.lotNumber]);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedLots.includes(lot.lotNumber)}
+                          onChange={() => {}}
+                          className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                        />
+                        <div>
+                          <div className="font-medium">Lot #{lot.lotNumber}</div>
+                          <div className="text-sm text-gray-600">{lot.description}</div>
+                        </div>
+                      </div>
+                      <div className="font-semibold text-green-600">
+                        ₹{lot.hammerPrice?.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSplitModal(false);
+                  setSelectedLots([]);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSplitInvoice}
+                disabled={selectedLots.length === 0 || selectedLots.length === selectedInvoice.lots?.length}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Split Invoice ({selectedLots.length} lots)
+              </button>
+            </div>
           </div>
         </div>
       )}
