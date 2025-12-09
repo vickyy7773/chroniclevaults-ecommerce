@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   FileText, Download, MapPin, Calendar, Clock, Info,
-  Phone, BookOpen, Gavel, ChevronRight
+  Phone, BookOpen, Gavel, ChevronRight, Shield, CheckCircle, Award, MessageCircle
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
@@ -204,6 +204,65 @@ const AuctionCatalog = () => {
                     </p>
                     <p className="text-xs italic">
                       View lots during the preview period and register in advance for a seamless bidding experience.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Trust Badges & Guarantees */}
+                <div className="bg-gradient-to-br from-accent-50 to-accent-100 rounded-lg p-6 border-2 border-accent-200">
+                  <h3 className="text-lg font-bold text-accent-900 mb-4 text-center">Why Bid With Chronicle Vaults?</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-12 h-12 bg-accent-600 rounded-full flex items-center justify-center mb-2">
+                        <Shield className="w-6 h-6 text-white" />
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900">100% Authentic</p>
+                      <p className="text-xs text-gray-600">Verified Lots</p>
+                    </div>
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mb-2">
+                        <CheckCircle className="w-6 h-6 text-white" />
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900">Secure Payment</p>
+                      <p className="text-xs text-gray-600">Safe Transactions</p>
+                    </div>
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mb-2">
+                        <Award className="w-6 h-6 text-white" />
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900">Expert Valuation</p>
+                      <p className="text-xs text-gray-600">Certified Items</p>
+                    </div>
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mb-2">
+                        <MessageCircle className="w-6 h-6 text-white" />
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900">24/7 Support</p>
+                      <p className="text-xs text-gray-600">We're Here to Help</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact & Support */}
+                <div className="border-l-4 border-accent-600 pl-4 bg-accent-50 rounded-r-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Phone className="w-5 h-5 text-accent-600" />
+                    <p className="text-sm text-gray-600 font-medium">Need Help?</p>
+                  </div>
+                  <div className="text-sm text-gray-700 space-y-2">
+                    <p className="font-medium">Contact Chronicle Vaults</p>
+                    <div className="space-y-1">
+                      <p className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-accent-600" />
+                        <span>For queries: <a href="tel:+911234567890" className="text-accent-600 hover:text-accent-700 font-semibold">+91 123 456 7890</a></span>
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <MessageCircle className="w-4 h-4 text-green-600" />
+                        <span>WhatsApp: <a href="https://wa.me/911234567890" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-700 font-semibold">Click to Chat</a></span>
+                      </p>
+                    </div>
+                    <p className="text-xs text-gray-500 italic mt-2">
+                      Our team is available to assist you with lot inquiries, bidding guidance, and registration support.
                     </p>
                   </div>
                 </div>
