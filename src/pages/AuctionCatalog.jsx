@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   FileText, Download, MapPin, Calendar, Clock, Info,
-  Phone, BookOpen, Gavel, ChevronRight, Shield, CheckCircle, Award, MessageCircle
+  Phone, BookOpen, Gavel, ChevronRight
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
+import vintagePoster from '../assets/images/WhatsApp Image 2025-12-09 at 20.27.36.jpeg';
 
 const AuctionCatalog = () => {
   const { id } = useParams();
@@ -155,7 +156,7 @@ const AuctionCatalog = () => {
             {/* Vintage Auction Poster - Decorative Element */}
             <div className="bg-gradient-to-br from-accent-900 via-accent-800 to-accent-900 rounded-lg shadow-lg overflow-hidden border-4 border-accent-700">
               <img
-                src="https://i.ibb.co/8d6HLT8/photo-2025-01-09-23-03-53.jpg"
+                src={vintagePoster}
                 alt="Numismatic Treasures Auction"
                 className="w-full h-auto object-cover"
               />
