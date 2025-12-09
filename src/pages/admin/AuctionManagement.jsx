@@ -148,6 +148,7 @@ const AuctionManagement = () => {
           lotNumber: prev.lots.length + 1,
           title: '',
           description: '',
+          category: 'Miscellaneous',
           productId: '',
           image: '',
           vendorId: '',
@@ -885,6 +886,20 @@ const AuctionManagement = () => {
                                     className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
                                     placeholder={`Description for lot ${index + 1}`}
                                   />
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Category
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={lot.category || 'Miscellaneous'}
+                                    onChange={(e) => handleLotChange(index, 'category', e.target.value)}
+                                    className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                    placeholder="e.g., Ancient India, Mughals, British India"
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">Enter category for grouping lots in catalog (e.g., Ancient India, Princely States)</p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
