@@ -153,13 +153,29 @@ const AuctionCatalog = () => {
               </div>
             )}
 
-            {/* Vintage Auction Poster - Decorative Element */}
-            <div className="bg-gradient-to-br from-accent-900 via-accent-800 to-accent-900 rounded-lg shadow-lg overflow-hidden border-4 border-accent-700">
-              <img
-                src={vintagePoster}
-                alt="Numismatic Treasures Auction"
-                className="w-full h-auto object-cover"
-              />
+            {/* Vintage Auction Poster - Decorative Showcase */}
+            <div className="flex justify-center items-center py-8">
+              <div className="relative w-full max-w-2xl group">
+                {/* Decorative background glow */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-accent-600 via-amber-500 to-accent-600 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition duration-500"></div>
+
+                {/* Main poster container */}
+                <div className="relative bg-gradient-to-br from-amber-50 via-white to-accent-50 rounded-xl shadow-2xl overflow-hidden border-4 border-accent-700 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-3xl">
+                  <img
+                    src={vintagePoster}
+                    alt="Numismatic Treasures Auction"
+                    className="w-full h-auto object-contain"
+                  />
+                  {/* Subtle overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-accent-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+
+                {/* Decorative corner accents */}
+                <div className="absolute -top-2 -left-2 w-8 h-8 border-t-4 border-l-4 border-accent-600 rounded-tl-lg"></div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 border-t-4 border-r-4 border-accent-600 rounded-tr-lg"></div>
+                <div className="absolute -bottom-2 -left-2 w-8 h-8 border-b-4 border-l-4 border-accent-600 rounded-bl-lg"></div>
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-4 border-r-4 border-accent-600 rounded-br-lg"></div>
+              </div>
             </div>
 
             {/* Auction Details */}
