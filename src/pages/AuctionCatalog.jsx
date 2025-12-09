@@ -139,7 +139,7 @@ const AuctionCatalog = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* 3-Column Layout: Cover, Poster, Quick Info */}
+            {/* 3-Column Image Layout */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {/* Cover Image */}
               {auction.coverImage && (
@@ -164,57 +164,117 @@ const AuctionCatalog = () => {
                 />
               </div>
 
-              {/* Auction Highlights */}
-              <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-accent-50 rounded-lg shadow-lg p-4 border-2 border-amber-400 relative overflow-hidden">
-                {/* Decorative corner ribbon */}
-                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-accent-600 to-amber-600 transform rotate-45 translate-x-10 -translate-y-10"></div>
+              {/* Third Image Placeholder or Another Cover */}
+              {auction.coverImage && (
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <img
+                    src={auction.coverImage}
+                    alt="Auction Preview"
+                    className="w-full h-auto object-cover opacity-90"
+                  />
+                  <div className="p-3 text-center">
+                    <p className="text-xs text-gray-600">Preview</p>
+                  </div>
+                </div>
+              )}
+            </div>
 
-                <h3 className="text-lg font-bold text-amber-900 mb-4 flex items-center gap-2">
-                  <Gavel className="w-5 h-5 text-amber-700" />
-                  Why Join This Auction?
+            {/* Full-Width Auction Highlights & Information */}
+            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-accent-50 rounded-lg shadow-xl p-6 border-2 border-amber-400 relative overflow-hidden">
+              {/* Decorative corner ribbons */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-accent-600 to-amber-600 transform rotate-45 translate-x-16 -translate-y-16 opacity-20"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-br from-amber-600 to-accent-600 transform rotate-45 -translate-x-16 translate-y-16 opacity-20"></div>
+
+              <div className="relative">
+                <h3 className="text-2xl font-bold text-amber-900 mb-6 flex items-center gap-3 border-b-2 border-amber-300 pb-3">
+                  <Gavel className="w-7 h-7 text-amber-700" />
+                  Auction Highlights & Essential Information
                 </h3>
 
-                <div className="space-y-3">
-                  {/* Highlight 1 */}
-                  <div className="flex items-start gap-3 bg-white/70 rounded-lg p-2 backdrop-blur-sm">
-                    <div className="w-8 h-8 bg-gradient-to-br from-accent-600 to-accent-700 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-white font-bold text-xs">✓</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left Column - Date, Time, Location */}
+                  <div className="space-y-4">
+                    <div className="bg-white/80 rounded-lg p-4 shadow-md backdrop-blur-sm border border-amber-200">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-accent-600 to-accent-700 rounded-full flex items-center justify-center">
+                          <Calendar className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-600 font-medium">Auction Date & Time</p>
+                          <p className="text-lg font-bold text-gray-900">{formatDate(auction.startTime)}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Rare Collection</p>
-                      <p className="text-xs text-gray-600">{auction.lots?.length || 0} authentic numismatic treasures</p>
+
+                    <div className="bg-white/80 rounded-lg p-4 shadow-md backdrop-blur-sm border border-amber-200">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center">
+                          <MapPin className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-600 font-medium">Venue</p>
+                          <p className="text-base font-bold text-gray-900">{auction.venue?.city}, {auction.venue?.state}</p>
+                          {auction.venue?.location && (
+                            <p className="text-sm text-gray-600">{auction.venue.location}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/80 rounded-lg p-4 shadow-md backdrop-blur-sm border border-amber-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center">
+                          <span className="text-2xl font-bold text-white">{auction.lots?.length || 0}</span>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-600 font-medium">Total Lots</p>
+                          <p className="text-base font-bold text-gray-900">Authentic Numismatic Treasures</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Highlight 2 */}
-                  <div className="flex items-start gap-3 bg-white/70 rounded-lg p-2 backdrop-blur-sm">
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-white font-bold text-xs">✓</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Live & Online</p>
-                      <p className="text-xs text-gray-600">Bid from anywhere, real-time</p>
-                    </div>
-                  </div>
+                  {/* Right Column - Why Join */}
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-bold text-amber-900 mb-3">Why Join This Auction?</h4>
 
-                  {/* Highlight 3 */}
-                  <div className="flex items-start gap-3 bg-white/70 rounded-lg p-2 backdrop-blur-sm">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-white font-bold text-xs">✓</span>
+                    <div className="flex items-start gap-3 bg-white/70 rounded-lg p-3 backdrop-blur-sm border border-amber-200">
+                      <div className="w-10 h-10 bg-gradient-to-br from-accent-600 to-accent-700 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-bold">✓</span>
+                      </div>
+                      <div>
+                        <p className="text-base font-semibold text-gray-900">Rare & Authentic Collection</p>
+                        <p className="text-sm text-gray-600">Every lot verified and authenticated by numismatic experts. Discover coins and treasures you won't find anywhere else.</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Expert Verified</p>
-                      <p className="text-xs text-gray-600">Authenticated by specialists</p>
-                    </div>
-                  </div>
 
-                  {/* CTA Button */}
-                  <button
-                    onClick={() => navigate(`/auction/${id}`)}
-                    className="w-full mt-3 px-4 py-2.5 bg-gradient-to-r from-accent-600 to-amber-600 text-white rounded-lg hover:from-accent-700 hover:to-amber-700 transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    🔨 Start Bidding Now
-                  </button>
+                    <div className="flex items-start gap-3 bg-white/70 rounded-lg p-3 backdrop-blur-sm border border-amber-200">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-bold">✓</span>
+                      </div>
+                      <div>
+                        <p className="text-base font-semibold text-gray-900">Live & Online Bidding</p>
+                        <p className="text-sm text-gray-600">Participate from the comfort of your home or join us at the venue. Real-time bidding with instant updates.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 bg-white/70 rounded-lg p-3 backdrop-blur-sm border border-amber-200">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-bold">✓</span>
+                      </div>
+                      <div>
+                        <p className="text-base font-semibold text-gray-900">Secure & Transparent Process</p>
+                        <p className="text-sm text-gray-600">Trusted platform with secure payments and transparent bidding. Your satisfaction is guaranteed.</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => navigate(`/auction/${id}`)}
+                      className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-accent-600 to-amber-600 text-white rounded-lg hover:from-accent-700 hover:to-amber-700 transition-all duration-300 text-base font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      🔨 Start Bidding Now
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
