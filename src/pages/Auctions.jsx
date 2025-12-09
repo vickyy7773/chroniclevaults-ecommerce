@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Gavel, Clock, TrendingUp, Users, Filter } from 'lucide-react';
+import { Gavel, Clock, TrendingUp, Users, Filter, BookOpen } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
 
@@ -195,37 +195,49 @@ const AuctionsPage = () => {
                     )}
                   </div>
 
-                  {/* Action Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/auction/${auction._id}`);
-                    }}
-                    className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 ${
-                      auction.status === 'Active'
-                        ? 'bg-accent-600 hover:bg-accent-700 text-white'
-                        : auction.status === 'Upcoming'
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : 'bg-gray-300 text-gray-700'
-                    }`}
-                  >
-                    {auction.status === 'Active' ? (
-                      <>
-                        <Gavel className="w-4 h-4" />
-                        <span>Place Bid</span>
-                      </>
-                    ) : auction.status === 'Upcoming' ? (
-                      <>
-                        <Clock className="w-4 h-4" />
-                        <span>View Details</span>
-                      </>
-                    ) : (
-                      <>
-                        <TrendingUp className="w-4 h-4" />
-                        <span>View Results</span>
-                      </>
-                    )}
-                  </button>
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/auction/${auction._id}/catalog`);
+                      }}
+                      className="flex-1 py-2 px-3 rounded-lg font-medium transition-colors border border-accent-600 text-accent-600 hover:bg-accent-50 flex items-center justify-center space-x-1"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      <span>Catalog</span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/auction/${auction._id}`);
+                      }}
+                      className={`flex-1 py-2 px-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-1 ${
+                        auction.status === 'Active'
+                          ? 'bg-accent-600 hover:bg-accent-700 text-white'
+                          : auction.status === 'Upcoming'
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                          : 'bg-gray-300 text-gray-700'
+                      }`}
+                    >
+                      {auction.status === 'Active' ? (
+                        <>
+                          <Gavel className="w-4 h-4" />
+                          <span>Bid</span>
+                        </>
+                      ) : auction.status === 'Upcoming' ? (
+                        <>
+                          <Clock className="w-4 h-4" />
+                          <span>View</span>
+                        </>
+                      ) : (
+                        <>
+                          <TrendingUp className="w-4 h-4" />
+                          <span>Results</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
 
                   {/* Start/End Time */}
                   <div className="mt-3 pt-3 border-t border-gray-200">

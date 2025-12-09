@@ -66,6 +66,7 @@ const BulkLotUpload = lazy(() => import('./pages/admin/BulkLotUpload'));
 // Auction Pages
 const Auctions = lazy(() => import('./pages/Auctions'));
 const Auction = lazy(() => import('./pages/Auction'));
+const AuctionCatalog = lazy(() => import('./pages/AuctionCatalog'));
 const AuctionRegistration = lazy(() => import('./pages/AuctionRegistration'));
 const NoAuction = lazy(() => import('./pages/NoAuction'));
 const PriceRealization = lazy(() => import('./pages/PriceRealization'));
@@ -633,6 +634,7 @@ const AppContent = () => {
 
             {/* Auction Pages */}
             <Route path="/auctions" element={<Auctions />} />
+            <Route path="/auction/:id/catalog" element={<AuctionCatalog />} />
             <Route path="/auction/:id" element={<Auction />} />
             <Route path="/auction-registration" element={<AuctionRegistration />} />
             <Route path="/no-auction" element={<NoAuction />} />

@@ -160,6 +160,10 @@ const auctionSchema = new mongoose.Schema({
     title: String,
     description: String,
     image: String,
+    category: {
+      type: String,
+      default: 'Miscellaneous' // Category like "Ancient India", "Mughals", etc.
+    },
     vendorId: {
       type: String,
       default: null // Vendor ID for tracking lot ownership (admin only)
@@ -203,7 +207,56 @@ const auctionSchema = new mongoose.Schema({
     },
     startTime: Date,
     endTime: Date
-  }]
+  }],
+
+  // Auction Catalog Information
+  auctionCode: {
+    type: String,
+    default: function() {
+      return `AUC${Math.floor(Math.random() * 100)}`;
+    }
+  },
+  venue: {
+    location: String,
+    address: String,
+    city: String,
+    state: String,
+    contactPhone: String
+  },
+  lotViewing: [{
+    startDate: Date,
+    endDate: Date,
+    time: String,
+    location: String,
+    notes: String
+  }],
+  onlineBiddingEndTime: Date,
+  buyersPremium: {
+    percentage: {
+      type: Number,
+      default: 15
+    },
+    gstOnPremium: {
+      type: Number,
+      default: 18
+    },
+    gstOnHammer: {
+      type: Number,
+      default: 5
+    },
+    totalPremium: {
+      type: Number,
+      default: 22.70
+    },
+    hsnCode: {
+      type: String,
+      default: '9705'
+    },
+    notes: String
+  },
+  catalogPDF: String, // URL to catalog PDF
+  coverImage: String, // Cover page image
+  errataPDF: String // Auction errata PDF
 }, {
   timestamps: true
 });
