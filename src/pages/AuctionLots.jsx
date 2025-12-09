@@ -102,11 +102,21 @@ const AuctionLots = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Image */}
                   <div className="md:col-span-1">
-                    <img
-                      src={lot.images && lot.images[0] ? lot.images[0] : '/placeholder-coin.png'}
-                      alt={lot.title}
-                      className="w-full h-48 object-contain bg-gray-50 rounded-lg border border-gray-200"
-                    />
+                    {lot.image ? (
+                      <img
+                        src={lot.image}
+                        alt={lot.title}
+                        className="w-full h-48 object-contain bg-gray-50 rounded-lg border border-gray-200"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-48 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                        <p className="text-gray-400 text-sm">No Image Available</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Description */}
