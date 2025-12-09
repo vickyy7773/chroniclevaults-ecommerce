@@ -292,6 +292,12 @@ const AuctionManagement = () => {
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     };
 
+    // Ensure all lots have a category field (for backward compatibility with old lots)
+    const lotsWithCategory = (auction.lots || []).map(lot => ({
+      ...lot,
+      category: lot.category || 'Miscellaneous' // Add category if missing
+    }));
+
     setFormData({
       productId: auction.product?._id || '',
       title: auction.title,
@@ -304,7 +310,7 @@ const AuctionManagement = () => {
       isLotBidding: auction.isLotBidding || false,
       totalLots: auction.totalLots || 1,
       lotDuration: auction.lotDuration || 10,
-      lots: auction.lots || []
+      lots: lotsWithCategory
     });
     setImagePreview(auction.image);
     setShowModal(true);
