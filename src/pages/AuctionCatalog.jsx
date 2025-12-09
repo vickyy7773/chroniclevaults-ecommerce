@@ -139,129 +139,105 @@ const AuctionCatalog = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Images and Highlights Side by Side */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Left: Images Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Cover Image */}
-                {auction.coverImage && (
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                    <img
-                      src={auction.coverImage}
-                      alt="Catalog Cover"
-                      className="w-full h-auto object-cover"
-                    />
-                    <div className="p-2 text-center">
-                      <p className="text-xs text-gray-600">Cover</p>
+            {/* Auction Highlights - Full Width */}
+            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-accent-50 rounded-lg shadow-xl p-6 border-2 border-amber-400 relative overflow-hidden mb-6">
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-accent-600 to-amber-600 transform rotate-45 translate-x-16 -translate-y-16 opacity-20"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-br from-amber-600 to-accent-600 transform rotate-45 -translate-x-16 translate-y-16 opacity-20"></div>
+
+              <div className="relative">
+                <h3 className="text-2xl font-bold text-amber-900 mb-6 flex items-center gap-3 border-b-2 border-amber-300 pb-3">
+                  <Gavel className="w-7 h-7 text-amber-700" />
+                  Auction Highlights
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {/* Vintage Poster */}
+                  <div className="md:col-span-1">
+                    <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-accent-600 h-full">
+                      <img
+                        src={vintagePoster}
+                        alt="Numismatic Treasures"
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                   </div>
-                )}
 
-                {/* Vintage Poster */}
-                <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-accent-600">
-                  <img
-                    src={vintagePoster}
-                    alt="Numismatic Treasures"
-                    className="w-full h-auto object-contain"
-                  />
-                </div>
-
-                {/* Third Image */}
-                {auction.coverImage && (
-                  <div className="col-span-2 bg-white rounded-lg shadow-md overflow-hidden">
-                    <img
-                      src={auction.coverImage}
-                      alt="Preview"
-                      className="w-full h-48 object-cover opacity-90"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Right: Auction Highlights */}
-              <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-accent-50 rounded-lg shadow-xl p-5 border-2 border-amber-400 relative overflow-hidden">
-                {/* Decorative corner ribbon */}
-                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-accent-600 to-amber-600 transform rotate-45 translate-x-12 -translate-y-12 opacity-20"></div>
-
-                <div className="relative">
-                  <h3 className="text-xl font-bold text-amber-900 mb-4 flex items-center gap-2 border-b-2 border-amber-300 pb-2">
-                    <Gavel className="w-6 h-6 text-amber-700" />
-                    Auction Highlights
-                  </h3>
-
-                  <div className="space-y-3">
+                  {/* Info Cards */}
+                  <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Date & Time */}
-                    <div className="bg-white/80 rounded-lg p-3 shadow-md backdrop-blur-sm border border-amber-200">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-accent-600 to-accent-700 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Calendar className="w-5 h-5 text-white" />
+                    <div className="bg-white/80 rounded-lg p-4 shadow-md backdrop-blur-sm border border-amber-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-accent-600 to-accent-700 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Calendar className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <p className="text-xs text-gray-600 font-medium">Date & Time</p>
-                          <p className="text-sm font-bold text-gray-900">{formatDate(auction.startTime)}</p>
+                          <p className="text-xs text-gray-600 font-medium">Auction Date & Time</p>
+                          <p className="text-base font-bold text-gray-900">{formatDate(auction.startTime)}</p>
                         </div>
                       </div>
                     </div>
 
                     {/* Venue */}
-                    <div className="bg-white/80 rounded-lg p-3 shadow-md backdrop-blur-sm border border-amber-200">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
-                          <MapPin className="w-5 h-5 text-white" />
+                    <div className="bg-white/80 rounded-lg p-4 shadow-md backdrop-blur-sm border border-amber-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-6 h-6 text-white" />
                         </div>
                         <div>
                           <p className="text-xs text-gray-600 font-medium">Venue</p>
-                          <p className="text-sm font-bold text-gray-900">{auction.venue?.city}, {auction.venue?.state}</p>
+                          <p className="text-base font-bold text-gray-900">{auction.venue?.city}, {auction.venue?.state}</p>
                         </div>
                       </div>
                     </div>
 
                     {/* Total Lots */}
-                    <div className="bg-white/80 rounded-lg p-3 shadow-md backdrop-blur-sm border border-amber-200">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-lg font-bold text-white">{auction.lots?.length || 0}</span>
+                    <div className="bg-white/80 rounded-lg p-4 shadow-md backdrop-blur-sm border border-amber-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-xl font-bold text-white">{auction.lots?.length || 0}</span>
                         </div>
                         <div>
                           <p className="text-xs text-gray-600 font-medium">Total Lots</p>
-                          <p className="text-sm font-bold text-gray-900">Numismatic Treasures</p>
+                          <p className="text-base font-bold text-gray-900">Numismatic Treasures</p>
                         </div>
                       </div>
                     </div>
 
-                    {/* Why Join - Compact */}
-                    <div className="space-y-2 pt-2">
-                      <h4 className="text-sm font-bold text-amber-900">Why Join?</h4>
-
-                      <div className="flex items-center gap-2 bg-white/70 rounded-lg p-2 backdrop-blur-sm">
-                        <div className="w-6 h-6 bg-gradient-to-br from-accent-600 to-accent-700 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-white text-xs">✓</span>
+                    {/* Why Join */}
+                    <div className="bg-white/80 rounded-lg p-4 shadow-md backdrop-blur-sm border border-amber-200">
+                      <h4 className="text-sm font-bold text-amber-900 mb-3">Why Join This Auction?</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 bg-gradient-to-br from-accent-600 to-accent-700 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-xs">✓</span>
+                          </div>
+                          <p className="text-xs font-semibold text-gray-900">Rare & Authentic</p>
                         </div>
-                        <p className="text-xs font-semibold text-gray-900">Rare & Authentic Collection</p>
-                      </div>
-
-                      <div className="flex items-center gap-2 bg-white/70 rounded-lg p-2 backdrop-blur-sm">
-                        <div className="w-6 h-6 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-white text-xs">✓</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-xs">✓</span>
+                          </div>
+                          <p className="text-xs font-semibold text-gray-900">Live & Online</p>
                         </div>
-                        <p className="text-xs font-semibold text-gray-900">Live & Online Bidding</p>
-                      </div>
-
-                      <div className="flex items-center gap-2 bg-white/70 rounded-lg p-2 backdrop-blur-sm">
-                        <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-white text-xs">✓</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-xs">✓</span>
+                          </div>
+                          <p className="text-xs font-semibold text-gray-900">Secure & Trusted</p>
                         </div>
-                        <p className="text-xs font-semibold text-gray-900">Secure & Transparent</p>
                       </div>
                     </div>
 
-                    {/* CTA Button */}
-                    <button
-                      onClick={() => navigate(`/auction/${id}`)}
-                      className="w-full mt-3 px-4 py-2.5 bg-gradient-to-r from-accent-600 to-amber-600 text-white rounded-lg hover:from-accent-700 hover:to-amber-700 transition-all duration-300 text-sm font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      🔨 Start Bidding Now
-                    </button>
+                    {/* CTA Button - Full Width */}
+                    <div className="md:col-span-2">
+                      <button
+                        onClick={() => navigate(`/auction/${id}`)}
+                        className="w-full px-6 py-3 bg-gradient-to-r from-accent-600 to-amber-600 text-white rounded-lg hover:from-accent-700 hover:to-amber-700 transition-all duration-300 text-base font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
+                      >
+                        🔨 Start Bidding Now
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
