@@ -54,10 +54,10 @@ const BulkLotUpload = () => {
 
   // Download CSV template
   const downloadTemplate = () => {
-    const csvContent = 'Lot Number,Title,Description,Image URL,Vendor ID,Starting Price,Reserve Price\n' +
-      '1,Ancient Roman Coin,Rare silver denarius from 100 AD,https://example.com/image1.jpg,VEN001,5000,7000\n' +
-      '2,Gold British Sovereign,1885 Victoria gold sovereign,https://example.com/image2.jpg,VEN002,15000,20000\n' +
-      '3,Indian Copper Coin,East India Company 1/4 Anna,https://example.com/image3.jpg,VEN001,2000,3000';
+    const csvContent = 'Lot Number,Title,Description,Category,Image URL,Vendor ID,Starting Price,Reserve Price\n' +
+      '1,Ancient Roman Coin,Rare silver denarius from 100 AD,Ancient World,https://example.com/image1.jpg,VEN001,5000,7000\n' +
+      '2,Gold British Sovereign,1885 Victoria gold sovereign,British India,https://example.com/image2.jpg,VEN002,15000,20000\n' +
+      '3,Indian Copper Coin,East India Company 1/4 Anna,East India Company,https://example.com/image3.jpg,VEN001,2000,3000';
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -87,11 +87,12 @@ const BulkLotUpload = () => {
         lotNumber: parseInt(values[0]) || i,
         title: values[1]?.trim() || '',
         description: values[2]?.trim() || '',
-        image: values[3]?.trim() || '',
-        vendorId: values[4]?.trim() || null,
-        startingPrice: parseFloat(values[5]) || 0,
-        reservePrice: parseFloat(values[6]) || 0,
-        currentBid: parseFloat(values[5]) || 0, // Initialize with starting price
+        category: values[3]?.trim() || 'Miscellaneous',
+        image: values[4]?.trim() || '',
+        vendorId: values[5]?.trim() || null,
+        startingPrice: parseFloat(values[6]) || 0,
+        reservePrice: parseFloat(values[7]) || 0,
+        currentBid: parseFloat(values[6]) || 0, // Initialize with starting price
         status: 'Upcoming'
       };
 
@@ -457,6 +458,9 @@ const BulkLotUpload = () => {
                     Description
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
+                    Category
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
                     Vendor ID
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
@@ -537,6 +541,11 @@ const BulkLotUpload = () => {
                           {lot.description || '-'}
                         </p>
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded-md text-xs font-semibold">
+                        {lot.category || 'Miscellaneous'}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       <span className="inline-flex items-center px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-md text-xs font-semibold">
