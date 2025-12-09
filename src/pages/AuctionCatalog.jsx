@@ -283,19 +283,19 @@ const AuctionCatalog = () => {
                 )}
 
                 {/* Bidding Information - Always Visible */}
-                <div className="border-l-4 border-green-600 pl-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Gavel className="w-5 h-5 text-green-600" />
-                    <p className="text-sm text-gray-600 font-medium">Bidding Information</p>
+                <div className="border-l-4 border-green-600 pl-5 py-2">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Gavel className="w-6 h-6 text-green-600" />
+                    <p className="text-base text-gray-700 font-semibold">Bidding Information</p>
                   </div>
-                  <div className="text-sm text-gray-500 space-y-2">
-                    <p className="font-medium">
+                  <div className="text-base text-gray-600 space-y-3">
+                    <p className="font-semibold text-gray-900">
                       Join us for Live Bidding starting at {new Date(auction.startTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} on auction day.
                     </p>
-                    <p>
+                    <p className="leading-relaxed">
                       Bid from anywhere using our online platform, or experience the excitement live at the venue. Both online and floor bids are accepted simultaneously in real-time.
                     </p>
-                    <p className="text-xs italic">
+                    <p className="text-sm italic text-gray-500">
                       View lots during the preview period and register in advance for a seamless bidding experience.
                     </p>
                   </div>
@@ -338,21 +338,21 @@ const AuctionCatalog = () => {
 
                 {/* Buyer's Premium */}
                 {auction.buyersPremium && (
-                  <div className="border-l-4 border-red-600 pl-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Info className="w-5 h-5 text-red-600" />
-                      <p className="text-sm text-gray-600 font-medium">Buyer's Premium</p>
+                  <div className="border-l-4 border-red-600 pl-5 py-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Info className="w-6 h-6 text-red-600" />
+                      <p className="text-base text-gray-700 font-semibold">Buyer's Premium</p>
                     </div>
-                    <p className="text-gray-900">
+                    <p className="text-base text-gray-900 font-medium leading-relaxed">
                       {auction.buyersPremium.percentage}% Buyers Premium plus {auction.buyersPremium.gstOnPremium}% GST on Buyers Premium plus {auction.buyersPremium.gstOnHammer}% GST on Hammer, {auction.buyersPremium.totalPremium}% Total Buyers Premium
                     </p>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-base text-gray-700 mt-2 font-medium">
                       HSN Code: {auction.buyersPremium.hsnCode}
                     </p>
                     {auction.buyersPremium.notes && (
-                      <p className="text-sm text-gray-500 mt-2">{auction.buyersPremium.notes}</p>
+                      <p className="text-base text-gray-600 mt-2">{auction.buyersPremium.notes}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-2 italic">
+                    <p className="text-sm text-gray-500 mt-3 italic">
                       As per Government rules and regulation any changes in GST slab will be applicable to the buyer.
                     </p>
                   </div>
