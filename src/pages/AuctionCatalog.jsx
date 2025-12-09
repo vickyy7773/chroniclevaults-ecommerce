@@ -139,29 +139,57 @@ const AuctionCatalog = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Cover Image */}
-            {auction.coverImage && (
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <img
-                  src={auction.coverImage}
-                  alt="Catalog Cover"
-                  className="w-full h-auto object-cover"
-                />
-                <div className="p-4 text-center">
-                  <p className="text-sm text-gray-600">Click on image to view catalogue</p>
-                </div>
-              </div>
-            )}
-
-            {/* Vintage Auction Poster */}
-            <div className="flex justify-center py-4">
-              <div className="w-full max-w-md">
-                <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-accent-600 hover:shadow-xl transition-shadow duration-300">
+            {/* 3-Column Layout: Cover, Poster, Quick Info */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {/* Cover Image */}
+              {auction.coverImage && (
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
                   <img
-                    src={vintagePoster}
-                    alt="Numismatic Treasures Auction"
-                    className="w-full h-auto object-contain"
+                    src={auction.coverImage}
+                    alt="Catalog Cover"
+                    className="w-full h-auto object-cover"
                   />
+                  <div className="p-3 text-center">
+                    <p className="text-xs text-gray-600">Catalog Cover</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Vintage Poster */}
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-accent-600">
+                <img
+                  src={vintagePoster}
+                  alt="Numismatic Treasures Auction"
+                  className="w-full h-auto object-contain"
+                />
+              </div>
+
+              {/* Quick Auction Info Card */}
+              <div className="bg-gradient-to-br from-accent-50 to-accent-100 rounded-lg shadow-md p-4 border-2 border-accent-200">
+                <h3 className="text-lg font-bold text-accent-900 mb-3">Quick Info</h3>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-gray-600">Date</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {formatDateOnly(auction.startTime)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Location</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {auction.venue?.city}, {auction.venue?.state}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Total Lots</p>
+                    <p className="text-2xl font-bold text-accent-700">{auction.lots?.length || 0}</p>
+                  </div>
+                  <button
+                    onClick={() => navigate(`/auction/${id}`)}
+                    className="w-full mt-2 px-3 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-700 transition-colors text-sm font-semibold"
+                  >
+                    Start Bidding
+                  </button>
                 </div>
               </div>
             </div>
