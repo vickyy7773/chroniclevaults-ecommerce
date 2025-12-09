@@ -180,24 +180,8 @@ const AuctionLots = () => {
                   </div>
                 </div>
 
-                {/* Lot Footer */}
-                <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-center gap-4">
-                  <button
-                    onClick={() => navigate(`/auction/${id}?lot=${lot.lotNumber}`)}
-                    className="text-red-700 hover:text-red-800 font-medium text-sm"
-                  >
-                    View Lot »
-                  </button>
-                  <span className="text-gray-300">|</span>
-                  <button
-                    className="text-red-700 hover:text-red-800 font-medium text-sm"
-                  >
-                    Add To Watch List »
-                  </button>
-                </div>
-
                 {/* Bidding Note */}
-                <div className="mt-3 text-center">
+                <div className="mt-4 pt-4 border-t border-gray-200 text-center">
                   <p className="text-sm text-blue-600 font-medium">
                     ** You can enter any bid amount more than or equal to the Next Bid **
                   </p>
