@@ -1041,7 +1041,9 @@ export const createAuction = async (req, res) => {
         lotNumber: index + 1,
         title: lot.title,
         description: lot.description || '',
+        category: lot.category || 'Miscellaneous', // Include category field
         image: lot.image || '',
+        vendorId: lot.vendorId || null, // Include vendor ID
         startingPrice: lot.startingPrice,
         currentBid: lot.startingPrice,
         reservePrice: lot.reservePrice || 0,
@@ -1140,6 +1142,16 @@ export const updateAuction = async (req, res) => {
         auction[field] = req.body[field];
       }
     });
+
+    // Handle lots update for lot bidding auctions
+    if (req.body.lots && Array.isArray(req.body.lots)) {
+      // Preserve category and vendorId fields when updating lots
+      auction.lots = req.body.lots.map((lot, index) => ({
+        ...lot,
+        category: lot.category || 'Miscellaneous',
+        vendorId: lot.vendorId || null
+      }));
+    }
 
     // Update status based on time
     await auction.updateStatus();
