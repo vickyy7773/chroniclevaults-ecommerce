@@ -140,21 +140,21 @@ const AuctionCatalog = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Auction Highlights - Full Width */}
-            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-accent-50 rounded-lg shadow-xl p-6 border-2 border-amber-400 relative overflow-hidden mb-6">
+            <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-accent-50 rounded-lg shadow-xl p-8 border-2 border-amber-400 relative overflow-hidden mb-6">
               {/* Decorative elements */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-accent-600 to-amber-600 transform rotate-45 translate-x-16 -translate-y-16 opacity-20"></div>
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-br from-amber-600 to-accent-600 transform rotate-45 -translate-x-16 translate-y-16 opacity-20"></div>
 
               <div className="relative">
-                <h3 className="text-2xl font-bold text-amber-900 mb-6 flex items-center gap-3 border-b-2 border-amber-300 pb-3">
+                <h3 className="text-2xl font-bold text-amber-900 mb-8 flex items-center gap-3 border-b-2 border-amber-300 pb-4">
                   <Gavel className="w-7 h-7 text-amber-700" />
                   Auction Highlights
                 </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   {/* Vintage Poster */}
                   <div className="md:col-span-1">
-                    <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-accent-600 h-full">
+                    <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-accent-600 h-full min-h-[400px]">
                       <img
                         src={vintagePoster}
                         alt="Numismatic Treasures"
@@ -164,67 +164,67 @@ const AuctionCatalog = () => {
                   </div>
 
                   {/* Info Cards */}
-                  <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-5">
                     {/* Date & Time */}
-                    <div className="bg-white/80 rounded-lg p-4 shadow-md backdrop-blur-sm border border-amber-200">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-accent-600 to-accent-700 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Calendar className="w-6 h-6 text-white" />
+                    <div className="bg-white/80 rounded-lg p-5 shadow-md backdrop-blur-sm border border-amber-200 min-h-[100px] flex items-center">
+                      <div className="flex items-center gap-4 w-full">
+                        <div className="w-14 h-14 bg-gradient-to-br from-accent-600 to-accent-700 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Calendar className="w-7 h-7 text-white" />
                         </div>
                         <div>
-                          <p className="text-xs text-gray-600 font-medium">Auction Date & Time</p>
+                          <p className="text-sm text-gray-600 font-medium mb-1">Auction Date & Time</p>
                           <p className="text-base font-bold text-gray-900">{formatDate(auction.startTime)}</p>
                         </div>
                       </div>
                     </div>
 
                     {/* Venue */}
-                    <div className="bg-white/80 rounded-lg p-4 shadow-md backdrop-blur-sm border border-amber-200">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
-                          <MapPin className="w-6 h-6 text-white" />
+                    <div className="bg-white/80 rounded-lg p-5 shadow-md backdrop-blur-sm border border-amber-200 min-h-[100px] flex items-center">
+                      <div className="flex items-center gap-4 w-full">
+                        <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0">
+                          <MapPin className="w-7 h-7 text-white" />
                         </div>
                         <div>
-                          <p className="text-xs text-gray-600 font-medium">Venue</p>
+                          <p className="text-sm text-gray-600 font-medium mb-1">Venue</p>
                           <p className="text-base font-bold text-gray-900">{auction.venue?.city}, {auction.venue?.state}</p>
                         </div>
                       </div>
                     </div>
 
                     {/* Total Lots */}
-                    <div className="bg-white/80 rounded-lg p-4 shadow-md backdrop-blur-sm border border-amber-200">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-xl font-bold text-white">{auction.lots?.length || 0}</span>
+                    <div className="bg-white/80 rounded-lg p-5 shadow-md backdrop-blur-sm border border-amber-200 min-h-[100px] flex items-center">
+                      <div className="flex items-center gap-4 w-full">
+                        <div className="w-14 h-14 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-2xl font-bold text-white">{auction.lots?.length || 0}</span>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-600 font-medium">Total Lots</p>
+                          <p className="text-sm text-gray-600 font-medium mb-1">Total Lots</p>
                           <p className="text-base font-bold text-gray-900">Numismatic Treasures</p>
                         </div>
                       </div>
                     </div>
 
                     {/* Why Join */}
-                    <div className="bg-white/80 rounded-lg p-4 shadow-md backdrop-blur-sm border border-amber-200">
-                      <h4 className="text-sm font-bold text-amber-900 mb-3">Why Join This Auction?</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 bg-gradient-to-br from-accent-600 to-accent-700 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-white text-xs">✓</span>
+                    <div className="bg-white/80 rounded-lg p-5 shadow-md backdrop-blur-sm border border-amber-200 min-h-[100px]">
+                      <h4 className="text-base font-bold text-amber-900 mb-4">Why Join This Auction?</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 bg-gradient-to-br from-accent-600 to-accent-700 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-sm font-bold">✓</span>
                           </div>
-                          <p className="text-xs font-semibold text-gray-900">Rare & Authentic</p>
+                          <p className="text-sm font-semibold text-gray-900">Rare & Authentic</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-white text-xs">✓</span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-sm font-bold">✓</span>
                           </div>
-                          <p className="text-xs font-semibold text-gray-900">Live & Online</p>
+                          <p className="text-sm font-semibold text-gray-900">Live & Online</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-white text-xs">✓</span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-sm font-bold">✓</span>
                           </div>
-                          <p className="text-xs font-semibold text-gray-900">Secure & Trusted</p>
+                          <p className="text-sm font-semibold text-gray-900">Secure & Trusted</p>
                         </div>
                       </div>
                     </div>
@@ -233,7 +233,7 @@ const AuctionCatalog = () => {
                     <div className="md:col-span-2">
                       <button
                         onClick={() => navigate(`/auction/${id}`)}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-accent-600 to-amber-600 text-white rounded-lg hover:from-accent-700 hover:to-amber-700 transition-all duration-300 text-base font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
+                        className="w-full px-8 py-4 bg-gradient-to-r from-accent-600 to-amber-600 text-white rounded-lg hover:from-accent-700 hover:to-amber-700 transition-all duration-300 text-lg font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
                       >
                         🔨 Start Bidding Now
                       </button>
