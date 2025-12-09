@@ -154,11 +154,11 @@ const AuctionCatalog = () => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   {/* Vintage Poster */}
                   <div className="md:col-span-1">
-                    <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-accent-600 h-full min-h-[400px]">
+                    <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-accent-600">
                       <img
                         src={vintagePoster}
                         alt="Numismatic Treasures"
-                        className="w-full h-full object-contain"
+                        className="w-full h-auto object-contain"
                       />
                     </div>
                   </div>
