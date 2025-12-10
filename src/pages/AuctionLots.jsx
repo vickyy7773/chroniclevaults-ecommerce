@@ -65,14 +65,14 @@ const AuctionLots = () => {
     // Apply price sorting
     if (filters.priceSort === 'low-to-high') {
       result.sort((a, b) => {
-        const priceA = a.currentBid || a.startingBid || 0;
-        const priceB = b.currentBid || b.startingBid || 0;
+        const priceA = a.estimatedPrice?.min || 0;
+        const priceB = b.estimatedPrice?.min || 0;
         return priceA - priceB;
       });
     } else if (filters.priceSort === 'high-to-low') {
       result.sort((a, b) => {
-        const priceA = a.currentBid || a.startingBid || 0;
-        const priceB = b.currentBid || b.startingBid || 0;
+        const priceA = a.estimatedPrice?.min || 0;
+        const priceB = b.estimatedPrice?.min || 0;
         return priceB - priceA;
       });
     }
@@ -355,8 +355,8 @@ const AuctionLots = () => {
                       <div>
                         <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Estimated Price</p>
                         <p className="text-lg font-bold text-green-700">
-                          ₹{(lot.startingBid || 0).toLocaleString('en-IN')}
-                          {lot.reservePrice && lot.reservePrice > 0 && ` - ₹${lot.reservePrice.toLocaleString('en-IN')}`}
+                          ₹{(lot.estimatedPrice?.min || 0).toLocaleString('en-IN')}
+                          {lot.estimatedPrice?.max && lot.estimatedPrice?.max > 0 && ` - ₹${lot.estimatedPrice.max.toLocaleString('en-IN')}`}
                         </p>
                       </div>
 
