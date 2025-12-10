@@ -1029,6 +1029,173 @@ const AuctionInvoiceManagement = () => {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">GSTIN</label>
+                      <input
+                        type="text"
+                        value={formData.buyerDetails?.gstin || selectedInvoice.buyerDetails?.gstin || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          buyerDetails: { ...formData.buyerDetails, gstin: e.target.value }
+                        })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter GSTIN"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">PAN</label>
+                      <input
+                        type="text"
+                        value={formData.buyerDetails?.pan || selectedInvoice.buyerDetails?.pan || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          buyerDetails: { ...formData.buyerDetails, pan: e.target.value }
+                        })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter PAN"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Billing Address Section */}
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3 border-b pb-2">Billing Address</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Street Address</label>
+                        <input
+                          type="text"
+                          value={formData.billingAddress?.street || selectedInvoice.billingAddress?.street || ''}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            billingAddress: { ...formData.billingAddress, street: e.target.value }
+                          })}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter street address"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                          <input
+                            type="text"
+                            value={formData.billingAddress?.city || selectedInvoice.billingAddress?.city || ''}
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              billingAddress: { ...formData.billingAddress, city: e.target.value }
+                            })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                            placeholder="City"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                          <input
+                            type="text"
+                            value={formData.billingAddress?.state || selectedInvoice.billingAddress?.state || ''}
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              billingAddress: { ...formData.billingAddress, state: e.target.value }
+                            })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                            placeholder="State"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code</label>
+                          <input
+                            type="text"
+                            value={formData.billingAddress?.zipCode || selectedInvoice.billingAddress?.zipCode || ''}
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              billingAddress: { ...formData.billingAddress, zipCode: e.target.value }
+                            })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                            placeholder="ZIP"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Shipping Address Section */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 flex-1">Shipping Address</h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Copy billing address to shipping address
+                          setFormData({
+                            ...formData,
+                            shippingAddress: { ...(formData.billingAddress || selectedInvoice.billingAddress) }
+                          });
+                        }}
+                        className="text-sm text-blue-600 hover:text-blue-700 underline"
+                      >
+                        Same as Billing
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Street Address</label>
+                        <input
+                          type="text"
+                          value={formData.shippingAddress?.street || selectedInvoice.shippingAddress?.street || ''}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            shippingAddress: { ...formData.shippingAddress, street: e.target.value }
+                          })}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter street address"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                          <input
+                            type="text"
+                            value={formData.shippingAddress?.city || selectedInvoice.shippingAddress?.city || ''}
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              shippingAddress: { ...formData.shippingAddress, city: e.target.value }
+                            })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                            placeholder="City"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                          <input
+                            type="text"
+                            value={formData.shippingAddress?.state || selectedInvoice.shippingAddress?.state || ''}
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              shippingAddress: { ...formData.shippingAddress, state: e.target.value }
+                            })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                            placeholder="State"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code</label>
+                          <input
+                            type="text"
+                            value={formData.shippingAddress?.zipCode || selectedInvoice.shippingAddress?.zipCode || ''}
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              shippingAddress: { ...formData.shippingAddress, zipCode: e.target.value }
+                            })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                            placeholder="ZIP"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Packing & Forwarding Charges (₹)</label>
                     <input
