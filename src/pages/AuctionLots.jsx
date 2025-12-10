@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Gavel, ArrowLeft } from 'lucide-react';
+import { Gavel, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
 
@@ -9,6 +9,7 @@ const AuctionLots = () => {
   const navigate = useNavigate();
   const [auction, setAuction] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImages, setSelectedImages] = useState({}); // Track selected image for each lot
 
   useEffect(() => {
     fetchAuction();
@@ -92,23 +93,88 @@ const AuctionLots = () => {
 
                 {/* Lot Content */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Image */}
+                  {/* Image Gallery */}
                   <div className="md:col-span-1">
-                    {lot.image ? (
-                      <img
-                        src={lot.image}
-                        alt={lot.title}
-                        className="w-full h-48 object-contain bg-gray-50 rounded-lg border border-gray-200"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-48 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
-                        <p className="text-gray-400 text-sm">No Image Available</p>
-                      </div>
-                    )}
+                    {(() => {
+                      // Get images array (support both 'image' and 'images' fields)
+                      const images = lot.images && lot.images.length > 0
+                        ? lot.images
+                        : lot.image
+                          ? [lot.image]
+                          : [];
+                      const currentIndex = selectedImages[lot._id] || 0;
+                      const currentImage = images[currentIndex];
+
+                      return images.length > 0 ? (
+                        <>
+                          {/* Main Image Display */}
+                          <div className="relative bg-white rounded-lg border border-gray-200 overflow-hidden mb-2 group">
+                            <img
+                              src={currentImage}
+                              alt={lot.title}
+                              className="w-full h-64 sm:h-80 object-contain bg-gray-50"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
+                              }}
+                            />
+
+                            {/* Navigation Arrows - Only show if multiple images */}
+                            {images.length > 1 && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    const newIndex = (currentIndex - 1 + images.length) % images.length;
+                                    setSelectedImages(prev => ({ ...prev, [lot._id]: newIndex }));
+                                  }}
+                                  className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const newIndex = (currentIndex + 1) % images.length;
+                                    setSelectedImages(prev => ({ ...prev, [lot._id]: newIndex }));
+                                  }}
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <ChevronRight className="w-5 h-5" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Thumbnail Gallery - Only show if multiple images */}
+                          {images.length > 1 && (
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {images.map((img, imgIndex) => (
+                                <button
+                                  key={imgIndex}
+                                  onClick={() => setSelectedImages(prev => ({ ...prev, [lot._id]: imgIndex }))}
+                                  className={`relative bg-white rounded-md overflow-hidden border-2 transition-all ${
+                                    currentIndex === imgIndex ? 'border-accent-600' : 'border-gray-200 hover:border-accent-400'
+                                  }`}
+                                >
+                                  <img
+                                    src={img}
+                                    alt={`${lot.title} - Image ${imgIndex + 1}`}
+                                    className="w-full h-16 object-contain"
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3C/svg%3E';
+                                    }}
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="w-full h-64 sm:h-80 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                          <p className="text-gray-400 text-sm">No Image Available</p>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Description */}
