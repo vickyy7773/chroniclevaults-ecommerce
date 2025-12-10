@@ -54,29 +54,6 @@ const AuctionLots = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-accent-700 to-accent-800 text-white py-8">
-        <div className="container mx-auto px-4">
-          <button
-            onClick={() => navigate(`/auction-catalog/${id}`)}
-            className="flex items-center gap-2 text-accent-100 hover:text-white mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Catalog</span>
-          </button>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">{auction.title}</h1>
-              <p className="text-accent-100">Browse All Lots - {auction.auctionCode || 'AUC50'}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-accent-100 text-sm">Total Lots</p>
-              <p className="text-4xl font-bold">{auction.lots?.length || 0}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="container mx-auto px-4 py-8">
         {/* All Lots Listing */}
         {auction.lots && auction.lots.length > 0 ? (
