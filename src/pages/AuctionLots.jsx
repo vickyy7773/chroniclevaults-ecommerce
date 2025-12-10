@@ -71,8 +71,8 @@ const AuctionLots = () => {
       });
     } else if (filters.priceSort === 'high-to-low') {
       result.sort((a, b) => {
-        const priceA = a.estimatedPrice?.max || 0;
-        const priceB = b.estimatedPrice?.max || 0;
+        const priceA = a.estimatedPrice?.min || 0;
+        const priceB = b.estimatedPrice?.min || 0;
         return priceB - priceA;
       });
     }
