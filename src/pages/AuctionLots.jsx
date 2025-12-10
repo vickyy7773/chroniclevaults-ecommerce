@@ -128,12 +128,20 @@ const AuctionLots = () => {
                   {/* Pricing and Bidding */}
                   <div className="md:col-span-1">
                     <div className="space-y-4">
-                      {/* Estimated Price */}
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Estimated Price</p>
-                        <p className="text-lg font-bold text-green-700">
-                          ₹{lot.estimatedPrice?.min?.toLocaleString('en-IN') || '0'} - ₹{lot.estimatedPrice?.max?.toLocaleString('en-IN') || '0'}
-                        </p>
+                      {/* Starting & Reserve Price */}
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Starting Price</p>
+                          <p className="text-base font-bold text-green-700">
+                            ₹{lot.estimatedPrice?.min?.toLocaleString('en-IN') || '0'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Reserve Price</p>
+                          <p className="text-base font-bold text-orange-700">
+                            ₹{lot.estimatedPrice?.max?.toLocaleString('en-IN') || '0'}
+                          </p>
+                        </div>
                       </div>
 
                       {/* Current Bid Info */}
