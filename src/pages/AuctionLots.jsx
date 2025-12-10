@@ -16,8 +16,7 @@ const AuctionLots = () => {
     keyword: '',
     category: '',
     priceSort: '',
-    material: '',
-    viewPassedLots: false
+    material: ''
   });
 
   useEffect(() => {
@@ -137,19 +136,6 @@ const AuctionLots = () => {
                 <option value="Brass">Brass</option>
               </select>
             </div>
-
-            {/* View Passed Lots */}
-            <div className="flex items-center">
-              <label className="flex items-center gap-2 cursor-pointer mt-6">
-                <input
-                  type="checkbox"
-                  checked={filters.viewPassedLots}
-                  onChange={(e) => setFilters({...filters, viewPassedLots: e.target.checked})}
-                  className="w-4 h-4 text-accent-600 border-gray-300 rounded focus:ring-accent-500"
-                />
-                <span className="text-sm font-medium text-gray-700">View Passed Lots</span>
-              </label>
-            </div>
           </div>
 
           {/* Filter Actions */}
@@ -159,8 +145,7 @@ const AuctionLots = () => {
                 keyword: '',
                 category: '',
                 priceSort: '',
-                material: '',
-                viewPassedLots: false
+                material: ''
               })}
               className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
             >
