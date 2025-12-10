@@ -352,27 +352,21 @@ const AuctionLots = () => {
                   <div className="md:col-span-1">
                     <div className="space-y-4">
                       {/* Estimated Price */}
-                      {(() => {
-                        const startingPrice = lot.startingBid || lot.estimatedPrice?.min || 0;
-                        const reservePrice = lot.reservePrice || lot.estimatedPrice?.max || 0;
-                        const hasPrice = startingPrice > 0 || reservePrice > 0;
-
-                        // Only show if there's any price data
-                        if (hasPrice) {
-                          return (
-                            <div>
-                              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Estimated Price</p>
-                              <p className="text-lg font-bold text-green-700">
-                                {startingPrice > 0 && reservePrice > 0
-                                  ? `₹${startingPrice.toLocaleString('en-IN')} - ₹${reservePrice.toLocaleString('en-IN')}`
-                                  : `₹${(startingPrice || reservePrice).toLocaleString('en-IN')}`
-                                }
-                              </p>
-                            </div>
-                          );
-                        }
-                        return null; // Hide section if no price data
-                      })()}
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Estimated Price</p>
+                        <p className="text-lg font-bold text-green-700">
+                          {lot.startingBid && lot.reservePrice
+                            ? `₹${lot.startingBid.toLocaleString('en-IN')} - ₹${lot.reservePrice.toLocaleString('en-IN')}`
+                            : lot.startingBid
+                              ? `₹${lot.startingBid.toLocaleString('en-IN')}`
+                              : lot.reservePrice
+                                ? `₹${lot.reservePrice.toLocaleString('en-IN')}`
+                                : (lot.estimatedPrice?.min && lot.estimatedPrice?.max
+                                    ? `₹${lot.estimatedPrice.min.toLocaleString('en-IN')} - ₹${lot.estimatedPrice.max.toLocaleString('en-IN')}`
+                                    : 'Price on request')
+                          }
+                        </p>
+                      </div>
 
                       {/* Current Bid Info */}
                       <div className="pt-3 border-t border-gray-200">
