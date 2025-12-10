@@ -65,14 +65,14 @@ const AuctionLots = () => {
     // Apply price sorting
     if (filters.priceSort === 'low-to-high') {
       result.sort((a, b) => {
-        const priceA = a.estimatedPrice?.min || 0;
-        const priceB = b.estimatedPrice?.min || 0;
+        const priceA = a.currentBid || a.startingBid || 0;
+        const priceB = b.currentBid || b.startingBid || 0;
         return priceA - priceB;
       });
     } else if (filters.priceSort === 'high-to-low') {
       result.sort((a, b) => {
-        const priceA = a.estimatedPrice?.min || 0;
-        const priceB = b.estimatedPrice?.min || 0;
+        const priceA = a.currentBid || a.startingBid || 0;
+        const priceB = b.currentBid || b.startingBid || 0;
         return priceB - priceA;
       });
     }
