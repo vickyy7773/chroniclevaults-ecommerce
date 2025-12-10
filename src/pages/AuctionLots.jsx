@@ -355,16 +355,28 @@ const AuctionLots = () => {
                       <div>
                         <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Estimated Price</p>
                         <p className="text-lg font-bold text-green-700">
-                          {lot.startingBid && lot.reservePrice
-                            ? `₹${lot.startingBid.toLocaleString('en-IN')} - ₹${lot.reservePrice.toLocaleString('en-IN')}`
-                            : lot.startingBid
-                              ? `₹${lot.startingBid.toLocaleString('en-IN')}`
-                              : lot.reservePrice
-                                ? `₹${lot.reservePrice.toLocaleString('en-IN')}`
-                                : (lot.estimatedPrice?.min && lot.estimatedPrice?.max
-                                    ? `₹${lot.estimatedPrice.min.toLocaleString('en-IN')} - ₹${lot.estimatedPrice.max.toLocaleString('en-IN')}`
-                                    : 'Price on request')
-                          }
+                          {(() => {
+                            // Both prices exist and are greater than 0
+                            if (lot.startingPrice > 0 && lot.reservePrice > 0) {
+                              return `₹${lot.startingPrice.toLocaleString('en-IN')} - ₹${lot.reservePrice.toLocaleString('en-IN')}`;
+                            }
+                            // Only starting price exists
+                            else if (lot.startingPrice > 0) {
+                              return `₹${lot.startingPrice.toLocaleString('en-IN')}`;
+                            }
+                            // Only reserve price exists (rare case)
+                            else if (lot.reservePrice > 0) {
+                              return `₹${lot.reservePrice.toLocaleString('en-IN')}`;
+                            }
+                            // Fallback to estimated price
+                            else if (lot.estimatedPrice?.min && lot.estimatedPrice?.max) {
+                              return `₹${lot.estimatedPrice.min.toLocaleString('en-IN')} - ₹${lot.estimatedPrice.max.toLocaleString('en-IN')}`;
+                            }
+                            // Final fallback
+                            else {
+                              return 'Price on request';
+                            }
+                          })()}
                         </p>
                       </div>
 
@@ -380,7 +392,7 @@ const AuctionLots = () => {
                         ) : (
                           <>
                             <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Opening Bid</p>
-                            <p className="text-xl font-bold text-gray-900">₹{(lot.startingBid || lot.estimatedPrice?.min || 0).toLocaleString('en-IN')}</p>
+                            <p className="text-xl font-bold text-gray-900">₹{(lot.startingPrice || lot.estimatedPrice?.min || 0).toLocaleString('en-IN')}</p>
                           </>
                         )}
                       </div>
