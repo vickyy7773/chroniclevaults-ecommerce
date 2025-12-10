@@ -355,7 +355,7 @@ const AuctionLots = () => {
                       <div>
                         <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Estimated Price</p>
                         <p className="text-lg font-bold text-green-700">
-                          ₹{(lot.currentBid || lot.startingBid || 0).toLocaleString('en-IN')}
+                          ₹{(lot.startingBid || 0).toLocaleString('en-IN')}
                           {lot.reservePrice && lot.reservePrice > 0 && ` - ₹${lot.reservePrice.toLocaleString('en-IN')}`}
                         </p>
                       </div>
