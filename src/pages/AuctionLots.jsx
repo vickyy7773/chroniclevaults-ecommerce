@@ -19,6 +19,24 @@ const AuctionLots = () => {
     material: ''
   });
 
+  // Get unique categories from auction lots
+  const uniqueCategories = React.useMemo(() => {
+    if (!auction?.lots) return [];
+    const categories = auction.lots
+      .map(lot => lot.category)
+      .filter(Boolean); // Remove null/undefined values
+    return [...new Set(categories)]; // Get unique categories
+  }, [auction?.lots]);
+
+  // Get unique materials from auction lots
+  const uniqueMaterials = React.useMemo(() => {
+    if (!auction?.lots) return [];
+    const materials = auction.lots
+      .map(lot => lot.material)
+      .filter(Boolean); // Remove null/undefined values
+    return [...new Set(materials)]; // Get unique materials
+  }, [auction?.lots]);
+
   useEffect(() => {
     fetchAuction();
   }, [id]);
@@ -98,11 +116,9 @@ const AuctionLots = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
               >
                 <option value="">--Select Category--</option>
-                <option value="Ancient India">Ancient India</option>
-                <option value="Medieval India">Medieval India</option>
-                <option value="Princely States">Princely States</option>
-                <option value="British India">British India</option>
-                <option value="Republic India">Republic India</option>
+                {uniqueCategories.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
               </select>
             </div>
 
@@ -129,11 +145,9 @@ const AuctionLots = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
               >
                 <option value="">--Select Item Material--</option>
-                <option value="Gold">Gold</option>
-                <option value="Silver">Silver</option>
-                <option value="Copper">Copper</option>
-                <option value="Bronze">Bronze</option>
-                <option value="Brass">Brass</option>
+                {uniqueMaterials.map(material => (
+                  <option key={material} value={material}>{material}</option>
+                ))}
               </select>
             </div>
           </div>
