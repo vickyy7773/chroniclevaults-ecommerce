@@ -356,8 +356,8 @@ const AuctionLots = () => {
                         <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Estimated Price</p>
                         <p className="text-lg font-bold text-green-700">
                           {(() => {
-                            const startingPrice = lot.startingBid || 0;
-                            const reservePrice = lot.reservePrice || 0;
+                            const startingPrice = lot.startingBid || lot.estimatedPrice?.min || 0;
+                            const reservePrice = lot.reservePrice || lot.estimatedPrice?.max || 0;
 
                             // Show starting price - reserve price if both exist
                             if (startingPrice > 0 && reservePrice > 0) {
