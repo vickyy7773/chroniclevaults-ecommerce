@@ -355,8 +355,24 @@ const AuctionLots = () => {
                       <div>
                         <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Estimated Price</p>
                         <p className="text-lg font-bold text-green-700">
-                          ₹{(lot.estimatedPrice?.min || lot.startingBid || 0).toLocaleString('en-IN')}
-                          {((lot.estimatedPrice?.max && lot.estimatedPrice?.max > 0) || (lot.reservePrice && lot.reservePrice > 0)) && ` - ₹${(lot.estimatedPrice?.max || lot.reservePrice || 0).toLocaleString('en-IN')}`}
+                          {(() => {
+                            const minPrice = lot.estimatedPrice?.min || lot.startingBid || 0;
+                            const maxPrice = lot.estimatedPrice?.max || lot.reservePrice || 0;
+
+                            if (minPrice === 0 && maxPrice === 0) {
+                              return 'To be announced';
+                            }
+
+                            if (minPrice > 0 && maxPrice > 0) {
+                              return `₹${minPrice.toLocaleString('en-IN')} - ₹${maxPrice.toLocaleString('en-IN')}`;
+                            }
+
+                            if (minPrice > 0) {
+                              return `₹${minPrice.toLocaleString('en-IN')}`;
+                            }
+
+                            return 'To be announced';
+                          })()}
                         </p>
                       </div>
 
