@@ -146,24 +146,34 @@ const AuctionLots = () => {
 
                           {/* Thumbnail Gallery - Only show if multiple images */}
                           {images.length > 1 && (
-                            <div className="grid grid-cols-4 gap-1.5">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                               {images.map((img, imgIndex) => (
                                 <button
                                   key={imgIndex}
                                   onClick={() => setSelectedImages(prev => ({ ...prev, [lot._id]: imgIndex }))}
-                                  className={`relative bg-white rounded-md overflow-hidden border-2 transition-all ${
-                                    currentIndex === imgIndex ? 'border-accent-600' : 'border-gray-200 hover:border-accent-400'
+                                  className={`relative rounded-lg overflow-hidden border-3 transition-all transform hover:scale-105 ${
+                                    currentIndex === imgIndex
+                                      ? 'border-amber-500 ring-2 ring-amber-400 shadow-lg'
+                                      : 'border-gray-300 hover:border-amber-300 shadow-sm'
                                   }`}
                                 >
-                                  <img
-                                    src={img}
-                                    alt={`${lot.title} - Image ${imgIndex + 1}`}
-                                    className="w-full h-16 object-contain"
-                                    onError={(e) => {
-                                      e.target.onerror = null;
-                                      e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3C/svg%3E';
-                                    }}
-                                  />
+                                  <div className={`w-full h-20 sm:h-24 p-2 ${
+                                    currentIndex === imgIndex ? 'bg-amber-50' : 'bg-white'
+                                  }`}>
+                                    <img
+                                      src={img}
+                                      alt={`${lot.title} - Image ${imgIndex + 1}`}
+                                      className="w-full h-full object-contain"
+                                      onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3C/svg%3E';
+                                      }}
+                                    />
+                                  </div>
+                                  {/* Selected Indicator Badge */}
+                                  {currentIndex === imgIndex && (
+                                    <div className="absolute top-1 right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white"></div>
+                                  )}
                                 </button>
                               ))}
                             </div>
