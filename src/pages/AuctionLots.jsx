@@ -97,11 +97,22 @@ const AuctionLots = () => {
                   <div className="md:col-span-1">
                     {(() => {
                       // Get images array (support both 'image' and 'images' fields)
-                      const images = lot.images && lot.images.length > 0
+                      let images = lot.images && lot.images.length > 0
                         ? lot.images
                         : lot.image
                           ? [lot.image]
                           : [];
+
+                      // DEMO MODE: Add duplicate images to show gallery (TEMPORARY FOR TESTING)
+                      // Remove this block after testing
+                      if (images.length === 1 && lot.image) {
+                        images = [
+                          lot.image,
+                          lot.image,
+                          lot.image
+                        ];
+                      }
+
                       const currentIndex = selectedImages[lot._id] || 0;
                       const currentImage = images[currentIndex];
 
