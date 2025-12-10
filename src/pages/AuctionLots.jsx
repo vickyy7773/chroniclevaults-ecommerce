@@ -37,6 +37,49 @@ const AuctionLots = () => {
     return [...new Set(materials)]; // Get unique materials
   }, [auction?.lots]);
 
+  // Filter and sort lots based on filter criteria
+  const filteredLots = React.useMemo(() => {
+    if (!auction?.lots) return [];
+
+    let result = [...auction.lots];
+
+    // Apply keyword filter
+    if (filters.keyword) {
+      const keyword = filters.keyword.toLowerCase();
+      result = result.filter(lot =>
+        lot.title?.toLowerCase().includes(keyword) ||
+        lot.description?.toLowerCase().includes(keyword)
+      );
+    }
+
+    // Apply category filter
+    if (filters.category) {
+      result = result.filter(lot => lot.category === filters.category);
+    }
+
+    // Apply material filter
+    if (filters.material) {
+      result = result.filter(lot => lot.material === filters.material);
+    }
+
+    // Apply price sorting
+    if (filters.priceSort === 'low-to-high') {
+      result.sort((a, b) => {
+        const priceA = a.estimatedPrice?.min || 0;
+        const priceB = b.estimatedPrice?.min || 0;
+        return priceA - priceB;
+      });
+    } else if (filters.priceSort === 'high-to-low') {
+      result.sort((a, b) => {
+        const priceA = a.estimatedPrice?.max || 0;
+        const priceB = b.estimatedPrice?.max || 0;
+        return priceB - priceA;
+      });
+    }
+
+    return result;
+  }, [auction?.lots, filters]);
+
   useEffect(() => {
     fetchAuction();
   }, [id]);
@@ -172,9 +215,9 @@ const AuctionLots = () => {
         </div>
 
         {/* All Lots Listing */}
-        {auction.lots && auction.lots.length > 0 ? (
+        {filteredLots && filteredLots.length > 0 ? (
           <div className="space-y-6">
-            {auction.lots.map((lot, index) => (
+            {filteredLots.map((lot, index) => (
               <div key={lot._id || index} className="bg-white border border-gray-300 rounded-lg p-5 hover:border-accent-400 hover:shadow-lg transition-all duration-200 shadow-sm">
                 {/* Lot Header */}
                 <div className="flex items-center gap-3 mb-3 pb-2 border-b border-gray-200">
