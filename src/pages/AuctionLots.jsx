@@ -11,6 +11,22 @@ const AuctionLots = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImages, setSelectedImages] = useState({}); // Track selected image for each lot
 
+  // Filter states
+  const [filters, setFilters] = useState({
+    keyword: '',
+    category: '',
+    priceRange: '',
+    material: '',
+    auctionNo: '',
+    lotNoFrom: '',
+    lotNoTo: '',
+    priceFrom: '',
+    priceTo: '',
+    denomination: '',
+    lotsPerPage: 25,
+    viewPassedLots: false
+  });
+
   useEffect(() => {
     fetchAuction();
   }, [id]);
@@ -63,6 +79,202 @@ const AuctionLots = () => {
           <ArrowLeft className="w-5 h-5" />
           <span className="font-medium">Back to Catalog</span>
         </button>
+
+        {/* Filter Section */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Filter Lots</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Keyword Search */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Keyword</label>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={filters.keyword}
+                onChange={(e) => setFilters({...filters, keyword: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+              />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                value={filters.category}
+                onChange={(e) => setFilters({...filters, category: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+              >
+                <option value="">--Select Category--</option>
+                <option value="Ancient India">Ancient India</option>
+                <option value="Medieval India">Medieval India</option>
+                <option value="Princely States">Princely States</option>
+                <option value="British India">British India</option>
+                <option value="Republic India">Republic India</option>
+              </select>
+            </div>
+
+            {/* Price Range */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+              <select
+                value={filters.priceRange}
+                onChange={(e) => setFilters({...filters, priceRange: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+              >
+                <option value="">--Select--</option>
+                <option value="0-10000">₹0 - ₹10,000</option>
+                <option value="10000-50000">₹10,000 - ₹50,000</option>
+                <option value="50000-100000">₹50,000 - ₹1,00,000</option>
+                <option value="100000+">₹1,00,000+</option>
+              </select>
+            </div>
+
+            {/* Material */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Material</label>
+              <select
+                value={filters.material}
+                onChange={(e) => setFilters({...filters, material: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+              >
+                <option value="">--Select Item Material--</option>
+                <option value="Gold">Gold</option>
+                <option value="Silver">Silver</option>
+                <option value="Copper">Copper</option>
+                <option value="Bronze">Bronze</option>
+                <option value="Brass">Brass</option>
+              </select>
+            </div>
+
+            {/* Auction No */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Auction No.</label>
+              <input
+                type="text"
+                value={filters.auctionNo}
+                onChange={(e) => setFilters({...filters, auctionNo: e.target.value})}
+                placeholder={auction.auctionCode || 'AUC50'}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+              />
+            </div>
+
+            {/* Denomination */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Denomination</label>
+              <select
+                value={filters.denomination}
+                onChange={(e) => setFilters({...filters, denomination: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+              >
+                <option value="">--Select--</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+
+            {/* Lot No Range */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lot No.</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="number"
+                  placeholder="From"
+                  value={filters.lotNoFrom}
+                  onChange={(e) => setFilters({...filters, lotNoFrom: e.target.value})}
+                  className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                />
+                <input
+                  type="number"
+                  placeholder="To"
+                  value={filters.lotNoTo}
+                  onChange={(e) => setFilters({...filters, lotNoTo: e.target.value})}
+                  className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                />
+              </div>
+            </div>
+
+            {/* Price Range Custom */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="number"
+                  placeholder="From"
+                  value={filters.priceFrom}
+                  onChange={(e) => setFilters({...filters, priceFrom: e.target.value})}
+                  className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                />
+                <input
+                  type="number"
+                  placeholder="To"
+                  value={filters.priceTo}
+                  onChange={(e) => setFilters({...filters, priceTo: e.target.value})}
+                  className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                />
+              </div>
+            </div>
+
+            {/* Lots Per Page */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Select Lots in Page</label>
+              <select
+                value={filters.lotsPerPage}
+                onChange={(e) => setFilters({...filters, lotsPerPage: parseInt(e.target.value)})}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+              >
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+
+            {/* View Passed Lots */}
+            <div className="flex items-center">
+              <label className="flex items-center gap-2 cursor-pointer mt-6">
+                <input
+                  type="checkbox"
+                  checked={filters.viewPassedLots}
+                  onChange={(e) => setFilters({...filters, viewPassedLots: e.target.checked})}
+                  className="w-4 h-4 text-accent-600 border-gray-300 rounded focus:ring-accent-500"
+                />
+                <span className="text-sm font-medium text-gray-700">View Passed Lots</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Filter Actions */}
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={() => setFilters({
+                keyword: '',
+                category: '',
+                priceRange: '',
+                material: '',
+                auctionNo: '',
+                lotNoFrom: '',
+                lotNoTo: '',
+                priceFrom: '',
+                priceTo: '',
+                denomination: '',
+                lotsPerPage: 25,
+                viewPassedLots: false
+              })}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+            >
+              Clear Filters
+            </button>
+            <button className="px-4 py-2 bg-accent-600 text-white rounded hover:bg-accent-700 transition-colors">
+              Apply Filters
+            </button>
+          </div>
+        </div>
 
         {/* All Lots Listing */}
         {auction.lots && auction.lots.length > 0 ? (
