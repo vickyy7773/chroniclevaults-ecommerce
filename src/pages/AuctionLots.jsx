@@ -200,7 +200,7 @@ const AuctionLots = () => {
 
                   {/* Description */}
                   <div className="md:col-span-1">
-                    <h3 className="text-base font-bold text-gray-900 mb-2">{lot.title}</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">{lot.title}</h3>
                     <p className="text-sm text-gray-600 leading-relaxed">
                       {lot.description || 'No description available'}
                     </p>
