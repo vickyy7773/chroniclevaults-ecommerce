@@ -54,10 +54,10 @@ const BulkLotUpload = () => {
 
   // Download CSV template
   const downloadTemplate = () => {
-    const csvContent = 'Lot Number,Title,Description,Category,Image URL,Vendor ID,Starting Price,Reserve Price\n' +
-      '1,Ancient Roman Coin,Rare silver denarius from 100 AD,Ancient World,https://example.com/image1.jpg,VEN001,5000,7000\n' +
-      '2,Gold British Sovereign,1885 Victoria gold sovereign,British India,https://example.com/image2.jpg,VEN002,15000,20000\n' +
-      '3,Indian Copper Coin,East India Company 1/4 Anna,East India Company,https://example.com/image3.jpg,VEN001,2000,3000';
+    const csvContent = 'Lot Number,Title,Description,Category,Material,Image URL 1,Image URL 2,Image URL 3,Video URL,Vendor ID,Starting Price,Reserve Price\n' +
+      '1,Ancient Roman Coin,Rare silver denarius from 100 AD,Ancient World,Silver,https://example.com/image1.jpg,https://example.com/image1-2.jpg,https://example.com/image1-3.jpg,https://youtube.com/embed/xyz,VEN001,5000,7000\n' +
+      '2,Gold British Sovereign,1885 Victoria gold sovereign,British India,Gold,https://example.com/image2.jpg,https://example.com/image2-2.jpg,,https://youtube.com/embed/abc,VEN002,15000,20000\n' +
+      '3,Indian Copper Coin,East India Company 1/4 Anna,East India Company,Copper,https://example.com/image3.jpg,,,https://youtube.com/embed/def,VEN001,2000,3000';
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -83,16 +83,26 @@ const BulkLotUpload = () => {
         continue;
       }
 
+      // Collect all image URLs (filter out empty ones)
+      const imageUrls = [
+        values[5]?.trim(),
+        values[6]?.trim(),
+        values[7]?.trim()
+      ].filter(url => url && url.length > 0);
+
       const lot = {
         lotNumber: parseInt(values[0]) || i,
         title: values[1]?.trim() || '',
         description: values[2]?.trim() || '',
         category: values[3]?.trim() || 'Miscellaneous',
-        image: values[4]?.trim() || '',
-        vendorId: values[5]?.trim() || null,
-        startingPrice: parseFloat(values[6]) || 0,
-        reservePrice: parseFloat(values[7]) || 0,
-        currentBid: parseFloat(values[6]) || 0, // Initialize with starting price
+        material: values[4]?.trim() || '',
+        image: imageUrls[0] || '', // First image for backwards compatibility
+        images: imageUrls, // Array of all images
+        video: values[8]?.trim() || '',
+        vendorId: values[9]?.trim() || null,
+        startingPrice: parseFloat(values[10]) || 0,
+        reservePrice: parseFloat(values[11]) || 0,
+        currentBid: parseFloat(values[10]) || 0, // Initialize with starting price
         status: 'Upcoming'
       };
 
@@ -100,7 +110,7 @@ const BulkLotUpload = () => {
       const errors = [];
       if (!lot.title) errors.push('Title is required');
       if (!lot.description) errors.push('Description is required');
-      if (!lot.image) errors.push('Image URL is required');
+      if (imageUrls.length === 0) errors.push('At least one image URL is required');
       if (lot.startingPrice <= 0) errors.push('Starting price must be greater than 0');
 
       lot.errors = errors;
