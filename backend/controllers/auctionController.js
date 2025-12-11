@@ -151,6 +151,73 @@ export const deductFrozenCoins = async (userId, auctionId, lotNumber, amount) =>
   }
 };
 
+/**
+ * Auto-bid for reserve price protection (system bids to push price toward reserve)
+ * @param {Object} auction - Auction object
+ * @param {Number} lotIndex - Lot index (for lot bidding) or null for regular auction
+ * @returns {Boolean} - True if system bid was placed
+ */
+export const placeReservePriceAutoBid = async (auction, lotIndex = null) => {
+  try {
+    // Only auto-bid if catalog bidding is enabled
+    if (!auction.catalogBiddingEnabled) {
+      return false;
+    }
+
+    let currentBid, reservePrice, lot;
+
+    if (auction.isLotBidding && lotIndex !== null) {
+      // Lot bidding - get current lot's data
+      lot = auction.lots[lotIndex];
+      if (!lot) return false;
+
+      currentBid = lot.currentBid || lot.startingPrice;
+      reservePrice = lot.reservePrice;
+    } else {
+      // Regular auction
+      currentBid = auction.currentBid;
+      reservePrice = auction.reservePrice;
+    }
+
+    // If no reserve price or reserve already met, no auto-bid needed
+    if (!reservePrice || currentBid >= reservePrice) {
+      return false;
+    }
+
+    // Calculate next bid amount using increment slabs
+    const nextBidAmount = auction.getNextBidAmount(currentBid);
+
+    // Don't exceed reserve price
+    const systemBidAmount = Math.min(nextBidAmount, reservePrice);
+
+    // Place system bid
+    if (auction.isLotBidding && lot) {
+      lot.bids.push({
+        user: null, // No user for system bids
+        amount: systemBidAmount,
+        timestamp: new Date(),
+        isSystemBid: true,
+        isCatalogBid: false // System bids happen in live phase
+      });
+      lot.currentBid = systemBidAmount;
+    } else {
+      auction.bids.push({
+        user: null,
+        amount: systemBidAmount,
+        timestamp: new Date(),
+        isSystemBid: true
+      });
+      auction.currentBid = systemBidAmount;
+    }
+
+    console.log(`🤖 System auto-bid placed: ₹${systemBidAmount} (protecting reserve: ₹${reservePrice})`);
+    return true;
+  } catch (error) {
+    console.error('Reserve price auto-bid error:', error);
+    return false;
+  }
+};
+
 // Indian state codes mapping for invoice generation
 const STATE_CODES = {
   'Andhra Pradesh': '37',
@@ -1265,7 +1332,16 @@ export const placeBid = async (req, res) => {
     // Update and check auction status
     await auction.updateStatus();
 
-    if (auction.status !== 'Active') {
+    // PHASE DETECTION: Determine if we're in Catalog or Live phase
+    const now = new Date();
+    const auctionStartTime = new Date(auction.startTime);
+    const isInCatalogPhase = auction.catalogBiddingEnabled && now < auctionStartTime;
+    const isInLivePhase = now >= auctionStartTime;
+
+    console.log(`📊 Phase Detection: catalogEnabled=${auction.catalogBiddingEnabled}, now=${now.toISOString()}, start=${auctionStartTime.toISOString()}, catalog=${isInCatalogPhase}, live=${isInLivePhase}`);
+
+    // Allow bidding in both Catalog and Live phases
+    if (auction.status !== 'Active' && !isInCatalogPhase) {
       return res.status(400).json({
         success: false,
         message: `Cannot place bid. Auction is ${auction.status.toLowerCase()}`
@@ -1376,6 +1452,7 @@ export const placeBid = async (req, res) => {
             maxBid: maxBid,
             isReserveBidder: false,
             isAutoBid: false,
+            isCatalogBid: isInCatalogPhase,
             timestamp: new Date()
           });
           currentLot.currentBid = amount;
@@ -1386,7 +1463,8 @@ export const placeBid = async (req, res) => {
             amount,
             maxBid: maxBid,
             isReserveBidder: false,
-            isAutoBid: false
+            isAutoBid: false,
+            isCatalogBid: isInCatalogPhase
           });
         }
 
@@ -1404,6 +1482,7 @@ export const placeBid = async (req, res) => {
             maxBid: maxBid,
             isReserveBidder: false,
             isAutoBid: false,
+            isCatalogBid: isInCatalogPhase,
             timestamp: new Date()
           });
           currentLot.currentBid = amount;
@@ -1414,7 +1493,8 @@ export const placeBid = async (req, res) => {
             amount,
             maxBid: maxBid,
             isReserveBidder: false,
-            isAutoBid: false
+            isAutoBid: false,
+            isCatalogBid: isInCatalogPhase
           });
         }
 
@@ -1437,6 +1517,7 @@ export const placeBid = async (req, res) => {
               maxBid: maxBid,
               isReserveBidder: false,
               isAutoBid: true,
+              isCatalogBid: isInCatalogPhase,
               timestamp: new Date()
             });
             currentLot.currentBid = auction.highestReserveBid;
@@ -1447,7 +1528,8 @@ export const placeBid = async (req, res) => {
               amount: auction.highestReserveBid,
               maxBid: maxBid,
               isReserveBidder: false,
-              isAutoBid: true
+              isAutoBid: true,
+              isCatalogBid: isInCatalogPhase
             });
           }
 
@@ -1465,6 +1547,7 @@ export const placeBid = async (req, res) => {
               maxBid: maxBid,
               isReserveBidder: false,
               isAutoBid: true,
+              isCatalogBid: isInCatalogPhase,
               timestamp: new Date()
             });
             currentLot.currentBid = finalBidAmount;
@@ -1475,7 +1558,8 @@ export const placeBid = async (req, res) => {
               amount: finalBidAmount,
               maxBid: maxBid,
               isReserveBidder: false,
-              isAutoBid: true
+              isAutoBid: true,
+              isCatalogBid: isInCatalogPhase
             });
           }
 
@@ -1496,6 +1580,7 @@ export const placeBid = async (req, res) => {
         currentLot.bids.push({
           user: userId,
           amount,
+          isCatalogBid: isInCatalogPhase,
           timestamp: new Date()
         });
         currentLot.currentBid = amount;
@@ -1506,7 +1591,8 @@ export const placeBid = async (req, res) => {
           amount,
           maxBid: null,
           isReserveBidder: false,
-          isAutoBid: false
+          isAutoBid: false,
+          isCatalogBid: isInCatalogPhase
         });
       }
 
@@ -1534,6 +1620,7 @@ export const placeBid = async (req, res) => {
                 maxBid: auction.highestReserveBid,
                 isReserveBidder: true,
                 isAutoBid: true,
+                isCatalogBid: isInCatalogPhase,
                 timestamp: new Date()
               });
               currentLot.currentBid = autoBidAmount;
@@ -1544,7 +1631,8 @@ export const placeBid = async (req, res) => {
                 amount: autoBidAmount,
                 maxBid: auction.highestReserveBid,
                 isReserveBidder: true,
-                isAutoBid: true
+                isAutoBid: true,
+                isCatalogBid: isInCatalogPhase
               });
             }
 
@@ -1653,6 +1741,19 @@ export const placeBid = async (req, res) => {
     auction.lastBidTime = new Date();
 
     await auction.save();
+
+    // RESERVE PRICE AUTO-BIDDING: Trigger system auto-bid to push toward reserve price
+    // Only in catalog phase when catalogBiddingEnabled is true
+    if (isInCatalogPhase && auction.catalogBiddingEnabled) {
+      const lotIndex = auction.isLotBidding ? ((auction.lotNumber || 1) - 1) : null;
+      const systemBidPlaced = await placeReservePriceAutoBid(auction, lotIndex);
+
+      if (systemBidPlaced) {
+        console.log(`🤖 System auto-bid triggered after user bid in catalog phase`);
+        // Save auction again after system bid
+        await auction.save();
+      }
+    }
 
     // Freeze the full bid amount
     const freezeAmount = amount;

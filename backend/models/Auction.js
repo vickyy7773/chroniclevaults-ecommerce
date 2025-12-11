@@ -19,6 +19,11 @@ const auctionSchema = new mongoose.Schema({
     type: Boolean,
     default: false // Is this a lot-based auction?
   },
+  // Catalog/Pre-Bidding Phase (2-Phase Auction System)
+  catalogBiddingEnabled: {
+    type: Boolean,
+    default: false // Enable catalog browsing phase before live auction
+  },
   image: {
     type: String,
     required: function() {
@@ -197,12 +202,21 @@ const auctionSchema = new mongoose.Schema({
     bids: [{
       user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        required: false // Not required for system/reserve bids
       },
       amount: Number,
       timestamp: {
         type: Date,
         default: Date.now
+      },
+      isSystemBid: {
+        type: Boolean,
+        default: false // True if this is an automatic reserve price bid
+      },
+      isCatalogBid: {
+        type: Boolean,
+        default: false // True if placed during catalog phase (before startTime)
       }
     }],
     winner: {
@@ -293,6 +307,21 @@ auctionSchema.methods.getCurrentIncrement = function() {
 
   // If no slab matches, return the last slab's increment
   return this.incrementSlabs[this.incrementSlabs.length - 1]?.increment || 50;
+};
+
+// Method to get next bid amount (current bid + increment)
+auctionSchema.methods.getNextBidAmount = function(currentBidAmount) {
+  const currentBid = currentBidAmount || this.currentBid;
+
+  for (let slab of this.incrementSlabs) {
+    if (currentBid >= slab.minPrice && currentBid < slab.maxPrice) {
+      return currentBid + slab.increment;
+    }
+  }
+
+  // If no slab matches, use the last slab's increment
+  const lastIncrement = this.incrementSlabs[this.incrementSlabs.length - 1]?.increment || 50;
+  return currentBid + lastIncrement;
 };
 
 // Method to validate bid amount
