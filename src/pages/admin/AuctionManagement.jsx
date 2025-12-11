@@ -1081,102 +1081,16 @@ const AuctionManagement = () => {
                                   <label className="block text-sm font-medium text-gray-900 mb-2">
                                     🎥 Lot Video (Optional)
                                   </label>
-
-                                  {/* Video Input Type Selector */}
-                                  <div className="flex gap-4 mb-2">
-                                    <label className="flex items-center cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        name={`videoType-${index}`}
-                                        checked={lot.videoInputType === 'file' || !lot.videoInputType}
-                                        onChange={() => handleLotChange(index, 'videoInputType', 'file')}
-                                        className="mr-2"
-                                      />
-                                      <span className="text-sm font-medium">File Upload</span>
-                                    </label>
-                                    <label className="flex items-center cursor-pointer">
-                                      <input
-                                        type="radio"
-                                        name={`videoType-${index}`}
-                                        checked={lot.videoInputType === 'url'}
-                                        onChange={() => handleLotChange(index, 'videoInputType', 'url')}
-                                        className="mr-2"
-                                      />
-                                      <span className="text-sm font-medium">Video URL / YouTube</span>
-                                    </label>
-                                  </div>
-
-                                  {/* Conditional Input Based on Selection */}
-                                  {(lot.videoInputType === 'file' || !lot.videoInputType) ? (
-                                    <>
-                                      <input
-                                        type="file"
-                                        accept="video/*"
-                                        id={`videoFileInput-${index}`}
-                                        onChange={async (e) => {
-                                          const file = e.target.files[0];
-                                          if (file) {
-                                            // Show uploading toast
-                                            const uploadingToastId = toast.loading('Uploading video...');
-
-                                            try {
-                                              const formData = new FormData();
-                                              formData.append('video', file);
-
-                                              const API_URL = import.meta.env.PROD
-                                                ? 'https://chroniclevaults.com/api'
-                                                : 'http://localhost:5000/api';
-
-                                              const response = await fetch(`${API_URL}/upload/video`, {
-                                                method: 'POST',
-                                                headers: {
-                                                  'Authorization': `Bearer ${localStorage.getItem('token')}`
-                                                },
-                                                body: formData
-                                              });
-
-                                              if (!response.ok) {
-                                                throw new Error('Failed to upload video');
-                                              }
-
-                                              const data = await response.json();
-
-                                              // Update lot with video URL
-                                              handleLotChange(index, 'video', data.videoUrl);
-
-                                              toast.update(uploadingToastId, {
-                                                render: 'Video uploaded successfully!',
-                                                type: 'success',
-                                                isLoading: false,
-                                                autoClose: 3000
-                                              });
-                                            } catch (error) {
-                                              console.error('Video upload error:', error);
-                                              toast.update(uploadingToastId, {
-                                                render: 'Failed to upload video',
-                                                type: 'error',
-                                                isLoading: false,
-                                                autoClose: 3000
-                                              });
-                                            }
-                                          }
-                                        }}
-                                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
-                                      />
-                                      <p className="text-xs text-gray-600 mt-1">Upload video file (MP4, MOV, etc.)</p>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <input
-                                        type="text"
-                                        value={lot.video || ''}
-                                        onChange={(e) => handleLotChange(index, 'video', e.target.value)}
-                                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
-                                        placeholder="https://youtube.com/embed/... or https://example.com/video.mp4"
-                                      />
-                                      <p className="text-xs text-gray-600 mt-1">Enter YouTube embed URL or direct video file URL</p>
-                                    </>
-                                  )}
+                                  <input
+                                    type="text"
+                                    value={lot.video || ''}
+                                    onChange={(e) => handleLotChange(index, 'video', e.target.value)}
+                                    className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                    placeholder="https://youtube.com/embed/... or video file URL"
+                                  />
+                                  <p className="text-xs text-purple-600 mt-1 font-medium">
+                                    💡 Use <a href="/admin/video-upload" target="_blank" rel="noopener noreferrer" className="underline hover:text-purple-800">Video Upload Manager</a> to upload videos and get URLs
+                                  </p>
 
                                   {/* Video Preview */}
                                   {lot.video && (
