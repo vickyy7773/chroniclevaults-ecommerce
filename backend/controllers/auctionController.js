@@ -1042,7 +1042,10 @@ export const createAuction = async (req, res) => {
         title: lot.title,
         description: lot.description || '',
         category: lot.category || 'Miscellaneous', // Include category field
+        material: lot.material || null, // Include material field
         image: lot.image || '',
+        images: lot.images || (lot.image ? [lot.image] : []), // Include images array
+        video: lot.video || null, // Include video field
         vendorId: lot.vendorId || null, // Include vendor ID
         startingPrice: lot.startingPrice,
         currentBid: lot.startingPrice,
