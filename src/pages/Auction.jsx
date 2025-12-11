@@ -26,6 +26,56 @@ const AuctionPage = () => {
   const [phaseTimer, setPhaseTimer] = useState(0); // 10-second countdown per phase
   const [selectedLotIndex, setSelectedLotIndex] = useState(null); // Track which lot is selected for viewing
 
+  // 2-PHASE AUCTION SYSTEM: Track auction phase (catalog/live/ended)
+  const [auctionPhase, setAuctionPhase] = useState('catalog'); // 'catalog', 'live', or 'ended'
+  const [catalogTimeRemaining, setCatalogTimeRemaining] = useState(''); // Time until live auction starts
+
+  // Phase Detection: Determine if auction is in Catalog or Live phase
+  useEffect(() => {
+    if (!auction) return;
+
+    const detectPhase = () => {
+      const now = new Date();
+      const startTime = new Date(auction.startTime);
+      const endTime = auction.endTime ? new Date(auction.endTime) : null;
+
+      // Check if catalog bidding is enabled
+      const isCatalogEnabled = auction.catalogBiddingEnabled === true;
+
+      if (now < startTime && isCatalogEnabled) {
+        // Catalog Phase: Before start time with catalog enabled
+        setAuctionPhase('catalog');
+
+        // Calculate time remaining until live auction
+        const diff = startTime - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+        if (days > 0) {
+          setCatalogTimeRemaining(`${days}d ${hours}h ${minutes}m`);
+        } else if (hours > 0) {
+          setCatalogTimeRemaining(`${hours}h ${minutes}m`);
+        } else {
+          setCatalogTimeRemaining(`${minutes}m`);
+        }
+      } else if (now >= startTime && (!endTime || now < endTime)) {
+        // Live Phase: After start time
+        setAuctionPhase('live');
+      } else {
+        // Ended Phase
+        setAuctionPhase('ended');
+      }
+    };
+
+    detectPhase();
+
+    // Update phase every 30 seconds
+    const interval = setInterval(detectPhase, 30000);
+
+    return () => clearInterval(interval);
+  }, [auction]);
+
   useEffect(() => {
     const fetchUserData = async () => {
       const savedUser = localStorage.getItem('user');
@@ -475,8 +525,14 @@ const AuctionPage = () => {
   const updateTimeRemaining = () => {
     if (!auction) return;
 
-    // FOR LOT BIDDING: Show phase timer if active
-    if (auction.isLotBidding) {
+    // 2-PHASE SYSTEM: In Catalog Phase, show countdown to live auction
+    if (auctionPhase === 'catalog') {
+      setTimeRemaining(`📚 Catalog Bidding • Live in: ${catalogTimeRemaining}`);
+      return;
+    }
+
+    // FOR LOT BIDDING: Show phase timer if active (Live Phase only)
+    if (auction.isLotBidding && auctionPhase === 'live') {
       // Priority 1: If phase timer is active, show it with phase message
       if (callNumber > 0 && phaseTimer !== undefined) {
         const phaseLabels = {
@@ -871,11 +927,22 @@ const AuctionPage = () => {
           {/* Right Column - Bidding Section */}
           <div>
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              {/* Time Remaining Header */}
-              {auction.status === 'Active' && (
-                <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-2.5 text-white">
-                  <p className="text-white/80 text-base uppercase tracking-wide mb-0.5">Time Remaining</p>
+              {/* Time Remaining Header - Phase-aware styling */}
+              {(auction.status === 'Active' || auctionPhase === 'catalog') && (
+                <div className={`p-2.5 text-white ${
+                  auctionPhase === 'catalog'
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600'
+                    : 'bg-gradient-to-r from-orange-500 to-amber-500'
+                }`}>
+                  <p className="text-white/80 text-base uppercase tracking-wide mb-0.5">
+                    {auctionPhase === 'catalog' ? 'Catalog Phase' : 'Time Remaining'}
+                  </p>
                   <p className="text-2xl font-bold font-mono">{timeRemaining}</p>
+                  {auctionPhase === 'catalog' && (
+                    <p className="text-xs text-white/70 mt-1">
+                      Place your bids now • Live auction starts soon
+                    </p>
+                  )}
                 </div>
               )}
 
