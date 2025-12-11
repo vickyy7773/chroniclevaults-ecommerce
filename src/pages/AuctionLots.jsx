@@ -231,9 +231,12 @@ const AuctionLots = () => {
 
                 {/* Lot Content */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  {/* Image Gallery */}
+                  {/* Image Gallery + Video */}
                   <div className="md:col-span-1">
                     {(() => {
+                      // Build media items array (images + video)
+                      const mediaItems = [];
+
                       // Get images array (support both 'image' and 'images' fields)
                       let images = lot.images && lot.images.length > 0
                         ? lot.images
@@ -241,39 +244,59 @@ const AuctionLots = () => {
                           ? [lot.image]
                           : [];
 
-                      // DEMO MODE: Add duplicate images to show gallery (TEMPORARY FOR TESTING)
-                      // Remove this block after testing
-                      if (images.length === 1 && lot.image) {
-                        images = [
-                          lot.image,
-                          lot.image,
-                          lot.image
-                        ];
+                      // Add all images to media items
+                      images.forEach(img => {
+                        mediaItems.push({ type: 'image', url: img });
+                      });
+
+                      // Add video to media items if exists
+                      if (lot.video) {
+                        mediaItems.push({ type: 'video', url: lot.video });
                       }
 
                       const currentIndex = selectedImages[lot._id] || 0;
-                      const currentImage = images[currentIndex];
+                      const currentMedia = mediaItems[currentIndex];
 
-                      return images.length > 0 ? (
+                      return mediaItems.length > 0 ? (
                         <>
-                          {/* Main Image Display */}
+                          {/* Main Media Display (Image or Video) */}
                           <div className="relative bg-white rounded-lg border border-gray-200 overflow-hidden mb-2 group">
-                            <img
-                              src={currentImage}
-                              alt={lot.title}
-                              className="w-full h-64 sm:h-80 object-contain bg-gray-50"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
-                              }}
-                            />
+                            {currentMedia?.type === 'image' ? (
+                              <img
+                                src={currentMedia.url}
+                                alt={lot.title}
+                                className="w-full h-64 sm:h-80 object-contain bg-gray-50"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="14"%3ENo Image%3C/text%3E%3C/svg%3E';
+                                }}
+                              />
+                            ) : (
+                              currentMedia?.url.includes('youtube.com') || currentMedia?.url.includes('youtu.be') ? (
+                                <iframe
+                                  src={currentMedia.url.replace('watch?v=', 'embed/')}
+                                  className="w-full h-64 sm:h-80 rounded"
+                                  allowFullScreen
+                                  title={lot.title}
+                                />
+                              ) : (
+                                <video
+                                  src={currentMedia?.url}
+                                  controls
+                                  className="w-full h-64 sm:h-80 object-contain bg-gray-50"
+                                  title={lot.title}
+                                >
+                                  Your browser does not support the video tag.
+                                </video>
+                              )
+                            )}
 
-                            {/* Navigation Arrows - Only show if multiple images */}
-                            {images.length > 1 && (
+                            {/* Navigation Arrows - Only show if multiple media items */}
+                            {mediaItems.length > 1 && (
                               <>
                                 <button
                                   onClick={() => {
-                                    const newIndex = (currentIndex - 1 + images.length) % images.length;
+                                    const newIndex = (currentIndex - 1 + mediaItems.length) % mediaItems.length;
                                     setSelectedImages(prev => ({ ...prev, [lot._id]: newIndex }));
                                   }}
                                   className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
@@ -282,7 +305,7 @@ const AuctionLots = () => {
                                 </button>
                                 <button
                                   onClick={() => {
-                                    const newIndex = (currentIndex + 1) % images.length;
+                                    const newIndex = (currentIndex + 1) % mediaItems.length;
                                     setSelectedImages(prev => ({ ...prev, [lot._id]: newIndex }));
                                   }}
                                   className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
@@ -293,35 +316,34 @@ const AuctionLots = () => {
                             )}
                           </div>
 
-                          {/* Thumbnail Gallery - Only show if multiple images */}
-                          {images.length > 1 && (
+                          {/* Thumbnail Gallery (Images + Video) - Only show if multiple items */}
+                          {mediaItems.length > 1 && (
                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                              {images.map((img, imgIndex) => (
+                              {mediaItems.map((item, itemIndex) => (
                                 <button
-                                  key={imgIndex}
-                                  onClick={() => setSelectedImages(prev => ({ ...prev, [lot._id]: imgIndex }))}
-                                  className={`relative rounded-lg overflow-hidden border-3 transition-all transform hover:scale-105 ${
-                                    currentIndex === imgIndex
-                                      ? 'border-amber-500 ring-2 ring-amber-400 shadow-lg'
-                                      : 'border-gray-300 hover:border-amber-300 shadow-sm'
+                                  key={itemIndex}
+                                  onClick={() => setSelectedImages(prev => ({ ...prev, [lot._id]: itemIndex }))}
+                                  className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                                    currentIndex === itemIndex
+                                      ? 'border-amber-500 ring-2 ring-amber-400'
+                                      : 'border-gray-200 hover:border-amber-300'
                                   }`}
                                 >
-                                  <div className={`w-full h-20 sm:h-24 p-2 ${
-                                    currentIndex === imgIndex ? 'bg-amber-50' : 'bg-white'
-                                  }`}>
+                                  {item.type === 'image' ? (
                                     <img
-                                      src={img}
-                                      alt={`${lot.title} - Image ${imgIndex + 1}`}
-                                      className="w-full h-full object-contain"
-                                      onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3C/svg%3E';
-                                      }}
+                                      src={item.url}
+                                      alt={`View ${itemIndex + 1}`}
+                                      className="w-full h-16 sm:h-20 lg:h-24 object-contain"
                                     />
-                                  </div>
-                                  {/* Selected Indicator Badge */}
-                                  {currentIndex === imgIndex && (
-                                    <div className="absolute top-1 right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white"></div>
+                                  ) : (
+                                    <div className="relative w-full h-16 sm:h-20 lg:h-24 bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                                      <svg className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z" />
+                                      </svg>
+                                      <span className="absolute bottom-0.5 sm:bottom-1 right-0.5 sm:right-1 bg-black/70 text-white text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded">
+                                        Video
+                                      </span>
+                                    </div>
                                   )}
                                 </button>
                               ))}
@@ -334,34 +356,6 @@ const AuctionLots = () => {
                         </div>
                       );
                     })()}
-
-                    {/* Video Player */}
-                    {lot.video && (
-                      <div className="mt-3">
-                        <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-2">
-                          <p className="text-xs font-semibold text-purple-900 mb-2 flex items-center">
-                            🎥 Video
-                          </p>
-                          {lot.video.includes('youtube.com') || lot.video.includes('youtu.be') ? (
-                            <iframe
-                              src={lot.video.replace('watch?v=', 'embed/')}
-                              className="w-full h-48 rounded border border-purple-300"
-                              allowFullScreen
-                              title={`${lot.title} video`}
-                            />
-                          ) : (
-                            <video
-                              src={lot.video}
-                              controls
-                              className="w-full rounded border border-purple-300"
-                              title={`${lot.title} video`}
-                            >
-                              Your browser does not support the video tag.
-                            </video>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   {/* Description */}
