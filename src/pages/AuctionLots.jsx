@@ -125,8 +125,14 @@ const AuctionLots = () => {
         // Clear the bid amount for this lot
         setBidAmounts(prev => ({ ...prev, [lotNumber]: '' }));
 
-        // Refresh auction data to show updated bid
-        await fetchAuction();
+        // Update auction state with the returned auction data (faster than refetching)
+        if (response.data.data?.auction) {
+          setAuction(response.data.data.auction);
+          console.log('✅ Auction state updated with new bid data');
+        } else {
+          // Fallback: Refresh auction data from server
+          await fetchAuction();
+        }
       }
     } catch (error) {
       console.error('Place bid error:', error);
