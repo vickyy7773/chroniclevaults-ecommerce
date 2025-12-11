@@ -1385,7 +1385,8 @@ export const placeBid = async (req, res) => {
       }
       currentLot = auction.lots[currentLotIndex];
 
-      if (currentLot.status !== 'Active') {
+      // Allow bidding in both Catalog and Live phases for lots too
+      if (currentLot.status !== 'Active' && !isInCatalogPhase) {
         return res.status(400).json({
           success: false,
           message: `Cannot place bid. Current lot is ${currentLot.status.toLowerCase()}`
