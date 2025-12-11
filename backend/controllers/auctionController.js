@@ -479,6 +479,12 @@ export const endCurrentLot = async (auctionId, io) => {
 
         // Unfreeze all bidders' coins for this lot
         for (const bid of currentLot.bids) {
+          // Skip system bids (where user is null)
+          if (!bid.user) {
+            console.log(`⚠️  Skipping unfreeze for system bid on lot ${lotNumber}`);
+            continue;
+          }
+
           const unfreezeResult = await unfreezeCoinsForLot(bid.user, auctionId, lotNumber);
           console.log(`🔓 Unfroze coins for bidder ${bid.user} on UNSOLD lot ${lotNumber}`);
 
@@ -530,6 +536,12 @@ export const endCurrentLot = async (auctionId, io) => {
 
         // Unfreeze all other bidders' coins
         for (const bid of currentLot.bids) {
+          // Skip system bids (where user is null)
+          if (!bid.user) {
+            console.log(`⚠️  Skipping unfreeze for system bid on lot ${lotNumber}`);
+            continue;
+          }
+
           if (bid.user.toString() !== winningBid.user.toString()) {
             const unfreezeResult = await unfreezeCoinsForLot(bid.user, auctionId, lotNumber);
             console.log(`🔓 Unfroze coins for non-winner ${bid.user} on lot ${lotNumber}`);
