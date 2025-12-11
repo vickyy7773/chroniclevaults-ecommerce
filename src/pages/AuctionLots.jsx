@@ -10,6 +10,8 @@ const AuctionLots = () => {
   const [auction, setAuction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImages, setSelectedImages] = useState({}); // Track selected image for each lot
+  const [bidAmounts, setBidAmounts] = useState({}); // Track bid amounts for each lot
+  const [submittingBid, setSubmittingBid] = useState({}); // Track submission state for each lot
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -94,6 +96,43 @@ const AuctionLots = () => {
       toast.error('Failed to load auction lots');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle bid submission for a specific lot
+  const handlePlaceBid = async (lotNumber) => {
+    const amount = parseInt(bidAmounts[lotNumber]);
+
+    if (!amount || amount <= 0) {
+      toast.error('Please enter a valid bid amount');
+      return;
+    }
+
+    if (amount % 50 !== 0) {
+      toast.error('Bid amount must be divisible by 50');
+      return;
+    }
+
+    try {
+      setSubmittingBid(prev => ({ ...prev, [lotNumber]: true }));
+
+      const response = await api.post(`/auctions/${id}/bid`, { amount });
+
+      if (response.data.success) {
+        toast.success('Bid placed successfully! 🎉');
+
+        // Clear the bid amount for this lot
+        setBidAmounts(prev => ({ ...prev, [lotNumber]: '' }));
+
+        // Refresh auction data to show updated bid
+        await fetchAuction();
+      }
+    } catch (error) {
+      console.error('Place bid error:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to place bid';
+      toast.error(errorMessage);
+    } finally {
+      setSubmittingBid(prev => ({ ...prev, [lotNumber]: false }));
     }
   };
 
@@ -426,17 +465,30 @@ const AuctionLots = () => {
                         <input
                           type="number"
                           placeholder="Enter bid amount"
+                          value={bidAmounts[lot.lotNumber] || ''}
+                          onChange={(e) => setBidAmounts(prev => ({ ...prev, [lot.lotNumber]: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          disabled={submittingBid[lot.lotNumber]}
                         />
                       </div>
 
                       {/* Submit Bid Button */}
                       <button
-                        onClick={() => navigate(`/auction/${id}?lot=${lot.lotNumber}`)}
-                        className="w-full px-4 py-2.5 bg-accent-600 text-white rounded hover:bg-accent-700 transition-colors font-semibold flex items-center justify-center gap-2"
+                        onClick={() => handlePlaceBid(lot.lotNumber)}
+                        disabled={submittingBid[lot.lotNumber]}
+                        className="w-full px-4 py-2.5 bg-accent-600 text-white rounded hover:bg-accent-700 transition-colors font-semibold flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                       >
-                        <Gavel className="w-4 h-4" />
-                        Submit Bid
+                        {submittingBid[lot.lotNumber] ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Placing Bid...
+                          </>
+                        ) : (
+                          <>
+                            <Gavel className="w-4 h-4" />
+                            Submit Bid
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
