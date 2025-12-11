@@ -1754,11 +1754,12 @@ export const placeBid = async (req, res) => {
     // RESERVE PRICE AUTO-BIDDING: Trigger system auto-bid to push toward reserve price
     // Only in catalog phase when catalogBiddingEnabled is true
     if (isInCatalogPhase && auction.catalogBiddingEnabled) {
-      const lotIndex = auction.isLotBidding ? ((auction.lotNumber || 1) - 1) : null;
-      const systemBidPlaced = await placeReservePriceAutoBid(auction, lotIndex);
+      // Use the lot that user just bid on (currentLotIndex), not the auction's active lot
+      const lotIndexForSystemBid = auction.isLotBidding ? currentLotIndex : null;
+      const systemBidPlaced = await placeReservePriceAutoBid(auction, lotIndexForSystemBid);
 
       if (systemBidPlaced) {
-        console.log(`🤖 System auto-bid triggered after user bid in catalog phase`);
+        console.log(`🤖 System auto-bid triggered after user bid in catalog phase on Lot #${currentLotIndex + 1}`);
         // Save auction again after system bid
         await auction.save();
       }
