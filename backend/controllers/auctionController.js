@@ -607,13 +607,15 @@ export const endCurrentLot = async (auctionId, io) => {
             lastBidTime: auction.lastBidTime // Should be null for new lot
           });
 
-          // Capture the generation for timer callback
+          // Capture the generation and lot number for timer callback
           const capturedGen = newGen;
+          const capturedLotNumber = auction.lotNumber;
+          const nextLotTimerKey = getTimerKey(auctionId, capturedLotNumber);
 
           // Start timer after 3-second pause
           setTimeout(async () => {
             // CRITICAL: Check if this callback is still valid (not superseded by newer lot switch)
-            const currentGen = timerGeneration.get(auctionId);
+            const currentGen = timerGeneration.get(nextLotTimerKey);
             if (currentGen !== capturedGen) {
               console.log(`⚠️  [GEN ${capturedGen}] Lot start callback superseded by gen ${currentGen}, skipping timer start`);
               return;
@@ -622,7 +624,7 @@ export const endCurrentLot = async (auctionId, io) => {
             // Restart 3-phase timer for new lot
             if (auction.isThreePhaseTimerEnabled) {
               startThreePhaseTimer(auctionId, io);
-              console.log(`⏰ [GEN ${capturedGen}] Started 3-phase timer for newly activated Lot ${auction.lotNumber}`);
+              console.log(`⏰ [GEN ${capturedGen}] Started 3-phase timer for newly activated Lot ${capturedLotNumber}`);
             }
           }, 3000);
         }
@@ -722,6 +724,17 @@ export const startThreePhaseTimer = async (auctionId, io) => {
         return;
       }
 
+      // CRITICAL: Check if current lot is already ended (SOLD/UNSOLD/Ended)
+      if (auction.isLotBidding && auction.lots && auction.lots[currentLotNum - 1]) {
+        const currentLot = auction.lots[currentLotNum - 1];
+        if (currentLot.status === 'Sold' || currentLot.status === 'Unsold' || currentLot.status === 'Ended') {
+          console.log(`⏹️  LOT ${currentLotNum} already ${currentLot.status}, stopping timer for ${timerKey}`);
+          auctionTimers.delete(timerKey);
+          timerGeneration.delete(timerKey);
+          return;
+        }
+      }
+
       const now = new Date();
       const phaseStartTime = new Date(auction.phaseStartTime);
       const elapsedSeconds = Math.floor((now - phaseStartTime) / 1000);
@@ -766,16 +779,23 @@ export const startThreePhaseTimer = async (auctionId, io) => {
           console.log(`🎯 [${timerKey}] Phase 3 complete - ending lot`);
 
           if (auction.isLotBidding) {
-            await endCurrentLot(auctionId, io);
+            const result = await endCurrentLot(auctionId, io);
+            if (!result || !result.success) {
+              console.log(`⚠️  [${timerKey}] endCurrentLot failed or lot already ended, stopping timer`);
+              auctionTimers.delete(timerKey);
+              timerGeneration.delete(timerKey);
+              return;
+            }
           } else {
             auction.status = 'Ended';
             await auction.updateStatus();
             await auction.save();
           }
 
-          // Clear timer
+          // Clear timer (already cleared in endCurrentLot, but double-check)
           auctionTimers.delete(timerKey);
           timerGeneration.delete(timerKey);
+          console.log(`✅ [${timerKey}] Timer fully stopped after lot completion`);
         }
       } else {
         await auction.save();
