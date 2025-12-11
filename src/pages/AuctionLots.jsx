@@ -14,6 +14,7 @@ const AuctionLots = () => {
   const [selectedImages, setSelectedImages] = useState({}); // Track selected image for each lot
   const [bidAmounts, setBidAmounts] = useState({}); // Track bid amounts for each lot
   const [submittingBid, setSubmittingBid] = useState({}); // Track submission state for each lot
+  const [currentUser, setCurrentUser] = useState(null); // Current logged-in user
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -171,9 +172,24 @@ const AuctionLots = () => {
     };
   }, [id]);
 
-  // Real-time bid update listener
+  // Fetch current user on mount
   useEffect(() => {
-    if (!socketRef.current) return;
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await api.get('/auth/me');
+        if (response.data.success) {
+          setCurrentUser(response.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch current user:', error);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
+
+  // Real-time bid update listener with personalized notifications
+  useEffect(() => {
+    if (!socketRef.current || !currentUser) return;
 
     const handleBidPlaced = (data) => {
       console.log('🔴 CATALOG PAGE - Real-time bid update:', data);
@@ -182,8 +198,22 @@ const AuctionLots = () => {
         // Update auction state with new bid data
         setAuction(data.auction);
 
-        // Show toast notification for new bid
-        if (data.latestBid) {
+        // Check if current user was outbid
+        if (data.outbidUser && data.outbidUser.userId === currentUser._id) {
+          toast.error('⚠️ You have been outbid!', {
+            autoClose: 4000,
+            position: 'top-center'
+          });
+        }
+        // Check if current user placed the winning bid
+        else if (data.latestBid && data.latestBid.user && data.latestBid.user._id === currentUser._id) {
+          toast.success('🎉 You are winning!', {
+            autoClose: 3000,
+            position: 'top-center'
+          });
+        }
+        // Show general bid notification for other users' bids
+        else if (data.latestBid) {
           toast.info(`New bid: ₹${data.latestBid.amount.toLocaleString()}`, {
             autoClose: 3000
           });
@@ -191,15 +221,34 @@ const AuctionLots = () => {
       }
     };
 
+    // Listen for coin balance updates (when outbid)
+    const handleCoinBalanceUpdate = (data) => {
+      console.log('💰 Coin balance updated:', data);
+
+      if (data.reason === 'Outbid - coins refunded') {
+        toast.warning(`⚠️ Outbid on Lot ${data.lotNumber}! ₹${data.auctionCoins.toLocaleString()} coins refunded`, {
+          autoClose: 5000,
+          position: 'top-center'
+        });
+      } else if (data.reason === 'Bid placed - coins deducted') {
+        toast.info(`💰 Coins updated: ₹${data.auctionCoins.toLocaleString()} available`, {
+          autoClose: 3000
+        });
+      }
+    };
+
     socketRef.current.off('bid-placed', handleBidPlaced);
     socketRef.current.on('bid-placed', handleBidPlaced);
+    socketRef.current.off('coin-balance-updated', handleCoinBalanceUpdate);
+    socketRef.current.on('coin-balance-updated', handleCoinBalanceUpdate);
 
     return () => {
       if (socketRef.current) {
         socketRef.current.off('bid-placed', handleBidPlaced);
+        socketRef.current.off('coin-balance-updated', handleCoinBalanceUpdate);
       }
     };
-  }, [socketRef.current]);
+  }, [socketRef.current, currentUser]);
 
   // Handle bid submission for a specific lot
   const handlePlaceBid = async (lotNumber) => {
