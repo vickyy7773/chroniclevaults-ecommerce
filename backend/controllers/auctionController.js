@@ -1868,7 +1868,11 @@ export const addBulkLots = async (req, res) => {
       lotNumber: lot.lotNumber || (currentMaxLotNumber + index + 1),
       title: lot.title,
       description: lot.description,
+      category: lot.category || 'Miscellaneous',
+      material: lot.material || null,
       image: lot.image,
+      images: lot.images || (lot.image ? [lot.image] : []),
+      video: lot.video || null,
       vendorId: lot.vendorId || null, // Vendor ID for admin tracking
       startingPrice: lot.startingPrice,
       currentBid: lot.startingPrice, // Initialize with starting price
