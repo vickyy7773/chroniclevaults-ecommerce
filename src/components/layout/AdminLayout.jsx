@@ -294,6 +294,7 @@ const AdminLayout = () => {
         { path: '/admin/auction-registrations', label: 'Registrations' },
         { path: '/admin/auction-invoices', label: 'Invoices' },
         { path: '/admin/image-upload', label: 'Image Upload' },
+        { path: '/admin/video-upload', label: 'Video Upload' },
         { path: '/admin/bulk-lot-upload', label: 'Bulk Lot Upload' }
       ]
     },
