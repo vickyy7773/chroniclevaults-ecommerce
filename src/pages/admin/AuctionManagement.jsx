@@ -22,6 +22,7 @@ const AuctionManagement = () => {
     startTime: '',
     endTime: '',
     isLotBidding: false,
+    catalogBiddingEnabled: false,
     totalLots: 1,
     lotDuration: 10,
     lots: []

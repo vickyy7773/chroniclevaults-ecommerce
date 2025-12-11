@@ -22,7 +22,7 @@ const auctionSchema = new mongoose.Schema({
   // Catalog/Pre-Bidding Phase (2-Phase Auction System)
   catalogBiddingEnabled: {
     type: Boolean,
-    default: false // Enable catalog browsing phase before live auction
+    default: true // Enable catalog browsing phase before live auction (ALWAYS ON)
   },
   image: {
     type: String,
