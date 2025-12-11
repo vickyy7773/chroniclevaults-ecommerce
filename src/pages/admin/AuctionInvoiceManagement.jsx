@@ -117,33 +117,78 @@ const AuctionInvoiceManagement = () => {
     }
   };
 
-  const handleCustomerSelect = (customer) => {
-    setFormData({
-      ...formData,
-      buyerId: customer._id,
-      buyerDetails: {
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone || '',
-        gstin: customer.gstin || '',
-        pan: customer.pan || ''
-      },
-      billingAddress: {
-        street: customer.address?.street || '',
-        city: customer.address?.city || '',
-        state: customer.address?.state || 'Maharashtra',
-        stateCode: customer.address?.stateCode || '27',
-        zipCode: customer.address?.zipCode || ''
-      },
-      shippingAddress: {
-        street: customer.address?.street || '',
-        city: customer.address?.city || '',
-        state: customer.address?.state || 'Maharashtra',
-        stateCode: customer.address?.stateCode || '27',
-        zipCode: customer.address?.zipCode || ''
+  const handleCustomerSelect = async (customer) => {
+    try {
+      // Try to fetch auction registration for detailed address
+      let auctionReg = null;
+      try {
+        const regResponse = await api.get(`/auction-registration/user/${customer._id}`);
+        auctionReg = regResponse.data;
+      } catch (err) {
+        console.log('No auction registration found for customer, using basic address');
       }
-    });
-    setCustomerSearch(customer.name);
+
+      let billingStreet = '';
+      let billingCity = '';
+      let billingState = 'Maharashtra';
+      let billingZipCode = '';
+      let buyerGstin = '';
+      let buyerPan = '';
+
+      if (auctionReg && auctionReg.billingAddress) {
+        // Use detailed auction registration address
+        const addressParts = [
+          auctionReg.billingAddress.addressLine1,
+          auctionReg.billingAddress.addressLine2,
+          auctionReg.billingAddress.addressLine3
+        ].filter(Boolean);
+
+        billingStreet = addressParts.join(', ');
+        billingCity = auctionReg.billingAddress.city || '';
+        billingState = auctionReg.billingAddress.state || 'Maharashtra';
+        billingZipCode = auctionReg.billingAddress.pinCode || '';
+        buyerGstin = auctionReg.gstNumber || '';
+        buyerPan = auctionReg.gstNumber ? auctionReg.gstNumber.substring(2, 12) : '';
+      } else if (customer.address) {
+        // Fall back to basic user address
+        billingStreet = customer.address.street || '';
+        billingCity = customer.address.city || '';
+        billingState = customer.address.state || 'Maharashtra';
+        billingZipCode = customer.address.zipCode || '';
+        buyerGstin = customer.gstin || '';
+        buyerPan = customer.pan || '';
+      }
+
+      setFormData({
+        ...formData,
+        buyerId: customer._id,
+        buyerDetails: {
+          name: customer.name,
+          email: customer.email,
+          phone: customer.phone || '',
+          gstin: buyerGstin,
+          pan: buyerPan
+        },
+        billingAddress: {
+          street: billingStreet,
+          city: billingCity,
+          state: billingState,
+          stateCode: '27',
+          zipCode: billingZipCode
+        },
+        shippingAddress: {
+          street: billingStreet,
+          city: billingCity,
+          state: billingState,
+          stateCode: '27',
+          zipCode: billingZipCode
+        }
+      });
+      setCustomerSearch(customer.name);
+    } catch (error) {
+      console.error('Error selecting customer:', error);
+      toast.error('Failed to load customer details');
+    }
   };
 
   const handleSplitInvoice = async () => {

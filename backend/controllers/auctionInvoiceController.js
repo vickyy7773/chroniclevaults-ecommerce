@@ -1,6 +1,7 @@
 import AuctionInvoice from '../models/AuctionInvoice.js';
 import Auction from '../models/Auction.js';
 import User from '../models/User.js';
+import AuctionRegistration from '../models/AuctionRegistration.js';
 import { logActivity } from '../middleware/activityLogger.js';
 
 // Indian state codes mapping
@@ -92,9 +93,47 @@ export const createAuctionInvoice = async (req, res) => {
       });
     }
 
+    // Try to get auction registration data for more detailed address info
+    const auctionReg = await AuctionRegistration.findOne({ userId: buyer._id, status: 'approved' });
+
+    // Use auction registration address if available, otherwise fall back to user address
+    let billingStreet = '';
+    let billingCity = '';
+    let billingState = '';
+    let billingZipCode = '';
+    let buyerGstin = '';
+    let buyerPan = '';
+
+    if (auctionReg) {
+      // Use detailed auction registration address
+      const addressParts = [
+        auctionReg.billingAddress.addressLine1,
+        auctionReg.billingAddress.addressLine2,
+        auctionReg.billingAddress.addressLine3
+      ].filter(Boolean); // Remove empty values
+
+      billingStreet = addressParts.join(', ');
+      billingCity = auctionReg.billingAddress.city;
+      billingState = auctionReg.billingAddress.state;
+      billingZipCode = auctionReg.billingAddress.pinCode;
+      buyerGstin = auctionReg.gstNumber || '';
+      // PAN can be extracted from GST (first 10 chars) or stored separately
+      buyerPan = auctionReg.gstNumber ? auctionReg.gstNumber.substring(2, 12) : '';
+    } else if (buyer.address) {
+      // Fall back to basic user address
+      billingStreet = buyer.address.street || '';
+      billingCity = buyer.address.city || '';
+      billingState = buyer.address.state || 'Maharashtra';
+      billingZipCode = buyer.address.zipCode || '';
+      buyerGstin = buyer.gstin || '';
+      buyerPan = buyer.pan || '';
+    } else {
+      // No address available - use defaults
+      billingState = 'Maharashtra';
+    }
+
     // Determine billing address state code
-    const buyerState = buyer.address?.state || 'Maharashtra';
-    const buyerStateCode = STATE_CODES[buyerState] || '27';
+    const buyerStateCode = STATE_CODES[billingState] || '27';
 
     // Company details (default for Chronicle Vaults)
     const defaultCompanyDetails = {
@@ -129,23 +168,23 @@ export const createAuctionInvoice = async (req, res) => {
         name: buyer.name,
         email: buyer.email,
         phone: buyer.phone,
-        gstin: buyer.gstin || '',
-        pan: buyer.pan || '',
+        gstin: buyerGstin,
+        pan: buyerPan,
         buyerNumber: `BUY${buyer._id.toString().slice(-3).toUpperCase()}`
       },
       billingAddress: {
-        street: buyer.address?.street || '',
-        city: buyer.address?.city || '',
-        state: buyerState,
+        street: billingStreet,
+        city: billingCity,
+        state: billingState,
         stateCode: buyerStateCode,
-        zipCode: buyer.address?.zipCode || ''
+        zipCode: billingZipCode
       },
       shippingAddress: {
-        street: buyer.address?.street || '',
-        city: buyer.address?.city || '',
-        state: buyerState,
+        street: billingStreet,
+        city: billingCity,
+        state: billingState,
         stateCode: buyerStateCode,
-        zipCode: buyer.address?.zipCode || ''
+        zipCode: billingZipCode
       },
       lotDetails: {
         description: lot.title,

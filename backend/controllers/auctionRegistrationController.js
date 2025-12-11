@@ -293,3 +293,33 @@ export const rejectRegistration = async (req, res) => {
     res.status(500).json({ message: 'Error rejecting registration' });
   }
 };
+
+// @desc    Get auction registration by user ID
+// @route   GET /api/auction-registration/user/:userId
+// @access  Private
+export const getRegistrationByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const registration = await AuctionRegistration.findOne({
+      userId,
+      status: 'approved'
+    }).select('-verificationToken');
+
+    if (!registration) {
+      return res.status(404).json({
+        success: false,
+        message: 'No approved auction registration found for this user'
+      });
+    }
+
+    res.json(registration);
+
+  } catch (error) {
+    console.error('Error fetching registration by user ID:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching registration'
+    });
+  }
+};
