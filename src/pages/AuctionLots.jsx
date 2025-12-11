@@ -224,7 +224,9 @@ const AuctionLots = () => {
                   <span className="px-3 py-1 bg-accent-600 text-white text-sm font-semibold rounded">Lot #{lot.lotNumber}</span>
                   <span className="px-3 py-1 bg-amber-600 text-white text-sm font-semibold rounded">{auction.auctionCode || 'AUC50'}</span>
                   <span className="px-3 py-1 bg-amber-100 text-amber-900 text-sm font-semibold rounded">{lot.category || 'Ancient India'}</span>
-                  <span className="ml-auto px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded">{lot.material || 'Silver'}</span>
+                  {lot.material && (
+                    <span className="ml-auto px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded">{lot.material}</span>
+                  )}
                 </div>
 
                 {/* Lot Content */}
