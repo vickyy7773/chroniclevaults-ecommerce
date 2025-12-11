@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Gavel, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
+import { io } from 'socket.io-client';
 
 const AuctionLots = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const socketRef = useRef(null);
   const [auction, setAuction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImages, setSelectedImages] = useState({}); // Track selected image for each lot
@@ -98,6 +100,77 @@ const AuctionLots = () => {
       setLoading(false);
     }
   };
+
+  // Socket.IO connection setup for real-time updates
+  useEffect(() => {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    const isProduction = backendUrl.includes('chroniclevaults.com');
+
+    socketRef.current = io(backendUrl, {
+      transports: isProduction ? ['polling'] : ['polling', 'websocket'],
+      reconnection: true,
+      reconnectionDelay: 3000,
+      reconnectionDelayMax: 10000,
+      reconnectionAttempts: 5,
+      path: '/socket.io',
+      upgrade: !isProduction,
+      forceNew: false,
+      timeout: 20000,
+      autoConnect: true
+    });
+
+    socketRef.current.on('connect', () => {
+      console.log('✅ Connected to Socket.io server (Catalog Page)');
+      if (id) {
+        socketRef.current.emit('join-auction', id);
+        console.log(`🎯 Joined auction room: ${id}`);
+      }
+    });
+
+    socketRef.current.on('disconnect', (reason) => {
+      console.log('❌ Disconnected from Socket.io:', reason);
+    });
+
+    return () => {
+      if (socketRef.current) {
+        if (id) {
+          socketRef.current.emit('leave-auction', id);
+        }
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [id]);
+
+  // Real-time bid update listener
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    const handleBidPlaced = (data) => {
+      console.log('🔴 CATALOG PAGE - Real-time bid update:', data);
+
+      if (data.auction) {
+        // Update auction state with new bid data
+        setAuction(data.auction);
+
+        // Show toast notification for new bid
+        if (data.latestBid) {
+          toast.info(`New bid: ₹${data.latestBid.amount.toLocaleString()}`, {
+            autoClose: 3000
+          });
+        }
+      }
+    };
+
+    socketRef.current.off('bid-placed', handleBidPlaced);
+    socketRef.current.on('bid-placed', handleBidPlaced);
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off('bid-placed', handleBidPlaced);
+      }
+    };
+  }, [socketRef.current]);
 
   // Handle bid submission for a specific lot
   const handlePlaceBid = async (lotNumber) => {

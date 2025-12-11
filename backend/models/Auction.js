@@ -331,14 +331,14 @@ auctionSchema.methods.validateBid = function(bidAmount) {
     return { valid: false, message: 'Bid amount must be divisible by 50' };
   }
 
-  const currentIncrement = this.getCurrentIncrement();
-  const minBid = this.currentBid + currentIncrement;
+  // Minimum bid is just current bid (or 0 if no bids)
+  const minBid = this.currentBid || 0;
 
-  // Check if bid meets minimum requirement
-  if (bidAmount < minBid) {
+  // Check if bid is higher than current bid
+  if (bidAmount <= minBid) {
     return {
       valid: false,
-      message: `Bid must be at least ₹${minBid.toLocaleString()} (current bid + increment of ₹${currentIncrement.toLocaleString()})`
+      message: `Bid must be greater than current bid of ₹${minBid.toLocaleString()}`
     };
   }
 
