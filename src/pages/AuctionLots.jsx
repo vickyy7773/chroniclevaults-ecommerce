@@ -101,6 +101,35 @@ const AuctionLots = () => {
     }
   };
 
+  // Auto-redirect to live auction when auction starts
+  useEffect(() => {
+    if (!auction) return;
+
+    const checkAuctionStatus = () => {
+      const now = new Date();
+      const startTime = new Date(auction.startTime);
+
+      // If auction has started, redirect to live auction page
+      if (now >= startTime) {
+        console.log('🔴 Auction started! Redirecting to live auction page...');
+        toast.info('Auction has started! Redirecting to live auction...', {
+          autoClose: 2000
+        });
+        setTimeout(() => {
+          navigate(`/auction/${id}`);
+        }, 2000);
+      }
+    };
+
+    // Check immediately
+    checkAuctionStatus();
+
+    // Check every 10 seconds
+    const interval = setInterval(checkAuctionStatus, 10000);
+
+    return () => clearInterval(interval);
+  }, [auction, id, navigate]);
+
   // Socket.IO connection setup for real-time updates
   useEffect(() => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
