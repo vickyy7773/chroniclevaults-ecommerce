@@ -1692,7 +1692,8 @@ export const placeBid = async (req, res) => {
       const previousHighestBid = sortedPrevBids[0];
 
       // Unfreeze previous leader's coins (they got outbid)
-      if (previousHighestBid && previousHighestBid.user.toString() !== userId.toString()) {
+      // Skip if previous bid was a system bid (no user) or if it's the same user
+      if (previousHighestBid && previousHighestBid.user && previousHighestBid.user.toString() !== userId.toString()) {
         const io = req.app.get('io');
 
         if (auction.isLotBidding) {
