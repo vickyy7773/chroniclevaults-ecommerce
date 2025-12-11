@@ -298,6 +298,21 @@ const AuctionInvoiceManagement = () => {
           <p><strong>Buyer:</strong> ${invoice.buyerDetails.name}</p>
           <p><strong>Email:</strong> ${invoice.buyerDetails.email}</p>
           <p><strong>Phone:</strong> ${invoice.buyerDetails.phone}</p>
+          ${invoice.buyerDetails.gstin ? `<p><strong>GSTIN:</strong> ${invoice.buyerDetails.gstin}</p>` : ''}
+          ${invoice.buyerDetails.pan ? `<p><strong>PAN:</strong> ${invoice.buyerDetails.pan}</p>` : ''}
+        </div>
+
+        <div style="display: flex; gap: 40px; margin: 20px 0;">
+          <div style="flex: 1;">
+            <h3 style="margin-bottom: 10px; border-bottom: 2px solid #333; padding-bottom: 5px;">Billing Address</h3>
+            <p>${invoice.billingAddress?.street || ''}</p>
+            <p>${invoice.billingAddress?.city || ''}, ${invoice.billingAddress?.state || ''} - ${invoice.billingAddress?.zipCode || ''}</p>
+          </div>
+          <div style="flex: 1;">
+            <h3 style="margin-bottom: 10px; border-bottom: 2px solid #333; padding-bottom: 5px;">Shipping Address</h3>
+            <p>${invoice.shippingAddress?.street || ''}</p>
+            <p>${invoice.shippingAddress?.city || ''}, ${invoice.shippingAddress?.state || ''} - ${invoice.shippingAddress?.zipCode || ''}</p>
+          </div>
         </div>
 
         <table class="table">
