@@ -10,8 +10,8 @@ import User from '../models/User.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from backend directory
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+// Load environment variables from app root directory (two levels up from scripts)
+dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
 // Indian state codes mapping
 const STATE_CODES = {
