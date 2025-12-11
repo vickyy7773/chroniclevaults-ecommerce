@@ -954,9 +954,10 @@ const AuctionManagement = () => {
                                   <p className="text-xs text-gray-500 mt-1">Vendor identifier for tracking (admin only)</p>
                                 </div>
 
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Lot Image
+                                {/* Multiple Images Section */}
+                                <div className="border-2 border-blue-200 bg-blue-50 rounded-lg p-3">
+                                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                                    📸 Lot Images (Multiple)
                                   </label>
 
                                   {/* Image Input Type Selector */}
@@ -969,7 +970,7 @@ const AuctionManagement = () => {
                                         onChange={() => handleLotChange(index, 'imageInputType', 'file')}
                                         className="mr-2"
                                       />
-                                      <span className="text-sm">File Upload</span>
+                                      <span className="text-sm font-medium">File Upload</span>
                                     </label>
                                     <label className="flex items-center cursor-pointer">
                                       <input
@@ -979,11 +980,11 @@ const AuctionManagement = () => {
                                         onChange={() => handleLotChange(index, 'imageInputType', 'url')}
                                         className="mr-2"
                                       />
-                                      <span className="text-sm">Image URL</span>
+                                      <span className="text-sm font-medium">Image URL</span>
                                     </label>
                                   </div>
 
-                                  {/* Conditional Input Based on Selection */}
+                                  {/* Add Image Input */}
                                   {(lot.imageInputType === 'file' || !lot.imageInputType) ? (
                                     <>
                                       <input
@@ -994,47 +995,119 @@ const AuctionManagement = () => {
                                           if (file) {
                                             const reader = new FileReader();
                                             reader.onloadend = () => {
-                                              handleLotChange(index, 'image', reader.result);
+                                              const currentImages = lot.images || (lot.image ? [lot.image] : []);
+                                              handleLotChange(index, 'images', [...currentImages, reader.result]);
+                                              handleLotChange(index, 'image', currentImages[0] || reader.result); // Keep first image for backwards compatibility
                                             };
                                             reader.readAsDataURL(file);
                                           }
                                         }}
                                         className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
                                       />
-                                      <p className="text-xs text-gray-500 mt-1">Upload an image file directly</p>
+                                      <p className="text-xs text-gray-600 mt-1">Upload images one by one</p>
                                     </>
                                   ) : (
                                     <>
-                                      <input
-                                        type="text" 
-                                        value={lot.image || ''}
-                                        onChange={(e) => handleLotChange(index, 'image', e.target.value)}
-                                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
-                                        placeholder="https://chroniclevaults.com/api/uploads/img-123456.jpg"
-                                      />
+                                      <div className="flex gap-2">
+                                        <input
+                                          type="text"
+                                          placeholder="https://chroniclevaults.com/api/uploads/img-123456.jpg"
+                                          id={`imageUrlInput-${index}`}
+                                          className="flex-1 dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const input = document.getElementById(`imageUrlInput-${index}`);
+                                            if (input && input.value) {
+                                              const currentImages = lot.images || (lot.image ? [lot.image] : []);
+                                              handleLotChange(index, 'images', [...currentImages, input.value]);
+                                              handleLotChange(index, 'image', currentImages[0] || input.value); // Keep first image for backwards compatibility
+                                              input.value = '';
+                                            }
+                                          }}
+                                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                                        >
+                                          Add
+                                        </button>
+                                      </div>
                                       <p className="text-xs text-blue-600 mt-1">
                                         💡 Use Image Upload Manager to upload images and paste URL here
                                       </p>
                                     </>
                                   )}
+
+                                  {/* Display Images */}
+                                  {(lot.images && lot.images.length > 0) && (
+                                    <div className="mt-3 space-y-2">
+                                      <p className="text-sm font-medium text-gray-700">Images ({lot.images.length}):</p>
+                                      <div className="grid grid-cols-3 gap-2">
+                                        {lot.images.map((img, imgIndex) => (
+                                          <div key={imgIndex} className="relative group">
+                                            <img
+                                              src={img}
+                                              alt={`Lot ${index + 1} - Image ${imgIndex + 1}`}
+                                              className="w-full h-24 object-cover rounded border border-gray-300"
+                                              onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="10"%3EInvalid%3C/text%3E%3C/svg%3E';
+                                              }}
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const newImages = lot.images.filter((_, i) => i !== imgIndex);
+                                                handleLotChange(index, 'images', newImages);
+                                                handleLotChange(index, 'image', newImages[0] || ''); // Update first image
+                                              }}
+                                              className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                              <X className="w-3 h-3" />
+                                            </button>
+                                            {imgIndex === 0 && (
+                                              <span className="absolute bottom-1 left-1 bg-green-600 text-white px-2 py-0.5 rounded text-xs">
+                                                Main
+                                              </span>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
 
-                                {lot.image && (
-                                  <div className="mt-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                      Image Preview Lot {index + 1}
-                                    </label>
-                                    <img
-                                      src={lot.image}
-                                      alt={`Lot ${index + 1}`}
-                                      className="w-full h-32 object-cover rounded-lg border border-gray-300"
-                                      onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="14"%3EInvalid Image%3C/text%3E%3C/svg%3E';
-                                      }}
-                                    />
-                                  </div>
-                                )}
+                                {/* Video Section */}
+                                <div className="border-2 border-purple-200 bg-purple-50 rounded-lg p-3">
+                                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                                    🎥 Lot Video (Optional)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={lot.video || ''}
+                                    onChange={(e) => handleLotChange(index, 'video', e.target.value)}
+                                    className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                    placeholder="https://youtube.com/embed/... or video file URL"
+                                  />
+                                  <p className="text-xs text-gray-600 mt-1">Enter YouTube embed URL or direct video file URL</p>
+                                  {lot.video && (
+                                    <div className="mt-2">
+                                      <p className="text-sm font-medium text-gray-700 mb-1">Video Preview:</p>
+                                      {lot.video.includes('youtube.com') || lot.video.includes('youtu.be') ? (
+                                        <iframe
+                                          src={lot.video.replace('watch?v=', 'embed/')}
+                                          className="w-full h-40 rounded border border-gray-300"
+                                          allowFullScreen
+                                        />
+                                      ) : (
+                                        <video
+                                          src={lot.video}
+                                          controls
+                                          className="w-full h-40 rounded border border-gray-300"
+                                        />
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           ))}

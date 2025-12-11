@@ -332,6 +332,34 @@ const AuctionLots = () => {
                         </div>
                       );
                     })()}
+
+                    {/* Video Player */}
+                    {lot.video && (
+                      <div className="mt-3">
+                        <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-2">
+                          <p className="text-xs font-semibold text-purple-900 mb-2 flex items-center">
+                            🎥 Video
+                          </p>
+                          {lot.video.includes('youtube.com') || lot.video.includes('youtu.be') ? (
+                            <iframe
+                              src={lot.video.replace('watch?v=', 'embed/')}
+                              className="w-full h-48 rounded border border-purple-300"
+                              allowFullScreen
+                              title={`${lot.title} video`}
+                            />
+                          ) : (
+                            <video
+                              src={lot.video}
+                              controls
+                              className="w-full rounded border border-purple-300"
+                              title={`${lot.title} video`}
+                            >
+                              Your browser does not support the video tag.
+                            </video>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Description */}

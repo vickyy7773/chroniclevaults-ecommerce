@@ -159,7 +159,18 @@ const auctionSchema = new mongoose.Schema({
     lotNumber: Number,
     title: String,
     description: String,
-    image: String,
+    image: String, // Kept for backwards compatibility (will use first image from images array)
+    images: {
+      type: [String],
+      default: function() {
+        // If old 'image' field exists, use it as first image
+        return this.image ? [this.image] : [];
+      }
+    },
+    video: {
+      type: String,
+      default: null // Video URL or file path
+    },
     category: {
       type: String,
       default: 'Miscellaneous' // Category like "Ancient India", "Mughals", etc.
