@@ -1771,9 +1771,11 @@ export const placeBid = async (req, res) => {
     // Freeze the coins
     if (auction.isLotBidding) {
       // LOT BIDDING: Use per-lot freeze
-      const lotNumber = auction.lotNumber || 1;
-      await freezeCoinsForLot(userId, auction._id, lotNumber, freezeAmount);
-      console.log(`🔒 LOT ${lotNumber}: Froze ${freezeAmount} coins for user ${userId}`);
+      // CATALOG PHASE: Use lot user bid on (lotNumber from request)
+      // LIVE PHASE: Use current active lot (auction.lotNumber)
+      const freezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+      await freezeCoinsForLot(userId, auction._id, freezeLotNumber, freezeAmount);
+      console.log(`🔒 LOT ${freezeLotNumber}: Froze ${freezeAmount} coins for user ${userId}`);
 
       // Refresh user to get updated balances
       const updatedUser = await User.findById(userId);
@@ -1787,7 +1789,7 @@ export const placeBid = async (req, res) => {
           auctionCoins: updatedUser.auctionCoins,
           frozenCoins: updatedUser.frozenCoins,
           reason: 'Bid placed - coins deducted',
-          lotNumber,
+          lotNumber: freezeLotNumber,
           auctionId: auction._id.toString(),
           bidAmount: freezeAmount
         });
