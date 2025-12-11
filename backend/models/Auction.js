@@ -175,6 +175,10 @@ const auctionSchema = new mongoose.Schema({
       type: String,
       default: 'Miscellaneous' // Category like "Ancient India", "Mughals", etc.
     },
+    material: {
+      type: String,
+      default: null // Material of the lot (e.g., Gold, Silver, Bronze, Copper, etc.)
+    },
     vendorId: {
       type: String,
       default: null // Vendor ID for tracking lot ownership (admin only)

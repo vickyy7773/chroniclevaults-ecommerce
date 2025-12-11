@@ -149,6 +149,7 @@ const AuctionManagement = () => {
           title: '',
           description: '',
           category: 'Miscellaneous',
+          material: '',
           productId: '',
           image: '',
           vendorId: '',
@@ -906,6 +907,20 @@ const AuctionManagement = () => {
                                     placeholder="e.g., Ancient India, Mughals, British India"
                                   />
                                   <p className="text-xs text-gray-500 mt-1">Enter category for grouping lots in catalog (e.g., Ancient India, Princely States)</p>
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Material (Optional)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={lot.material || ''}
+                                    onChange={(e) => handleLotChange(index, 'material', e.target.value)}
+                                    className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                    placeholder="e.g., Gold, Silver, Bronze, Copper, Paper"
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">Specify the material of the item (e.g., Gold, Silver, Bronze, Copper)</p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
