@@ -1320,6 +1320,8 @@ export const placeBid = async (req, res) => {
     const { amount, maxBid, lotNumber } = req.body; // Accept lotNumber for catalog phase
     const userId = req.user._id;
 
+    console.log(`🎯 BID REQUEST: amount=${amount}, lotNumber=${lotNumber}, userId=${userId}`);
+
     const auction = await Auction.findById(req.params.id);
 
     if (!auction) {
