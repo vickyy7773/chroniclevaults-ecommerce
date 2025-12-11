@@ -1698,10 +1698,12 @@ export const placeBid = async (req, res) => {
 
         if (auction.isLotBidding) {
           // LOT BIDDING: Use per-lot unfreeze
-          const lotNumber = auction.lotNumber || 1;
-          const unfreezeResult = await unfreezeCoinsForLot(previousHighestBid.user, auction._id, lotNumber);
+          // CATALOG PHASE: Use lot user bid on (lotNumber from request)
+          // LIVE PHASE: Use current active lot (auction.lotNumber)
+          const unfreezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+          const unfreezeResult = await unfreezeCoinsForLot(previousHighestBid.user, auction._id, unfreezeLotNumber);
           if (unfreezeResult.success && unfreezeResult.unfrozenAmount > 0) {
-            console.log(`🔓 LOT ${lotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for outbid user ${previousHighestBid.user}`);
+            console.log(`🔓 LOT ${unfreezeLotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for outbid user ${previousHighestBid.user}`);
             outbidUserId = previousHighestBid.user.toString();
             outbidUserNewBalance = unfreezeResult.user.auctionCoins;
 
@@ -1711,7 +1713,7 @@ export const placeBid = async (req, res) => {
                 auctionCoins: unfreezeResult.user.auctionCoins,
                 frozenCoins: unfreezeResult.user.frozenCoins,
                 reason: 'Outbid - coins refunded',
-                lotNumber,
+                lotNumber: unfreezeLotNumber,
                 auctionId: auction._id.toString()
               });
               console.log(`💰 Sent real-time coin update to outbid user ${previousHighestBid.user}: ${unfreezeResult.user.auctionCoins} coins`);
