@@ -103,6 +103,7 @@ export const createAuctionInvoice = async (req, res) => {
     let billingZipCode = '';
     let buyerGstin = '';
     let buyerPan = '';
+    let buyerPhone = '';
 
     if (auctionReg) {
       // Use detailed auction registration address
@@ -117,6 +118,7 @@ export const createAuctionInvoice = async (req, res) => {
       billingState = auctionReg.billingAddress.state;
       billingZipCode = auctionReg.billingAddress.pinCode;
       buyerGstin = auctionReg.gstNumber || '';
+      buyerPhone = auctionReg.mobile || buyer.phone || '';
       // PAN can be extracted from GST (first 10 chars) or stored separately
       buyerPan = auctionReg.gstNumber ? auctionReg.gstNumber.substring(2, 12) : '';
     } else if (buyer.address) {
@@ -167,7 +169,7 @@ export const createAuctionInvoice = async (req, res) => {
       buyerDetails: {
         name: buyer.name,
         email: buyer.email,
-        phone: buyer.phone,
+        phone: buyerPhone,
         gstin: buyerGstin,
         pan: buyerPan,
         buyerNumber: `BUY${buyer._id.toString().slice(-3).toUpperCase()}`

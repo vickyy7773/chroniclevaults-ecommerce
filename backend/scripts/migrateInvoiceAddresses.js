@@ -104,11 +104,13 @@ async function migrateInvoiceAddresses() {
         const billingZipCode = auctionReg.billingAddress.pinCode;
         const buyerGstin = auctionReg.gstNumber || '';
         const buyerPan = auctionReg.gstNumber ? auctionReg.gstNumber.substring(2, 12) : '';
+        const buyerPhone = auctionReg.mobile || invoice.buyer.phone || '';
         const buyerStateCode = STATE_CODES[billingState] || '27';
 
         // Update invoice
         invoice.buyerDetails.gstin = buyerGstin;
         invoice.buyerDetails.pan = buyerPan;
+        invoice.buyerDetails.phone = buyerPhone;
 
         invoice.billingAddress = {
           street: billingStreet,
