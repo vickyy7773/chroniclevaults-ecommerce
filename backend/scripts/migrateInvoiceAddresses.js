@@ -1,11 +1,17 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import AuctionInvoice from '../models/AuctionInvoice.js';
 import AuctionRegistration from '../models/AuctionRegistration.js';
 import User from '../models/User.js';
 
-// Load environment variables
-dotenv.config();
+// Get directory name for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from backend directory
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 // Indian state codes mapping
 const STATE_CODES = {
