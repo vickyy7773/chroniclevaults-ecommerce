@@ -58,7 +58,7 @@ async function migrateInvoiceAddresses() {
     console.log('🚀 Starting invoice address migration...');
 
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Connected to MongoDB');
 
     // Get all invoices
