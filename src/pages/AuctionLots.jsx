@@ -116,7 +116,8 @@ const AuctionLots = () => {
     try {
       setSubmittingBid(prev => ({ ...prev, [lotNumber]: true }));
 
-      const response = await api.post(`/auctions/${id}/bid`, { amount });
+      // Send lot number with bid for catalog phase
+      const response = await api.post(`/auctions/${id}/bid`, { amount, lotNumber });
 
       if (response.data.success) {
         toast.success('Bid placed successfully! 🎉');

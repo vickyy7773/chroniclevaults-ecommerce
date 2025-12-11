@@ -1317,7 +1317,7 @@ export const deleteAuction = async (req, res) => {
 // @access  Protected
 export const placeBid = async (req, res) => {
   try {
-    const { amount, maxBid } = req.body;
+    const { amount, maxBid, lotNumber } = req.body; // Accept lotNumber for catalog phase
     const userId = req.user._id;
 
     const auction = await Auction.findById(req.params.id);
@@ -1376,7 +1376,15 @@ export const placeBid = async (req, res) => {
     let currentLotIndex = null;
     let currentLot = null;
     if (auction.isLotBidding) {
-      currentLotIndex = (auction.lotNumber || 1) - 1;
+      // CATALOG PHASE: Allow bidding on any lot (use lotNumber from request)
+      // LIVE PHASE: Only allow bidding on current active lot (use auction.lotNumber)
+      if (isInCatalogPhase && lotNumber) {
+        currentLotIndex = lotNumber - 1; // User-specified lot in catalog phase
+        console.log(`📚 Catalog Phase: Bidding on Lot #${lotNumber}`);
+      } else {
+        currentLotIndex = (auction.lotNumber || 1) - 1; // Current active lot in live phase
+        console.log(`🔴 Live Phase: Bidding on active Lot #${auction.lotNumber || 1}`);
+      }
       if (!auction.lots || !auction.lots[currentLotIndex]) {
         return res.status(400).json({
           success: false,
