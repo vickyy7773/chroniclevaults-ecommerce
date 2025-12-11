@@ -187,8 +187,14 @@ export const placeReservePriceAutoBid = async (auction, lotIndex = null) => {
     // Calculate next bid amount using increment slabs
     const nextBidAmount = auction.getNextBidAmount(currentBid);
 
-    // Don't exceed reserve price
-    const systemBidAmount = Math.min(nextBidAmount, reservePrice);
+    // CRITICAL: Don't bid if next bid would meet or exceed reserve price
+    // System should only push bids BELOW reserve, not AT or ABOVE reserve
+    if (nextBidAmount >= reservePrice) {
+      console.log(`🤖 System auto-bid stopped: Next bid ₹${nextBidAmount} would meet/exceed reserve ₹${reservePrice}`);
+      return false;
+    }
+
+    const systemBidAmount = nextBidAmount;
 
     // Place system bid
     if (auction.isLotBidding && lot) {
