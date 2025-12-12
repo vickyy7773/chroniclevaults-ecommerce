@@ -773,8 +773,9 @@ const getTimerKey = (auctionId, lotNumber) => {
   return `${auctionId}-L${lotNumber}`;
 };
 
-// Start 3-Phase Progressive Timer (30s → 20s → 10s)
-// Phase 1: 30s-21s (bid resets to 30s), Phase 2: 20s-11s (bid resets to 20s), Phase 3: 10s-0s (bid resets to 10s)
+// Start 3-Phase Timer (30 seconds total: 10s per phase)
+// Display: Phase 1 shows 30→20, Phase 2 shows 20→10, Phase 3 shows 10→0
+// Bid resets: Phase 1 resets to 30s, Phase 2 resets to 20s, Phase 3 resets to 10s
 export const startThreePhaseTimer = async (auctionId, io) => {
   // Fetch auction to get current lot number
   const auction = await Auction.findById(auctionId);
@@ -805,9 +806,9 @@ export const startThreePhaseTimer = async (auctionId, io) => {
     auction.phaseStartTime = new Date();
   }
   if (auction.phaseTimer === undefined) {
-    // Progressive timer: Phase 1=30s, Phase 2=20s, Phase 3=10s
-    const phaseDurations = { 1: 30, 2: 20, 3: 10 };
-    auction.phaseTimer = phaseDurations[auction.callNumber] || 30;
+    // Initial display values: Phase 1 shows 30, Phase 2 shows 20, Phase 3 shows 10
+    const phaseInitialValues = { 1: 30, 2: 20, 3: 10 };
+    auction.phaseTimer = phaseInitialValues[auction.callNumber] || 30;
   }
   await auction.save();
 
@@ -853,12 +854,18 @@ export const startThreePhaseTimer = async (auctionId, io) => {
       const phaseStartTime = new Date(auction.phaseStartTime);
       const elapsedSeconds = Math.floor((now - phaseStartTime) / 1000);
 
-      // Progressive timer durations: Phase 1=30s, Phase 2=20s, Phase 3=10s
-      const phaseDurations = { 1: 30, 2: 20, 3: 10 };
-      const phaseDuration = phaseDurations[auction.callNumber] || 30;
-      const remainingSeconds = Math.max(0, phaseDuration - elapsedSeconds);
+      // Phase durations: Each phase lasts 10 seconds (30s total)
+      const phaseDurations = { 1: 10, 2: 10, 3: 10 };
+      const phaseDuration = phaseDurations[auction.callNumber] || 10;
 
-      // Update phaseTimer
+      // Display values: Phase 1 shows 30→20, Phase 2 shows 20→10, Phase 3 shows 10→0
+      const phaseInitialValues = { 1: 30, 2: 20, 3: 10 };
+      const initialValue = phaseInitialValues[auction.callNumber] || 30;
+
+      // Calculate display time (counts down from initial value)
+      const remainingSeconds = Math.max(0, initialValue - elapsedSeconds);
+
+      // Update phaseTimer for display
       auction.phaseTimer = remainingSeconds;
 
       // Emit timer update
@@ -875,18 +882,18 @@ export const startThreePhaseTimer = async (auctionId, io) => {
         phaseMessage: phaseMessages[auction.callNumber]
       });
 
-      console.log(`⏱️  [${timerKey}] Phase ${auction.callNumber}: ${remainingSeconds}s remaining`);
+      console.log(`⏱️  [${timerKey}] Phase ${auction.callNumber}: ${remainingSeconds}s remaining (${elapsedSeconds}s elapsed)`);
 
-      // Check if phase is complete
-      if (remainingSeconds <= 0) {
+      // Check if phase is complete (based on elapsed time, not display value)
+      if (elapsedSeconds >= phaseDuration) {
         // Phase completed, move to next phase
         if (auction.callNumber < 3) {
           // Move to next phase
           auction.callNumber++;
 
-          // Set duration for next phase (Phase 2=20s, Phase 3=10s)
-          const nextPhaseDurations = { 2: 20, 3: 10 };
-          auction.phaseTimer = nextPhaseDurations[auction.callNumber] || 10;
+          // Set initial display value for next phase (Phase 2 shows 20, Phase 3 shows 10)
+          const nextPhaseInitialValues = { 2: 20, 3: 10 };
+          auction.phaseTimer = nextPhaseInitialValues[auction.callNumber] || 10;
           auction.phaseStartTime = new Date();
           await auction.save();
 
@@ -899,7 +906,7 @@ export const startThreePhaseTimer = async (auctionId, io) => {
             phaseTimer: auction.phaseTimer
           });
 
-          console.log(`🔄 [${timerKey}] Moving to Phase ${auction.callNumber} (${auction.phaseTimer}s)`);
+          console.log(`🔄 [${timerKey}] Moving to Phase ${auction.callNumber} (display: ${auction.phaseTimer}s)`);
 
           // Continue ticking
           const timerId = setTimeout(tickPhase, 1000);
@@ -966,10 +973,11 @@ export const resetPhaseTimer = async (auctionId, io) => {
         console.log(`🧹 [${timerKey}] [GEN ${oldGen}] Cleared existing timer for phase reset`);
       }
 
-      // Reset phase timer to phase-specific time (stay in same phase)
-      // Phase 1: reset to 30s, Phase 2: reset to 20s, Phase 3: reset to 10s
-      const phaseDurations = { 1: 30, 2: 20, 3: 10 };
-      const resetTime = phaseDurations[auction.callNumber] || 30;
+      // Reset phase timer to phase-specific display value (stay in same phase)
+      // Phase 1: reset to 30s display, Phase 2: reset to 20s display, Phase 3: reset to 10s display
+      // Each phase still lasts 10 seconds, but display resets to phase's initial value
+      const phaseResetValues = { 1: 30, 2: 20, 3: 10 };
+      const resetTime = phaseResetValues[auction.callNumber] || 30;
 
       auction.phaseTimer = resetTime;
       auction.phaseStartTime = new Date();
@@ -984,7 +992,7 @@ export const resetPhaseTimer = async (auctionId, io) => {
         message: `New bid! Timer reset to ${resetTime} seconds.`
       });
 
-      console.log(`🔄 [${timerKey}] Phase ${auction.callNumber} timer reset to ${resetTime} seconds`);
+      console.log(`🔄 [${timerKey}] Phase ${auction.callNumber} timer reset to ${resetTime}s display (10s duration)`);
 
       // Restart timer (this will increment generation)
       await startThreePhaseTimer(auctionId, io);
