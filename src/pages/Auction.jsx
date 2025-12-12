@@ -349,18 +349,20 @@ const AuctionPage = () => {
         setPhaseMessage(data.phaseMessage);
         setPhaseTimer(data.phaseTimer);
 
-        // When phase 3 ends (timer = 0), show SOLD/UNSOLD and refresh auction
-        if (data.callNumber === 3 && data.phaseTimer === 0) {
-          // Show final result
+        // Show SOLD/UNSOLD when phase 3 timer hits 0 or when phase ends
+        if (data.callNumber === 3 && (data.phaseTimer === 0 || data.phaseTimer <= 1)) {
+          // Show final result - dismiss quickly
           if (data.phaseMessage === 'SOLD') {
             toast.success(`🎉 SOLD!`, {
-              autoClose: 2000,
-              position: 'top-center'
+              autoClose: 1000,
+              position: 'top-center',
+              style: { fontSize: '18px', fontWeight: 'bold' }
             });
-          } else {
+          } else if (data.phaseMessage === 'UNSOLD') {
             toast.warning(`❌ UNSOLD`, {
-              autoClose: 2000,
-              position: 'top-center'
+              autoClose: 1000,
+              position: 'top-center',
+              style: { fontSize: '18px', fontWeight: 'bold' }
             });
           }
 
@@ -378,11 +380,16 @@ const AuctionPage = () => {
       console.log('⚡ PHASE TRANSITION:', data);
 
       if (data.auctionId === auction._id) {
-        // Show flash message at phase transitions (20s and 10s)
-        toast.warning(data.flashMessage, {
-          autoClose: 2000,
-          position: 'top-center'
-        });
+        // Show flash message at phase transitions (20s and 10s) - quick dismiss
+        if (data.flashMessage) {
+          toast.warning(data.flashMessage, {
+            autoClose: 1000,
+            position: 'top-center',
+            style: { fontSize: '18px', fontWeight: 'bold' },
+            hideProgressBar: false
+          });
+          console.log(`📢 Phase transition notification: ${data.flashMessage}`);
+        }
       }
     };
 
@@ -393,8 +400,9 @@ const AuctionPage = () => {
         setCallNumber(data.callNumber);
         setPhaseTimer(data.phaseTimer);
         toast.info(`New bid! Timer reset to ${data.phaseTimer}s`, {
-          autoClose: 2000,
-          position: 'top-center'
+          autoClose: 800,
+          position: 'top-center',
+          hideProgressBar: false
         });
       }
     };
