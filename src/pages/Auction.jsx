@@ -1268,16 +1268,48 @@ const AuctionPage = () => {
                           <div className="text-sm text-gray-500">
                             Start: <span className="font-semibold text-gray-700">₹{lot.startingPrice.toLocaleString()}</span>
                           </div>
-                          {lot.reservePrice > 0 && (
+
+                          {/* Personalized Status for Ended Lots */}
+                          {(lot.status === 'Sold' || lot.status === 'Unsold') && user && (() => {
+                            // Check if current user is the winner
+                            const isWinner = lot.status === 'Sold' && lot.winner && lot.winner.toString() === user._id.toString();
+
+                            // Check if current user bid on this lot
+                            const userBid = lot.bids?.find(bid => bid.user && bid.user.toString() === user._id.toString());
+                            const didUserBid = !!userBid;
+
+                            if (isWinner) {
+                              return (
+                                <div className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
+                                  🎉 You Win!
+                                </div>
+                              );
+                            } else if (didUserBid) {
+                              return (
+                                <div className="text-sm font-bold text-red-600 bg-red-50 px-2 py-1 rounded">
+                                  ⚠️ You are Outbid
+                                </div>
+                              );
+                            } else {
+                              // User didn't bid - show reserve price if exists
+                              return lot.reservePrice > 0 ? (
+                                <div className="text-sm text-orange-600 font-medium">
+                                  Reserve: <span className="font-semibold">₹{lot.reservePrice.toLocaleString()}</span>
+                                  <span className="ml-1">
+                                    {lot.currentBid >= lot.reservePrice ? '✅' : '❌'}
+                                  </span>
+                                </div>
+                              ) : null;
+                            }
+                          })()}
+
+                          {/* Reserve Price for Active/Upcoming Lots */}
+                          {(lot.status === 'Active' || lot.status === 'Upcoming') && lot.reservePrice > 0 && (
                             <div className="text-sm text-orange-600 font-medium">
                               Reserve: <span className="font-semibold">₹{lot.reservePrice.toLocaleString()}</span>
-                              {(lot.status === 'Sold' || lot.status === 'Unsold') && (
-                                <span className="ml-1">
-                                  {lot.currentBid >= lot.reservePrice ? '✅' : '❌'}
-                                </span>
-                              )}
                             </div>
                           )}
+
                           <div className="text-sm text-gray-600 font-medium">
                             {lot.status === 'Active' || lot.status === 'Upcoming' ? 'Current: ' : 'Final: '}
                             <span className={`font-bold text-base ${
