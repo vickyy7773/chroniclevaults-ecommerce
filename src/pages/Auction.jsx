@@ -1342,7 +1342,7 @@ const AuctionPage = () => {
                               ₹{lot.currentBid.toLocaleString()}
                             </span>
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-xs text-gray-500 truncate">
                             {lot.bids?.length || 0} bid{(lot.bids?.length || 0) !== 1 ? 's' : ''}
                           </div>
                         </div>
