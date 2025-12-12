@@ -1142,7 +1142,10 @@ const AuctionPage = () => {
                     </div>
                   ) : (
                     <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                      {[...(auction.isLotBidding && displayLot ? (displayLot.bids || []) : auction.bids)].reverse().map((bid, index) => (
+                      {[...(auction.isLotBidding && displayLot ? (displayLot.bids || []) : auction.bids)]
+                        .filter(bid => bid && bid.amount && bid.timestamp) // Filter out invalid bids
+                        .reverse()
+                        .map((bid, index) => (
                         <div
                           key={index}
                           className={`flex items-center justify-between p-2 rounded-lg transition-all ${
