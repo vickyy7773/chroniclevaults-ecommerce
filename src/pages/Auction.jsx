@@ -764,10 +764,19 @@ const AuctionPage = () => {
   const currentIncrement = getCurrentIncrement(auction);
   const minBid = displayCurrentBid + currentIncrement;
 
-  // FOR LOT BIDDING: Use display lot's image
+  // FOR LOT BIDDING: Use display lot's images (multiple images support)
   let auctionImages;
-  if (auction.isLotBidding && displayLot && displayLot.image) {
-    auctionImages = [displayLot.image];
+  if (auction.isLotBidding && displayLot) {
+    // First try to use images array (supports multiple images)
+    if (displayLot.images && displayLot.images.length > 0) {
+      auctionImages = displayLot.images;
+    }
+    // Fallback to single image if images array is empty
+    else if (displayLot.image) {
+      auctionImages = [displayLot.image];
+    } else {
+      auctionImages = [];
+    }
   } else {
     // Fix: Backend uses auction.image (singular), not auction.images (plural)
     auctionImages = auction.image ? [auction.image] : [];
