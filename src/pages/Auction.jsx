@@ -848,6 +848,34 @@ const AuctionPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {/* Left Column - Auction Images & Details */}
           <div className="space-y-2">
+            {/* Video Player (if video exists) */}
+            {displayLot && displayLot.video && (
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div className="relative aspect-video bg-gray-100">
+                  <video
+                    src={displayLot.video}
+                    controls
+                    className="w-full h-full object-contain"
+                    controlsList="nodownload"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+
+                  {/* Status Badge on Video */}
+                  <div className={`absolute top-2 left-2 px-2.5 py-1 rounded-full font-bold text-base shadow-lg ${
+                    auction.status === 'Active'
+                      ? 'bg-green-500 text-white'
+                      : auction.status === 'Upcoming'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-500 text-white'
+                  }`}>
+                    {auction.status === 'Active' && <span className="inline-block w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse"></span>}
+                    {auction.status}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Auction Image Gallery */}
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               <div className="relative aspect-video bg-gray-100">
@@ -863,17 +891,19 @@ const AuctionPage = () => {
                   </div>
                 )}
 
-                {/* Status Badge on Image */}
-                <div className={`absolute top-2 left-2 px-2.5 py-1 rounded-full font-bold text-base shadow-lg ${
-                  auction.status === 'Active'
-                    ? 'bg-green-500 text-white'
-                    : auction.status === 'Upcoming'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-500 text-white'
-                }`}>
-                  {auction.status === 'Active' && <span className="inline-block w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse"></span>}
-                  {auction.status}
-                </div>
+                {/* Status Badge on Image (only show if no video) */}
+                {(!displayLot || !displayLot.video) && (
+                  <div className={`absolute top-2 left-2 px-2.5 py-1 rounded-full font-bold text-base shadow-lg ${
+                    auction.status === 'Active'
+                      ? 'bg-green-500 text-white'
+                      : auction.status === 'Upcoming'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-500 text-white'
+                  }`}>
+                    {auction.status === 'Active' && <span className="inline-block w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse"></span>}
+                    {auction.status}
+                  </div>
+                )}
               </div>
 
               {/* Thumbnail Gallery */}
