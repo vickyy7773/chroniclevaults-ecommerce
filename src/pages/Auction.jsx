@@ -1222,7 +1222,7 @@ const AuctionPage = () => {
                   <div
                     key={index}
                     onClick={() => handleLotClick(index)}
-                    className={`flex-shrink-0 w-80 rounded-lg p-3 border-2 transition-all cursor-pointer hover:shadow-lg h-52 ${
+                    className={`flex-shrink-0 w-96 rounded-lg p-3 border-2 transition-all cursor-pointer hover:shadow-lg h-52 ${
                       selectedLotIndex === index
                         ? 'bg-accent-50 border-accent-500 shadow-lg ring-2 ring-accent-300'
                         : lot.status === 'Active'
