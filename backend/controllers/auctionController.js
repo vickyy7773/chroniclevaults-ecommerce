@@ -472,58 +472,154 @@ export const endCurrentLot = async (auctionId, io) => {
       const winningBid = sortedBids[0];
       const reservePrice = currentLot.reservePrice || 0;
 
+      // CRITICAL FIX: Check if any bidder has a reserve bid (maxBid) that meets reserve price
+      // If yes, auto-bid them up to reserve price before ending lot
       if (winningBid.amount < reservePrice) {
-        // BELOW RESERVE PRICE - Mark as UNSOLD
-        currentLot.status = 'Unsold';
-        currentLot.unsoldReason = 'Below reserve price';
-        currentLot.endTime = new Date();
+        // Find all bids with maxBid property
+        const reserveBids = currentLot.bids.filter(bid => bid.maxBid && bid.maxBid >= reservePrice);
 
-        console.log(`❌ LOT ${lotNumber} UNSOLD - Winning bid ₹${winningBid.amount} below reserve ₹${reservePrice}`);
+        if (reserveBids.length > 0) {
+          // Sort by maxBid to find highest reserve bidder
+          const sortedReserveBids = [...reserveBids].sort((a, b) => b.maxBid - a.maxBid);
+          const highestReserveBidder = sortedReserveBids[0];
 
-        // Unfreeze all bidders' coins for this lot
-        for (const bid of currentLot.bids) {
-          // Skip system bids (where user is null)
-          if (!bid.user) {
-            console.log(`⚠️  Skipping unfreeze for system bid on lot ${lotNumber}`);
-            continue;
+          console.log(`🎯 Reserve bidder found! User ${highestReserveBidder.user} has maxBid ₹${highestReserveBidder.maxBid} >= reserve ₹${reservePrice}`);
+          console.log(`🤖 Auto-bidding reserve bidder to reserve price ₹${reservePrice}`);
+
+          // Place auto-bid at reserve price for the reserve bidder
+          currentLot.bids.push({
+            user: highestReserveBidder.user,
+            amount: reservePrice,
+            maxBid: highestReserveBidder.maxBid,
+            isReserveBidder: true,
+            isAutoBid: true,
+            isCatalogBid: false, // This happens at lot end
+            timestamp: new Date()
+          });
+          currentLot.currentBid = reservePrice;
+
+          // Re-sort bids to get new winning bid
+          const updatedSortedBids = [...currentLot.bids].sort((a, b) => b.amount - a.amount);
+          const newWinningBid = updatedSortedBids[0];
+
+          console.log(`✅ Reserve bidder auto-bid successful! New winning bid: ₹${newWinningBid.amount}`);
+
+          // Now proceed to SOLD logic with updated winning bid
+          // SOLD - Winner pays, losers get unfrozen
+          currentLot.status = 'Sold';
+          currentLot.winner = newWinningBid.user;
+          currentLot.endTime = new Date();
+
+          console.log(`✅ LOT ${lotNumber} SOLD to reserve bidder ${newWinningBid.user} for ₹${newWinningBid.amount}`);
+
+          // Deduct winner's frozen coins
+          await deductFrozenCoins(newWinningBid.user, auctionId, lotNumber, newWinningBid.amount);
+          console.log(`💰 Deducted ₹${newWinningBid.amount} from winner ${newWinningBid.user}`);
+
+          // Unfreeze all other bidders' coins
+          for (const bid of currentLot.bids) {
+            // Skip system bids (where user is null)
+            if (!bid.user) {
+              console.log(`⚠️  Skipping unfreeze for system bid on lot ${lotNumber}`);
+              continue;
+            }
+
+            if (bid.user.toString() !== newWinningBid.user.toString()) {
+              const unfreezeResult = await unfreezeCoinsForLot(bid.user, auctionId, lotNumber);
+              console.log(`🔓 Unfroze coins for non-winner ${bid.user} on lot ${lotNumber}`);
+
+              // REAL-TIME: Emit coin balance update to each non-winner
+              if (io && unfreezeResult.success && unfreezeResult.user) {
+                io.to(`user-${bid.user.toString()}`).emit('coin-balance-updated', {
+                  auctionCoins: unfreezeResult.user.auctionCoins,
+                  frozenCoins: unfreezeResult.user.frozenCoins,
+                  reason: 'Lot sold to another bidder - coins refunded',
+                  lotNumber,
+                  auctionId: auctionId.toString()
+                });
+                console.log(`💰 Sent real-time coin update to non-winner ${bid.user}: ${unfreezeResult.user.auctionCoins} coins`);
+              }
+            }
           }
 
-          const unfreezeResult = await unfreezeCoinsForLot(bid.user, auctionId, lotNumber);
-          console.log(`🔓 Unfroze coins for bidder ${bid.user} on UNSOLD lot ${lotNumber}`);
+          // Auto-generate invoice for sold lot
+          await autoGenerateInvoice(auctionId, lotNumber, currentLot, newWinningBid.user);
 
-          // REAL-TIME: Emit coin balance update to each user individually
-          if (io && unfreezeResult.success && unfreezeResult.user) {
-            io.to(`user-${bid.user.toString()}`).emit('coin-balance-updated', {
-              auctionCoins: unfreezeResult.user.auctionCoins,
-              frozenCoins: unfreezeResult.user.frozenCoins,
-              reason: 'Lot unsold - coins refunded',
+          // Emit final announcement and socket event
+          if (io) {
+            // Emit SOLD announcement
+            io.to(`auction-${auctionId}`).emit('auction-warning', {
+              auctionId: auctionId.toString(),
+              message: 'SOLD! 🎉',
+              warning: 3,
+              final: true,
               lotNumber,
-              auctionId: auctionId.toString()
+              finalPrice: newWinningBid.amount
             });
-            console.log(`💰 Sent real-time coin update to user ${bid.user}: ${unfreezeResult.user.auctionCoins} coins`);
+
+            // Emit lot-sold event
+            io.to(`auction-${auctionId}`).emit('lot-sold', {
+              auctionId,
+              lotNumber,
+              winner: newWinningBid.user,
+              finalPrice: newWinningBid.amount,
+              nextLotNumber: auction.lotNumber + 1 <= auction.totalLots ? auction.lotNumber + 1 : null
+            });
           }
-        }
+        } else {
+          // No reserve bidder with sufficient maxBid - Mark as UNSOLD
+          // BELOW RESERVE PRICE - Mark as UNSOLD
+          currentLot.status = 'Unsold';
+          currentLot.unsoldReason = 'Below reserve price';
+          currentLot.endTime = new Date();
 
-        // Emit final announcement and socket event
-        if (io) {
-          // Emit UNSOLD announcement
-          io.to(`auction-${auctionId}`).emit('auction-warning', {
-            auctionId: auctionId.toString(),
-            message: 'UNSOLD! ❌ (Below reserve)',
-            warning: 3,
-            final: true,
-            lotNumber
-          });
+          console.log(`❌ LOT ${lotNumber} UNSOLD - Winning bid ₹${winningBid.amount} below reserve ₹${reservePrice}`);
 
-          // Emit lot-unsold event
-          io.to(`auction-${auctionId}`).emit('lot-unsold', {
-            auctionId,
-            lotNumber,
-            reason: 'Below reserve price',
-            winningBid: winningBid.amount,
-            reservePrice,
-            nextLotNumber: auction.lotNumber + 1 <= auction.totalLots ? auction.lotNumber + 1 : null
-          });
+          // Unfreeze all bidders' coins for this lot
+          for (const bid of currentLot.bids) {
+            // Skip system bids (where user is null)
+            if (!bid.user) {
+              console.log(`⚠️  Skipping unfreeze for system bid on lot ${lotNumber}`);
+              continue;
+            }
+
+            const unfreezeResult = await unfreezeCoinsForLot(bid.user, auctionId, lotNumber);
+            console.log(`🔓 Unfroze coins for bidder ${bid.user} on UNSOLD lot ${lotNumber}`);
+
+            // REAL-TIME: Emit coin balance update to each user individually
+            if (io && unfreezeResult.success && unfreezeResult.user) {
+              io.to(`user-${bid.user.toString()}`).emit('coin-balance-updated', {
+                auctionCoins: unfreezeResult.user.auctionCoins,
+                frozenCoins: unfreezeResult.user.frozenCoins,
+                reason: 'Lot unsold - coins refunded',
+                lotNumber,
+                auctionId: auctionId.toString()
+              });
+              console.log(`💰 Sent real-time coin update to user ${bid.user}: ${unfreezeResult.user.auctionCoins} coins`);
+            }
+          }
+
+          // Emit final announcement and socket event
+          if (io) {
+            // Emit UNSOLD announcement
+            io.to(`auction-${auctionId}`).emit('auction-warning', {
+              auctionId: auctionId.toString(),
+              message: 'UNSOLD! ❌ (Below reserve)',
+              warning: 3,
+              final: true,
+              lotNumber
+            });
+
+            // Emit lot-unsold event
+            io.to(`auction-${auctionId}`).emit('lot-unsold', {
+              auctionId,
+              lotNumber,
+              reason: 'Below reserve price',
+              winningBid: winningBid.amount,
+              reservePrice,
+              nextLotNumber: auction.lotNumber + 1 <= auction.totalLots ? auction.lotNumber + 1 : null
+            });
+          }
         }
       } else {
         // SOLD - Winner pays, losers get unfrozen
