@@ -1165,18 +1165,6 @@ const AuctionPage = () => {
                                     Leading
                                   </span>
                                 )}
-                                {/* Personalized status for current user */}
-                                {user && bid.user && bid.user._id === user._id && (
-                                  index === 0 ? (
-                                    <span className="ml-1 text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-bold">
-                                      🎉 You Win
-                                    </span>
-                                  ) : (
-                                    <span className="ml-1 text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold">
-                                      ⚠️ You are Outbid
-                                    </span>
-                                  )
-                                )}
                               </p>
                               <p className="text-sm text-gray-500">
                                 {new Date(bid.timestamp).toLocaleString('en-IN', {
