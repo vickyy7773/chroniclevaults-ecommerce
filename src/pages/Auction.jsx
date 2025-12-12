@@ -349,19 +349,9 @@ const AuctionPage = () => {
         setPhaseMessage(data.phaseMessage);
         setPhaseTimer(data.phaseTimer);
 
-        // Show toast on phase change
-        if (data.callNumber === 1 && data.phaseTimer === 10) {
-          toast.warning(`⚠️ Going Once! Place your bid now!`, {
-            autoClose: 3000,
-            position: 'top-center'
-          });
-        } else if (data.callNumber === 2 && data.phaseTimer === 10) {
-          toast.error(`🚨 Going Twice! Last chance to bid!`, {
-            autoClose: 3000,
-            position: 'top-center'
-          });
-        } else if (data.callNumber === 3 && data.phaseTimer === 10) {
-          // Phase 3 started
+        // When phase 3 ends (timer = 0), show SOLD/UNSOLD and refresh auction
+        if (data.callNumber === 3 && data.phaseTimer === 0) {
+          // Show final result
           if (data.phaseMessage === 'SOLD') {
             toast.success(`🎉 SOLD!`, {
               autoClose: 2000,
@@ -373,10 +363,7 @@ const AuctionPage = () => {
               position: 'top-center'
             });
           }
-        }
 
-        // When phase 3 ends (timer = 0), refresh auction
-        if (data.callNumber === 3 && data.phaseTimer === 0) {
           setTimeout(() => {
             setCallNumber(0);
             setPhaseMessage('');
@@ -384,6 +371,18 @@ const AuctionPage = () => {
             fetchAuction();
           }, 1000);
         }
+      }
+    };
+
+    const handlePhaseTransition = (data) => {
+      console.log('⚡ PHASE TRANSITION:', data);
+
+      if (data.auctionId === auction._id) {
+        // Show flash message at phase transitions (20s and 10s)
+        toast.warning(data.flashMessage, {
+          autoClose: 2000,
+          position: 'top-center'
+        });
       }
     };
 
@@ -457,12 +456,14 @@ const AuctionPage = () => {
     };
 
     socketRef.current.off('auction-phase-tick', handlePhaseTick);
+    socketRef.current.off('auction-phase-transition', handlePhaseTransition);
     socketRef.current.off('auction-phase-reset', handlePhaseReset);
     socketRef.current.off('lot-changed', handleLotChanged);
     socketRef.current.off('lot-started', handleLotChanged);
     socketRef.current.off('auction-completed', handleAuctionCompleted);
 
     socketRef.current.on('auction-phase-tick', handlePhaseTick);
+    socketRef.current.on('auction-phase-transition', handlePhaseTransition);
     socketRef.current.on('auction-phase-reset', handlePhaseReset);
     socketRef.current.on('lot-changed', handleLotChanged);
     socketRef.current.on('lot-started', handleLotChanged);
@@ -471,6 +472,7 @@ const AuctionPage = () => {
     return () => {
       if (socketRef.current) {
         socketRef.current.off('auction-phase-tick', handlePhaseTick);
+        socketRef.current.off('auction-phase-transition', handlePhaseTransition);
         socketRef.current.off('auction-phase-reset', handlePhaseReset);
         socketRef.current.off('lot-changed', handleLotChanged);
         socketRef.current.off('lot-started', handleLotChanged);
@@ -533,15 +535,10 @@ const AuctionPage = () => {
 
     // FOR LOT BIDDING: Show phase timer if active (Live Phase only)
     if (auction.isLotBidding && auctionPhase === 'live') {
-      // Priority 1: If phase timer is active, show it with phase message
+      // Priority 1: If phase timer is active, show continuous countdown
       if (callNumber > 0 && phaseTimer !== undefined) {
-        const phaseLabels = {
-          1: 'Going Once',
-          2: 'Going Twice',
-          3: phaseMessage || 'Final'
-        };
-
-        setTimeRemaining(`${phaseLabels[callNumber]}: ${phaseTimer}s`);
+        // Show continuous countdown timer
+        setTimeRemaining(`Closing in: ${phaseTimer}s`);
         return;
       }
 
