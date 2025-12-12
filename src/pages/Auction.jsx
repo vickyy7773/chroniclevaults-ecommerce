@@ -1012,21 +1012,6 @@ const AuctionPage = () => {
                     <p className="text-sm text-gray-500 uppercase tracking-wide">Increment</p>
                     <p className="font-bold text-gray-900 text-sm">₹{currentIncrement.toLocaleString()}</p>
                   </div>
-                  {/* Reserve Price - LOT BIDDING ONLY */}
-                  {auction.isLotBidding && displayLot && displayLot.reservePrice > 0 && (
-                    <div className="col-span-2 bg-orange-50 border border-orange-200 rounded-lg p-2">
-                      <p className="text-sm text-orange-600 uppercase tracking-wide flex items-center gap-1">
-                        <Shield className="w-3 h-3" />
-                        Reserve Price (Min to Sell)
-                      </p>
-                      <p className="font-bold text-orange-700 text-sm">₹{displayLot.reservePrice.toLocaleString()}</p>
-                      <p className="text-xs text-orange-600 mt-0.5">
-                        {displayCurrentBid >= displayLot.reservePrice
-                          ? '✅ Reserve met - Will sell if no higher bid'
-                          : '⚠️ Reserve not met - Won\'t sell below this'}
-                      </p>
-                    </div>
-                  )}
                 </div>
 
                 {/* User Bid Stats */}
@@ -1141,10 +1126,15 @@ const AuctionPage = () => {
                 <div className="border-t border-gray-200 pt-2.5">
                   <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center justify-between">
                     <span>Bid History</span>
-                    <span className="text-base font-normal text-gray-500">{auction.bids.length} bids</span>
+                    <span className="text-base font-normal text-gray-500">
+                      {auction.isLotBidding && displayLot ?
+                        `${displayLot.bids?.length || 0} bids` :
+                        `${auction.bids.length} bids`
+                      }
+                    </span>
                   </h3>
 
-                  {auction.bids.length === 0 ? (
+                  {(auction.isLotBidding && displayLot ? (displayLot.bids?.length || 0) : auction.bids.length) === 0 ? (
                     <div className="text-center py-4">
                       <Gavel className="w-8 h-8 text-gray-200 mx-auto mb-1.5" />
                       <p className="text-gray-500 font-medium text-base">No bids yet</p>
@@ -1152,7 +1142,7 @@ const AuctionPage = () => {
                     </div>
                   ) : (
                     <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                      {[...auction.bids].reverse().map((bid, index) => (
+                      {[...(auction.isLotBidding && displayLot ? (displayLot.bids || []) : auction.bids)].reverse().map((bid, index) => (
                         <div
                           key={index}
                           className={`flex items-center justify-between p-2 rounded-lg transition-all ${
@@ -1169,11 +1159,23 @@ const AuctionPage = () => {
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="font-semibold text-gray-900 text-base truncate">
-                                Bidder #{auction.bids.length - index}
+                                Bidder #{(auction.isLotBidding && displayLot ? (displayLot.bids?.length || 0) : auction.bids.length) - index}
                                 {index === 0 && (
                                   <span className="ml-1 text-sm bg-green-600 text-white px-1.5 py-0.5 rounded-full">
                                     Leading
                                   </span>
+                                )}
+                                {/* Personalized status for current user */}
+                                {user && bid.user && bid.user._id === user._id && (
+                                  index === 0 ? (
+                                    <span className="ml-1 text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded-full font-bold">
+                                      🎉 You Win
+                                    </span>
+                                  ) : (
+                                    <span className="ml-1 text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold">
+                                      ⚠️ You are Outbid
+                                    </span>
+                                  )
                                 )}
                               </p>
                               <p className="text-sm text-gray-500">
