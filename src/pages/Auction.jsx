@@ -850,13 +850,13 @@ const AuctionPage = () => {
         </div>
       </div>
 
-      <div className="w-full mx-auto px-4 py-3">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <div className="w-full mx-auto px-[2%] py-[0.5rem]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[1%]">
           {/* Left Column - Auction Images & Details */}
-          <div className="space-y-2">
+          <div className="space-y-[0.5rem]">
             {/* Media Gallery (Images + Video) */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="relative aspect-video bg-gray-100">
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="relative w-full h-0 pb-[56.25%] bg-gray-100">
                 {mediaItems.length > 0 ? (
                   <>
                     {/* Show image or video based on type */}
@@ -864,7 +864,7 @@ const AuctionPage = () => {
                       <img
                         src={mediaItems[selectedImage].url}
                         alt={auction.title}
-                        className="w-full h-full object-contain"
+                        className="absolute top-0 left-0 w-full h-full object-contain"
                       />
                     ) : (
                       <video
@@ -874,7 +874,7 @@ const AuctionPage = () => {
                         loop
                         muted
                         playsInline
-                        className="w-full h-full object-contain bg-black"
+                        className="absolute top-0 left-0 w-full h-full object-contain bg-black"
                         controlsList="nodownload"
                       >
                         Your browser does not support the video tag.
@@ -882,39 +882,39 @@ const AuctionPage = () => {
                     )}
                   </>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Gavel className="w-16 h-16 text-gray-300" />
+                  <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
+                    <Gavel className="w-[3rem] h-[3rem] text-gray-300" />
                   </div>
                 )}
 
                 {/* Status Badge */}
-                <div className={`absolute top-2 left-2 px-2.5 py-1 rounded-full font-bold text-base shadow-lg ${
+                <div className={`absolute top-[0.5rem] left-[0.5rem] px-[0.625rem] py-[0.25rem] rounded-full font-bold text-[0.875rem] shadow-lg ${
                   auction.status === 'Active'
                     ? 'bg-green-500 text-white'
                     : auction.status === 'Upcoming'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-500 text-white'
                 }`}>
-                  {auction.status === 'Active' && <span className="inline-block w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse"></span>}
+                  {auction.status === 'Active' && <span className="inline-block w-[0.375rem] h-[0.375rem] bg-white rounded-full mr-[0.375rem] animate-pulse"></span>}
                   {auction.status}
                 </div>
               </div>
 
               {/* Thumbnail Gallery (Images + Video) */}
               {mediaItems.length > 1 && (
-                <div className="p-2 border-t flex gap-1.5 overflow-x-auto">
+                <div className="p-[0.5rem] border-t flex gap-[0.375rem] overflow-x-auto">
                   {mediaItems.map((item, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedImage(idx)}
-                      className={`flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${
+                      className={`flex-shrink-0 w-[2.5rem] h-[2.5rem] rounded-lg overflow-hidden border-2 transition-all ${
                         selectedImage === idx ? 'border-accent-600 shadow-lg' : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       {item.type === 'image' ? (
                         <img src={item.url} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-black flex items-center justify-center text-white text-[8px] font-bold">
+                        <div className="w-full h-full bg-black flex items-center justify-center text-white text-[0.5rem] font-bold">
                           VIDEO
                         </div>
                       )}
@@ -925,7 +925,7 @@ const AuctionPage = () => {
             </div>
 
             {/* Auction Information */}
-            <div className="bg-white rounded-lg shadow-lg p-3">
+            <div className="bg-white rounded-lg shadow-md p-[0.75rem]">
               {/* FOR LOT BIDDING: Show display lot title */}
               {auction.isLotBidding && auction.lots && displayLot ? (
                 <>
