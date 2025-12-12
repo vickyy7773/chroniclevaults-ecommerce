@@ -1234,12 +1234,12 @@ const AuctionPage = () => {
                   >
                     <div className="flex gap-3 h-full">
                       {/* Lot Image */}
-                      <div className="w-32 h-full rounded-lg flex-shrink-0 overflow-hidden border-2 border-gray-200 bg-gray-100">
+                      <div className="w-40 h-full rounded-lg flex-shrink-0 overflow-hidden border-2 border-gray-200 bg-gray-100">
                         {lot.image ? (
                           <img
                             src={lot.image}
                             alt={lot.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                             onError={(e) => {
                               e.target.onerror = null;
                               e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="104"%3E%3Crect fill="%23f3f4f6" width="96" height="104"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="12"%3ENo Image%3C/text%3E%3C/svg%3E';
