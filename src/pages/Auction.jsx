@@ -764,22 +764,28 @@ const AuctionPage = () => {
   const currentIncrement = getCurrentIncrement(auction);
   const minBid = displayCurrentBid + currentIncrement;
 
-  // FOR LOT BIDDING: Use display lot's images (multiple images support)
-  let auctionImages;
+  // FOR LOT BIDDING: Build media items array (images + video) like ProductDetail
+  let mediaItems = [];
   if (auction.isLotBidding && displayLot) {
-    // First try to use images array (supports multiple images)
+    // Add all images
     if (displayLot.images && displayLot.images.length > 0) {
-      auctionImages = displayLot.images;
+      displayLot.images.forEach(img => {
+        mediaItems.push({ type: 'image', url: img });
+      });
+    } else if (displayLot.image) {
+      // Fallback to single image
+      mediaItems.push({ type: 'image', url: displayLot.image });
     }
-    // Fallback to single image if images array is empty
-    else if (displayLot.image) {
-      auctionImages = [displayLot.image];
-    } else {
-      auctionImages = [];
+
+    // Add video if exists
+    if (displayLot.video) {
+      mediaItems.push({ type: 'video', url: displayLot.video });
     }
   } else {
     // Fix: Backend uses auction.image (singular), not auction.images (plural)
-    auctionImages = auction.image ? [auction.image] : [];
+    if (auction.image) {
+      mediaItems.push({ type: 'image', url: auction.image });
+    }
   }
 
   // Handle lot click - show selected lot details
@@ -848,68 +854,56 @@ const AuctionPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {/* Left Column - Auction Images & Details */}
           <div className="space-y-2">
-            {/* Video Player (if video exists) */}
-            {displayLot && displayLot.video && (
-              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div className="relative aspect-video bg-gray-100">
-                  <video
-                    src={displayLot.video}
-                    controls
-                    className="w-full h-full object-contain"
-                    controlsList="nodownload"
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-
-                  {/* Status Badge on Video */}
-                  <div className={`absolute top-2 left-2 px-2.5 py-1 rounded-full font-bold text-base shadow-lg ${
-                    auction.status === 'Active'
-                      ? 'bg-green-500 text-white'
-                      : auction.status === 'Upcoming'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-500 text-white'
-                  }`}>
-                    {auction.status === 'Active' && <span className="inline-block w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse"></span>}
-                    {auction.status}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Auction Image Gallery */}
+            {/* Media Gallery (Images + Video) */}
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               <div className="relative aspect-video bg-gray-100">
-                {auctionImages.length > 0 ? (
-                  <img
-                    src={auctionImages[selectedImage]}
-                    alt={auction.title}
-                    className="w-full h-full object-contain"
-                  />
+                {mediaItems.length > 0 ? (
+                  <>
+                    {/* Show image or video based on type */}
+                    {mediaItems[selectedImage].type === 'image' ? (
+                      <img
+                        src={mediaItems[selectedImage].url}
+                        alt={auction.title}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <video
+                        src={mediaItems[selectedImage].url}
+                        controls
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-contain bg-black"
+                        controlsList="nodownload"
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Gavel className="w-16 h-16 text-gray-300" />
                   </div>
                 )}
 
-                {/* Status Badge on Image (only show if no video) */}
-                {(!displayLot || !displayLot.video) && (
-                  <div className={`absolute top-2 left-2 px-2.5 py-1 rounded-full font-bold text-base shadow-lg ${
-                    auction.status === 'Active'
-                      ? 'bg-green-500 text-white'
-                      : auction.status === 'Upcoming'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-500 text-white'
-                  }`}>
-                    {auction.status === 'Active' && <span className="inline-block w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse"></span>}
-                    {auction.status}
-                  </div>
-                )}
+                {/* Status Badge */}
+                <div className={`absolute top-2 left-2 px-2.5 py-1 rounded-full font-bold text-base shadow-lg ${
+                  auction.status === 'Active'
+                    ? 'bg-green-500 text-white'
+                    : auction.status === 'Upcoming'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-500 text-white'
+                }`}>
+                  {auction.status === 'Active' && <span className="inline-block w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-pulse"></span>}
+                  {auction.status}
+                </div>
               </div>
 
-              {/* Thumbnail Gallery */}
-              {auctionImages.length > 1 && (
+              {/* Thumbnail Gallery (Images + Video) */}
+              {mediaItems.length > 1 && (
                 <div className="p-2 border-t flex gap-1.5 overflow-x-auto">
-                  {auctionImages.map((img, idx) => (
+                  {mediaItems.map((item, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedImage(idx)}
@@ -917,7 +911,13 @@ const AuctionPage = () => {
                         selectedImage === idx ? 'border-accent-600 shadow-lg' : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      {item.type === 'image' ? (
+                        <img src={item.url} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-black flex items-center justify-center text-white text-[8px] font-bold">
+                          VIDEO
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
