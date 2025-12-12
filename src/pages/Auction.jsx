@@ -1222,7 +1222,7 @@ const AuctionPage = () => {
                   <div
                     key={index}
                     onClick={() => handleLotClick(index)}
-                    className={`flex-shrink-0 w-80 rounded-lg p-3 border-2 transition-all cursor-pointer hover:shadow-lg h-40 ${
+                    className={`flex-shrink-0 w-80 rounded-lg p-3 border-2 transition-all cursor-pointer hover:shadow-lg h-48 ${
                       selectedLotIndex === index
                         ? 'bg-accent-50 border-accent-500 shadow-lg ring-2 ring-accent-300'
                         : lot.status === 'Active'
@@ -1293,8 +1293,8 @@ const AuctionPage = () => {
                           </h4>
                         </div>
 
-                        <div className="space-y-1">
-                          <div className="text-sm text-gray-500">
+                        <div className="space-y-0.5">
+                          <div className="text-xs text-gray-500">
                             Start: <span className="font-semibold text-gray-700">₹{lot.startingPrice.toLocaleString()}</span>
                           </div>
 
@@ -1309,13 +1309,13 @@ const AuctionPage = () => {
 
                             if (isWinner) {
                               return (
-                                <div className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
+                                <div className="text-xs font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
                                   🎉 You Win!
                                 </div>
                               );
                             } else if (didUserBid) {
                               return (
-                                <div className="text-sm font-bold text-red-600 bg-red-50 px-2 py-1 rounded">
+                                <div className="text-xs font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
                                   ⚠️ You are Outbid
                                 </div>
                               );
@@ -1327,14 +1327,14 @@ const AuctionPage = () => {
 
                           {/* Reserve Price for Active/Upcoming Lots */}
                           {(lot.status === 'Active' || lot.status === 'Upcoming') && lot.reservePrice > 0 && (
-                            <div className="text-sm text-orange-600 font-medium">
+                            <div className="text-xs text-orange-600 font-medium">
                               Reserve: <span className="font-semibold">₹{lot.reservePrice.toLocaleString()}</span>
                             </div>
                           )}
 
-                          <div className="text-sm text-gray-600 font-medium">
+                          <div className="text-xs text-gray-600 font-medium">
                             {lot.status === 'Active' || lot.status === 'Upcoming' ? 'Current: ' : 'Final: '}
-                            <span className={`font-bold text-base ${
+                            <span className={`font-bold text-sm ${
                               lot.status === 'Sold' ? 'text-emerald-600' :
                               lot.status === 'Unsold' ? 'text-red-600' :
                               'text-gray-900'
