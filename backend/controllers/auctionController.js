@@ -159,10 +159,7 @@ export const deductFrozenCoins = async (userId, auctionId, lotNumber, amount) =>
  */
 export const placeReservePriceAutoBid = async (auction, lotIndex = null) => {
   try {
-    // Only auto-bid if catalog bidding is enabled
-    if (!auction.catalogBiddingEnabled) {
-      return false;
-    }
+    // Auto-bid works in BOTH catalog and live phases to protect reserve price
 
     let currentBid, reservePrice, lot;
 
@@ -1795,14 +1792,15 @@ export const placeBid = async (req, res) => {
     await auction.save();
 
     // RESERVE PRICE AUTO-BIDDING: Trigger system auto-bid to push toward reserve price
-    // Only in catalog phase when catalogBiddingEnabled is true
-    if (isInCatalogPhase && auction.catalogBiddingEnabled) {
+    // Works in BOTH catalog and live phases
+    if (isInCatalogPhase || isInLivePhase) {
       // Use the lot that user just bid on (currentLotIndex), not the auction's active lot
       const lotIndexForSystemBid = auction.isLotBidding ? currentLotIndex : null;
       const systemBidPlaced = await placeReservePriceAutoBid(auction, lotIndexForSystemBid);
 
       if (systemBidPlaced) {
-        console.log(`🤖 System auto-bid triggered after user bid in catalog phase on Lot #${currentLotIndex + 1}`);
+        const phaseText = isInCatalogPhase ? 'catalog' : 'live';
+        console.log(`🤖 System auto-bid triggered after user bid in ${phaseText} phase on Lot #${currentLotIndex + 1}`);
         // Save auction again after system bid
         await auction.save();
       }
