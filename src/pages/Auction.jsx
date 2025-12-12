@@ -1291,15 +1291,8 @@ const AuctionPage = () => {
                                 </div>
                               );
                             } else {
-                              // User didn't bid - show reserve price if exists
-                              return lot.reservePrice > 0 ? (
-                                <div className="text-sm text-orange-600 font-medium">
-                                  Reserve: <span className="font-semibold">₹{lot.reservePrice.toLocaleString()}</span>
-                                  <span className="ml-1">
-                                    {lot.currentBid >= lot.reservePrice ? '✅' : '❌'}
-                                  </span>
-                                </div>
-                              ) : null;
+                              // User didn't bid - show nothing
+                              return null;
                             }
                           })()}
 
