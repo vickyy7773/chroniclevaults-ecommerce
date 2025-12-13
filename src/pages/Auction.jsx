@@ -772,7 +772,12 @@ const AuctionPage = () => {
   // FOR LOT BIDDING: Build media items array (images + video) like ProductDetail
   let mediaItems = [];
   if (auction.isLotBidding && displayLot) {
-    // Add all images
+    // PRIORITY 1: Add auction highlight image if available (shown first during live auction)
+    if (auction.highlightImage) {
+      mediaItems.push({ type: 'image', url: auction.highlightImage, isHighlight: true });
+    }
+
+    // PRIORITY 2: Add all lot images
     if (displayLot.images && displayLot.images.length > 0) {
       displayLot.images.forEach(img => {
         mediaItems.push({ type: 'image', url: img });
@@ -782,7 +787,7 @@ const AuctionPage = () => {
       mediaItems.push({ type: 'image', url: displayLot.image });
     }
 
-    // Add video if exists
+    // PRIORITY 3: Add video if exists
     if (displayLot.video) {
       mediaItems.push({ type: 'video', url: displayLot.video });
     }

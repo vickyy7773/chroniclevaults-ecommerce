@@ -17,6 +17,7 @@ const AuctionManagement = () => {
     title: '',
     description: '',
     image: '',
+    highlightImage: '',
     startingPrice: '',
     reservePrice: '',
     startTime: '',
@@ -30,6 +31,9 @@ const AuctionManagement = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [imageInputType, setImageInputType] = useState('file'); // 'file' or 'url'
+  const [highlightImageFile, setHighlightImageFile] = useState(null);
+  const [highlightImagePreview, setHighlightImagePreview] = useState('');
+  const [highlightImageInputType, setHighlightImageInputType] = useState('url'); // 'file' or 'url'
   const [customers, setCustomers] = useState([]);
 
   useEffect(() => {
@@ -191,6 +195,23 @@ const AuctionManagement = () => {
     }
   };
 
+  const handleHighlightImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setHighlightImageFile(file);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setHighlightImagePreview(reader.result);
+        setFormData(prev => ({
+          ...prev,
+          highlightImage: reader.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -215,6 +236,18 @@ const AuctionManagement = () => {
         } catch (uploadError) {
           console.error('Image upload error:', uploadError);
           toast.error('Failed to upload image');
+          return;
+        }
+      }
+
+      // If highlight image is base64, upload it first
+      if (formData.highlightImage && formData.highlightImage.startsWith('data:image/')) {
+        try {
+          const uploadResponse = await api.post('/upload/base64', { image: formData.highlightImage });
+          submitData.highlightImage = uploadResponse.imageUrl;
+        } catch (uploadError) {
+          console.error('Highlight image upload error:', uploadError);
+          toast.error('Failed to upload highlight image');
           return;
         }
       }
@@ -713,6 +746,79 @@ const AuctionManagement = () => {
                             <img
                               src={imageInputType === 'file' ? imagePreview : formData.image}
                               alt="Preview"
+                              className="w-full h-48 object-cover rounded-lg border border-gray-300"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="14"%3EInvalid Image%3C/text%3E%3C/svg%3E';
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Highlight Image (for Live Auction) */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Auction Highlight Image (Live Auction Banner)
+                        </label>
+
+                        {/* Image Input Type Selector */}
+                        <div className="flex gap-4 mb-2">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="highlightImageInputType"
+                              checked={highlightImageInputType === 'file'}
+                              onChange={() => setHighlightImageInputType('file')}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">File Upload</span>
+                          </label>
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="highlightImageInputType"
+                              checked={highlightImageInputType === 'url'}
+                              onChange={() => setHighlightImageInputType('url')}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">Image URL</span>
+                          </label>
+                        </div>
+
+                        {/* Conditional Input Based on Selection */}
+                        {highlightImageInputType === 'file' ? (
+                          <>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleHighlightImageChange}
+                              className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Upload a banner image for live auction highlights section</p>
+                          </>
+                        ) : (
+                          <>
+                            <input
+                              type="text"
+                              name="highlightImage"
+                              value={formData.highlightImage || ''}
+                              onChange={handleInputChange}
+                              className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                              placeholder="https://chroniclevaults.com/api/uploads/highlight-img-123456.jpg"
+                            />
+                            <p className="text-xs text-blue-600 mt-1">
+                              💡 Use Image Upload Manager to upload images and paste URL here
+                            </p>
+                          </>
+                        )}
+
+                        {/* Image Preview */}
+                        {(highlightImagePreview || (highlightImageInputType === 'url' && formData.highlightImage)) && (
+                          <div className="mt-2">
+                            <img
+                              src={highlightImageInputType === 'file' ? highlightImagePreview : formData.highlightImage}
+                              alt="Highlight Preview"
                               className="w-full h-48 object-cover rounded-lg border border-gray-300"
                               onError={(e) => {
                                 e.target.onerror = null;

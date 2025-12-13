@@ -285,6 +285,7 @@ const auctionSchema = new mongoose.Schema({
   },
   catalogPDF: String, // URL to catalog PDF
   coverImage: String, // Cover page image
+  highlightImage: String, // Auction highlight banner image (shown during live auction)
   errataPDF: String // Auction errata PDF
 }, {
   timestamps: true
