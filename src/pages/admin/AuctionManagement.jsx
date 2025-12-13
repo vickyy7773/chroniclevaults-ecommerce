@@ -372,6 +372,7 @@ const AuctionManagement = () => {
       title: '',
       description: '',
       image: '',
+      highlightImage: '',
       startingPrice: '',
       reservePrice: '',
       reserveBidder: '',
@@ -384,6 +385,9 @@ const AuctionManagement = () => {
     });
     setImageFile(null);
     setImagePreview('');
+    setHighlightImageFile(null);
+    setHighlightImagePreview('');
+    setHighlightImageInputType('file');
     setSelectedAuction(null);
   };
 
