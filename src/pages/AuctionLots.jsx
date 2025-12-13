@@ -330,29 +330,6 @@ const AuctionLots = () => {
           <span className="font-medium">Back to Catalog</span>
         </button>
 
-        {/* Auction Highlights Banner */}
-        {auction.highlightImage && (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-            <div className="relative w-full h-64 md:h-80 lg:h-96">
-              <img
-                src={auction.highlightImage}
-                alt="Auction Highlights"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.style.display = 'none';
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end">
-                <div className="p-6 text-white">
-                  <h2 className="text-2xl md:text-3xl font-bold mb-2">Auction Highlights</h2>
-                  <p className="text-lg">{auction.title}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Filter Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Filter Lots</h3>
