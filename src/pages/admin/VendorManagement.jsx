@@ -52,19 +52,48 @@ const VendorManagement = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Strict validation rules
+    let sanitizedValue = value;
+
+    // Name fields - only letters, spaces, dots, and hyphens
+    if (name === 'name' || name === 'bankDetails.accountHolderName' || name === 'bankDetails.bankName' || name === 'bankDetails.branchName') {
+      sanitizedValue = value.replace(/[^a-zA-Z\s.-]/g, '');
+    }
+
+    // Mobile number - only digits, max 10
+    if (name === 'mobile') {
+      sanitizedValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+    }
+
+    // Account number - only digits and letters (some banks use alphanumeric)
+    if (name === 'bankDetails.accountNumber') {
+      sanitizedValue = value.replace(/[^0-9]/g, '');
+    }
+
+    // IFSC Code - uppercase letters and digits only, max 11 characters
+    if (name === 'bankDetails.ifscCode') {
+      sanitizedValue = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11);
+    }
+
+    // Commission - only numbers and decimal point
+    if (name === 'commissionPercentage') {
+      sanitizedValue = value.replace(/[^0-9.]/g, '');
+    }
+
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
       setFormData(prev => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: value
+          [child]: sanitizedValue
         }
       }));
     } else {
       setFormData(prev => ({
         ...prev,
-        [name]: value
+        [name]: sanitizedValue
       }));
     }
   };
@@ -445,13 +474,17 @@ const VendorManagement = () => {
                         Name <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="text" 
+                        type="text"
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
                         required
+                        pattern="[a-zA-Z\s.-]{2,}"
+                        placeholder="Enter vendor name"
+                        title="Name should contain only letters, spaces, dots and hyphens"
                         className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Only letters, spaces, dots and hyphens allowed</p>
                     </div>
 
                     <div>
@@ -459,13 +492,17 @@ const VendorManagement = () => {
                         Email <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="email" 
+                        type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
                         required
+                        pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                        placeholder="vendor@example.com"
+                        title="Please enter a valid email address"
                         className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Must be a valid email format</p>
                     </div>
 
                     <div>
@@ -473,15 +510,18 @@ const VendorManagement = () => {
                         Mobile Number <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="tel" 
+                        type="tel"
                         name="mobile"
                         value={formData.mobile}
                         onChange={handleInputChange}
                         required
                         pattern="[0-9]{10}"
                         placeholder="10-digit mobile number"
+                        maxLength="10"
+                        title="Mobile number must be exactly 10 digits"
                         className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Only 10 digit numbers allowed</p>
                     </div>
 
                     <div className="md:col-span-2">
@@ -579,13 +619,17 @@ const VendorManagement = () => {
                         Account Holder Name <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="text" 
+                        type="text"
                         name="bankDetails.accountHolderName"
                         value={formData.bankDetails.accountHolderName}
                         onChange={handleInputChange}
                         required
+                        pattern="[a-zA-Z\s.-]{2,}"
+                        placeholder="As per bank account"
+                        title="Name should contain only letters, spaces, dots and hyphens"
                         className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Only letters, spaces, dots and hyphens allowed</p>
                     </div>
 
                     <div>
@@ -593,13 +637,17 @@ const VendorManagement = () => {
                         Account Number <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="text" 
+                        type="text"
                         name="bankDetails.accountNumber"
                         value={formData.bankDetails.accountNumber}
                         onChange={handleInputChange}
                         required
+                        pattern="[0-9]{9,18}"
+                        placeholder="9 to 18 digit account number"
+                        title="Account number must be 9-18 digits"
                         className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Only numbers allowed (9-18 digits)</p>
                     </div>
 
                     <div>
@@ -607,13 +655,18 @@ const VendorManagement = () => {
                         IFSC Code <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="text" 
+                        type="text"
                         name="bankDetails.ifscCode"
                         value={formData.bankDetails.ifscCode}
                         onChange={handleInputChange}
                         required
+                        pattern="[A-Z]{4}0[A-Z0-9]{6}"
+                        placeholder="e.g., SBIN0001234"
+                        maxLength="11"
+                        title="IFSC code must be 11 characters (4 letters + 0 + 6 alphanumeric)"
                         className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Format: 4 letters + 0 + 6 characters (auto uppercase)</p>
                     </div>
 
                     <div>
@@ -621,13 +674,17 @@ const VendorManagement = () => {
                         Bank Name <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="text" 
+                        type="text"
                         name="bankDetails.bankName"
                         value={formData.bankDetails.bankName}
                         onChange={handleInputChange}
                         required
+                        pattern="[a-zA-Z\s.-]{2,}"
+                        placeholder="Enter bank name"
+                        title="Bank name should contain only letters, spaces, dots and hyphens"
                         className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Only letters, spaces, dots and hyphens allowed</p>
                     </div>
 
                     <div>
@@ -635,12 +692,16 @@ const VendorManagement = () => {
                         Branch Name
                       </label>
                       <input
-                        type="text" 
+                        type="text"
                         name="bankDetails.branchName"
                         value={formData.bankDetails.branchName}
                         onChange={handleInputChange}
+                        pattern="[a-zA-Z\s.-]*"
+                        placeholder="Enter branch name"
+                        title="Branch name should contain only letters, spaces, dots and hyphens"
                         className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Only letters, spaces, dots and hyphens allowed</p>
                     </div>
                   </div>
                 </div>
