@@ -248,7 +248,7 @@ const AuctionLots = () => {
         socketRef.current.off('coin-balance-updated', handleCoinBalanceUpdate);
       }
     };
-  }, [socketRef.current, currentUser]);
+  }, [currentUser, id]);
 
   // Handle bid submission for a specific lot
   const handlePlaceBid = async (lotNumber) => {
