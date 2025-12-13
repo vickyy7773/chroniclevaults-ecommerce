@@ -874,7 +874,7 @@ const AuctionManagement = () => {
                           Auction Title
                         </label>
                         <input
-                          type="text" 
+                          type="text"
                           name="title"
                           value={formData.title}
                           onChange={handleInputChange}
@@ -897,6 +897,79 @@ const AuctionManagement = () => {
                           className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                           placeholder="Overall auction description"
                         />
+                      </div>
+
+                      {/* Highlight Image (for Catalog Page Banner) */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Auction Highlight Image (Catalog Page Banner)
+                        </label>
+
+                        {/* Image Input Type Selector */}
+                        <div className="flex gap-4 mb-2">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="highlightImageInputType"
+                              checked={highlightImageInputType === 'file'}
+                              onChange={() => setHighlightImageInputType('file')}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">File Upload</span>
+                          </label>
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="highlightImageInputType"
+                              checked={highlightImageInputType === 'url'}
+                              onChange={() => setHighlightImageInputType('url')}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">Image URL</span>
+                          </label>
+                        </div>
+
+                        {/* Conditional Input Based on Selection */}
+                        {highlightImageInputType === 'file' ? (
+                          <>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleHighlightImageChange}
+                              className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Upload a banner image for catalog page highlights section</p>
+                          </>
+                        ) : (
+                          <>
+                            <input
+                              type="text"
+                              name="highlightImage"
+                              value={formData.highlightImage || ''}
+                              onChange={handleInputChange}
+                              className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                              placeholder="https://chroniclevaults.com/api/uploads/highlight-img-123456.jpg"
+                            />
+                            <p className="text-xs text-blue-600 mt-1">
+                              💡 Use Image Upload Manager to upload images and paste URL here
+                            </p>
+                          </>
+                        )}
+
+                        {/* Image Preview */}
+                        {(highlightImagePreview || (highlightImageInputType === 'url' && formData.highlightImage)) && (
+                          <div className="mt-2">
+                            <img
+                              src={highlightImageInputType === 'file' ? highlightImagePreview : formData.highlightImage}
+                              alt="Highlight Preview"
+                              className="w-full h-48 object-cover rounded-lg border border-gray-300"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="14"%3EInvalid Image%3C/text%3E%3C/svg%3E';
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
 
                       {/* Lots Management */}
