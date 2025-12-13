@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { FaWhatsapp, FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter } from 'react-icons/fa';
 import logoImage from '../../assets/fixed logo.png';
-import posterImage from '../../assets/poster.jpg';
 import { API_BASE_URL } from '../../constants/api';
 
 const Header = ({
@@ -390,7 +389,7 @@ const Header = ({
               {/* Mobile Menu Header */}
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-primary-300">
                 <div className="flex items-center space-x-3">
-                  <img src={posterImage} alt="Chronicle Vaults" className="h-12 w-auto object-contain" />
+                  <img src={logoImage} alt="Chronicle Vaults" className="h-12 w-auto object-contain" />
                   <div>
                     <h2 className="text-lg font-black text-neutral-900">Menu</h2>
                   </div>
