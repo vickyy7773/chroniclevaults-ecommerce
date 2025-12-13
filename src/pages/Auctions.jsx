@@ -138,12 +138,12 @@ const AuctionsPage = () => {
                 className="rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-1"
               >
                 {/* Auction Highlight Banner Image */}
-                <div className="relative w-full h-80 bg-gray-200">
+                <div className="relative w-full h-[500px] bg-gray-200">
                   {auction.highlightImage || auction.image ? (
                     <img
                       src={auction.highlightImage || auction.image}
                       alt={auction.title}
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23f3f4f6" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="20"%3ENo Image%3C/text%3E%3C/svg%3E';
