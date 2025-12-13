@@ -134,125 +134,26 @@ const AuctionsPage = () => {
             {auctions.map((auction) => (
               <div
                 key={auction._id}
-                onClick={() => navigate(`/auction/${auction._id}`)}
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-1"
+                onClick={() => navigate(`/auction/${auction._id}/catalog`)}
+                className="rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-1"
               >
-                {/* Auction Image */}
-                <div className="relative h-56 bg-gray-200">
-                  {auction.image ? (
+                {/* Auction Highlight Banner Image */}
+                <div className="relative w-full h-80 bg-gray-200">
+                  {auction.highlightImage || auction.image ? (
                     <img
-                      src={auction.image}
+                      src={auction.highlightImage || auction.image}
                       alt={auction.title}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23f3f4f6" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="20"%3ENo Image%3C/text%3E%3C/svg%3E';
+                      }}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
                       <Gavel className="w-16 h-16 text-gray-400" />
                     </div>
                   )}
-
-                  {/* Status Badge */}
-                  <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(auction.status)}`}>
-                    {auction.status}
-                  </div>
-
-                  {/* Time Remaining Badge for Active Auctions */}
-                  {auction.status === 'Active' && (
-                    <div className="absolute bottom-3 left-3 bg-black/70 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center">
-                      <Clock className="w-3 h-3 mr-1" />
-                      {getTimeRemaining(auction.endTime)}
-                    </div>
-                  )}
-                </div>
-
-                {/* Auction Details */}
-                <div className="p-4">
-                  <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 min-h-[3.5rem]">
-                    {auction.title}
-                  </h3>
-
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                    {auction.description}
-                  </p>
-
-                  {/* Price Information */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Current Bid:</span>
-                      <span className="text-lg font-bold text-accent-600">
-                        ₹{auction.currentBid?.toLocaleString()}
-                      </span>
-                    </div>
-
-                    {auction.status === 'Active' && (
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600 flex items-center">
-                          <Users className="w-4 h-4 mr-1" />
-                          Bids:
-                        </span>
-                        <span className="font-semibold">{auction.totalBids || 0}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/auction/${auction._id}/catalog`);
-                      }}
-                      className="flex-1 py-2 px-3 rounded-lg font-medium transition-colors border border-accent-600 text-accent-600 hover:bg-accent-50 flex items-center justify-center space-x-1"
-                    >
-                      <BookOpen className="w-4 h-4" />
-                      <span>Catalog</span>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/auction/${auction._id}`);
-                      }}
-                      className={`flex-1 py-2 px-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-1 ${
-                        auction.status === 'Active'
-                          ? 'bg-accent-600 hover:bg-accent-700 text-white'
-                          : auction.status === 'Upcoming'
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                          : 'bg-gray-300 text-gray-700'
-                      }`}
-                    >
-                      {auction.status === 'Active' ? (
-                        <>
-                          <Gavel className="w-4 h-4" />
-                          <span>Bid</span>
-                        </>
-                      ) : auction.status === 'Upcoming' ? (
-                        <>
-                          <Clock className="w-4 h-4" />
-                          <span>View</span>
-                        </>
-                      ) : (
-                        <>
-                          <TrendingUp className="w-4 h-4" />
-                          <span>Results</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Start/End Time */}
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    {auction.status === 'Upcoming' ? (
-                      <p className="text-xs text-gray-600 flex items-center">
-                        <Clock className="w-3 h-3 mr-1" />
-                        Starts: {formatDate(auction.startTime)}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-gray-600 flex items-center">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {auction.status === 'Active' ? 'Ends' : 'Ended'}: {formatDate(auction.endTime)}
-                      </p>
-                    )}
-                  </div>
                 </div>
               </div>
             ))}
