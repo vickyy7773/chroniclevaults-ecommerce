@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
-import vintagePoster from '../assets/images/WhatsApp Image 2025-12-09 at 20.27.36.jpeg';
 
 const AuctionCatalog = () => {
   const { id } = useParams();
@@ -182,16 +181,22 @@ const AuctionCatalog = () => {
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  {/* Vintage Poster */}
-                  <div className="md:col-span-1">
-                    <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-accent-600">
-                      <img
-                        src={vintagePoster}
-                        alt="Numismatic Treasures"
-                        className="w-full h-auto object-contain"
-                      />
+                  {/* Auction Highlight Image */}
+                  {auction.highlightImage && (
+                    <div className="md:col-span-1">
+                      <div className="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-accent-600">
+                        <img
+                          src={auction.highlightImage}
+                          alt="Auction Highlights"
+                          className="w-full h-auto object-contain"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Info Cards */}
                   <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-5">
