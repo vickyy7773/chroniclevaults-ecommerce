@@ -338,6 +338,7 @@ const AuctionManagement = () => {
       title: auction.title,
       description: auction.description,
       image: auction.image,
+      highlightImage: auction.highlightImage || '',
       startingPrice: auction.startingPrice,
       reservePrice: auction.reservePrice || '',
       startTime: formatDateTimeLocal(startTimeIST),
@@ -348,6 +349,7 @@ const AuctionManagement = () => {
       lots: lotsWithCategory
     });
     setImagePreview(auction.image);
+    setHighlightImagePreview(auction.highlightImage || '');
     setShowModal(true);
   };
 
