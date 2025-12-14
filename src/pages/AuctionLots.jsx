@@ -189,12 +189,23 @@ const AuctionLots = () => {
 
   // Real-time bid update listener with personalized notifications
   useEffect(() => {
-    if (!socketRef.current || !currentUser) return;
+    console.log('🔧 CATALOG - Setting up bid listeners. Socket exists:', !!socketRef.current, 'User:', currentUser?._id);
+
+    if (!socketRef.current || !currentUser) {
+      console.warn('⚠️ CATALOG - Cannot setup listeners. Socket:', !!socketRef.current, 'User:', !!currentUser);
+      return;
+    }
 
     const handleBidPlaced = (data) => {
-      console.log('🔴 CATALOG PAGE - Real-time bid update:', data);
+      console.log('🔴 CATALOG PAGE - Real-time bid update received:', {
+        hasAuction: !!data.auction,
+        auctionId: data.auction?._id,
+        lotCount: data.auction?.lots?.length,
+        firstLotBids: data.auction?.lots?.[0]?.bids?.length
+      });
 
       if (data.auction) {
+        console.log('✅ CATALOG - Updating auction state with new data');
         // Update auction state with new bid data
         setAuction(data.auction);
 

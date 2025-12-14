@@ -1996,6 +1996,15 @@ export const placeBid = async (req, res) => {
       // Deep convert Mongoose document to plain object (handles nested arrays properly)
       const auctionObject = JSON.parse(JSON.stringify(auction));
 
+      console.log('📡 BACKEND - Emitting bid-placed event:', {
+        auctionId: auction._id,
+        room: `auction-${auction._id}`,
+        isLotBidding: auction.isLotBidding,
+        lotCount: auctionObject.lots?.length,
+        firstLotBids: auctionObject.lots?.[0]?.bids?.length,
+        serializedProperly: typeof auctionObject === 'object' && !auctionObject._doc
+      });
+
       // Emit to all users in this auction room
       io.to(`auction-${auction._id}`).emit('bid-placed', {
         auction: auctionObject,
@@ -2007,6 +2016,8 @@ export const placeBid = async (req, res) => {
           newBalance: outbidUserNewBalance
         } : null
       });
+
+      console.log('✅ BACKEND - bid-placed event emitted successfully');
 
       // Reset 3-phase timer on new bid (stays in same phase)
       await resetPhaseTimer(auction._id, io);
