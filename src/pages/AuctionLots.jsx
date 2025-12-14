@@ -641,7 +641,7 @@ const AuctionLots = () => {
 
                       {/* Current Bid Info */}
                       <div className="pt-3 border-t border-gray-200">
-                        {lot.currentBid && lot.currentBid > 0 ? (
+                        {lot.bids && lot.bids.length > 0 ? (
                           <>
                             <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Current Bid</p>
                             <p className="text-base font-bold text-gray-900 mb-3">₹{lot.currentBid.toLocaleString('en-IN')}</p>
