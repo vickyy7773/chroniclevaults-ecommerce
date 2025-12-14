@@ -237,15 +237,16 @@ const AuctionLots = () => {
       }
     };
 
-    socketRef.current.off('bid-placed', handleBidPlaced);
+    // Remove ALL previous listeners before adding new ones (prevents multiple listener accumulation)
+    socketRef.current.off('bid-placed');
     socketRef.current.on('bid-placed', handleBidPlaced);
-    socketRef.current.off('coin-balance-updated', handleCoinBalanceUpdate);
+    socketRef.current.off('coin-balance-updated');
     socketRef.current.on('coin-balance-updated', handleCoinBalanceUpdate);
 
     return () => {
       if (socketRef.current) {
-        socketRef.current.off('bid-placed', handleBidPlaced);
-        socketRef.current.off('coin-balance-updated', handleCoinBalanceUpdate);
+        socketRef.current.off('bid-placed');
+        socketRef.current.off('coin-balance-updated');
       }
     };
   }, [currentUser, id]);
