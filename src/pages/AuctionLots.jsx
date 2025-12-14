@@ -178,9 +178,12 @@ const AuctionLots = () => {
       try {
         console.log('🔍 CATALOG - Fetching current user...');
         const response = await api.get('/auth/me');
-        if (response.data.success) {
-          console.log('✅ CATALOG - User fetched:', response.data.data._id);
-          setCurrentUser(response.data.data);
+        // Response interceptor already extracts data, so response = { success, data }
+        if (response.success) {
+          console.log('✅ CATALOG - User fetched:', response.data._id);
+          setCurrentUser(response.data);
+        } else {
+          console.warn('⚠️ CATALOG - User fetch unsuccessful:', response);
         }
       } catch (error) {
         console.error('❌ CATALOG - Failed to fetch current user:', error);
