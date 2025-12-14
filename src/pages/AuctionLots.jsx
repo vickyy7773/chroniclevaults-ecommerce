@@ -176,12 +176,14 @@ const AuctionLots = () => {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
+        console.log('🔍 CATALOG - Fetching current user...');
         const response = await api.get('/auth/me');
         if (response.data.success) {
+          console.log('✅ CATALOG - User fetched:', response.data.data._id);
           setCurrentUser(response.data.data);
         }
       } catch (error) {
-        console.error('Failed to fetch current user:', error);
+        console.error('❌ CATALOG - Failed to fetch current user:', error);
       }
     };
     fetchCurrentUser();
@@ -189,12 +191,14 @@ const AuctionLots = () => {
 
   // Real-time bid update listener with personalized notifications
   useEffect(() => {
-    console.log('🔧 CATALOG - Setting up bid listeners. Socket exists:', !!socketRef.current, 'User:', currentUser?._id);
+    console.log('🔧 CATALOG - Bid listener useEffect triggered. Socket:', !!socketRef.current, 'User:', currentUser?._id, 'ID:', id);
 
     if (!socketRef.current || !currentUser) {
       console.warn('⚠️ CATALOG - Cannot setup listeners. Socket:', !!socketRef.current, 'User:', !!currentUser);
       return;
     }
+
+    console.log('✅ CATALOG - All prerequisites met, setting up listeners NOW');
 
     const handleBidPlaced = (data) => {
       console.log('🔴 CATALOG PAGE - Real-time bid update received:', {
