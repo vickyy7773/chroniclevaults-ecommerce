@@ -15,6 +15,7 @@ const AuctionLots = () => {
   const [bidAmounts, setBidAmounts] = useState({}); // Track bid amounts for each lot
   const [submittingBid, setSubmittingBid] = useState({}); // Track submission state for each lot
   const [currentUser, setCurrentUser] = useState(null); // Current logged-in user
+  const [bidStatus, setBidStatus] = useState({}); // Track bid status for each lot (success, outbid, winning)
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -216,25 +217,25 @@ const AuctionLots = () => {
         // Update auction state with new bid data
         setAuction(data.auction);
 
-        // Check if current user was outbid
+        // Check if current user was outbid and get the lot number
         if (data.outbidUser && data.outbidUser.userId === currentUser._id) {
-          toast.error('⚠️ You have been outbid!', {
-            autoClose: 4000,
-            position: 'top-center'
-          });
-        }
-        // Check if current user placed the winning bid
-        else if (data.latestBid && data.latestBid.user && data.latestBid.user._id === currentUser._id) {
-          toast.success('🎉 You are winning!', {
-            autoClose: 3000,
-            position: 'top-center'
-          });
-        }
-        // Show general bid notification for other users' bids
-        else if (data.latestBid) {
-          toast.info(`New bid: ₹${data.latestBid.amount.toLocaleString()}`, {
-            autoClose: 3000
-          });
+          // Find which lot user was outbid on
+          const outbidLotNumber = data.auction.lots?.findIndex(lot =>
+            lot.bids?.some(bid =>
+              bid.user?.toString() === currentUser._id &&
+              bid.amount < lot.currentBid
+            )
+          ) + 1;
+
+          if (outbidLotNumber > 0) {
+            // Show outbid status on card
+            setBidStatus(prev => ({ ...prev, [outbidLotNumber]: 'outbid' }));
+
+            // Auto-clear after 10 seconds
+            setTimeout(() => {
+              setBidStatus(prev => ({ ...prev, [outbidLotNumber]: null }));
+            }, 10000);
+          }
         }
       }
     };
@@ -289,20 +290,27 @@ const AuctionLots = () => {
       // Send lot number with bid for catalog phase
       const response = await api.post(`/auctions/${id}/bid`, { amount, lotNumber });
 
-      if (response.data.success) {
-        toast.success('Bid placed successfully! 🎉');
+      // Response interceptor already extracts data, so check response.success not response.data.success
+      if (response.success) {
+        // Show success status on card
+        setBidStatus(prev => ({ ...prev, [lotNumber]: 'success' }));
 
         // Clear the bid amount for this lot
         setBidAmounts(prev => ({ ...prev, [lotNumber]: '' }));
 
         // Update auction state with the returned auction data (faster than refetching)
-        if (response.data.data?.auction) {
-          setAuction(response.data.data.auction);
+        if (response.data?.auction) {
+          setAuction(response.data.auction);
           console.log('✅ Auction state updated with new bid data');
         } else {
           // Fallback: Refresh auction data from server
           await fetchAuction();
         }
+
+        // Auto-clear success status after 5 seconds
+        setTimeout(() => {
+          setBidStatus(prev => ({ ...prev, [lotNumber]: null }));
+        }, 5000);
       }
     } catch (error) {
       console.error('Place bid error:', error);
@@ -636,6 +644,21 @@ const AuctionLots = () => {
                           </>
                         )}
                       </div>
+
+                      {/* Bid Status Badge */}
+                      {bidStatus[lot.lotNumber] && (
+                        <div className={`p-3 rounded-lg text-center font-bold text-sm animate-pulse ${
+                          bidStatus[lot.lotNumber] === 'success'
+                            ? 'bg-green-100 text-green-800 border-2 border-green-400'
+                            : bidStatus[lot.lotNumber] === 'outbid'
+                            ? 'bg-red-100 text-red-800 border-2 border-red-400'
+                            : 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                        }`}>
+                          {bidStatus[lot.lotNumber] === 'success' && '✅ Bid Placed Successfully!'}
+                          {bidStatus[lot.lotNumber] === 'outbid' && '⚠️ You Are Outbid!'}
+                          {bidStatus[lot.lotNumber] === 'winning' && '🎉 You Are Winning!'}
+                        </div>
+                      )}
 
                       {/* Bid Input */}
                       <div>
