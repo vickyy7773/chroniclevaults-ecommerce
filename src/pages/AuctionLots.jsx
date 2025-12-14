@@ -290,10 +290,23 @@ const AuctionLots = () => {
       // Send lot number with bid for catalog phase
       const response = await api.post(`/auctions/${id}/bid`, { amount, lotNumber });
 
+      console.log('🎯 BID RESPONSE:', {
+        success: response.success,
+        hasData: !!response.data,
+        hasAuction: !!response.data?.auction,
+        lotNumber
+      });
+
       // Response interceptor already extracts data, so check response.success not response.data.success
       if (response.success) {
+        console.log('✅ Setting bidStatus to SUCCESS for lot', lotNumber);
+
         // Show success status on card
-        setBidStatus(prev => ({ ...prev, [lotNumber]: 'success' }));
+        setBidStatus(prev => {
+          const newStatus = { ...prev, [lotNumber]: 'success' };
+          console.log('✅ New bidStatus:', newStatus);
+          return newStatus;
+        });
 
         // Clear the bid amount for this lot
         setBidAmounts(prev => ({ ...prev, [lotNumber]: '' }));
@@ -307,10 +320,8 @@ const AuctionLots = () => {
           await fetchAuction();
         }
 
-        // Auto-clear success status after 5 seconds
-        setTimeout(() => {
-          setBidStatus(prev => ({ ...prev, [lotNumber]: null }));
-        }, 5000);
+        // DON'T auto-clear success status - keep showing until someone else bids
+        // Status will be updated by Socket.IO listener when another bid comes in
       }
     } catch (error) {
       console.error('Place bid error:', error);
@@ -646,7 +657,12 @@ const AuctionLots = () => {
                       </div>
 
                       {/* Bid Status Badge */}
-                      {bidStatus[lot.lotNumber] && (
+                      {(() => {
+                        if (bidStatus[lot.lotNumber]) {
+                          console.log('🎨 RENDERING BID STATUS for lot', lot.lotNumber, ':', bidStatus[lot.lotNumber]);
+                        }
+                        return bidStatus[lot.lotNumber];
+                      })() && (
                         <div className={`p-3 rounded-lg text-center font-bold text-sm animate-pulse ${
                           bidStatus[lot.lotNumber] === 'success'
                             ? 'bg-green-100 text-green-800 border-2 border-green-400'
