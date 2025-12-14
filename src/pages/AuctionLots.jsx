@@ -612,8 +612,8 @@ const AuctionLots = () => {
                     <div className="space-y-4">
                       {/* Estimated Price */}
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Estimated Price</p>
-                        <p className="text-lg font-bold text-green-700">
+                        <p className="text-xs font-semibold text-black uppercase mb-1">Estimated Price</p>
+                        <p className="text-lg font-bold text-black">
                           {(() => {
                             // Both prices exist and are greater than 0
                             if (lot.startingPrice > 0 && lot.reservePrice > 0) {
