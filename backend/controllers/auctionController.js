@@ -1993,8 +1993,8 @@ export const placeBid = async (req, res) => {
     // Get Socket.io instance and emit real-time update
     const io = req.app.get('io');
     if (io) {
-      // Convert Mongoose document to plain object for proper serialization of nested arrays
-      const auctionObject = auction.toObject();
+      // Deep convert Mongoose document to plain object (handles nested arrays properly)
+      const auctionObject = JSON.parse(JSON.stringify(auction));
 
       // Emit to all users in this auction room
       io.to(`auction-${auction._id}`).emit('bid-placed', {
