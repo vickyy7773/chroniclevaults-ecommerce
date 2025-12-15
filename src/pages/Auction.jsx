@@ -759,18 +759,36 @@ const AuctionPage = () => {
 
         // Check if user is actually winning after this bid
         const auctionData = response.data.auction;
-        const myBidIsLast = auctionData.bids.length > 0 &&
-                            auctionData.bids[auctionData.bids.length - 1].user._id.toString() === user._id.toString();
-        const someoneHasHigherReserve = auctionData.highestReserveBid &&
-                                        auctionData.reserveBidder &&
-                                        auctionData.reserveBidder.toString() !== user._id.toString() &&
-                                        auctionData.highestReserveBid > auctionData.currentBid;
+
+        // FOR LOT BIDDING: Check current lot's bids, not auction-level bids
+        let bidsToCheck, reserveToCheck, reserveBidderToCheck;
+        if (auctionData.isLotBidding && auctionData.lots && auctionData.lotNumber) {
+          const currentLotIndex = (auctionData.lotNumber || 1) - 1;
+          const currentLot = auctionData.lots[currentLotIndex];
+          bidsToCheck = currentLot?.bids || [];
+          reserveToCheck = currentLot?.highestReserveBid;
+          reserveBidderToCheck = currentLot?.reserveBidder;
+        } else {
+          bidsToCheck = auctionData.bids || [];
+          reserveToCheck = auctionData.highestReserveBid;
+          reserveBidderToCheck = auctionData.reserveBidder;
+        }
+
+        const myBidIsLast = bidsToCheck.length > 0 &&
+                            bidsToCheck[bidsToCheck.length - 1].user._id.toString() === user._id.toString();
+        const someoneHasHigherReserve = reserveToCheck &&
+                                        reserveBidderToCheck &&
+                                        reserveBidderToCheck.toString() !== user._id.toString() &&
+                                        reserveToCheck > auctionData.currentBid;
 
         console.log('📊 BID RESPONSE STATUS CHECK:', {
+          isLotBidding: auctionData.isLotBidding,
+          lotNumber: auctionData.lotNumber,
+          bidsChecked: bidsToCheck.length,
           myBidIsLast,
           someoneHasHigherReserve,
-          highestReserveBid: auctionData.highestReserveBid,
-          reserveBidder: auctionData.reserveBidder,
+          reserveToCheck,
+          reserveBidderToCheck,
           currentBid: auctionData.currentBid,
           myId: user._id
         });
