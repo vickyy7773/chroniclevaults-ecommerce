@@ -1363,16 +1363,11 @@ const AuctionPage = () => {
                   <div
                     key={index}
                     onClick={() => handleLotClick(index)}
-                    style={{
-                      transition: 'all 0.8s ease-out',
-                      opacity: isCompleted ? 0 : 1,
-                      transform: isCompleted ? 'scale(0.8) translateY(-20px)' : 'scale(1) translateY(0)',
-                      maxWidth: isCompleted ? '0px' : '352px',
-                      marginRight: isCompleted ? '0px' : '12px',
-                      padding: isCompleted ? '0px' : '12px',
-                      overflow: 'hidden'
-                    }}
-                    className={`flex-shrink-0 w-88 rounded-lg border-2 cursor-pointer hover:shadow-lg h-40 ${
+                    className={`flex-shrink-0 rounded-lg border-2 cursor-pointer hover:shadow-lg transition-all duration-700 ease-out overflow-hidden ${
+                      isCompleted
+                        ? 'opacity-0 scale-75 -translate-y-5 max-w-0 p-0 mr-0 h-0'
+                        : 'opacity-100 scale-100 translate-y-0 w-88 p-3 mr-3 h-40'
+                    } ${
                       selectedLotIndex === index
                         ? 'bg-accent-50 border-accent-500 shadow-lg ring-2 ring-accent-300'
                         : lot.status === 'Active'
