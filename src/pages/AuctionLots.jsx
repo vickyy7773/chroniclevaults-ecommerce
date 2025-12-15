@@ -639,6 +639,16 @@ const AuctionLots = () => {
                         </p>
                       </div>
 
+                      {/* Current Bid Info - Only show when bids exist */}
+                      {lot.bids && lot.bids.length > 0 && (
+                        <div className="pt-3 border-t border-gray-200">
+                          <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Current Bid</p>
+                          <p className="text-base font-bold text-gray-900 mb-3">₹{lot.currentBid.toLocaleString('en-IN')}</p>
+                          <p className="text-xs font-semibold text-green-600 uppercase mb-1">Next Bid</p>
+                          <p className="text-xl font-bold text-green-600">₹{(lot.currentBid + (lot.bidIncrement || 1000)).toLocaleString('en-IN')}</p>
+                        </div>
+                      )}
+
                       {/* Bid Status Badge */}
                       {(() => {
                         if (bidStatus[lot.lotNumber]) {
