@@ -439,11 +439,12 @@ const AuctionPage = () => {
       if (data.auctionId === auction._id) {
         setCallNumber(data.callNumber);
         setPhaseTimer(data.phaseTimer);
-        toast.info(`New bid! Timer reset to ${data.phaseTimer}s`, {
-          autoClose: 800,
-          position: 'top-center',
-          hideProgressBar: false
-        });
+        // Timer reset toast removed as per user request
+        // toast.info(`New bid! Timer reset to ${data.phaseTimer}s`, {
+        //   autoClose: 800,
+        //   position: 'top-center',
+        //   hideProgressBar: false
+        // });
       }
     };
 
