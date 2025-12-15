@@ -528,6 +528,15 @@ const AuctionPage = () => {
     }
   }, [auction, phaseTimer, callNumber]); // Include phaseTimer and callNumber to prevent stale closure
 
+  // RESET BID BUTTON STATUS when lot number changes (for lot bidding)
+  useEffect(() => {
+    if (!auction || !auction.isLotBidding) return;
+
+    // When lot number changes, reset button status to default
+    console.log('🔄 Lot changed to:', auction.lotNumber, '- Resetting button status to default');
+    setBidButtonStatus('default');
+  }, [auction?.lotNumber]); // Watch for lot number changes
+
   const fetchAuction = async () => {
     try {
       setLoading(true);
