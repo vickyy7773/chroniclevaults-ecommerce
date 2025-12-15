@@ -693,6 +693,54 @@ const AuctionPage = () => {
     }
   };
 
+  // Quick bid function for one-click bidding
+  const handleQuickBid = async () => {
+    if (!user) {
+      toast.error('Please login to place a bid');
+      navigate('/login');
+      return;
+    }
+
+    // Calculate minBid based on current auction state
+    let minBid;
+    if (auction.isLotBidding) {
+      const currentLotIndex = (auction.lotNumber || 1) - 1;
+      const currentLot = auction.lots && auction.lots[currentLotIndex];
+      const currentLotBid = currentLot?.currentBid || auction.currentBid;
+      const currentIncrement = getCurrentIncrement(auction, currentLotBid);
+      minBid = currentLotBid + currentIncrement;
+    } else {
+      const currentIncrement = getCurrentIncrement(auction);
+      minBid = auction.currentBid + currentIncrement;
+    }
+
+    const coinDeduction = minBid - auction.currentBid;
+
+    if (user.auctionCoins < coinDeduction) {
+      toast.error(`Insufficient coins! You have ${user.auctionCoins?.toLocaleString() || 0} coins but need ${coinDeduction.toLocaleString()} for this bid`);
+      return;
+    }
+
+    try {
+      setSubmittingBid(true);
+      const response = await api.post(`/auctions/${auction._id}/bid`, { amount: minBid, maxBid: null });
+      setAuction(response.data.auction);
+
+      // Update user's remaining coins
+      if (response.data.remainingCoins !== undefined) {
+        const updatedUser = { ...user, auctionCoins: response.data.remainingCoins };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        toast.success(`Bid placed! Remaining coins: ${response.data.remainingCoins.toLocaleString()}`);
+      }
+    } catch (error) {
+      console.error('Place bid error:', error);
+      toast.error(error.response?.data?.message || 'Failed to place bid');
+    } finally {
+      setSubmittingBid(false);
+    }
+  };
+
   const isUserWinning = () => {
     if (!user || !auction || auction.bids.length === 0) return false;
     const lastBid = auction.bids[auction.bids.length - 1];
@@ -1029,44 +1077,23 @@ const AuctionPage = () => {
                 {/* Bid Form */}
                 {auction.status === 'Active' ? (
                   user && user.isAuctionVerified ? (
-                    <form onSubmit={handlePlaceBid} className="space-y-2">
-                      <div>
-                        <label className="block text-base font-semibold text-gray-700 mb-1">
-                          Your Bid / Max Reserve (₹)
-                        </label>
-                        <input
-                          type="number"
-                          value={bidAmount}
-                          onChange={(e) => setBidAmount(e.target.value)}
-                          min={minBid}
-                          step="50"
-                          required
-                          className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500 text-lg font-bold text-center"
-                          placeholder={minBid.toString()}
-                        />
-                        <p className="text-sm text-gray-500 mt-0.5 text-center">
-                          Min: ₹{minBid.toLocaleString()}
-                        </p>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={submittingBid}
-                        className="w-full bg-gradient-to-r from-accent-600 to-accent-700 hover:from-accent-700 hover:to-accent-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 text-base shadow-lg hover:shadow-xl"
-                      >
-                        {submittingBid ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                            <span>Placing Bid...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Gavel className="w-4 h-4" />
-                            <span>Place Bid</span>
-                          </>
-                        )}
-                      </button>
-                    </form>
+                    <button
+                      onClick={handleQuickBid}
+                      disabled={submittingBid}
+                      className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-black py-6 px-6 rounded-2xl transition-all flex items-center justify-center gap-3 text-2xl shadow-2xl hover:shadow-3xl hover:scale-105 transform"
+                    >
+                      {submittingBid ? (
+                        <>
+                          <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
+                          <span>Placing Bid...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Gavel className="w-8 h-8" />
+                          <span>Bid ₹{minBid.toLocaleString()}</span>
+                        </>
+                      )}
+                    </button>
                   ) : (
                     <div className="text-center py-3">
                       <Shield className="w-8 h-8 text-gray-300 mx-auto mb-2" />
