@@ -1097,6 +1097,7 @@ export const getAllAuctions = async (req, res) => {
       .populate('winner', 'name email phone')
       .populate('reserveBidder', 'name email phone')
       .populate('bids.user', 'name email')
+      .populate('lots.bids.user', 'name email')  // FOR LOT BIDDING
       .sort({ createdAt: -1 });
 
     // Update status for all auctions based on current time
@@ -1128,7 +1129,8 @@ export const getAuctionById = async (req, res) => {
       .populate('product', 'name price images description')
       .populate('winner', 'name email phone')
       .populate('reserveBidder', 'name email phone')
-      .populate('bids.user', 'name email');
+      .populate('bids.user', 'name email')
+      .populate('lots.bids.user', 'name email');  // FOR LOT BIDDING
 
     if (!auction) {
       return res.status(404).json({
@@ -1990,6 +1992,11 @@ export const placeBid = async (req, res) => {
     // Populate the latest bid user info
     await auction.populate('bids.user', 'name email');
 
+    // FOR LOT BIDDING: Also populate user info in lot-level bids
+    if (auction.isLotBidding && auction.lots && auction.lots.length > 0) {
+      await auction.populate('lots.bids.user', 'name email');
+    }
+
     // Get Socket.io instance and emit real-time update
     const io = req.app.get('io');
     if (io) {
@@ -2058,6 +2065,7 @@ export const getUserBids = async (req, res) => {
     })
       .populate('product', 'name price images')
       .populate('bids.user', 'name email')
+      .populate('lots.bids.user', 'name email')  // FOR LOT BIDDING
       .sort({ 'bids.timestamp': -1 });
 
     // Filter to get only user's bids from each auction
