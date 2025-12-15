@@ -1356,12 +1356,13 @@ const AuctionPage = () => {
             <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
               <div className="flex gap-3 p-3 min-w-min">
                 {auction.lots.map((lot, index) => {
-                  const isCompleted = lot.status === 'Sold' || lot.status === 'Unsold' || lot.status === 'Ended';
+                  const isLastLot = lot.lotNumber === auction.totalLots;
+                  const isCompleted = (lot.status === 'Sold' || lot.status === 'Unsold' || lot.status === 'Ended') && !isLastLot;
 
                   return (
                   <div
                     key={index}
-                    onClick={() => !isCompleted && handleLotClick(index)}
+                    onClick={() => handleLotClick(index)}
                     style={{
                       transition: 'all 0.8s ease-out',
                       opacity: isCompleted ? 0 : 1,
