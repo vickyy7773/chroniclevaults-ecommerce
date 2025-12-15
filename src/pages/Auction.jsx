@@ -775,7 +775,7 @@ const AuctionPage = () => {
         }
 
         const myBidIsLast = bidsToCheck.length > 0 &&
-                            bidsToCheck[bidsToCheck.length - 1].user._id.toString() === user._id.toString();
+                            bidsToCheck[bidsToCheck.length - 1].user?._id?.toString() === user._id.toString();
         const someoneHasHigherReserve = reserveToCheck &&
                                         reserveBidderToCheck &&
                                         reserveBidderToCheck.toString() !== user._id.toString() &&
