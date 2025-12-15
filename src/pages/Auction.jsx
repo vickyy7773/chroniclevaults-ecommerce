@@ -250,10 +250,10 @@ const AuctionPage = () => {
       setBidAmount(suggestedBid.toString());
 
       const isLastBidMine = data.auction.bids.length > 0 &&
-                            data.auction.bids[data.auction.bids.length - 1].user?._id === currentUser?._id;
+                            data.auction.bids[data.auction.bids.length - 1].user?._id?.toString() === currentUser?._id?.toString();
       const someoneElseHasHigherReserveBid = data.auction.highestReserveBid &&
                                              data.auction.reserveBidder &&
-                                             data.auction.reserveBidder !== currentUser?._id &&
+                                             data.auction.reserveBidder.toString() !== currentUser?._id?.toString() &&
                                              data.auction.highestReserveBid > data.auction.currentBid;
       const isStillWinning = isLastBidMine && !someoneElseHasHigherReserveBid;
 
@@ -266,7 +266,7 @@ const AuctionPage = () => {
       console.log('🔍 BID PLACED EVENT:', {
         latestBidUser: data.latestBid.user._id,
         currentUser: currentUser?._id,
-        isMyBid: data.latestBid.user._id === currentUser?._id,
+        isMyBid: data.latestBid.user._id?.toString() === currentUser?._id?.toString(),
         userHasParticipated,
         isStillWinning,
         isLastBidMine,
@@ -275,7 +275,7 @@ const AuctionPage = () => {
         highestReserveBid: data.auction.highestReserveBid
       });
 
-      if (data.latestBid.user._id === currentUser?._id) {
+      if (data.latestBid.user._id?.toString() === currentUser?._id?.toString()) {
         if (data.autoBidTriggered && data.latestBid.isAutoBid) {
           toast.success(`Auto-bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
         }
@@ -760,10 +760,10 @@ const AuctionPage = () => {
         // Check if user is actually winning after this bid
         const auctionData = response.data.auction;
         const myBidIsLast = auctionData.bids.length > 0 &&
-                            auctionData.bids[auctionData.bids.length - 1].user._id === user._id;
+                            auctionData.bids[auctionData.bids.length - 1].user._id.toString() === user._id.toString();
         const someoneHasHigherReserve = auctionData.highestReserveBid &&
                                         auctionData.reserveBidder &&
-                                        auctionData.reserveBidder !== user._id &&
+                                        auctionData.reserveBidder.toString() !== user._id.toString() &&
                                         auctionData.highestReserveBid > auctionData.currentBid;
 
         console.log('📊 BID RESPONSE STATUS CHECK:', {
