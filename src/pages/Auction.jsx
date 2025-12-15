@@ -999,26 +999,6 @@ const AuctionPage = () => {
                   </p>
                 </div>
 
-                {/* Bid Stats Grid */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <p className="text-sm text-gray-500 uppercase tracking-wide">Starting Price</p>
-                    <p className="font-bold text-gray-900 text-sm">₹{displayStartingPrice.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <p className="text-sm text-gray-500 uppercase tracking-wide">Total Bids</p>
-                    <p className="font-bold text-gray-900 text-sm">{auction.totalBids || 0}</p>
-                  </div>
-                  <div className="bg-green-50 rounded-lg p-2">
-                    <p className="text-sm text-green-600 uppercase tracking-wide">Next Min Bid</p>
-                    <p className="font-bold text-green-700 text-sm">₹{minBid.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <p className="text-sm text-gray-500 uppercase tracking-wide">Increment</p>
-                    <p className="font-bold text-gray-900 text-sm">₹{currentIncrement.toLocaleString()}</p>
-                  </div>
-                </div>
-
                 {/* User Bid Stats */}
                 {user && getUserBidCount() > 0 && (
                   <div className="bg-accent-50 rounded-lg p-2">
