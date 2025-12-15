@@ -1060,7 +1060,7 @@ const AuctionPage = () => {
                 </div>
 
                 {/* Lot Number Badge - Opposite side of Active badge */}
-                {auction.isLotBidding && auction.lotNumber && (
+                {auction.isLotBidding === true && auction.lotNumber > 0 && (
                   <div className="absolute top-[0.5rem] right-[0.5rem] px-[0.625rem] py-[0.25rem] rounded-full font-bold text-[0.875rem] shadow-lg bg-amber-500 text-white">
                     Lot #{auction.lotNumber}
                   </div>
