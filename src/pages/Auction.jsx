@@ -774,6 +774,19 @@ const AuctionPage = () => {
           reserveBidderToCheck = auctionData.reserveBidder;
         }
 
+        // Add detailed debugging to see the actual IDs being compared
+        const lastBid = bidsToCheck[bidsToCheck.length - 1];
+        console.log('🔬 DETAILED BID CHECK:', {
+          totalBids: bidsToCheck.length,
+          lastBidExists: !!lastBid,
+          lastBidUser: lastBid?.user,
+          lastBidUserId: lastBid?.user?._id,
+          lastBidUserIdString: lastBid?.user?._id?.toString(),
+          currentUserId: user._id,
+          currentUserIdString: user._id.toString(),
+          areEqual: lastBid?.user?._id?.toString() === user._id.toString()
+        });
+
         const myBidIsLast = bidsToCheck.length > 0 &&
                             bidsToCheck[bidsToCheck.length - 1].user?._id?.toString() === user._id.toString();
         const someoneHasHigherReserve = reserveToCheck &&
