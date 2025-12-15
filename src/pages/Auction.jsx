@@ -1334,7 +1334,7 @@ const AuctionPage = () => {
           <div className="mt-2 bg-white border-t border-gray-200 rounded-lg shadow overflow-hidden">
             <div className="px-3 py-2 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-900">
-                All Lots ({auction.lots.length})
+                Remaining Lots ({auction.lots.filter(lot => lot.status !== 'Sold' && lot.status !== 'Unsold' && lot.status !== 'Ended').length})
               </h3>
               {/* Lot Progress Indicator */}
               <div className="flex items-center gap-2">
@@ -1355,7 +1355,9 @@ const AuctionPage = () => {
             {/* Horizontal Scrolling Lots */}
             <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
               <div className="flex gap-3 p-3 min-w-min">
-                {auction.lots.map((lot, index) => (
+                {auction.lots
+                  .filter(lot => lot.status !== 'Sold' && lot.status !== 'Unsold' && lot.status !== 'Ended')
+                  .map((lot, index) => (
                   <div
                     key={index}
                     onClick={() => handleLotClick(index)}
