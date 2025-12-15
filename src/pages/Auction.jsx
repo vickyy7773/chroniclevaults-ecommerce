@@ -1355,13 +1355,23 @@ const AuctionPage = () => {
             {/* Horizontal Scrolling Lots */}
             <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
               <div className="flex gap-3 p-3 min-w-min">
-                {auction.lots
-                  .filter(lot => lot.status !== 'Sold' && lot.status !== 'Unsold' && lot.status !== 'Ended')
-                  .map((lot, index) => (
+                {auction.lots.map((lot, index) => {
+                  const isCompleted = lot.status === 'Sold' || lot.status === 'Unsold' || lot.status === 'Ended';
+
+                  return (
                   <div
                     key={index}
-                    onClick={() => handleLotClick(index)}
-                    className={`flex-shrink-0 w-88 rounded-lg p-3 border-2 transition-all cursor-pointer hover:shadow-lg h-40 ${
+                    onClick={() => !isCompleted && handleLotClick(index)}
+                    style={{
+                      transition: 'all 0.8s ease-out',
+                      opacity: isCompleted ? 0 : 1,
+                      transform: isCompleted ? 'scale(0.8) translateY(-20px)' : 'scale(1) translateY(0)',
+                      maxWidth: isCompleted ? '0px' : '352px',
+                      marginRight: isCompleted ? '0px' : '12px',
+                      padding: isCompleted ? '0px' : '12px',
+                      overflow: 'hidden'
+                    }}
+                    className={`flex-shrink-0 w-88 rounded-lg border-2 cursor-pointer hover:shadow-lg h-40 ${
                       selectedLotIndex === index
                         ? 'bg-accent-50 border-accent-500 shadow-lg ring-2 ring-accent-300'
                         : lot.status === 'Active'
@@ -1488,7 +1498,8 @@ const AuctionPage = () => {
                       </div>
                     </div>
                   </div>
-                ))}
+                );
+                })}
               </div>
             </div>
           </div>
