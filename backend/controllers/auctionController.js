@@ -2012,10 +2012,18 @@ export const placeBid = async (req, res) => {
         serializedProperly: typeof auctionObject === 'object' && !auctionObject._doc
       });
 
+      // Get latest bid from appropriate location (lot-level or auction-level)
+      let latestBid;
+      if (auction.isLotBidding && currentLot && currentLot.bids && currentLot.bids.length > 0) {
+        latestBid = currentLot.bids[currentLot.bids.length - 1];
+      } else {
+        latestBid = auction.bids[auction.bids.length - 1];
+      }
+
       // Emit to all users in this auction room
       io.to(`auction-${auction._id}`).emit('bid-placed', {
         auction: auctionObject,
-        latestBid: auction.bids[auction.bids.length - 1],
+        latestBid,
         autoBidTriggered,
         previousReserveBidAmount,
         outbidUser: outbidUserId ? {
