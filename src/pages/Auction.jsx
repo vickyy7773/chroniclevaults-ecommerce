@@ -238,9 +238,22 @@ const AuctionPage = () => {
         localStorage.setItem('user', JSON.stringify(updatedUser));
       }
 
-      const userHasBids = data.auction && data.auction.bids &&
-                          data.auction.bids.some(bid => bid.user?._id === currentUser?._id);
-      const userIsReserveBidder = data.auction && data.auction.reserveBidder === currentUser?._id;
+      // FOR LOT BIDDING: Check current lot's bids instead of auction-level bids
+      let bidsToCheck, reserveToCheck, reserveBidderToCheck;
+      if (data.auction.isLotBidding && data.auction.lots && data.auction.lotNumber) {
+        const currentLotIndex = (data.auction.lotNumber || 1) - 1;
+        const currentLot = data.auction.lots[currentLotIndex];
+        bidsToCheck = currentLot?.bids || [];
+        reserveToCheck = currentLot?.highestReserveBid;
+        reserveBidderToCheck = currentLot?.reserveBidder;
+      } else {
+        bidsToCheck = data.auction.bids || [];
+        reserveToCheck = data.auction.highestReserveBid;
+        reserveBidderToCheck = data.auction.reserveBidder;
+      }
+
+      const userHasBids = bidsToCheck.some(bid => bid.user?._id?.toString() === currentUser?._id?.toString());
+      const userIsReserveBidder = reserveBidderToCheck?.toString() === currentUser?._id?.toString();
       const userHasParticipated = userHasBids || userIsReserveBidder;
 
       setAuction(data.auction);
@@ -249,12 +262,12 @@ const AuctionPage = () => {
       const suggestedBid = data.auction.currentBid + currentIncrement;
       setBidAmount(suggestedBid.toString());
 
-      const isLastBidMine = data.auction.bids.length > 0 &&
-                            data.auction.bids[data.auction.bids.length - 1].user?._id?.toString() === currentUser?._id?.toString();
-      const someoneElseHasHigherReserveBid = data.auction.highestReserveBid &&
-                                             data.auction.reserveBidder &&
-                                             data.auction.reserveBidder.toString() !== currentUser?._id?.toString() &&
-                                             data.auction.highestReserveBid > data.auction.currentBid;
+      const isLastBidMine = bidsToCheck.length > 0 &&
+                            bidsToCheck[bidsToCheck.length - 1].user?._id?.toString() === currentUser?._id?.toString();
+      const someoneElseHasHigherReserveBid = reserveToCheck &&
+                                             reserveBidderToCheck &&
+                                             reserveBidderToCheck.toString() !== currentUser?._id?.toString() &&
+                                             reserveToCheck > data.auction.currentBid;
       const isStillWinning = isLastBidMine && !someoneElseHasHigherReserveBid;
 
       // Guard clause: Validate latestBid data structure
@@ -264,6 +277,9 @@ const AuctionPage = () => {
       }
 
       console.log('🔍 BID PLACED EVENT:', {
+        isLotBidding: data.auction.isLotBidding,
+        lotNumber: data.auction.lotNumber,
+        bidsChecked: bidsToCheck.length,
         latestBidUser: data.latestBid.user._id,
         currentUser: currentUser?._id,
         isMyBid: data.latestBid.user._id?.toString() === currentUser?._id?.toString(),
@@ -271,8 +287,8 @@ const AuctionPage = () => {
         isStillWinning,
         isLastBidMine,
         someoneElseHasHigherReserveBid,
-        reserveBidder: data.auction.reserveBidder,
-        highestReserveBid: data.auction.highestReserveBid
+        reserveBidderToCheck,
+        reserveToCheck
       });
 
       if (data.latestBid.user._id?.toString() === currentUser?._id?.toString()) {
