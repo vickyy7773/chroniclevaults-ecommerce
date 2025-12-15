@@ -645,8 +645,8 @@ const AuctionLots = () => {
                           <>
                             <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Current Bid</p>
                             <p className="text-base font-bold text-gray-900 mb-3">₹{lot.currentBid.toLocaleString('en-IN')}</p>
-                            <p className="text-xs font-semibold text-red-600 uppercase mb-1">Next Bid</p>
-                            <p className="text-xl font-bold text-red-600">₹{(lot.currentBid + (lot.bidIncrement || 1000)).toLocaleString('en-IN')}</p>
+                            <p className="text-xs font-semibold text-green-600 uppercase mb-1">Next Bid</p>
+                            <p className="text-xl font-bold text-green-600">₹{(lot.currentBid + (lot.bidIncrement || 1000)).toLocaleString('en-IN')}</p>
                           </>
                         ) : (
                           <>
