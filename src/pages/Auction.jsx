@@ -263,12 +263,30 @@ const AuctionPage = () => {
         return;
       }
 
+      console.log('🔍 BID PLACED EVENT:', {
+        latestBidUser: data.latestBid.user._id,
+        currentUser: currentUser?._id,
+        isMyBid: data.latestBid.user._id === currentUser?._id,
+        userHasParticipated,
+        isStillWinning,
+        isLastBidMine,
+        someoneElseHasHigherReserveBid,
+        reserveBidder: data.auction.reserveBidder,
+        highestReserveBid: data.auction.highestReserveBid
+      });
+
       if (data.latestBid.user._id === currentUser?._id) {
         if (data.autoBidTriggered && data.latestBid.isAutoBid) {
           toast.success(`Auto-bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
         }
+        // Even if it's my bid, check if someone has higher reserve
+        if (someoneElseHasHigherReserveBid) {
+          console.log('⚠️ MY BID BUT SOMEONE HAS HIGHER RESERVE - Setting outbid');
+          setBidButtonStatus('outbid');
+        }
       } else {
         if (userHasParticipated && !isStillWinning) {
+          console.log('⚠️ OUTBID DETECTED - Setting button to red');
           toast.warning(`⚠️ You are outbid! New bid placed: ₹${data.latestBid.amount.toLocaleString()}`, {
             autoClose: 5000
           });
