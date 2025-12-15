@@ -754,8 +754,31 @@ const AuctionPage = () => {
         localStorage.setItem('user', JSON.stringify(updatedUser));
         toast.success(`Bid placed! Remaining coins: ${response.data.remainingCoins.toLocaleString()}`);
 
-        // Set button status to 'mybid' (green) after successful bid
-        setBidButtonStatus('mybid');
+        // Check if user is actually winning after this bid
+        const auctionData = response.data.auction;
+        const myBidIsLast = auctionData.bids.length > 0 &&
+                            auctionData.bids[auctionData.bids.length - 1].user._id === user._id;
+        const someoneHasHigherReserve = auctionData.highestReserveBid &&
+                                        auctionData.reserveBidder &&
+                                        auctionData.reserveBidder !== user._id &&
+                                        auctionData.highestReserveBid > auctionData.currentBid;
+
+        console.log('📊 BID RESPONSE STATUS CHECK:', {
+          myBidIsLast,
+          someoneHasHigherReserve,
+          highestReserveBid: auctionData.highestReserveBid,
+          reserveBidder: auctionData.reserveBidder,
+          currentBid: auctionData.currentBid,
+          myId: user._id
+        });
+
+        if (myBidIsLast && !someoneHasHigherReserve) {
+          console.log('✅ Setting button to GREEN (mybid)');
+          setBidButtonStatus('mybid');
+        } else {
+          console.log('⚠️ Setting button to RED (outbid) - someone has higher reserve or I\'m not last bidder');
+          setBidButtonStatus('outbid');
+        }
       }
     } catch (error) {
       console.error('Place bid error:', error);
