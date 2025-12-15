@@ -1058,6 +1058,13 @@ const AuctionPage = () => {
                   {auction.status === 'Active' && <span className="inline-block w-[0.375rem] h-[0.375rem] bg-white rounded-full mr-[0.375rem] animate-pulse"></span>}
                   {auction.status}
                 </div>
+
+                {/* Lot Number Badge - Opposite side of Active badge */}
+                {auction.isLotBidding && auction.lotNumber && (
+                  <div className="absolute top-[0.5rem] right-[0.5rem] px-[0.625rem] py-[0.25rem] rounded-full font-bold text-[0.875rem] shadow-lg bg-amber-500 text-white">
+                    Lot #{auction.lotNumber}
+                  </div>
+                )}
               </div>
 
               {/* Thumbnail Gallery (Images + Video) */}
