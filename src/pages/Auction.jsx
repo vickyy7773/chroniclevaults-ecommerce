@@ -279,10 +279,13 @@ const AuctionPage = () => {
         if (data.autoBidTriggered && data.latestBid.isAutoBid) {
           toast.success(`Auto-bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
         }
-        // Even if it's my bid, check if someone has higher reserve
+        // Check if someone has higher reserve
         if (someoneElseHasHigherReserveBid) {
           console.log('⚠️ MY BID BUT SOMEONE HAS HIGHER RESERVE - Setting outbid');
           setBidButtonStatus('outbid');
+        } else {
+          console.log('✅ MY BID AND NO HIGHER RESERVE - Setting mybid');
+          setBidButtonStatus('mybid');
         }
       } else {
         if (userHasParticipated && !isStillWinning) {
