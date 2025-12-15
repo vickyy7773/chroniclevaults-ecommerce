@@ -25,6 +25,7 @@ const AuctionPage = () => {
   const [phaseMessage, setPhaseMessage] = useState(''); // Going Once, Going Twice, SOLD/UNSOLD
   const [phaseTimer, setPhaseTimer] = useState(0); // 10-second countdown per phase
   const [selectedLotIndex, setSelectedLotIndex] = useState(null); // Track which lot is selected for viewing
+  const [bidButtonStatus, setBidButtonStatus] = useState('default'); // 'default', 'mybid', 'outbid'
 
   // 2-PHASE AUCTION SYSTEM: Track auction phase (catalog/live/ended)
   const [auctionPhase, setAuctionPhase] = useState('catalog'); // 'catalog', 'live', or 'ended'
@@ -271,6 +272,8 @@ const AuctionPage = () => {
           toast.warning(`⚠️ You are outbid! New bid placed: ₹${data.latestBid.amount.toLocaleString()}`, {
             autoClose: 5000
           });
+          // Set button status to 'outbid' (red) when someone outbids you
+          setBidButtonStatus('outbid');
         } else if (!userHasParticipated) {
           toast.info(`New bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
         }
@@ -732,6 +735,9 @@ const AuctionPage = () => {
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
         toast.success(`Bid placed! Remaining coins: ${response.data.remainingCoins.toLocaleString()}`);
+
+        // Set button status to 'mybid' (green) after successful bid
+        setBidButtonStatus('mybid');
       }
     } catch (error) {
       console.error('Place bid error:', error);
@@ -1080,7 +1086,15 @@ const AuctionPage = () => {
                     <button
                       onClick={handleQuickBid}
                       disabled={submittingBid}
-                      className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-black py-6 px-6 rounded-2xl transition-all flex items-center justify-center gap-3 text-2xl shadow-2xl hover:shadow-3xl hover:scale-105 transform"
+                      className={`w-full font-black py-6 px-6 rounded-2xl transition-all flex items-center justify-center gap-3 text-2xl shadow-2xl hover:shadow-3xl hover:scale-105 transform ${
+                        submittingBid
+                          ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
+                          : bidButtonStatus === 'mybid'
+                          ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white'
+                          : bidButtonStatus === 'outbid'
+                          ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white'
+                          : 'bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 border-2 border-gray-300'
+                      }`}
                     >
                       {submittingBid ? (
                         <>
