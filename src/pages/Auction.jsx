@@ -258,8 +258,19 @@ const AuctionPage = () => {
 
       setAuction(data.auction);
 
-      const currentIncrement = getCurrentIncrement(data.auction);
-      const suggestedBid = data.auction.currentBid + currentIncrement;
+      // FOR LOT BIDDING: Calculate suggested bid using lot-level current bid
+      let suggestedBid;
+      if (data.auction.isLotBidding) {
+        const currentLotIndex = (data.auction.lotNumber || 1) - 1;
+        const currentLot = data.auction.lots && data.auction.lots[currentLotIndex];
+        const currentLotBid = currentLot?.currentBid || data.auction.currentBid;
+        const currentIncrement = getCurrentIncrement(data.auction, currentLotBid);
+        suggestedBid = currentLotBid + currentIncrement;
+      } else {
+        const currentIncrement = getCurrentIncrement(data.auction);
+        suggestedBid = data.auction.currentBid + currentIncrement;
+      }
+
       setBidAmount(suggestedBid.toString());
 
       const isLastBidMine = bidsToCheck.length > 0 &&
@@ -559,8 +570,20 @@ const AuctionPage = () => {
       setLoading(true);
       const response = await api.get(`/auctions/${id}`);
       setAuction(response.data);
-      const currentIncrement = getCurrentIncrement(response.data);
-      const suggestedBid = response.data.currentBid + currentIncrement;
+
+      // FOR LOT BIDDING: Calculate suggested bid using lot-level current bid
+      let suggestedBid;
+      if (response.data.isLotBidding) {
+        const currentLotIndex = (response.data.lotNumber || 1) - 1;
+        const currentLot = response.data.lots && response.data.lots[currentLotIndex];
+        const currentLotBid = currentLot?.currentBid || response.data.currentBid;
+        const currentIncrement = getCurrentIncrement(response.data, currentLotBid);
+        suggestedBid = currentLotBid + currentIncrement;
+      } else {
+        const currentIncrement = getCurrentIncrement(response.data);
+        suggestedBid = response.data.currentBid + currentIncrement;
+      }
+
       setBidAmount(suggestedBid.toString());
     } catch (error) {
       console.error('Fetch auction error:', error);
@@ -574,12 +597,26 @@ const AuctionPage = () => {
   const getCurrentIncrement = (auctionData, currentBidValue = null) => {
     const currentBid = currentBidValue !== null ? currentBidValue : auctionData.currentBid;
     const slabs = auctionData.incrementSlabs || [];
+
+    console.log('🔍 INCREMENT DEBUG:', {
+      currentBid,
+      currentBidValue,
+      auctionCurrentBid: auctionData.currentBid,
+      slabs,
+      slabsLength: slabs.length
+    });
+
     for (let slab of slabs) {
-      if (currentBid >= slab.minPrice && currentBid < slab.maxPrice) {
+      const matches = currentBid >= slab.minPrice && currentBid < slab.maxPrice;
+      console.log(`  Checking slab [${slab.minPrice}-${slab.maxPrice}]: ${currentBid} >= ${slab.minPrice} && ${currentBid} < ${slab.maxPrice} = ${matches}`);
+      if (matches) {
+        console.log(`  ✅ Matched! Returning increment: ${slab.increment}`);
         return slab.increment;
       }
     }
-    return slabs[slabs.length - 1]?.increment || 50;
+    const fallback = slabs[slabs.length - 1]?.increment || 50;
+    console.log(`  ❌ No match! Using fallback increment: ${fallback}`);
+    return fallback;
   };
 
   const updateTimeRemaining = () => {
@@ -719,8 +756,20 @@ const AuctionPage = () => {
       setSubmittingBid(true);
       const response = await api.post(`/auctions/${auction._id}/bid`, { amount: actualBid, maxBid });
       setAuction(response.data.auction);
-      const newIncrement = getCurrentIncrement(response.data.auction);
-      const nextSuggestedBid = response.data.auction.currentBid + newIncrement;
+
+      // FOR LOT BIDDING: Calculate next suggested bid using lot-level current bid
+      let nextSuggestedBid;
+      if (response.data.auction.isLotBidding) {
+        const currentLotIndex = (response.data.auction.lotNumber || 1) - 1;
+        const currentLot = response.data.auction.lots && response.data.auction.lots[currentLotIndex];
+        const currentLotBid = currentLot?.currentBid || response.data.auction.currentBid;
+        const newIncrement = getCurrentIncrement(response.data.auction, currentLotBid);
+        nextSuggestedBid = currentLotBid + newIncrement;
+      } else {
+        const newIncrement = getCurrentIncrement(response.data.auction);
+        nextSuggestedBid = response.data.auction.currentBid + newIncrement;
+      }
+
       setBidAmount(nextSuggestedBid.toString());
       setMaxBidAmount('');
 
@@ -921,7 +970,13 @@ const AuctionPage = () => {
   const displayCurrentBid = displayLot ? displayLot.currentBid : auction.currentBid;
   const displayStartingPrice = displayLot ? displayLot.startingPrice : auction.startingPrice;
 
-  const currentIncrement = getCurrentIncrement(auction);
+  // FOR LOT BIDDING: Calculate increment using lot-level current bid
+  let currentIncrement;
+  if (auction.isLotBidding && displayLot) {
+    currentIncrement = getCurrentIncrement(auction, displayLot.currentBid);
+  } else {
+    currentIncrement = getCurrentIncrement(auction);
+  }
   const minBid = displayCurrentBid + currentIncrement;
 
   // FOR LOT BIDDING: Build media items array (images + video) like ProductDetail
