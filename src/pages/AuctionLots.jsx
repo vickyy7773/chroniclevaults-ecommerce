@@ -103,6 +103,47 @@ const AuctionLots = () => {
     }
   };
 
+  // Calculate current increment based on bid slabs
+  const getCurrentIncrement = (currentBid, incrementSlabs) => {
+    console.log('🔍 CATALOG INCREMENT DEBUG:', {
+      currentBid,
+      hasSlabs: !!incrementSlabs,
+      slabsLength: incrementSlabs?.length || 0
+    });
+
+    if (!incrementSlabs || incrementSlabs.length === 0) {
+      console.log('⚠️ No slabs provided, using defaults');
+      // Default slabs if not provided
+      const defaultSlabs = [
+        { minPrice: 1, maxPrice: 1999, increment: 100 },
+        { minPrice: 2000, maxPrice: 2999, increment: 200 },
+        { minPrice: 3000, maxPrice: 4999, increment: 300 },
+        { minPrice: 5000, maxPrice: 9999, increment: 500 },
+        { minPrice: 10000, maxPrice: 19999, increment: 1000 },
+        { minPrice: 20000, maxPrice: 29999, increment: 2000 },
+        { minPrice: 30000, maxPrice: 49999, increment: 3000 },
+        { minPrice: 50000, maxPrice: 99999, increment: 5000 },
+        { minPrice: 100000, maxPrice: 199999, increment: 10000 },
+      ];
+      incrementSlabs = defaultSlabs;
+    }
+
+    console.log('🔍 Checking slabs:', incrementSlabs);
+
+    for (let slab of incrementSlabs) {
+      const matches = currentBid >= slab.minPrice && currentBid < slab.maxPrice;
+      console.log(`  Slab [${slab.minPrice}-${slab.maxPrice}]: ${currentBid} >= ${slab.minPrice} && ${currentBid} < ${slab.maxPrice} = ${matches}, increment: ${slab.increment}`);
+      if (matches) {
+        console.log(`  ✅ Matched! Returning increment: ${slab.increment}`);
+        return slab.increment;
+      }
+    }
+    // If currentBid is beyond all slabs, use the last slab's increment
+    const fallback = incrementSlabs[incrementSlabs.length - 1]?.increment || 100;
+    console.log(`  ❌ No match! Using fallback: ${fallback}`);
+    return fallback;
+  };
+
   // Auto-redirect to live auction when auction starts
   useEffect(() => {
     if (!auction) return;
@@ -646,7 +687,7 @@ const AuctionLots = () => {
                             <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Current Bid</p>
                             <p className="text-base font-bold text-gray-900 mb-3">₹{lot.currentBid.toLocaleString('en-IN')}</p>
                             <p className="text-xs font-semibold text-green-600 uppercase mb-1">Next Bid</p>
-                            <p className="text-xl font-bold text-green-600">₹{(lot.currentBid + (lot.bidIncrement || 1000)).toLocaleString('en-IN')}</p>
+                            <p className="text-xl font-bold text-green-600">₹{(lot.currentBid + getCurrentIncrement(lot.currentBid, auction.incrementSlabs)).toLocaleString('en-IN')}</p>
                           </>
                         ) : (
                           <>
