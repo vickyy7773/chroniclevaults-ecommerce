@@ -1248,21 +1248,26 @@ const AuctionPage = () => {
                   user && user.isAuctionVerified ? (
                     <button
                       onClick={handleQuickBid}
-                      disabled={submittingBid}
-                      className={`w-full font-black py-6 px-6 rounded-2xl transition-all flex items-center justify-center gap-3 text-2xl shadow-2xl hover:shadow-3xl hover:scale-105 transform ${
+                      disabled={submittingBid || bidButtonStatus === 'mybid'}
+                      className={`w-full font-black py-6 px-6 rounded-2xl transition-all flex items-center justify-center gap-3 text-2xl shadow-2xl ${
                         submittingBid
-                          ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
+                          ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed'
                           : bidButtonStatus === 'mybid'
-                          ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white'
+                          ? 'bg-gradient-to-r from-green-600 to-green-700 text-white cursor-not-allowed opacity-90'
                           : bidButtonStatus === 'outbid'
-                          ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white'
-                          : 'bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 border-2 border-gray-300'
+                          ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white hover:shadow-3xl hover:scale-105 transform'
+                          : 'bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 border-2 border-gray-300 hover:shadow-3xl hover:scale-105 transform'
                       }`}
                     >
                       {submittingBid ? (
                         <>
                           <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
                           <span>Placing Bid...</span>
+                        </>
+                      ) : bidButtonStatus === 'mybid' ? (
+                        <>
+                          <CheckCircle className="w-8 h-8" />
+                          <span>You're Winning! 🎉</span>
                         </>
                       ) : (
                         <>
