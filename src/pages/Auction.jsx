@@ -1530,13 +1530,6 @@ const AuctionPage = () => {
                             }
                           })()}
 
-                          {/* Reserve Price for Active/Upcoming Lots */}
-                          {(lot.status === 'Active' || lot.status === 'Upcoming') && lot.reservePrice > 0 && (
-                            <div className="text-xs text-orange-600 font-medium">
-                              Reserve: <span className="font-semibold">₹{lot.reservePrice.toLocaleString()}</span>
-                            </div>
-                          )}
-
                           <div className="text-xs text-gray-600 font-medium">
                             {lot.status === 'Active' || lot.status === 'Upcoming' ? 'Current: ' : 'Final: '}
                             <span className={`font-bold text-sm ${
