@@ -150,10 +150,11 @@ export const createAuctionInvoice = async (req, res) => {
       phone: companyDetails?.phone || '+91-XXXXXXXXXX',
       email: companyDetails?.email || 'info@chroniclevaults.com',
       bankDetails: companyDetails?.bankDetails || {
-        bankName: 'Bank Name',
-        accountNumber: 'XXXXXXXXXXXX',
-        ifsc: 'XXXXXX',
-        branch: 'Mumbai'
+        bankName: 'Saraswat Bank',
+        accountNumber: '610000000016716',
+        accountName: 'urhistory',
+        ifsc: 'SRCB000362',
+        branch: 'CG Road'
       }
     };
 

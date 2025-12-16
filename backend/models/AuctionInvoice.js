@@ -145,6 +145,7 @@ const auctionInvoiceSchema = new mongoose.Schema({
     email: String,
     bankDetails: {
       bankName: String,
+      accountName: String,
       accountNumber: String,
       ifsc: String,
       branch: String

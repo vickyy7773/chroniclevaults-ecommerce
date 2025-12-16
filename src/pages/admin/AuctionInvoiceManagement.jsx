@@ -356,6 +356,32 @@ const AuctionInvoiceManagement = () => {
           <p>Rs. ${numberToWords(invoice.amounts.totalPayable)} Only</p>
         </div>
 
+        <div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px;">
+          <h3 style="margin-top: 0; margin-bottom: 10px; color: #333;">Bank Details for Payment</h3>
+          <table style="width: 100%; border: none;">
+            <tr>
+              <td style="border: none; padding: 5px;"><strong>Bank Name:</strong></td>
+              <td style="border: none; padding: 5px;">${invoice.companyDetails.bankDetails?.bankName || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="border: none; padding: 5px;"><strong>Account Name:</strong></td>
+              <td style="border: none; padding: 5px;">${invoice.companyDetails.bankDetails?.accountName || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="border: none; padding: 5px;"><strong>Account Number:</strong></td>
+              <td style="border: none; padding: 5px;">${invoice.companyDetails.bankDetails?.accountNumber || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="border: none; padding: 5px;"><strong>IFSC Code:</strong></td>
+              <td style="border: none; padding: 5px;">${invoice.companyDetails.bankDetails?.ifsc || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="border: none; padding: 5px;"><strong>Branch:</strong></td>
+              <td style="border: none; padding: 5px;">${invoice.companyDetails.bankDetails?.branch || 'N/A'}</td>
+            </tr>
+          </table>
+        </div>
+
         <div style="margin-top: 50px; text-align: right;">
           <p>For ${invoice.companyDetails.name}</p>
           <br><br>
