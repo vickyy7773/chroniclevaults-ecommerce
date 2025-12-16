@@ -325,6 +325,29 @@ const AuctionLots = () => {
       return;
     }
 
+    // Find the lot
+    const lot = auction?.lots?.find(l => l.lotNumber === lotNumber);
+    if (!lot) {
+      toast.error('Lot not found');
+      return;
+    }
+
+    // Calculate minimum bid
+    let minBid;
+    if (lot.bids && lot.bids.length > 0) {
+      // Lot has bids: minimum = currentBid + increment
+      const increment = getCurrentIncrement(lot.currentBid, auction.incrementSlabs);
+      minBid = lot.currentBid + increment;
+    } else {
+      // No bids yet: minimum = starting price
+      minBid = lot.startingPrice || lot.estimatedPrice?.min || 0;
+    }
+
+    if (amount < minBid) {
+      toast.error(`Minimum bid is ₹${minBid.toLocaleString('en-IN')}`);
+      return;
+    }
+
     try {
       setSubmittingBid(prev => ({ ...prev, [lotNumber]: true }));
 
