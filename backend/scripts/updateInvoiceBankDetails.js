@@ -13,7 +13,9 @@ dotenv.config({ path: join(__dirname, '../../.env') });
 const updateInvoiceBankDetails = async () => {
   try {
     console.log('🔌 Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGODB_URI);
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/chroniclevaults';
+    console.log(`📡 Using MongoDB URI: ${mongoUri.replace(/\/\/.*@/, '//<credentials>@')}`);
+    await mongoose.connect(mongoUri);
     console.log('✅ Connected to MongoDB');
 
     // New bank details
