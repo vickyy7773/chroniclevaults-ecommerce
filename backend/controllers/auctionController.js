@@ -1570,18 +1570,37 @@ export const placeBid = async (req, res) => {
         });
       }
 
-      // For LOT BIDDING: Use increment slab validation
-      // Temporarily set auction.currentBid to currentLot.currentBid (or startingPrice if no bids)
-      const originalCurrentBid = auction.currentBid;
-      auction.currentBid = currentLot.currentBid || currentLot.startingPrice || 0;
-      const validation = auction.validateBid(amount);
-      auction.currentBid = originalCurrentBid; // Restore original value
+      // For LOT BIDDING: Validate bid amount
+      if (currentLot.bids && currentLot.bids.length > 0) {
+        // LOT HAS BIDS: Use increment slab validation
+        const originalCurrentBid = auction.currentBid;
+        auction.currentBid = currentLot.currentBid;
+        const validation = auction.validateBid(amount);
+        auction.currentBid = originalCurrentBid; // Restore original value
 
-      if (!validation.valid) {
-        return res.status(400).json({
-          success: false,
-          message: validation.message
-        });
+        if (!validation.valid) {
+          return res.status(400).json({
+            success: false,
+            message: validation.message
+          });
+        }
+      } else {
+        // FIRST BID ON LOT: Must be >= starting price
+        const startingPrice = currentLot.startingPrice || 0;
+
+        if (amount < startingPrice) {
+          return res.status(400).json({
+            success: false,
+            message: `First bid must be at least ₹${startingPrice.toLocaleString('en-IN')}`
+          });
+        }
+
+        if (amount % 50 !== 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'Bid amount must be divisible by 50'
+          });
+        }
       }
     } else {
       // For NORMAL AUCTION: Use increment slab validation
