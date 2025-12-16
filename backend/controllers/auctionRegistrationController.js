@@ -157,15 +157,24 @@ export const verifyEmail = async (req, res) => {
 // @access  Private/Admin
 export const getAllRegistrations = async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, page = 1, limit = 20 } = req.query;
     const filter = status ? { status } : {};
 
+    // Calculate skip value for pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get total count for pagination metadata
+    const total = await AuctionRegistration.countDocuments(filter);
+
+    // Fetch paginated registrations
     const registrations = await AuctionRegistration.find(filter)
       .populate('userId', 'auctionCoins isAuctionVerified')
       .sort({ submittedAt: -1 })
-      .select('-verificationToken');
+      .select('-verificationToken')
+      .skip(skip)
+      .limit(parseInt(limit));
 
-    console.log('📋 Total registrations found:', registrations.length);
+    console.log(`📋 Page ${page}: Fetched ${registrations.length} of ${total} total registrations`);
     if (registrations.length > 0) {
       const firstReg = registrations[0];
       console.log('📋 First registration auctionId:', firstReg.auctionId);
@@ -175,7 +184,18 @@ export const getAllRegistrations = async (req, res) => {
       }
     }
 
-    res.json(registrations);
+    // Send paginated response with metadata
+    res.json({
+      registrations,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit)),
+        totalItems: total,
+        itemsPerPage: parseInt(limit),
+        hasNextPage: skip + registrations.length < total,
+        hasPrevPage: parseInt(page) > 1
+      }
+    });
   } catch (error) {
     console.error('Error fetching registrations:', error);
     res.status(500).json({ message: 'Error fetching registrations' });

@@ -33,27 +33,47 @@ const AuctionRegistrationManagement = () => {
   const [editingCoins, setEditingCoins] = useState(0);
   const [updatingCoins, setUpdatingCoins] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 20,
+    hasNextPage: false,
+    hasPrevPage: false
+  });
+
+  useEffect(() => {
+    // Reset to page 1 when filter changes
+    setCurrentPage(1);
+  }, [filter]);
 
   useEffect(() => {
     fetchRegistrations();
-  }, [filter]);
+  }, [filter, currentPage]);
 
   const fetchRegistrations = async () => {
     try {
       setLoading(true);
-      const queryParam = filter !== 'all' ? `?status=${filter}` : '';
-      const response = await api.get(`/auction-registration/admin/all${queryParam}`);
-      // Response interceptor already returns response.data
+      const statusParam = filter !== 'all' ? `status=${filter}` : '';
+      const pageParam = `page=${currentPage}`;
+      const limitParam = 'limit=20';
+      const queryParams = [statusParam, pageParam, limitParam].filter(Boolean).join('&');
+      const url = `/auction-registration/admin/all${queryParams ? `?${queryParams}` : ''}`;
+
+      const response = await api.get(url);
       console.log('📊 Fetched Registrations:', response);
-      if (response && response.length > 0) {
-        console.log('📊 First registration sample:', response[0]);
-        console.log('📊 userId populated?', response[0].userId);
+
+      if (response.registrations) {
+        setRegistrations(response.registrations);
+        setPagination(response.pagination);
+      } else {
+        // Fallback for old API response format
+        setRegistrations(response || []);
       }
-      setRegistrations(response || []);
     } catch (error) {
       console.error('Error fetching registrations:', error);
       toast.error('Failed to fetch registrations');
-      setRegistrations([]); // Set empty array on error
+      setRegistrations([]);
     } finally {
       setLoading(false);
     }
@@ -376,6 +396,32 @@ const AuctionRegistrationManagement = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {pagination.totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between border-t pt-4">
+              <div className="text-sm text-gray-600">
+                Showing page <span className="font-bold">{pagination.currentPage}</span> of <span className="font-bold">{pagination.totalPages}</span>
+                {' '}({pagination.totalItems} total registrations)
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={!pagination.hasPrevPage}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={!pagination.hasNextPage}
+                  className="px-4 py-2 bg-accent-600 text-white rounded-lg font-semibold hover:bg-accent-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       );
       })()}
