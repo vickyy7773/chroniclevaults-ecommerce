@@ -538,6 +538,12 @@ const AuctionRegistrationManagement = () => {
                     <p className="font-semibold">{selectedRegistration.gstNumber || 'N/A'}</p>
                   </div>
                   <div>
+                    <label className="text-sm text-gray-600">PAN Number</label>
+                    <p className="font-semibold font-mono tracking-wider text-lg bg-amber-50 px-3 py-1 rounded border border-amber-200">
+                      {selectedRegistration.panNumber || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
                     <label className="text-sm text-gray-600">State Code</label>
                     <p className="font-semibold">{selectedRegistration.stateCode || 'N/A'}</p>
                   </div>
