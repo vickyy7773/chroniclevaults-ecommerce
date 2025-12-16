@@ -148,7 +148,7 @@ const AuctionInvoiceManagement = () => {
         billingState = auctionReg.billingAddress.state || 'Maharashtra';
         billingZipCode = auctionReg.billingAddress.pinCode || '';
         buyerGstin = auctionReg.gstNumber || '';
-        buyerPan = auctionReg.gstNumber ? auctionReg.gstNumber.substring(2, 12) : '';
+        buyerPan = auctionReg.panNumber || (auctionReg.gstNumber ? auctionReg.gstNumber.substring(2, 12) : '');
       } else if (customer.address) {
         // Fall back to basic user address
         billingStreet = customer.address.street || '';
