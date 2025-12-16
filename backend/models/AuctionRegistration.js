@@ -97,6 +97,15 @@ const auctionRegistrationSchema = new mongoose.Schema({
     type: String, // URL to uploaded file or base64
     required: true
   },
+  panNumber: {
+    type: String,
+    required: true,
+    uppercase: true,
+    trim: true,
+    match: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
+    maxlength: 10,
+    minlength: 10
+  },
   idProof: {
     proofType: {
       type: String,

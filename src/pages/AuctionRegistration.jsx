@@ -40,6 +40,7 @@ const AuctionRegistration = () => {
     phone: '',
     website: '',
     panCard: null,
+    panNumber: '',
     idProof: {
       proofType: 'aadhar',
       file: null
@@ -114,6 +115,12 @@ const AuctionRegistration = () => {
           proofType: value
         }
       }));
+    } else if (name === 'panNumber') {
+      // Convert PAN number to uppercase automatically
+      setFormData(prev => ({
+        ...prev,
+        panNumber: value.toUpperCase()
+      }));
     } else {
       setFormData(prev => ({
         ...prev,
@@ -158,9 +165,23 @@ const AuctionRegistration = () => {
     setMessage('');
 
     try {
-      // Custom validation for file uploads
+      // Custom validation for file uploads and PAN number
       if (!formData.panCard) {
         setError('Please upload PAN Card');
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.panNumber || formData.panNumber.length !== 10) {
+        setError('Please enter a valid 10-character PAN number');
+        setLoading(false);
+        return;
+      }
+
+      // Validate PAN format
+      const panPattern = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+      if (!panPattern.test(formData.panNumber)) {
+        setError('Invalid PAN format. Must be 5 letters, 4 numbers, 1 letter (e.g., ABCDE1234F)');
         setLoading(false);
         return;
       }
@@ -713,6 +734,26 @@ const AuctionRegistration = () => {
                       File uploaded
                     </span>
                   )}
+                </div>
+
+                <div className="mt-4">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-2">
+                    <FileText className="w-4 h-4 text-amber-600" />
+                    PAN Number <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="panNumber"
+                    value={formData.panNumber}
+                    onChange={handleChange}
+                    required
+                    pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
+                    maxLength="10"
+                    placeholder="ABCDE1234F"
+                    className="w-full md:w-1/2 border-2 border-amber-300 rounded-xl px-4 py-3 font-semibold uppercase focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                    style={{ textTransform: 'uppercase' }}
+                  />
+                  <p className="text-xs text-gray-600 mt-2">Format: 5 letters + 4 numbers + 1 letter (e.g., ABCDE1234F)</p>
                 </div>
               </div>
 
