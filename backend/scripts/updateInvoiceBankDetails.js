@@ -1,8 +1,14 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import AuctionInvoice from '../models/AuctionInvoice.js';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load .env from project root
+dotenv.config({ path: join(__dirname, '../../.env') });
 
 const updateInvoiceBankDetails = async () => {
   try {
