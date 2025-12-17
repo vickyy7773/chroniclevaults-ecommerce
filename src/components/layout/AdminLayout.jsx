@@ -293,6 +293,7 @@ const AdminLayout = () => {
         { path: '/admin/auctions', label: 'Auction Management' },
         { path: '/admin/auction-registrations', label: 'Registrations' },
         { path: '/admin/auction-invoices', label: 'Invoices' },
+        { path: '/admin/lot-transfer', label: 'Lot Transfer' },
         { path: '/admin/image-upload', label: 'Image Upload' },
         { path: '/admin/video-upload', label: 'Video Upload' },
         { path: '/admin/bulk-lot-upload', label: 'Bulk Lot Upload' }
