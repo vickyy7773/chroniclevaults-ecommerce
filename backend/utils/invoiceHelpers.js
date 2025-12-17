@@ -68,11 +68,6 @@ export const transferLotsBetweenBuyers = async (auctionId, fromBuyerId, toBuyerI
     }
   }
 
-  // Cannot transfer ALL lots - at least one must remain
-  if (lotNumbers.length === sourceInvoice.lots.length) {
-    throw new Error('Cannot transfer all lots. At least one lot must remain with the original buyer.');
-  }
-
   // 3. Get lots data to transfer
   const lotsToTransfer = sourceInvoice.lots.filter(l => lotNumbers.includes(l.lotNumber));
 
@@ -80,8 +75,13 @@ export const transferLotsBetweenBuyers = async (auctionId, fromBuyerId, toBuyerI
   sourceInvoice.lots = sourceInvoice.lots.filter(l => !lotNumbers.includes(l.lotNumber));
   sourceInvoice.lotNumbers = sourceInvoice.lots.map(l => l.lotNumber);
 
-  // Save source invoice (will auto-recalculate via pre-save hook)
-  await sourceInvoice.save();
+  // If all lots transferred, delete the source invoice; otherwise save it
+  if (sourceInvoice.lots.length === 0) {
+    await sourceInvoice.deleteOne();
+  } else {
+    // Save source invoice (will auto-recalculate via pre-save hook)
+    await sourceInvoice.save();
+  }
 
   // 5. Update lot winners in auction document
   for (const lotNum of lotNumbers) {
