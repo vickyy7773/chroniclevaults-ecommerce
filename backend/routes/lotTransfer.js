@@ -5,13 +5,13 @@ import {
   getAuctionUnsoldLots,
   getAuctionBuyersWithLots
 } from '../controllers/lotTransferController.js';
-import { protect, authorize } from '../middleware/auth.js';
+import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // All routes require admin authorization
 router.use(protect);
-router.use(authorize('admin', 'superadmin'));
+router.use(admin);
 
 // @route   POST /api/lot-transfer/transfer
 // @desc    Transfer lots from one buyer to another
