@@ -6,7 +6,8 @@ import {
   updateVendorInvoice,
   markVendorInvoiceAsPaid,
   deleteVendorInvoice,
-  getVendorInvoicesByAuction
+  getVendorInvoicesByAuction,
+  updateCompanyDetailsInAllInvoices
 } from '../controllers/vendorInvoiceController.js';
 import { protect, admin } from '../middleware/auth.js';
 
@@ -19,6 +20,9 @@ const router = express.Router();
 
 // Generate vendor invoices for an auction
 router.post('/generate', generateVendorInvoices);
+
+// Update company details in all invoices
+router.post('/update-company-details', updateCompanyDetailsInAllInvoices);
 
 // Get all vendor invoices (with optional filters)
 router.get('/', getAllVendorInvoices);

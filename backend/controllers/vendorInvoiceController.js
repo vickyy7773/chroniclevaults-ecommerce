@@ -419,3 +419,43 @@ export const getVendorInvoicesByAuction = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Update company details in all vendor invoices
+ * @route   POST /api/vendor-invoices/update-company-details
+ * @access  Private/Admin
+ */
+export const updateCompanyDetailsInAllInvoices = async (req, res) => {
+  try {
+    const correctCompanyDetails = {
+      name: 'Chronicle Vaults',
+      gstin: '24BCZPD7594Q1ZE',
+      pan: 'BCZPD7594Q',
+      address: '16/189, Netajinagar, Meghaninagar, Ahmedabad-380016, Gujarat',
+      city: 'Ahmedabad',
+      state: 'Gujarat',
+      phone: '+918460849878',
+      email: 'chroniclevaults@gmail.com'
+    };
+
+    // Update all vendor invoices
+    const result = await VendorInvoice.updateMany(
+      {}, // Empty filter to match all documents
+      { $set: { companyDetails: correctCompanyDetails } }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Updated company details in ${result.modifiedCount} vendor invoice(s)`,
+      modifiedCount: result.modifiedCount,
+      matchedCount: result.matchedCount
+    });
+  } catch (error) {
+    console.error('Update company details error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating company details',
+      error: error.message
+    });
+  }
+};
