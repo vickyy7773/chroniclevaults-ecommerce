@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, DollarSign, Search, Eye, X, Filter, RefreshCw, CheckCircle } from 'lucide-react';
+import { FileText, DollarSign, Search, Eye, X, Filter, RefreshCw, CheckCircle, Edit2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../../utils/api';
 
@@ -26,6 +26,12 @@ const VendorInvoiceManagement = () => {
     paymentMode: '',
     paymentReference: ''
   });
+
+  // Edit modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState(null);
+  const [editCommission, setEditCommission] = useState(0);
+  const [updating, setUpdating] = useState(false);
 
   const fetchInvoices = async () => {
     try {
@@ -123,6 +129,63 @@ const VendorInvoiceManagement = () => {
       console.error('Error marking invoice as paid:', error);
       toast.error('Failed to mark invoice as paid');
     }
+  };
+
+  const handleEditInvoice = (invoice) => {
+    setEditingInvoice(invoice);
+    setEditCommission(invoice.vendorDetails?.commissionPercentage || 0);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateCommission = async () => {
+    if (editCommission < 0 || editCommission > 100) {
+      toast.error('Commission must be between 0 and 100');
+      return;
+    }
+
+    try {
+      setUpdating(true);
+
+      // Update commission for all lots
+      const updatedLots = editingInvoice.lots.map(lot => ({
+        ...lot,
+        commissionRate: editCommission
+      }));
+
+      await api.put(`/vendor-invoices/${editingInvoice._id}`, {
+        vendorDetails: {
+          ...editingInvoice.vendorDetails,
+          commissionPercentage: editCommission
+        },
+        lots: updatedLots
+      });
+
+      toast.success('Commission updated successfully');
+      setShowEditModal(false);
+      setEditingInvoice(null);
+      fetchInvoices();
+    } catch (error) {
+      console.error('Error updating commission:', error);
+      toast.error('Failed to update commission');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const calculateUpdatedAmounts = () => {
+    if (!editingInvoice) return null;
+
+    const totalHammerPrice = editingInvoice.lots.reduce((sum, lot) => sum + (lot.hammerPrice || 0), 0);
+    const totalCommission = (totalHammerPrice * editCommission) / 100;
+    const totalNetPayable = totalHammerPrice - totalCommission;
+    const finalPayable = Math.round(totalNetPayable);
+
+    return {
+      totalHammerPrice,
+      totalCommission,
+      totalNetPayable,
+      finalPayable
+    };
   };
 
   const filteredInvoices = invoices.filter(invoice => {
@@ -368,16 +431,25 @@ const VendorInvoiceManagement = () => {
                           <Eye className="w-5 h-5" />
                         </button>
                         {invoice.status !== 'Paid' && (
-                          <button
-                            onClick={() => {
-                              setSelectedInvoice(invoice);
-                              setShowPaymentModal(true);
-                            }}
-                            className="text-green-600 hover:text-green-900"
-                            title="Mark as Paid"
-                          >
-                            <CheckCircle className="w-5 h-5" />
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handleEditInvoice(invoice)}
+                              className="text-indigo-600 hover:text-indigo-900"
+                              title="Edit Commission"
+                            >
+                              <Edit2 className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedInvoice(invoice);
+                                setShowPaymentModal(true);
+                              }}
+                              className="text-green-600 hover:text-green-900"
+                              title="Mark as Paid"
+                            >
+                              <CheckCircle className="w-5 h-5" />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
@@ -604,6 +676,110 @@ const VendorInvoiceManagement = () => {
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:bg-gray-400"
               >
                 Confirm Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Commission Modal */}
+      {showEditModal && editingInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-3xl w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Edit Vendor Commission</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">Invoice Details</h3>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-600">Invoice Number:</span>
+                    <p className="font-semibold">{editingInvoice.invoiceNumber}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Vendor:</span>
+                    <p className="font-semibold">{editingInvoice.vendorDetails?.name}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Auction:</span>
+                    <p className="font-semibold">{editingInvoice.auction?.auctionCode}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Total Lots:</span>
+                    <p className="font-semibold">{editingInvoice.lots?.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Commission Percentage (%) *
+                </label>
+                <input
+                  type="number"
+                  value={editCommission}
+                  onChange={(e) => setEditCommission(parseFloat(e.target.value) || 0)}
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg font-semibold"
+                />
+                <p className="text-xs text-gray-500 mt-1">Enter commission percentage (0-100)</p>
+              </div>
+
+              {calculateUpdatedAmounts() && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Updated Calculation</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total Hammer Price:</span>
+                      <span className="font-semibold">{formatCurrency(calculateUpdatedAmounts().totalHammerPrice)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Commission ({editCommission}%):</span>
+                      <span className="font-semibold text-red-600">-{formatCurrency(calculateUpdatedAmounts().totalCommission)}</span>
+                    </div>
+                    <div className="flex justify-between border-t pt-2">
+                      <span className="text-gray-600">Net Payable:</span>
+                      <span className="font-semibold">{formatCurrency(calculateUpdatedAmounts().totalNetPayable)}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold border-t-2 pt-2">
+                      <span className="text-gray-900">Final Payable:</span>
+                      <span className="text-green-600">{formatCurrency(calculateUpdatedAmounts().finalPayable)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateCommission}
+                disabled={updating}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:bg-gray-400 flex items-center gap-2"
+              >
+                {updating ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update Commission'
+                )}
               </button>
             </div>
           </div>

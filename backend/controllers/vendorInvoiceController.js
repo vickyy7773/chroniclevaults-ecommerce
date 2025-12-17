@@ -294,14 +294,14 @@ export const updateVendorInvoice = async (req, res) => {
     }
 
     // Update allowed fields
-    const allowedUpdates = ['vendorDetails', 'bankDetails', 'notes', 'termsAndConditions', 'status'];
+    const allowedUpdates = ['vendorDetails', 'bankDetails', 'lots', 'notes', 'termsAndConditions', 'status'];
     allowedUpdates.forEach(field => {
       if (updates[field] !== undefined) {
         invoice[field] = updates[field];
       }
     });
 
-    await invoice.save();
+    await invoice.save(); // Pre-save hook will recalculate commission amounts
 
     res.status(200).json({
       success: true,
