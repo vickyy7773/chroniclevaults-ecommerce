@@ -916,7 +916,6 @@ const AuctionInvoiceManagement = () => {
     }
 
     const lotNumbers = Object.keys(selectedUnsoldLots).map(Number);
-    const hammerPrices = Object.values(selectedUnsoldLots);
 
     if (lotNumbers.length === 0) {
       toast.error('Please select at least one unsold lot');
@@ -924,7 +923,12 @@ const AuctionInvoiceManagement = () => {
     }
 
     // Validate all prices are set
-    if (hammerPrices.some(price => !price || price <= 0)) {
+    const allPricesValid = lotNumbers.every(lotNum => {
+      const price = selectedUnsoldLots[lotNum];
+      return price && price > 0;
+    });
+
+    if (!allPricesValid) {
       toast.error('Please set valid hammer prices for all selected lots');
       return;
     }
@@ -935,7 +939,7 @@ const AuctionInvoiceManagement = () => {
         auctionId: currentAuctionForUnsold,
         buyerId: selectedUnsoldBuyer.buyer._id,
         lotNumbers,
-        hammerPrices
+        hammerPrices: selectedUnsoldLots  // Send as object {lotNumber: price}
       });
 
       if (response.success) {
