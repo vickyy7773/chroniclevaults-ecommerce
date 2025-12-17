@@ -247,11 +247,11 @@ export const generateVendorInvoices = async (req, res) => {
             name: 'Chronicle Vaults',
             gstin: '24BCZPD7594Q1ZE',
             pan: 'BCZPD7594Q',
-            address: '16/189, Netajinagar, Meghaninagar',
+            address: '16/189, Netajinagar, Meghaninagar, Ahmedabad-380016, Gujarat',
             city: 'Ahmedabad',
             state: 'Gujarat',
-            phone: '+91-9825085348',
-            email: 'info@chroniclevaults.com'
+            phone: '+918460849878',
+            email: 'chroniclevaults@gmail.com'
           }
         });
 
