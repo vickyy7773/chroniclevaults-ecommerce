@@ -60,6 +60,7 @@ const BlogManagement = lazy(() => import('./pages/admin/BlogManagement'));
 const AuctionManagement = lazy(() => import('./pages/admin/AuctionManagement'));
 const AuctionRegistrationManagement = lazy(() => import('./pages/admin/AuctionRegistrationManagement'));
 const AuctionInvoiceManagement = lazy(() => import('./pages/admin/AuctionInvoiceManagement'));
+const VendorInvoiceManagement = lazy(() => import('./pages/admin/VendorInvoiceManagement'));
 const ImageUploadManager = lazy(() => import('./pages/admin/ImageUploadManager'));
 const VideoUploadManager = lazy(() => import('./pages/admin/VideoUploadManager'));
 const BulkLotUpload = lazy(() => import('./pages/admin/BulkLotUpload'));
@@ -681,6 +682,7 @@ const AppContent = () => {
               <Route path="auctions" element={<AuctionManagement />} />
               <Route path="auction-registrations" element={<AuctionRegistrationManagement />} />
               <Route path="auction-invoices" element={<AuctionInvoiceManagement />} />
+              <Route path="vendor-invoices" element={<VendorInvoiceManagement />} />
               <Route path="lot-transfer" element={<LotTransferManagement />} />
               <Route path="image-upload" element={<ImageUploadManager />} />
               <Route path="video-upload" element={<VideoUploadManager />} />

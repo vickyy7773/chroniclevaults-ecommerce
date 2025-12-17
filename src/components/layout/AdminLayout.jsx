@@ -292,7 +292,8 @@ const AdminLayout = () => {
       submenu: [
         { path: '/admin/auctions', label: 'Auction Management' },
         { path: '/admin/auction-registrations', label: 'Registrations' },
-        { path: '/admin/auction-invoices', label: 'Invoices' },
+        { path: '/admin/auction-invoices', label: 'Customer Invoices' },
+        { path: '/admin/vendor-invoices', label: 'Vendor Invoices' },
         { path: '/admin/lot-transfer', label: 'Lot Transfer' },
         { path: '/admin/image-upload', label: 'Image Upload' },
         { path: '/admin/video-upload', label: 'Video Upload' },
