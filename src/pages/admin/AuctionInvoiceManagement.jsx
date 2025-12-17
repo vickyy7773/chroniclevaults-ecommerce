@@ -38,6 +38,16 @@ const AuctionInvoiceManagement = () => {
   const [auctionBuyers, setAuctionBuyers] = useState([]); // Buyers from same auction
   const [loadingBuyers, setLoadingBuyers] = useState(false);
 
+  // Unsold Lot Assignment states
+  const [showUnsoldModal, setShowUnsoldModal] = useState(false);
+  const [unsoldLots, setUnsoldLots] = useState([]);
+  const [selectedUnsoldLots, setSelectedUnsoldLots] = useState({});
+  const [unsoldBuyerSearch, setUnsoldBuyerSearch] = useState('');
+  const [selectedUnsoldBuyer, setSelectedUnsoldBuyer] = useState(null);
+  const [assigningUnsold, setAssigningUnsold] = useState(false);
+  const [loadingUnsoldLots, setLoadingUnsoldLots] = useState(false);
+  const [currentAuctionForUnsold, setCurrentAuctionForUnsold] = useState(null);
+
   const [formData, setFormData] = useState({
     auctionId: '',
     lotNumber: '',
@@ -845,6 +855,118 @@ const AuctionInvoiceManagement = () => {
            auctionReg?.auctionId?.toLowerCase().includes(searchLower);
   });
 
+  // Unsold Lot Assignment Functions
+  const openUnsoldLotsModal = async (auctionId) => {
+    setCurrentAuctionForUnsold(auctionId);
+    setShowUnsoldModal(true);
+    setSelectedUnsoldLots({});
+    setUnsoldBuyerSearch('');
+    setSelectedUnsoldBuyer(null);
+
+    // Fetch unsold lots for this auction
+    try {
+      setLoadingUnsoldLots(true);
+      const response = await api.get(`/lot-transfer/unsold/${auctionId}`);
+
+      if (response.success) {
+        setUnsoldLots(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching unsold lots:', error);
+      toast.error('Failed to load unsold lots');
+      setUnsoldLots([]);
+    } finally {
+      setLoadingUnsoldLots(false);
+    }
+
+    // Also fetch buyers for assignment
+    try {
+      const response = await api.get('/lot-transfer/all-buyers');
+      if (response.success) {
+        setAuctionBuyers(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching buyers:', error);
+    }
+  };
+
+  const toggleUnsoldLotSelection = (lotNumber, currentPrice = 0) => {
+    setSelectedUnsoldLots(prev => {
+      const newSelection = { ...prev };
+      if (newSelection[lotNumber]) {
+        delete newSelection[lotNumber];
+      } else {
+        newSelection[lotNumber] = currentPrice;
+      }
+      return newSelection;
+    });
+  };
+
+  const updateUnsoldLotPrice = (lotNumber, price) => {
+    setSelectedUnsoldLots(prev => ({
+      ...prev,
+      [lotNumber]: parseFloat(price) || 0
+    }));
+  };
+
+  const handleAssignUnsoldLots = async () => {
+    if (!selectedUnsoldBuyer) {
+      toast.error('Please select a buyer');
+      return;
+    }
+
+    const lotNumbers = Object.keys(selectedUnsoldLots).map(Number);
+    const hammerPrices = Object.values(selectedUnsoldLots);
+
+    if (lotNumbers.length === 0) {
+      toast.error('Please select at least one unsold lot');
+      return;
+    }
+
+    // Validate all prices are set
+    if (hammerPrices.some(price => !price || price <= 0)) {
+      toast.error('Please set valid hammer prices for all selected lots');
+      return;
+    }
+
+    try {
+      setAssigningUnsold(true);
+      const response = await api.post('/lot-transfer/assign-unsold', {
+        auctionId: currentAuctionForUnsold,
+        buyerId: selectedUnsoldBuyer.buyer._id,
+        lotNumbers,
+        hammerPrices
+      });
+
+      if (response.success) {
+        toast.success(`Successfully assigned ${lotNumbers.length} unsold lots`);
+        setShowUnsoldModal(false);
+        setSelectedUnsoldLots({});
+        setSelectedUnsoldBuyer(null);
+        setUnsoldLots([]);
+        setCurrentAuctionForUnsold(null);
+        fetchInvoices(); // Refresh invoices
+      }
+    } catch (error) {
+      console.error('Assign unsold lots error:', error);
+      toast.error(error.response?.data?.message || 'Failed to assign unsold lots');
+    } finally {
+      setAssigningUnsold(false);
+    }
+  };
+
+  const filteredUnsoldBuyers = auctionBuyers.filter(buyerData => {
+    if (!unsoldBuyerSearch) return true;
+    const searchLower = unsoldBuyerSearch.toLowerCase();
+    const buyer = buyerData.buyer;
+    const auctionReg = buyerData.auctionReg;
+
+    return buyer.name?.toLowerCase().includes(searchLower) ||
+           buyer.email?.toLowerCase().includes(searchLower) ||
+           buyer.phone?.toLowerCase().includes(searchLower) ||
+           auctionReg?.registrationId?.toLowerCase().includes(searchLower);
+  });
+
   // Debug logging
   console.log('🔍 Invoice filtering:', {
     totalInvoices: invoices.length,
@@ -887,6 +1009,15 @@ const AuctionInvoiceManagement = () => {
           <h1 className="text-3xl font-bold text-gray-900">Auction Invoice Management</h1>
           <p className="text-gray-600 mt-1">View and edit automatically generated auction invoices</p>
         </div>
+        {selectedAuctionFilter && (
+          <button
+            onClick={() => openUnsoldLotsModal(selectedAuctionFilter)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <DollarSign className="w-5 h-5" />
+            Assign Unsold Lots
+          </button>
+        )}
       </div>
 
       {/* Filters Section */}
@@ -1805,6 +1936,187 @@ const AuctionInvoiceManagement = () => {
               >
                 {transferring ? 'Transferring...' : `Transfer ${selectedLotsForTransfer.length} Lots`}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unsold Lots Assignment Modal */}
+      {showUnsoldModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">Assign Unsold Lots</h2>
+                <button
+                  onClick={() => {
+                    setShowUnsoldModal(false);
+                    setUnsoldLots([]);
+                    setSelectedUnsoldLots({});
+                    setSelectedUnsoldBuyer(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Unsold Lots Selection */}
+              <div className="mb-6">
+                <h3 className="font-semibold mb-2">Select Unsold Lots & Set Hammer Price</h3>
+                {loadingUnsoldLots ? (
+                  <div className="p-8 text-center text-gray-500">
+                    Loading unsold lots...
+                  </div>
+                ) : unsoldLots.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                    {unsoldLots.map((lot) => {
+                      const isSelected = selectedUnsoldLots[lot.lotNumber] !== undefined;
+                      return (
+                        <div
+                          key={lot.lotNumber}
+                          className={`p-4 border rounded-lg ${
+                            isSelected ? 'bg-green-50 border-green-500' : 'bg-white border-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3 flex-1">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleUnsoldLotSelection(lot.lotNumber, lot.estimateMin || 0)}
+                                className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                              />
+                              <div className="flex-1">
+                                <div className="font-medium text-lg">Lot #{lot.lotNumber}</div>
+                                <div className="text-sm text-gray-600">{lot.description}</div>
+                                {lot.estimateMin && lot.estimateMax && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    Estimate: ₹{lot.estimateMin?.toLocaleString()} - ₹{lot.estimateMax?.toLocaleString()}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <div className="flex items-center gap-2">
+                                <label className="text-sm font-medium text-gray-700">Hammer Price:</label>
+                                <input
+                                  type="number"
+                                  value={selectedUnsoldLots[lot.lotNumber] || ''}
+                                  onChange={(e) => updateUnsoldLotPrice(lot.lotNumber, e.target.value)}
+                                  placeholder="0"
+                                  className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-gray-500">
+                    No unsold lots found for this auction
+                  </div>
+                )}
+                <p className="text-sm text-gray-500 mt-2">
+                  Selected: {Object.keys(selectedUnsoldLots).length} lot(s)
+                </p>
+              </div>
+
+              {/* Select Buyer */}
+              <div className="mb-6">
+                <h3 className="font-semibold mb-2">Select Buyer</h3>
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, phone, or auction ID..."
+                    value={unsoldBuyerSearch}
+                    onChange={(e) => setUnsoldBuyerSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                </div>
+
+                {selectedUnsoldBuyer && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-semibold text-green-900">{selectedUnsoldBuyer.buyer.name}</div>
+                        <div className="text-sm text-green-700">{selectedUnsoldBuyer.buyer.email}</div>
+                        {selectedUnsoldBuyer.auctionReg?.registrationId && (
+                          <div className="text-xs text-green-600 font-mono mt-1">
+                            Auction ID: {selectedUnsoldBuyer.auctionReg.registrationId}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setSelectedUnsoldBuyer(null)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {!selectedUnsoldBuyer && (
+                  <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
+                    {filteredUnsoldBuyers.length > 0 ? (
+                      filteredUnsoldBuyers.map((buyerData) => (
+                        <div
+                          key={buyerData.buyer._id}
+                          onClick={() => setSelectedUnsoldBuyer(buyerData)}
+                          className="p-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="font-medium">{buyerData.buyer.name}</div>
+                          <div className="text-sm text-gray-600">{buyerData.buyer.email}</div>
+                          <div className="text-xs text-gray-500 mt-1 flex items-center gap-3">
+                            {buyerData.auctionReg?.registrationId && (
+                              <span className="font-mono bg-green-100 px-2 py-0.5 rounded">
+                                ID: {buyerData.auctionReg.registrationId}
+                              </span>
+                            )}
+                            {buyerData.buyer.phone && (
+                              <span>📱 {buyerData.buyer.phone}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-gray-500">
+                        {unsoldBuyerSearch
+                          ? 'No buyers found matching your search'
+                          : 'No registered buyers available'}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUnsoldModal(false);
+                    setUnsoldLots([]);
+                    setSelectedUnsoldLots({});
+                    setSelectedUnsoldBuyer(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAssignUnsoldLots}
+                  disabled={assigningUnsold || Object.keys(selectedUnsoldLots).length === 0 || !selectedUnsoldBuyer}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {assigningUnsold ? 'Assigning...' : `Assign ${Object.keys(selectedUnsoldLots).length} Lot(s)`}
+                </button>
+              </div>
             </div>
           </div>
         </div>
