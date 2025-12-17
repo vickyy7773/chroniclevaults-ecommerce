@@ -35,6 +35,8 @@ const AuctionInvoiceManagement = () => {
   const [targetBuyerSearch, setTargetBuyerSearch] = useState('');
   const [selectedTargetBuyer, setSelectedTargetBuyer] = useState(null);
   const [transferring, setTransferring] = useState(false);
+  const [auctionBuyers, setAuctionBuyers] = useState([]); // Buyers from same auction
+  const [loadingBuyers, setLoadingBuyers] = useState(false);
 
   const [formData, setFormData] = useState({
     auctionId: '',
@@ -736,17 +738,36 @@ const AuctionInvoiceManagement = () => {
   };
 
   // Lot Transfer Functions
-  const openTransferModal = (invoice) => {
+  const openTransferModal = async (invoice) => {
     // Only allow transfer if invoice has more than 1 lot
     if (!invoice.lots || invoice.lots.length <= 1) {
       toast.error('Cannot transfer lots. Invoice must have at least 2 lots (one must remain with original buyer)');
       return;
     }
+
     setTransferSourceInvoice(invoice);
     setSelectedLotsForTransfer([]);
     setTargetBuyerSearch('');
     setSelectedTargetBuyer(null);
     setShowTransferModal(true);
+
+    // Fetch buyers registered in same auction
+    try {
+      setLoadingBuyers(true);
+      const auctionId = typeof invoice.auction === 'object' ? invoice.auction._id : invoice.auction;
+      const response = await api.get(`/lot-transfer/buyers/${auctionId}`);
+
+      if (response.success) {
+        // Each buyer has: buyer (user object), auctionReg (registration), lots (array of lots)
+        setAuctionBuyers(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching auction buyers:', error);
+      toast.error('Failed to load buyers from this auction');
+      setAuctionBuyers([]);
+    } finally {
+      setLoadingBuyers(false);
+    }
   };
 
   const toggleLotForTransfer = (lotNumber) => {
@@ -778,10 +799,14 @@ const AuctionInvoiceManagement = () => {
 
     try {
       setTransferring(true);
+      const auctionId = typeof transferSourceInvoice.auction === 'object'
+        ? transferSourceInvoice.auction._id
+        : transferSourceInvoice.auction;
+
       const response = await api.post('/lot-transfer/transfer', {
-        auctionId: transferSourceInvoice.auction,
+        auctionId: auctionId,
         fromBuyerId: transferSourceInvoice.buyer._id || transferSourceInvoice.buyer,
-        toBuyerId: selectedTargetBuyer._id,
+        toBuyerId: selectedTargetBuyer.buyer._id, // Updated to use buyerData structure
         lotNumbers: selectedLotsForTransfer
       });
 
@@ -792,6 +817,7 @@ const AuctionInvoiceManagement = () => {
         setSelectedLotsForTransfer([]);
         setSelectedTargetBuyer(null);
         setTargetBuyerSearch('');
+        setAuctionBuyers([]);
         fetchInvoices(); // Refresh invoices
       }
     } catch (error) {
@@ -802,16 +828,22 @@ const AuctionInvoiceManagement = () => {
     }
   };
 
-  const filteredTargetBuyers = customers.filter(customer => {
+  const filteredTargetBuyers = auctionBuyers.filter(buyerData => {
     // Exclude current invoice buyer
     const currentBuyerId = transferSourceInvoice?.buyer?._id || transferSourceInvoice?.buyer;
-    if (customer._id === currentBuyerId) return false;
+    if (buyerData.buyer._id === currentBuyerId) return false;
 
-    // Filter by search
+    // Filter by search - search in name, email, phone, and auction registration ID
     if (!targetBuyerSearch) return true;
     const searchLower = targetBuyerSearch.toLowerCase();
-    return customer.name?.toLowerCase().includes(searchLower) ||
-           customer.email?.toLowerCase().includes(searchLower);
+    const buyer = buyerData.buyer;
+    const auctionReg = buyerData.auctionReg;
+
+    return buyer.name?.toLowerCase().includes(searchLower) ||
+           buyer.email?.toLowerCase().includes(searchLower) ||
+           buyer.phone?.toLowerCase().includes(searchLower) ||
+           auctionReg?.registrationId?.toLowerCase().includes(searchLower) ||
+           auctionReg?.auctionId?.toLowerCase().includes(searchLower);
   });
 
   // Debug logging
@@ -1646,7 +1678,7 @@ const AuctionInvoiceManagement = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search buyer by name or email..."
+                  placeholder="Search by name, email, phone, or auction ID..."
                   value={targetBuyerSearch}
                   onChange={(e) => setTargetBuyerSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -1657,8 +1689,13 @@ const AuctionInvoiceManagement = () => {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
                   <div className="flex justify-between items-center">
                     <div>
-                      <div className="font-semibold text-green-900">{selectedTargetBuyer.name}</div>
-                      <div className="text-sm text-green-700">{selectedTargetBuyer.email}</div>
+                      <div className="font-semibold text-green-900">{selectedTargetBuyer.buyer.name}</div>
+                      <div className="text-sm text-green-700">{selectedTargetBuyer.buyer.email}</div>
+                      {selectedTargetBuyer.auctionReg?.registrationId && (
+                        <div className="text-xs text-green-600 font-mono mt-1">
+                          Auction ID: {selectedTargetBuyer.auctionReg.registrationId}
+                        </div>
+                      )}
                     </div>
                     <button
                       onClick={() => setSelectedTargetBuyer(null)}
@@ -1672,20 +1709,41 @@ const AuctionInvoiceManagement = () => {
 
               {!selectedTargetBuyer && (
                 <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
-                  {filteredTargetBuyers.length > 0 ? (
-                    filteredTargetBuyers.map((buyer) => (
+                  {loadingBuyers ? (
+                    <div className="p-4 text-center text-gray-500">
+                      Loading buyers from this auction...
+                    </div>
+                  ) : filteredTargetBuyers.length > 0 ? (
+                    filteredTargetBuyers.map((buyerData) => (
                       <div
-                        key={buyer._id}
-                        onClick={() => setSelectedTargetBuyer(buyer)}
+                        key={buyerData.buyer._id}
+                        onClick={() => setSelectedTargetBuyer(buyerData)}
                         className="p-3 hover:bg-purple-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                       >
-                        <div className="font-medium">{buyer.name}</div>
-                        <div className="text-sm text-gray-600">{buyer.email}</div>
+                        <div className="font-medium">{buyerData.buyer.name}</div>
+                        <div className="text-sm text-gray-600">{buyerData.buyer.email}</div>
+                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-3">
+                          {buyerData.auctionReg?.registrationId && (
+                            <span className="font-mono bg-purple-100 px-2 py-0.5 rounded">
+                              ID: {buyerData.auctionReg.registrationId}
+                            </span>
+                          )}
+                          {buyerData.buyer.phone && (
+                            <span>📱 {buyerData.buyer.phone}</span>
+                          )}
+                          {buyerData.lots && buyerData.lots.length > 0 && (
+                            <span className="text-green-600">
+                              {buyerData.lots.length} lot(s)
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))
                   ) : (
                     <div className="p-4 text-center text-gray-500">
-                      No buyers found
+                      {targetBuyerSearch
+                        ? 'No buyers found matching your search'
+                        : 'No other buyers registered in this auction'}
                     </div>
                   )}
                 </div>
@@ -1707,7 +1765,12 @@ const AuctionInvoiceManagement = () => {
                   </div>
                   <div>
                     <span className="text-gray-600">To:</span>{' '}
-                    <span className="font-semibold">{selectedTargetBuyer.name}</span>
+                    <span className="font-semibold">{selectedTargetBuyer.buyer.name}</span>
+                    {selectedTargetBuyer.auctionReg?.registrationId && (
+                      <span className="text-xs text-purple-600 ml-2">
+                        (ID: {selectedTargetBuyer.auctionReg.registrationId})
+                      </span>
+                    )}
                   </div>
                   <div>
                     <span className="text-gray-600">Lots:</span>{' '}
@@ -1729,6 +1792,7 @@ const AuctionInvoiceManagement = () => {
                   setSelectedLotsForTransfer([]);
                   setTargetBuyerSearch('');
                   setSelectedTargetBuyer(null);
+                  setAuctionBuyers([]);
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
