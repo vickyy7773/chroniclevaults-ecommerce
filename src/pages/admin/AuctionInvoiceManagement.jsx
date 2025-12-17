@@ -1125,7 +1125,7 @@ const AuctionInvoiceManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
-                      {invoice.lots && invoice.lots.length > 1 && (
+                      {invoice.lots && invoice.lots.length > 0 && (
                         <button
                           onClick={() => openTransferModal(invoice)}
                           className="text-purple-600 hover:text-purple-900"
