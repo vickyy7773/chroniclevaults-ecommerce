@@ -663,12 +663,6 @@ const AuctionInvoiceManagement = () => {
 
   // Lot Transfer Functions
   const openTransferModal = async (invoice) => {
-    // Only allow transfer if invoice has more than 1 lot
-    if (!invoice.lots || invoice.lots.length <= 1) {
-      toast.error('Cannot transfer lots. Invoice must have at least 2 lots (one must remain with original buyer)');
-      return;
-    }
-
     setTransferSourceInvoice(invoice);
     setSelectedLotsForTransfer([]);
     setTargetBuyerSearch('');
@@ -711,12 +705,6 @@ const AuctionInvoiceManagement = () => {
 
     if (selectedLotsForTransfer.length === 0) {
       toast.error('Please select at least one lot to transfer');
-      return;
-    }
-
-    // Cannot transfer all lots
-    if (selectedLotsForTransfer.length >= transferSourceInvoice.lots.length) {
-      toast.error('Cannot transfer all lots. At least one lot must remain with the original buyer.');
       return;
     }
 
@@ -1545,24 +1533,17 @@ const AuctionInvoiceManagement = () => {
             {/* Select Lots */}
             <div className="mb-6">
               <h3 className="font-semibold mb-2">Select Lots to Transfer</h3>
-              <p className="text-sm text-gray-600 mb-3">
-                Note: At least one lot must remain with the original buyer
-              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
                 {transferSourceInvoice.lots?.map((lot) => {
                   const isSelected = selectedLotsForTransfer.includes(lot.lotNumber);
-                  const isLastLot = transferSourceInvoice.lots.length === 1;
-                  const wouldBeLastLot = selectedLotsForTransfer.length === transferSourceInvoice.lots.length - 1 && !isSelected;
 
                   return (
                     <div
                       key={lot.lotNumber}
-                      onClick={() => !isLastLot && !wouldBeLastLot && toggleLotForTransfer(lot.lotNumber)}
+                      onClick={() => toggleLotForTransfer(lot.lotNumber)}
                       className={`p-3 border rounded-lg cursor-pointer transition-all ${
                         isSelected
                           ? 'bg-purple-50 border-purple-500'
-                          : wouldBeLastLot
-                          ? 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
                           : 'bg-white border-gray-300 hover:border-purple-300'
                       }`}
                     >
@@ -1571,7 +1552,6 @@ const AuctionInvoiceManagement = () => {
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            disabled={wouldBeLastLot}
                             onChange={() => {}}
                             className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                           />
