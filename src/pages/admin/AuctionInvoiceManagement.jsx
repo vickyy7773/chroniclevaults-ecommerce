@@ -23,8 +23,6 @@ const AuctionInvoiceManagement = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   // New states for enhanced features
-  const [customers, setCustomers] = useState([]);
-  const [customerSearch, setCustomerSearch] = useState('');
   const [showSplitModal, setShowSplitModal] = useState(false);
   const [selectedLots, setSelectedLots] = useState([]);
 
@@ -95,20 +93,10 @@ const AuctionInvoiceManagement = () => {
     }
   };
 
-  const fetchCustomers = async () => {
-    try {
-      const response = await api.get('/users/customers');
-      setCustomers(response.data || []);
-    } catch (error) {
-      console.error('Failed to fetch customers:', error);
-    }
-  };
-
   useEffect(() => {
     console.log('🚀 Component mounted - calling fetchInvoices...');
     fetchInvoices();
     fetchAuctions();
-    fetchCustomers();
   }, []);
 
   const handleUpdateInvoice = async (e) => {
@@ -134,80 +122,6 @@ const AuctionInvoiceManagement = () => {
       fetchInvoices();
     } catch (error) {
       toast.error('Failed to delete invoice');
-    }
-  };
-
-  const handleCustomerSelect = async (customer) => {
-    try {
-      // Try to fetch auction registration for detailed address
-      let auctionReg = null;
-      try {
-        const regResponse = await api.get(`/auction-registration/user/${customer._id}`);
-        auctionReg = regResponse.data;
-      } catch (err) {
-        console.log('No auction registration found for customer, using basic address');
-      }
-
-      let billingStreet = '';
-      let billingCity = '';
-      let billingState = 'Maharashtra';
-      let billingZipCode = '';
-      let buyerGstin = '';
-      let buyerPan = '';
-
-      if (auctionReg && auctionReg.billingAddress) {
-        // Use detailed auction registration address
-        const addressParts = [
-          auctionReg.billingAddress.addressLine1,
-          auctionReg.billingAddress.addressLine2,
-          auctionReg.billingAddress.addressLine3
-        ].filter(Boolean);
-
-        billingStreet = addressParts.join(', ');
-        billingCity = auctionReg.billingAddress.city || '';
-        billingState = auctionReg.billingAddress.state || 'Maharashtra';
-        billingZipCode = auctionReg.billingAddress.pinCode || '';
-        buyerGstin = auctionReg.gstNumber || '';
-        buyerPan = auctionReg.panNumber || (auctionReg.gstNumber ? auctionReg.gstNumber.substring(2, 12) : '');
-      } else if (customer.address) {
-        // Fall back to basic user address
-        billingStreet = customer.address.street || '';
-        billingCity = customer.address.city || '';
-        billingState = customer.address.state || 'Maharashtra';
-        billingZipCode = customer.address.zipCode || '';
-        buyerGstin = customer.gstin || '';
-        buyerPan = customer.pan || '';
-      }
-
-      setFormData({
-        ...formData,
-        buyerId: customer._id,
-        buyerDetails: {
-          name: customer.name,
-          email: customer.email,
-          phone: customer.phone || '',
-          gstin: buyerGstin,
-          pan: buyerPan
-        },
-        billingAddress: {
-          street: billingStreet,
-          city: billingCity,
-          state: billingState,
-          stateCode: '27',
-          zipCode: billingZipCode
-        },
-        shippingAddress: {
-          street: billingStreet,
-          city: billingCity,
-          state: billingState,
-          stateCode: '27',
-          zipCode: billingZipCode
-        }
-      });
-      setCustomerSearch(customer.name);
-    } catch (error) {
-      console.error('Error selecting customer:', error);
-      toast.error('Failed to load customer details');
     }
   };
 
@@ -1271,7 +1185,6 @@ const AuctionInvoiceManagement = () => {
               <button
                 onClick={() => {
                   setShowEditModal(false);
-                  setCustomerSearch('');
                   resetForm();
                 }}
                 className="text-gray-500 hover:text-gray-700"
@@ -1283,130 +1196,6 @@ const AuctionInvoiceManagement = () => {
             <form onSubmit={handleUpdateInvoice}>
               {selectedInvoice && (
                 <>
-                  {/* Customer Search */}
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Search Customer or Auction ID
-                    </label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <input
-                        type="text"
-                        placeholder="Search by customer name, email, or auction ID..."
-                        value={customerSearch}
-                        onChange={(e) => setCustomerSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    {/* Customer Dropdown */}
-                    {customerSearch && (
-                      <div className="mt-2 max-h-48 overflow-y-auto border border-gray-300 rounded-lg bg-white shadow-lg">
-                        {customers
-                          .filter(c =>
-                            c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-                            c.email?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-                            c._id?.includes(customerSearch)
-                          )
-                          .slice(0, 10)
-                          .map(customer => (
-                            <div
-                              key={customer._id}
-                              onClick={() => handleCustomerSelect(customer)}
-                              className="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
-                            >
-                              <div className="font-medium">{customer.name}</div>
-                              <div className="text-sm text-gray-600">{customer.email}</div>
-                              <div className="text-xs text-gray-500">Phone: {customer.phone || 'N/A'}</div>
-                            </div>
-                          ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Invoice Number</label>
-                      <input
-                        type="text"
-                        value={selectedInvoice.invoiceNumber}
-                        disabled
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Buyer Name</label>
-                      <input
-                        type="text"
-                        value={formData.buyerDetails?.name || selectedInvoice.buyerDetails?.name || ''}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          buyerDetails: { ...formData.buyerDetails, name: e.target.value }
-                        })}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                      <input
-                        type="email"
-                        value={formData.buyerDetails?.email || selectedInvoice.buyerDetails?.email || ''}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          buyerDetails: { ...formData.buyerDetails, email: e.target.value }
-                        })}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                      <input
-                        type="text"
-                        value={formData.buyerDetails?.phone || selectedInvoice.buyerDetails?.phone || ''}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          buyerDetails: { ...formData.buyerDetails, phone: e.target.value }
-                        })}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">GSTIN</label>
-                      <input
-                        type="text"
-                        value={formData.buyerDetails?.gstin || selectedInvoice.buyerDetails?.gstin || ''}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          buyerDetails: { ...formData.buyerDetails, gstin: e.target.value }
-                        })}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter GSTIN"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">PAN</label>
-                      <input
-                        type="text"
-                        value={formData.buyerDetails?.pan || selectedInvoice.buyerDetails?.pan || ''}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          buyerDetails: { ...formData.buyerDetails, pan: e.target.value }
-                        })}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter PAN"
-                      />
-                    </div>
-                  </div>
-
                   {/* Billing Address Section */}
                   <div className="mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 mb-3 border-b pb-2">Billing Address</h3>
@@ -1597,7 +1386,6 @@ const AuctionInvoiceManagement = () => {
                     type="button"
                     onClick={() => {
                       setShowEditModal(false);
-                      setCustomerSearch('');
                       resetForm();
                     }}
                     className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
