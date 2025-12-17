@@ -751,19 +751,18 @@ const AuctionInvoiceManagement = () => {
     setSelectedTargetBuyer(null);
     setShowTransferModal(true);
 
-    // Fetch buyers registered in same auction
+    // Fetch ALL registered buyers from all auctions
     try {
       setLoadingBuyers(true);
-      const auctionId = typeof invoice.auction === 'object' ? invoice.auction._id : invoice.auction;
-      const response = await api.get(`/lot-transfer/buyers/${auctionId}`);
+      const response = await api.get('/lot-transfer/all-buyers');
 
       if (response.success) {
         // Each buyer has: buyer (user object), auctionReg (registration), lots (array of lots)
         setAuctionBuyers(response.data || []);
       }
     } catch (error) {
-      console.error('Error fetching auction buyers:', error);
-      toast.error('Failed to load buyers from this auction');
+      console.error('Error fetching buyers:', error);
+      toast.error('Failed to load registered buyers');
       setAuctionBuyers([]);
     } finally {
       setLoadingBuyers(false);
@@ -1711,7 +1710,7 @@ const AuctionInvoiceManagement = () => {
                 <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
                   {loadingBuyers ? (
                     <div className="p-4 text-center text-gray-500">
-                      Loading buyers from this auction...
+                      Loading registered buyers...
                     </div>
                   ) : filteredTargetBuyers.length > 0 ? (
                     filteredTargetBuyers.map((buyerData) => (
@@ -1743,7 +1742,7 @@ const AuctionInvoiceManagement = () => {
                     <div className="p-4 text-center text-gray-500">
                       {targetBuyerSearch
                         ? 'No buyers found matching your search'
-                        : 'No other buyers registered in this auction'}
+                        : 'No registered buyers available'}
                     </div>
                   )}
                 </div>

@@ -3,7 +3,8 @@ import {
   transferLots,
   assignUnsoldLots,
   getAuctionUnsoldLots,
-  getAuctionBuyersWithLots
+  getAuctionBuyersWithLots,
+  getAllBuyers
 } from '../controllers/lotTransferController.js';
 import { protect, admin } from '../middleware/auth.js';
 
@@ -29,8 +30,13 @@ router.post('/assign-unsold', assignUnsoldLots);
 router.get('/unsold/:auctionId', getAuctionUnsoldLots);
 
 // @route   GET /api/lot-transfer/buyers/:auctionId
-// @desc    Get all buyers with their lots
+// @desc    Get all buyers with their lots for specific auction
 // @access  Admin
 router.get('/buyers/:auctionId', getAuctionBuyersWithLots);
+
+// @route   GET /api/lot-transfer/all-buyers
+// @desc    Get all registered buyers from all auctions
+// @access  Admin
+router.get('/all-buyers', getAllBuyers);
 
 export default router;

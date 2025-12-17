@@ -443,3 +443,43 @@ export const getBuyersWithLots = async (auctionId) => {
     totalAmount: invoice.amounts.totalPayable
   }));
 };
+
+/**
+ * Get all approved auction registrations (for lot transfer across all auctions)
+ */
+export const getAllRegisteredBuyers = async () => {
+  // Get all approved auction registrations
+  const registrations = await AuctionRegistration.find({
+    status: 'approved',
+    userId: { $exists: true, $ne: null } // Only those linked to users
+  })
+    .populate('userId', 'name email phone')
+    .sort({ approvedAt: -1 });
+
+  // For each registration, get their lots/invoices if any
+  const buyersWithData = await Promise.all(
+    registrations.map(async (reg) => {
+      const invoices = await AuctionInvoice.find({ buyer: reg.userId._id })
+        .select('lots amounts.totalPayable');
+
+      // Aggregate all lots across all invoices
+      const allLots = invoices.reduce((acc, inv) => acc.concat(inv.lots || []), []);
+
+      return {
+        buyer: reg.userId,
+        auctionReg: {
+          registrationId: reg.auctionId,
+          auctionId: reg.auctionId,
+          mobile: reg.mobile,
+          email: reg.email,
+          panNumber: reg.panNumber,
+          gstNumber: reg.gstNumber
+        },
+        lots: allLots,
+        totalInvoices: invoices.length
+      };
+    })
+  );
+
+  return buyersWithData;
+};

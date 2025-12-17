@@ -2,7 +2,8 @@ import {
   transferLotsBetweenBuyers,
   assignUnsoldLotsToBuyer,
   getUnsoldLots,
-  getBuyersWithLots
+  getBuyersWithLots,
+  getAllRegisteredBuyers
 } from '../utils/invoiceHelpers.js';
 import { logActivity } from '../middleware/activityLogger.js';
 
@@ -186,6 +187,29 @@ export const getAuctionBuyersWithLots = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to fetch buyers with lots'
+    });
+  }
+};
+
+/**
+ * @desc    Get all registered buyers from all auctions (for lot transfer)
+ * @route   GET /api/lot-transfer/all-buyers
+ * @access  Private/Admin
+ */
+export const getAllBuyers = async (req, res) => {
+  try {
+    const buyers = await getAllRegisteredBuyers();
+
+    res.status(200).json({
+      success: true,
+      count: buyers.length,
+      data: buyers
+    });
+  } catch (error) {
+    console.error('❌ Get all buyers error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch all buyers'
     });
   }
 };
