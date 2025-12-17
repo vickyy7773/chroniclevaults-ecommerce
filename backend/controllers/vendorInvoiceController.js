@@ -178,17 +178,17 @@ export const generateVendorInvoices = async (req, res) => {
     const generatedInvoices = [];
 
     for (const [vendorId, lots] of Object.entries(vendorLotsMap)) {
-      // Get vendor details
-      const vendor = await Vendor.findById(vendorId);
+      // Get vendor details by vendorCode (not ObjectId)
+      const vendor = await Vendor.findOne({ vendorCode: vendorId });
       if (!vendor) {
-        console.warn(`⚠️ Vendor ${vendorId} not found, skipping`);
+        console.warn(`⚠️ Vendor with code ${vendorId} not found, skipping`);
         continue;
       }
 
       // Check if invoice already exists for this vendor-auction combination
       let vendorInvoice = await VendorInvoice.findOne({
         auction: auctionId,
-        vendor: vendorId
+        vendor: vendor._id
       });
 
       const lotData = lots.map(lot => ({
@@ -223,7 +223,7 @@ export const generateVendorInvoices = async (req, res) => {
         // Create new invoice
         vendorInvoice = await VendorInvoice.create({
           auction: auctionId,
-          vendor: vendorId,
+          vendor: vendor._id,
           vendorDetails: {
             vendorCode: vendor.vendorCode,
             name: vendor.name,
