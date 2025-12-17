@@ -245,12 +245,12 @@ export const generateVendorInvoices = async (req, res) => {
           status: 'Generated',
           companyDetails: {
             name: 'Chronicle Vaults',
-            gstin: '08AADCC5268G1ZK',
-            pan: 'AADCC5268G',
-            address: 'Plot No. 123, Industrial Area',
-            city: 'Udaipur',
-            state: 'Rajasthan',
-            phone: '+91-1234567890',
+            gstin: '24BCZPD7594Q1ZE',
+            pan: 'BCZPD7594Q',
+            address: '16/189, Netajinagar, Meghaninagar',
+            city: 'Ahmedabad',
+            state: 'Gujarat',
+            phone: '+91-9825085348',
             email: 'info@chroniclevaults.com'
           }
         });
