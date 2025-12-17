@@ -114,11 +114,6 @@ const LotTransferManagement = () => {
       return;
     }
 
-    if (selectedLotsForTransfer.length === selectedBuyer.lots.length) {
-      toast.error('Cannot transfer all lots. At least one lot must remain with the original buyer.');
-      return;
-    }
-
     try {
       setLoading(true);
       await api.post('/lot-transfer/transfer', {
@@ -555,16 +550,6 @@ const LotTransferManagement = () => {
                   </div>
                 </div>
 
-                {/* Warning */}
-                {selectedLotsForTransfer.length === selectedBuyer.lots.length && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-300 rounded-lg flex items-start gap-2">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-700">
-                      Cannot transfer all lots. At least one lot must remain with the original buyer.
-                    </p>
-                  </div>
-                )}
-
                 {/* Transfer Button */}
                 <div className="flex justify-end gap-2">
                   <button
@@ -582,8 +567,7 @@ const LotTransferManagement = () => {
                     disabled={
                       loading ||
                       !targetBuyer ||
-                      selectedLotsForTransfer.length === 0 ||
-                      selectedLotsForTransfer.length === selectedBuyer.lots.length
+                      selectedLotsForTransfer.length === 0
                     }
                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
                   >
