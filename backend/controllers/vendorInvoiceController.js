@@ -179,7 +179,15 @@ export const generateVendorInvoices = async (req, res) => {
 
     for (const [vendorId, lots] of Object.entries(vendorLotsMap)) {
       // Get vendor details by vendorCode (not ObjectId)
-      const vendor = await Vendor.findOne({ vendorCode: vendorId });
+      // Handle both "VEN001" and "VEN0001" formats
+      let vendor = await Vendor.findOne({ vendorCode: vendorId });
+
+      // If not found, try padding with zeros (VEN001 -> VEN0001)
+      if (!vendor && vendorId.match(/^VEN\d{1,3}$/)) {
+        const paddedCode = vendorId.replace(/(\d+)$/, (match) => match.padStart(4, '0'));
+        vendor = await Vendor.findOne({ vendorCode: paddedCode });
+      }
+
       if (!vendor) {
         console.warn(`⚠️ Vendor with code ${vendorId} not found, skipping`);
         continue;
