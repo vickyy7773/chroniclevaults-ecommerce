@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, DollarSign, Search, Eye, X, Filter, RefreshCw, CheckCircle, Edit2 } from 'lucide-react';
+import { FileText, DollarSign, Search, Eye, X, Filter, RefreshCw, CheckCircle, Edit2, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../../utils/api';
 
@@ -186,6 +186,209 @@ const VendorInvoiceManagement = () => {
       totalNetPayable,
       finalPayable
     };
+  };
+
+  const numberToWords = (num) => {
+    // Simple number to words conversion
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(num);
+  };
+
+  const handleDownloadPDF = (invoice) => {
+    try {
+      const htmlContent = generateVendorInvoiceHTML(invoice);
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.print();
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast.error('Failed to download PDF');
+    }
+  };
+
+  const generateVendorInvoiceHTML = (invoice) => {
+    const commissionRate = invoice.vendorDetails?.commissionPercentage || 0;
+    const totalHammerPrice = invoice.amounts?.totalHammerPrice || 0;
+    const totalCommission = invoice.amounts?.totalCommission || 0;
+    const finalPayable = invoice.amounts?.finalPayable || 0;
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Vendor Invoice ${invoice.invoiceNumber}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #8B5CF6; padding-bottom: 15px; }
+          .invoice-type { background-color: #8B5CF6; color: white; padding: 8px 20px; display: inline-block; border-radius: 5px; font-size: 18px; font-weight: bold; }
+          .section { margin: 25px 0; }
+          .section-title { font-weight: bold; font-size: 16px; margin-bottom: 15px; color: #333; border-bottom: 2px solid #8B5CF6; padding-bottom: 8px; }
+          .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+          .detail-item { padding: 8px; background-color: #f9f9f9; border-left: 3px solid #8B5CF6; }
+          .detail-label { font-weight: bold; color: #555; display: block; margin-bottom: 3px; }
+          .detail-value { color: #000; }
+          .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          .table th, .table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+          .table th { background-color: #8B5CF6; color: white; font-weight: bold; }
+          .table tr:nth-child(even) { background-color: #f9f9f9; }
+          .summary { float: right; width: 450px; margin: 30px 0; border: 2px solid #8B5CF6; }
+          .summary-row { display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid #ddd; }
+          .summary-row.total { background-color: #8B5CF6; color: white; font-weight: bold; font-size: 20px; border: none; }
+          .summary-row.commission { background-color: #FEE; }
+          .bank-details { background-color: #f0f0f0; border: 2px solid #8B5CF6; padding: 20px; margin: 20px 0; border-radius: 5px; }
+          .bank-details h3 { margin-top: 0; color: #8B5CF6; }
+          .bank-row { display: flex; padding: 5px 0; }
+          .bank-label { font-weight: bold; width: 180px; }
+          .signature { margin-top: 80px; text-align: right; }
+          .signature-line { border-top: 2px solid #333; width: 200px; margin-left: auto; margin-top: 60px; padding-top: 5px; }
+          @media print {
+            body { margin: 0; }
+            @page { size: A4; margin: 15mm; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1 style="margin: 10px 0; color: #8B5CF6;">Chronicle Vaults</h1>
+          <p style="margin: 5px 0;">GSTIN: ${invoice.companyDetails?.gstin || 'N/A'} | PAN: ${invoice.companyDetails?.pan || 'N/A'}</p>
+          <p style="margin: 5px 0;">${invoice.companyDetails?.address || ''}, ${invoice.companyDetails?.city || ''}, ${invoice.companyDetails?.state || ''}</p>
+          <p style="margin: 5px 0;">Phone: ${invoice.companyDetails?.phone || ''} | Email: ${invoice.companyDetails?.email || ''}</p>
+          <div style="margin-top: 15px;">
+            <span class="invoice-type">VENDOR SETTLEMENT INVOICE</span>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="details-grid">
+            <div>
+              <div class="detail-item">
+                <span class="detail-label">Invoice Number:</span>
+                <span class="detail-value">${invoice.invoiceNumber}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Invoice Date:</span>
+                <span class="detail-value">${new Date(invoice.invoiceDate).toLocaleDateString('en-IN')}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Auction:</span>
+                <span class="detail-value">${invoice.auction?.auctionCode || 'N/A'} - ${invoice.auction?.title || 'N/A'}</span>
+              </div>
+            </div>
+            <div>
+              <div class="detail-item">
+                <span class="detail-label">Vendor Code:</span>
+                <span class="detail-value">${invoice.vendorDetails?.vendorCode || 'N/A'}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Vendor Name:</span>
+                <span class="detail-value">${invoice.vendorDetails?.name || 'N/A'}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Contact:</span>
+                <span class="detail-value">${invoice.vendorDetails?.email || ''} | ${invoice.vendorDetails?.mobile || ''}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Lots Sold</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width: 80px;">Lot #</th>
+                <th>Description</th>
+                <th style="width: 120px;">Hammer Price</th>
+                <th style="width: 100px;">Commission</th>
+                <th style="width: 120px;">Net Payable</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(invoice.lots || []).map(lot => `
+                <tr>
+                  <td><strong>${lot.lotNumber || 'N/A'}</strong></td>
+                  <td>${lot.description || 'N/A'}</td>
+                  <td style="text-align: right;">₹${(lot.hammerPrice || 0).toLocaleString('en-IN')}</td>
+                  <td style="text-align: right;">${lot.commissionRate}%</td>
+                  <td style="text-align: right;"><strong>₹${(lot.netPayable || 0).toLocaleString('en-IN')}</strong></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="summary">
+          <div class="summary-row">
+            <span>Total Hammer Price:</span>
+            <span><strong>₹${totalHammerPrice.toLocaleString('en-IN')}</strong></span>
+          </div>
+          <div class="summary-row commission">
+            <span>Commission (${commissionRate}%):</span>
+            <span><strong>- ₹${totalCommission.toLocaleString('en-IN')}</strong></span>
+          </div>
+          <div class="summary-row total">
+            <span>Net Payable to Vendor:</span>
+            <span>₹${finalPayable.toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+
+        <div style="clear: both; margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-left: 4px solid #8B5CF6;">
+          <p style="margin: 5px 0;"><strong>Amount in Words:</strong></p>
+          <p style="margin: 5px 0; font-size: 16px; color: #333;">${numberToWords(finalPayable)} Only</p>
+        </div>
+
+        ${invoice.bankDetails ? `
+        <div class="bank-details">
+          <h3>Vendor Bank Details for Payment</h3>
+          <div class="bank-row">
+            <span class="bank-label">Account Holder Name:</span>
+            <span>${invoice.bankDetails.accountHolderName || 'N/A'}</span>
+          </div>
+          <div class="bank-row">
+            <span class="bank-label">Account Number:</span>
+            <span>${invoice.bankDetails.accountNumber || 'N/A'}</span>
+          </div>
+          <div class="bank-row">
+            <span class="bank-label">IFSC Code:</span>
+            <span>${invoice.bankDetails.ifscCode || 'N/A'}</span>
+          </div>
+          <div class="bank-row">
+            <span class="bank-label">Bank Name:</span>
+            <span>${invoice.bankDetails.bankName || 'N/A'}</span>
+          </div>
+          <div class="bank-row">
+            <span class="bank-label">Branch:</span>
+            <span>${invoice.bankDetails.branchName || 'N/A'}</span>
+          </div>
+        </div>
+        ` : ''}
+
+        ${invoice.notes ? `
+        <div style="margin: 20px 0; padding: 15px; background-color: #FFF9E6; border-left: 4px solid #FFC107;">
+          <p style="margin: 0;"><strong>Notes:</strong></p>
+          <p style="margin: 5px 0;">${invoice.notes}</p>
+        </div>
+        ` : ''}
+
+        <div class="signature">
+          <p style="margin-bottom: 5px;">For Chronicle Vaults</p>
+          <div class="signature-line"></div>
+          <p style="margin-top: 5px;"><strong>Authorised Signatory</strong></p>
+        </div>
+
+        <div style="margin-top: 30px; padding: 15px; background-color: #f0f0f0; border: 1px solid #ddd; border-radius: 5px;">
+          <p style="margin: 0; font-size: 11px; color: #555;">
+            <strong>Terms & Conditions:</strong><br>
+            1. This is a computer-generated vendor settlement invoice.<br>
+            2. Payment will be processed as per the terms and conditions of the consignment agreement.<br>
+            3. Commission has been deducted as per the agreed rate of ${commissionRate}%.<br>
+            4. For any queries, please contact: ${invoice.companyDetails?.email || 'info@chroniclevaults.com'}<br>
+            ${invoice.isPaid ? `<br><strong style="color: green;">✓ PAID on ${new Date(invoice.paidAt).toLocaleDateString('en-IN')}</strong>` : ''}
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
   };
 
   const filteredInvoices = invoices.filter(invoice => {
@@ -430,6 +633,13 @@ const VendorInvoiceManagement = () => {
                         >
                           <Eye className="w-5 h-5" />
                         </button>
+                        <button
+                          onClick={() => handleDownloadPDF(invoice)}
+                          className="text-purple-600 hover:text-purple-900"
+                          title="Download PDF"
+                        >
+                          <Download className="w-5 h-5" />
+                        </button>
                         {invoice.status !== 'Paid' && (
                           <>
                             <button
@@ -468,12 +678,22 @@ const VendorInvoiceManagement = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Vendor Invoice Details</h2>
-                <button
-                  onClick={() => setShowViewModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-6 h-6" />
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleDownloadPDF(selectedInvoice)}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                    title="Download PDF"
+                  >
+                    <Download className="w-5 h-5" />
+                    Download PDF
+                  </button>
+                  <button
+                    onClick={() => setShowViewModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
               </div>
 
               {/* Invoice Header */}
