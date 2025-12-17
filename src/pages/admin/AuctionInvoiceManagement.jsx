@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Edit2, Download, Trash2, DollarSign, Search, Eye, X, Filter } from 'lucide-react';
+import { FileText, Edit2, Download, Trash2, DollarSign, Search, Eye, X, Filter, ArrowRightLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useSearchParams } from 'react-router-dom';
 import auctionInvoiceService from '../../services/auctionInvoiceService';
@@ -27,6 +27,14 @@ const AuctionInvoiceManagement = () => {
   const [customerSearch, setCustomerSearch] = useState('');
   const [showSplitModal, setShowSplitModal] = useState(false);
   const [selectedLots, setSelectedLots] = useState([]);
+
+  // Lot Transfer states
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferSourceInvoice, setTransferSourceInvoice] = useState(null);
+  const [selectedLotsForTransfer, setSelectedLotsForTransfer] = useState([]);
+  const [targetBuyerSearch, setTargetBuyerSearch] = useState('');
+  const [selectedTargetBuyer, setSelectedTargetBuyer] = useState(null);
+  const [transferring, setTransferring] = useState(false);
 
   const [formData, setFormData] = useState({
     auctionId: '',
@@ -727,6 +735,85 @@ const AuctionInvoiceManagement = () => {
     setShowEditModal(true);
   };
 
+  // Lot Transfer Functions
+  const openTransferModal = (invoice) => {
+    // Only allow transfer if invoice has more than 1 lot
+    if (!invoice.lots || invoice.lots.length <= 1) {
+      toast.error('Cannot transfer lots. Invoice must have at least 2 lots (one must remain with original buyer)');
+      return;
+    }
+    setTransferSourceInvoice(invoice);
+    setSelectedLotsForTransfer([]);
+    setTargetBuyerSearch('');
+    setSelectedTargetBuyer(null);
+    setShowTransferModal(true);
+  };
+
+  const toggleLotForTransfer = (lotNumber) => {
+    setSelectedLotsForTransfer(prev => {
+      if (prev.includes(lotNumber)) {
+        return prev.filter(num => num !== lotNumber);
+      } else {
+        return [...prev, lotNumber];
+      }
+    });
+  };
+
+  const handleTransferLots = async () => {
+    if (!transferSourceInvoice || !selectedTargetBuyer) {
+      toast.error('Please select target buyer');
+      return;
+    }
+
+    if (selectedLotsForTransfer.length === 0) {
+      toast.error('Please select at least one lot to transfer');
+      return;
+    }
+
+    // Cannot transfer all lots
+    if (selectedLotsForTransfer.length >= transferSourceInvoice.lots.length) {
+      toast.error('Cannot transfer all lots. At least one lot must remain with the original buyer.');
+      return;
+    }
+
+    try {
+      setTransferring(true);
+      const response = await api.post('/lot-transfer/transfer', {
+        auctionId: transferSourceInvoice.auction,
+        fromBuyerId: transferSourceInvoice.buyer._id || transferSourceInvoice.buyer,
+        toBuyerId: selectedTargetBuyer._id,
+        lotNumbers: selectedLotsForTransfer
+      });
+
+      if (response.success) {
+        toast.success(`Successfully transferred ${selectedLotsForTransfer.length} lots`);
+        setShowTransferModal(false);
+        setTransferSourceInvoice(null);
+        setSelectedLotsForTransfer([]);
+        setSelectedTargetBuyer(null);
+        setTargetBuyerSearch('');
+        fetchInvoices(); // Refresh invoices
+      }
+    } catch (error) {
+      console.error('Transfer error:', error);
+      toast.error(error.response?.data?.message || 'Failed to transfer lots');
+    } finally {
+      setTransferring(false);
+    }
+  };
+
+  const filteredTargetBuyers = customers.filter(customer => {
+    // Exclude current invoice buyer
+    const currentBuyerId = transferSourceInvoice?.buyer?._id || transferSourceInvoice?.buyer;
+    if (customer._id === currentBuyerId) return false;
+
+    // Filter by search
+    if (!targetBuyerSearch) return true;
+    const searchLower = targetBuyerSearch.toLowerCase();
+    return customer.name?.toLowerCase().includes(searchLower) ||
+           customer.email?.toLowerCase().includes(searchLower);
+  });
+
   // Debug logging
   console.log('🔍 Invoice filtering:', {
     totalInvoices: invoices.length,
@@ -970,6 +1057,15 @@ const AuctionInvoiceManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
+                      {invoice.lots && invoice.lots.length > 1 && (
+                        <button
+                          onClick={() => openTransferModal(invoice)}
+                          className="text-purple-600 hover:text-purple-900"
+                          title="Transfer Lots"
+                        >
+                          <ArrowRightLeft className="w-4 h-4" />
+                        </button>
+                      )}
                       <button
                         onClick={() => openEditModal(invoice)}
                         className="text-blue-600 hover:text-blue-900"
@@ -1443,6 +1539,208 @@ const AuctionInvoiceManagement = () => {
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Split Invoice ({selectedLots.length} lots)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transfer Lots Modal */}
+      {showTransferModal && transferSourceInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-purple-600">Transfer Lots</h2>
+              <button
+                onClick={() => {
+                  setShowTransferModal(false);
+                  setTransferSourceInvoice(null);
+                  setSelectedLotsForTransfer([]);
+                  setTargetBuyerSearch('');
+                  setSelectedTargetBuyer(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Source Invoice Info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <h3 className="font-semibold text-blue-900 mb-2">From Invoice</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-gray-600">Invoice:</span>{' '}
+                  <span className="font-semibold">{transferSourceInvoice.invoiceNumber}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Buyer:</span>{' '}
+                  <span className="font-semibold">{transferSourceInvoice.buyerDetails?.name}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Total Lots:</span>{' '}
+                  <span className="font-semibold">{transferSourceInvoice.lots?.length}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Amount:</span>{' '}
+                  <span className="font-semibold">₹{transferSourceInvoice.amounts?.totalPayable?.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Select Lots */}
+            <div className="mb-6">
+              <h3 className="font-semibold mb-2">Select Lots to Transfer</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Note: At least one lot must remain with the original buyer
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                {transferSourceInvoice.lots?.map((lot) => {
+                  const isSelected = selectedLotsForTransfer.includes(lot.lotNumber);
+                  const isLastLot = transferSourceInvoice.lots.length === 1;
+                  const wouldBeLastLot = selectedLotsForTransfer.length === transferSourceInvoice.lots.length - 1 && !isSelected;
+
+                  return (
+                    <div
+                      key={lot.lotNumber}
+                      onClick={() => !isLastLot && !wouldBeLastLot && toggleLotForTransfer(lot.lotNumber)}
+                      className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                        isSelected
+                          ? 'bg-purple-50 border-purple-500'
+                          : wouldBeLastLot
+                          ? 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
+                          : 'bg-white border-gray-300 hover:border-purple-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            disabled={wouldBeLastLot}
+                            onChange={() => {}}
+                            className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                          />
+                          <div>
+                            <div className="font-medium">Lot #{lot.lotNumber}</div>
+                            <div className="text-sm text-gray-600">{lot.description}</div>
+                          </div>
+                        </div>
+                        <div className="font-semibold text-green-600">
+                          ₹{lot.hammerPrice?.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                Selected: {selectedLotsForTransfer.length} / {transferSourceInvoice.lots?.length} lots
+              </p>
+            </div>
+
+            {/* Select Target Buyer */}
+            <div className="mb-6">
+              <h3 className="font-semibold mb-2">Select Target Buyer</h3>
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search buyer by name or email..."
+                  value={targetBuyerSearch}
+                  onChange={(e) => setTargetBuyerSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              {selectedTargetBuyer && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="font-semibold text-green-900">{selectedTargetBuyer.name}</div>
+                      <div className="text-sm text-green-700">{selectedTargetBuyer.email}</div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedTargetBuyer(null)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!selectedTargetBuyer && (
+                <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
+                  {filteredTargetBuyers.length > 0 ? (
+                    filteredTargetBuyers.map((buyer) => (
+                      <div
+                        key={buyer._id}
+                        onClick={() => setSelectedTargetBuyer(buyer)}
+                        className="p-3 hover:bg-purple-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="font-medium">{buyer.name}</div>
+                        <div className="text-sm text-gray-600">{buyer.email}</div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-gray-500">
+                      No buyers found
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Transfer Summary */}
+            {selectedLotsForTransfer.length > 0 && selectedTargetBuyer && (
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                <h3 className="font-semibold text-purple-900 mb-2">Transfer Summary</h3>
+                <div className="text-sm space-y-1">
+                  <div>
+                    <span className="text-gray-600">Transferring:</span>{' '}
+                    <span className="font-semibold">{selectedLotsForTransfer.length} lots</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">From:</span>{' '}
+                    <span className="font-semibold">{transferSourceInvoice.buyerDetails?.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">To:</span>{' '}
+                    <span className="font-semibold">{selectedTargetBuyer.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Lots:</span>{' '}
+                    <span className="font-semibold">
+                      {selectedLotsForTransfer.sort((a, b) => a - b).join(', ')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowTransferModal(false);
+                  setTransferSourceInvoice(null);
+                  setSelectedLotsForTransfer([]);
+                  setTargetBuyerSearch('');
+                  setSelectedTargetBuyer(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleTransferLots}
+                disabled={transferring || selectedLotsForTransfer.length === 0 || !selectedTargetBuyer}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {transferring ? 'Transferring...' : `Transfer ${selectedLotsForTransfer.length} Lots`}
               </button>
             </div>
           </div>
