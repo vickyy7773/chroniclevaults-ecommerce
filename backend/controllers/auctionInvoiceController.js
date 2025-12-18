@@ -459,3 +459,70 @@ export const markInvoiceAsPaid = async (req, res) => {
     });
   }
 };
+
+// @desc    Update commission percentage for an invoice
+// @route   PUT /api/auction-invoices/:id/commission
+// @access  Private/Admin
+export const updateInvoiceCommission = async (req, res) => {
+  try {
+    const { commissionPercentage } = req.body;
+
+    // Validation
+    if (commissionPercentage === undefined || commissionPercentage === null) {
+      return res.status(400).json({
+        success: false,
+        message: 'Commission percentage is required'
+      });
+    }
+
+    if (commissionPercentage < 0 || commissionPercentage > 100) {
+      return res.status(400).json({
+        success: false,
+        message: 'Commission percentage must be between 0 and 100'
+      });
+    }
+
+    const invoice = await AuctionInvoice.findById(req.params.id);
+
+    if (!invoice) {
+      return res.status(404).json({
+        success: false,
+        message: 'Invoice not found'
+      });
+    }
+
+    // Update buyer's commission percentage
+    invoice.buyerDetails.commissionPercentage = commissionPercentage;
+
+    // Update commission rate and amount for each lot
+    invoice.lots.forEach(lot => {
+      lot.commissionRate = commissionPercentage;
+      // Commission amount will be recalculated by pre-save hook
+    });
+
+    // Save invoice (pre-save hook will recalculate commission amounts)
+    await invoice.save();
+
+    // Log activity
+    await logActivity(
+      req,
+      'update',
+      'auction-invoices',
+      `Updated commission to ${commissionPercentage}% for invoice ${invoice.invoiceNumber}`,
+      invoice._id,
+      `Invoice ${invoice.invoiceNumber}`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Commission updated successfully',
+      data: invoice
+    });
+  } catch (error) {
+    console.error('Update commission error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to update commission'
+    });
+  }
+};

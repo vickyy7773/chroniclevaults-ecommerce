@@ -6,7 +6,8 @@ import {
   updateAuctionInvoice,
   deleteAuctionInvoice,
   getInvoicesByAuction,
-  markInvoiceAsPaid
+  markInvoiceAsPaid,
+  updateInvoiceCommission
 } from '../controllers/auctionInvoiceController.js';
 import { protect, admin } from '../middleware/auth.js';
 
@@ -28,5 +29,6 @@ router.route('/:id')
 // Additional routes
 router.get('/auction/:auctionId', getInvoicesByAuction);
 router.put('/:id/pay', markInvoiceAsPaid);
+router.put('/:id/commission', updateInvoiceCommission);
 
 export default router;

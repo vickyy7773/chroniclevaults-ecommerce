@@ -39,7 +39,8 @@ const auctionInvoiceSchema = new mongoose.Schema({
     phone: String,
     gstin: String,
     pan: String,
-    buyerNumber: String
+    buyerNumber: String,
+    commissionPercentage: { type: Number, default: 10 } // For display only
   },
 
   // Billing Address
@@ -67,7 +68,9 @@ const auctionInvoiceSchema = new mongoose.Schema({
     detailedDescription: String, // For delivery note
     hsnCode: { type: String, default: '97050090' },
     quantity: { type: Number, default: 1 },
-    hammerPrice: { type: Number, required: true }
+    hammerPrice: { type: Number, required: true },
+    commissionRate: { type: Number, default: 10 }, // Percentage (for display only)
+    commissionAmount: { type: Number, default: 0 } // Calculated (for display only, not added to total)
   }],
 
   // Charges
@@ -111,6 +114,7 @@ const auctionInvoiceSchema = new mongoose.Schema({
   amounts: {
     grossAmount: Number,
     totalGST: Number,
+    totalCommission: { type: Number, default: 0 }, // For display only, not added to totalPayable
     roundOff: Number,
     totalPayable: Number
   },
@@ -180,9 +184,17 @@ auctionInvoiceSchema.pre('save', async function(next) {
 
 // Calculate GST and amounts before saving
 auctionInvoiceSchema.pre('save', function(next) {
+  // Calculate commission for each lot (for display only)
+  this.lots.forEach(lot => {
+    lot.commissionAmount = (lot.hammerPrice * lot.commissionRate) / 100;
+  });
+
   // Sum all hammer prices from all lots
   const totalHammerPrice = this.lots.reduce((sum, lot) => sum + (lot.hammerPrice || 0), 0);
   const packingCharges = this.packingForwardingCharges.amount;
+
+  // Calculate total commission (for display only, not added to totalPayable)
+  this.amounts.totalCommission = this.lots.reduce((sum, lot) => sum + (lot.commissionAmount || 0), 0);
 
   // Calculate item GST
   this.gst.itemGSTAmount = (totalHammerPrice * this.gst.itemGSTRate) / 100;
@@ -203,7 +215,7 @@ auctionInvoiceSchema.pre('save', function(next) {
     this.gst.sgst = this.gst.totalGST / 2;
   }
 
-  // Calculate amounts
+  // Calculate amounts (commission is NOT added to totalPayable)
   this.amounts.grossAmount = totalHammerPrice + packingCharges;
   this.amounts.totalGST = this.gst.totalGST;
 
