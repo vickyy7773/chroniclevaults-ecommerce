@@ -1702,6 +1702,54 @@ export const placeBid = async (req, res) => {
         if (auction.highestReserveBid && auction.highestReserveBid > amount) {
           previousReserveBidAmount = auction.highestReserveBid;
 
+          // OUTBID NOTIFICATION: Previous reserve bidder is being overtaken
+          if (auction.reserveBidder && auction.reserveBidder.toString() !== userId.toString()) {
+            const io = req.app.get('io');
+
+            if (auction.isLotBidding) {
+              // LOT BIDDING: Unfreeze previous reserve bidder's coins for this lot
+              const unfreezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+              const unfreezeResult = await unfreezeCoinsForLot(auction.reserveBidder, auction._id, unfreezeLotNumber);
+
+              if (unfreezeResult.success && unfreezeResult.unfrozenAmount > 0) {
+                console.log(`🔓 PROXY OUTBID - LOT ${unfreezeLotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for previous reserve bidder ${auction.reserveBidder}`);
+
+                // Send outbid notification
+                if (io) {
+                  io.to(`user-${auction.reserveBidder.toString()}`).emit('coin-balance-updated', {
+                    auctionCoins: unfreezeResult.user.auctionCoins,
+                    frozenCoins: unfreezeResult.user.frozenCoins,
+                    reason: 'Outbid - coins refunded',
+                    lotNumber: unfreezeLotNumber,
+                    auctionId: auction._id.toString()
+                  });
+                  console.log(`💰 PROXY OUTBID: Sent outbid notification to previous reserve bidder ${auction.reserveBidder}`);
+                }
+              }
+            } else {
+              // NORMAL AUCTION: Unfreeze previous reserve bidder's coins
+              const previousReserveBidder = await User.findById(auction.reserveBidder);
+              if (previousReserveBidder && previousReserveBidder.frozenCoins > 0) {
+                previousReserveBidder.auctionCoins += previousReserveBidder.frozenCoins;
+                const unfrozenAmount = previousReserveBidder.frozenCoins;
+                previousReserveBidder.frozenCoins = 0;
+                await previousReserveBidder.save();
+                console.log(`🔓 PROXY OUTBID: Unfroze ${unfrozenAmount} coins for previous reserve bidder ${auction.reserveBidder}`);
+
+                // Send outbid notification
+                if (io) {
+                  io.to(`user-${auction.reserveBidder.toString()}`).emit('coin-balance-updated', {
+                    auctionCoins: previousReserveBidder.auctionCoins,
+                    frozenCoins: previousReserveBidder.frozenCoins,
+                    reason: 'Outbid - coins refunded',
+                    auctionId: auction._id.toString()
+                  });
+                  console.log(`💰 PROXY OUTBID: Sent outbid notification to previous reserve bidder ${auction.reserveBidder}`);
+                }
+              }
+            }
+          }
+
           // Get the increment for the next bid
           const increment = auction.getCurrentIncrement();
 
