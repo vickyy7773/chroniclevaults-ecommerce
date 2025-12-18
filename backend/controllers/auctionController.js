@@ -1885,53 +1885,6 @@ export const placeBid = async (req, res) => {
             auction.totalBids = auction.bids.length;
             autoBidTriggered = true;
 
-            // OUTBID NOTIFICATION: Current user (who just placed bid) got outbid by auto-bid
-            // Unfreeze current user's coins and send notification
-            const io = req.app.get('io');
-
-            if (auction.isLotBidding) {
-              // LOT BIDDING: Unfreeze current user's coins for this lot
-              const unfreezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
-              const unfreezeResult = await unfreezeCoinsForLot(userId, auction._id, unfreezeLotNumber);
-
-              if (unfreezeResult.success && unfreezeResult.unfrozenAmount > 0) {
-                console.log(`🔓 AUTO-BID OUTBID - LOT ${unfreezeLotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for outbid user ${userId}`);
-
-                // Send outbid notification to current user
-                if (io) {
-                  io.to(`user-${userId.toString()}`).emit('coin-balance-updated', {
-                    auctionCoins: unfreezeResult.user.auctionCoins,
-                    frozenCoins: unfreezeResult.user.frozenCoins,
-                    reason: 'Outbid - coins refunded',
-                    lotNumber: unfreezeLotNumber,
-                    auctionId: auction._id.toString()
-                  });
-                  console.log(`💰 AUTO-BID OUTBID: Sent outbid notification to user ${userId} who was outbid by auto-bid`);
-                }
-              }
-            } else {
-              // NORMAL AUCTION: Unfreeze current user's coins
-              const currentUser = await User.findById(userId);
-              if (currentUser && currentUser.frozenCoins > 0) {
-                currentUser.auctionCoins += currentUser.frozenCoins;
-                const unfrozenAmount = currentUser.frozenCoins;
-                currentUser.frozenCoins = 0;
-                await currentUser.save();
-                console.log(`🔓 AUTO-BID OUTBID: Unfroze ${unfrozenAmount} coins for outbid user ${userId}`);
-
-                // Send outbid notification
-                if (io) {
-                  io.to(`user-${userId.toString()}`).emit('coin-balance-updated', {
-                    auctionCoins: currentUser.auctionCoins,
-                    frozenCoins: currentUser.frozenCoins,
-                    reason: 'Outbid - coins refunded',
-                    auctionId: auction._id.toString()
-                  });
-                  console.log(`💰 AUTO-BID OUTBID: Sent outbid notification to user ${userId} who was outbid by auto-bid`);
-                }
-              }
-            }
-
             // Now freeze the reserve bidder's coins for the auto-bid
             if (auction.isLotBidding) {
               // LOT BIDDING: Use per-lot freeze for auto-bid
@@ -2051,32 +2004,51 @@ export const placeBid = async (req, res) => {
       }
     }
 
-    // Freeze the full bid amount
+    // Freeze the full bid amount (UNLESS user was outbid by auto-bid)
     const freezeAmount = amount;
 
-    // Freeze the coins
-    if (auction.isLotBidding) {
-      // LOT BIDDING: Use per-lot freeze
-      // CATALOG PHASE: Use lot user bid on (lotNumber from request)
-      // LIVE PHASE: Use current active lot (auction.lotNumber)
-      const freezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
-      await freezeCoinsForLot(userId, auction._id, freezeLotNumber, freezeAmount);
-      console.log(`🔒 LOT ${freezeLotNumber}: Froze ${freezeAmount} coins for user ${userId}`);
+    // Check if auto-bid triggered and outbid the current user
+    if (autoBidTriggered) {
+      // User got outbid by auto-bid - DON'T freeze their coins, send outbid notification instead
+      console.log(`🚨 AUTO-BID OUTBID: User ${userId} was immediately outbid by auto-bid, skipping freeze and sending notification`);
 
-      // Refresh user to get updated balances
-      const updatedUser = await User.findById(userId);
-      user.auctionCoins = updatedUser.auctionCoins;
-      user.frozenCoins = updatedUser.frozenCoins;
-
-      // REAL-TIME: Emit coin balance update to current bidder
       const io = req.app.get('io');
+      const freezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+
       if (io) {
         io.to(`user-${userId.toString()}`).emit('coin-balance-updated', {
-          auctionCoins: updatedUser.auctionCoins,
-          frozenCoins: updatedUser.frozenCoins,
-          reason: 'Bid placed - coins deducted',
-          lotNumber: freezeLotNumber,
-          auctionId: auction._id.toString(),
+          auctionCoins: user.auctionCoins, // No change in coins since we didn't freeze
+          frozenCoins: 0,
+          reason: 'Outbid - coins refunded',
+          lotNumber: auction.isLotBidding ? freezeLotNumber : undefined,
+          auctionId: auction._id.toString()
+        });
+        console.log(`💰 AUTO-BID OUTBID: Sent outbid notification to user ${userId} (coins not deducted)`);
+      }
+    } else {
+      // Normal bid - freeze the coins
+      if (auction.isLotBidding) {
+        // LOT BIDDING: Use per-lot freeze
+        // CATALOG PHASE: Use lot user bid on (lotNumber from request)
+        // LIVE PHASE: Use current active lot (auction.lotNumber)
+        const freezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+        await freezeCoinsForLot(userId, auction._id, freezeLotNumber, freezeAmount);
+        console.log(`🔒 LOT ${freezeLotNumber}: Froze ${freezeAmount} coins for user ${userId}`);
+
+        // Refresh user to get updated balances
+        const updatedUser = await User.findById(userId);
+        user.auctionCoins = updatedUser.auctionCoins;
+        user.frozenCoins = updatedUser.frozenCoins;
+
+        // REAL-TIME: Emit coin balance update to current bidder
+        const io = req.app.get('io');
+        if (io) {
+          io.to(`user-${userId.toString()}`).emit('coin-balance-updated', {
+            auctionCoins: updatedUser.auctionCoins,
+            frozenCoins: updatedUser.frozenCoins,
+            reason: 'Bid placed - coins deducted',
+            lotNumber: freezeLotNumber,
+            auctionId: auction._id.toString(),
           bidAmount: freezeAmount
         });
         console.log(`💰 Sent real-time coin update to bidder ${userId}: ${updatedUser.auctionCoins} coins`);
@@ -2099,6 +2071,7 @@ export const placeBid = async (req, res) => {
           bidAmount: freezeAmount
         });
         console.log(`💰 Sent real-time coin update to bidder ${userId}: ${user.auctionCoins} coins`);
+      }
       }
     }
 
