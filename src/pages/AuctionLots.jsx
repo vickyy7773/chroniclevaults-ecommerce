@@ -271,12 +271,12 @@ const AuctionLots = () => {
   useEffect(() => {
     console.log('🔧 CATALOG - Bid listener useEffect triggered. Socket:', !!socketRef.current, 'User:', currentUser?._id, 'ID:', id);
 
-    if (!socketRef.current || !currentUser) {
-      console.warn('⚠️ CATALOG - Cannot setup listeners. Socket:', !!socketRef.current, 'User:', !!currentUser);
+    if (!socketRef.current) {
+      console.warn('⚠️ CATALOG - Cannot setup listeners. Socket not available');
       return;
     }
 
-    console.log('✅ CATALOG - All prerequisites met, setting up listeners NOW');
+    console.log('✅ CATALOG - Setting up listeners (currentUser:', currentUser?._id || 'NOT_LOADED', ')');
 
     const handleBidPlaced = (data) => {
       console.log('🔴 CATALOG PAGE - Real-time bid update received:', {
@@ -291,8 +291,8 @@ const AuctionLots = () => {
         // Update auction state with new bid data
         setAuction(data.auction);
 
-        // Check if current user was outbid and get the lot number
-        if (data.outbidUser && data.outbidUser.userId === currentUser._id) {
+        // Check if current user was outbid and get the lot number (only if user is loaded)
+        if (currentUser && data.outbidUser && data.outbidUser.userId === currentUser._id) {
           // Find which lot user was outbid on
           const outbidLotNumber = data.auction.lots?.findIndex(lot =>
             lot.bids?.some(bid =>
@@ -311,9 +311,16 @@ const AuctionLots = () => {
 
     // Listen for coin balance updates (when outbid)
     const handleCoinBalanceUpdate = (data) => {
-      console.log('💰 Coin balance updated:', data);
+      console.log('💰 CATALOG - Coin balance update received:', {
+        reason: data.reason,
+        lotNumber: data.lotNumber,
+        auctionCoins: data.auctionCoins,
+        currentUserLoaded: !!currentUser
+      });
 
       if (data.reason === 'Outbid - coins refunded') {
+        console.log('🚨 OUTBID DETECTED! Lot:', data.lotNumber);
+
         // Show toast notification
         toast.warning(`⚠️ Outbid on Lot ${data.lotNumber}! ₹${data.auctionCoins.toLocaleString()} coins refunded`, {
           autoClose: 5000,
@@ -322,7 +329,12 @@ const AuctionLots = () => {
 
         // Show red OUTBID indicator on card (will persist until new bid)
         if (data.lotNumber) {
-          setBidStatus(prev => ({ ...prev, [data.lotNumber]: 'outbid' }));
+          console.log('🎨 Setting bidStatus to OUTBID for lot', data.lotNumber);
+          setBidStatus(prev => {
+            const newStatus = { ...prev, [data.lotNumber]: 'outbid' };
+            console.log('🎨 New bidStatus:', newStatus);
+            return newStatus;
+          });
         }
       } else if (data.reason === 'Bid placed - coins deducted') {
         toast.info(`💰 Coins updated: ₹${data.auctionCoins.toLocaleString()} available`, {
@@ -336,6 +348,8 @@ const AuctionLots = () => {
     socketRef.current.on('bid-placed', handleBidPlaced);
     socketRef.current.off('coin-balance-updated');
     socketRef.current.on('coin-balance-updated', handleCoinBalanceUpdate);
+
+    console.log('✅ CATALOG - Listeners registered successfully');
 
     return () => {
       if (socketRef.current) {
