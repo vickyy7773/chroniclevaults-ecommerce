@@ -337,8 +337,8 @@ const AuctionInvoiceManagement = () => {
               <div class="info-row">GST NO: ${invoice.buyerDetails.gstin || 'N/A'}</div>
             </div>
             <div class="col-right">
-              <div class="info-row"><span class="label">Auction No.:</span> ${invoice.auctionId || 'N/A'}</div>
-              <div class="info-row"><span class="label">Auction Date:</span> ${invoice.auctionDate ? new Date(invoice.auctionDate).toLocaleDateString() : 'N/A'}</div>
+              <div class="info-row"><span class="label">Auction No.:</span> ${invoice.auction?._id ? `AUC-${invoice.auction._id.toString().slice(-6).toUpperCase()}` : 'N/A'}</div>
+              <div class="info-row"><span class="label">Auction Date:</span> ${invoice.auction?.startDate ? new Date(invoice.auction.startDate).toLocaleDateString() : 'N/A'}</div>
               <div class="info-row"><span class="label">Invoice No.:</span> ${invoice.invoiceNumber}</div>
               <div class="info-row"><span class="label">Invoice Date:</span> ${new Date(invoice.invoiceDate).toLocaleDateString()}</div>
               <div class="info-row"><span class="label">Bidder No.:</span> ${invoice.buyerDetails.buyerNumber || 'N/A'}</div>

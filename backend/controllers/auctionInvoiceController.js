@@ -250,7 +250,7 @@ export const getAllAuctionInvoices = async (req, res) => {
   try {
     const invoices = await AuctionInvoice.find({})
       .populate('buyer', 'name email phone')
-      .populate('auction', 'title')
+      .populate('auction', 'title startDate')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -273,7 +273,7 @@ export const getAuctionInvoiceById = async (req, res) => {
   try {
     const invoice = await AuctionInvoice.findById(req.params.id)
       .populate('buyer', 'name email phone address gstin pan')
-      .populate('auction', 'title lots');
+      .populate('auction', 'title lots startDate');
 
     if (!invoice) {
       return res.status(404).json({
