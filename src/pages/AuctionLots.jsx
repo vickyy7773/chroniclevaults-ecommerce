@@ -197,6 +197,11 @@ const AuctionLots = () => {
         socketRef.current.emit('join-auction', id);
         console.log(`🎯 Joined auction room: ${id}`);
       }
+      // Join personal user room for outbid notifications
+      if (currentUser && currentUser._id) {
+        socketRef.current.emit('join-user-room', currentUser._id);
+        console.log(`👤 Joined personal room: user-${currentUser._id}`);
+      }
     });
 
     socketRef.current.on('disconnect', (reason) => {
