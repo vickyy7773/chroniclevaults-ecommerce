@@ -100,6 +100,23 @@ export const transferLots = async (req, res) => {
       });
     }
 
+    // Get source and target vendor details to get vendor codes
+    const fromVendor = await Vendor.findById(fromVendorId);
+    if (!fromVendor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Source vendor not found'
+      });
+    }
+
+    const toVendor = await Vendor.findById(toVendorId);
+    if (!toVendor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Target vendor not found'
+      });
+    }
+
     // Verify all lots exist and belong to fromVendor
     for (const lotNum of lotNumbers) {
       const lot = auction.lots.find(l => l.lotNumber === lotNum);
@@ -109,10 +126,11 @@ export const transferLots = async (req, res) => {
           message: `Lot ${lotNum} not found in auction`
         });
       }
-      if (lot.vendorId?.toString() !== fromVendorId.toString()) {
+      // Compare vendorId (vendor code) with source vendor's code
+      if (lot.vendorId !== fromVendor.vendorCode) {
         return res.status(400).json({
           success: false,
-          message: `Lot ${lotNum} does not belong to the source vendor`
+          message: `Lot ${lotNum} does not belong to the source vendor (expected ${fromVendor.vendorCode}, found ${lot.vendorId})`
         });
       }
     }
@@ -155,11 +173,11 @@ export const transferLots = async (req, res) => {
       await sourceInvoice.save();
     }
 
-    // 5. Update lot vendorId in auction document
+    // 5. Update lot vendorId in auction document (use vendor code, not ObjectId)
     for (const lotNum of lotNumbers) {
       const lot = auction.lots.find(l => l.lotNumber === lotNum);
       if (lot) {
-        lot.vendorId = toVendorId;
+        lot.vendorId = toVendor.vendorCode; // Use vendor code, not ObjectId
       }
     }
     await auction.save();
@@ -171,14 +189,7 @@ export const transferLots = async (req, res) => {
     });
 
     if (!targetInvoice) {
-      // Create new invoice for target vendor
-      const toVendor = await Vendor.findById(toVendorId);
-      if (!toVendor) {
-        return res.status(404).json({
-          success: false,
-          message: 'Target vendor not found'
-        });
-      }
+      // Create new invoice for target vendor (toVendor already fetched above)
 
       // Get a sample vendor invoice to copy company details
       const sampleInvoice = await VendorInvoice.findOne({ auction: auctionId });
