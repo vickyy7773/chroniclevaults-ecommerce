@@ -34,6 +34,7 @@ import auctionInvoiceRoutes from "./routes/auctionInvoices.js";
 import vendorRoutes from "./routes/vendors.js";
 import vendorInvoiceRoutes from "./routes/vendorInvoice.js";
 import lotTransferRoutes from "./routes/lotTransfer.js";
+import vendorLotTransferRoutes from "./routes/vendorLotTransfer.js";
 import { initLotTimerService, stopLotTimerService } from "./services/lotTimerService.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -147,6 +148,7 @@ app.use("/api/auction-invoices", auctionInvoiceRoutes);
 app.use("/api/vendors", vendorRoutes);
 app.use("/api/vendor-invoices", vendorInvoiceRoutes);
 app.use("/api/lot-transfer", lotTransferRoutes);
+app.use("/api/vendor-lot-transfer", vendorLotTransferRoutes);
 
 // Import email transporter close function
 import { closeTransporter } from './config/email.js';
