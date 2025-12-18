@@ -1716,14 +1716,16 @@ export const placeBid = async (req, res) => {
 
                 // Send outbid notification
                 if (io) {
-                  io.to(`user-${auction.reserveBidder.toString()}`).emit('coin-balance-updated', {
+                  const outbidData = {
                     auctionCoins: unfreezeResult.user.auctionCoins,
                     frozenCoins: unfreezeResult.user.frozenCoins,
                     reason: 'Outbid - coins refunded',
                     lotNumber: unfreezeLotNumber,
                     auctionId: auction._id.toString()
-                  });
-                  console.log(`💰 PROXY OUTBID: Sent outbid notification to previous reserve bidder ${auction.reserveBidder}`);
+                  };
+                  console.log(`💰 PROXY OUTBID: Emitting to room 'user-${auction.reserveBidder.toString()}' with data:`, JSON.stringify(outbidData, null, 2));
+                  io.to(`user-${auction.reserveBidder.toString()}`).emit('coin-balance-updated', outbidData);
+                  console.log(`✅ PROXY OUTBID: Event emitted successfully`);
                 }
               }
             } else {
@@ -1944,14 +1946,16 @@ export const placeBid = async (req, res) => {
 
             // REAL-TIME: Emit coin balance update to outbid user
             if (io) {
-              io.to(`user-${previousHighestBid.user.toString()}`).emit('coin-balance-updated', {
+              const outbidData = {
                 auctionCoins: unfreezeResult.user.auctionCoins,
                 frozenCoins: unfreezeResult.user.frozenCoins,
                 reason: 'Outbid - coins refunded',
                 lotNumber: unfreezeLotNumber,
                 auctionId: auction._id.toString()
-              });
-              console.log(`💰 Sent real-time coin update to outbid user ${previousHighestBid.user}: ${unfreezeResult.user.auctionCoins} coins`);
+              };
+              console.log(`💰 REGULAR OUTBID: Emitting to room 'user-${previousHighestBid.user.toString()}' with data:`, JSON.stringify(outbidData, null, 2));
+              io.to(`user-${previousHighestBid.user.toString()}`).emit('coin-balance-updated', outbidData);
+              console.log(`✅ REGULAR OUTBID: Event emitted successfully`);
             }
           }
         } else {
@@ -2016,14 +2020,17 @@ export const placeBid = async (req, res) => {
       const freezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
 
       if (io) {
-        io.to(`user-${userId.toString()}`).emit('coin-balance-updated', {
+        const outbidData = {
           auctionCoins: user.auctionCoins, // No change in coins since we didn't freeze
           frozenCoins: 0,
           reason: 'Outbid - coins refunded',
           lotNumber: auction.isLotBidding ? freezeLotNumber : undefined,
           auctionId: auction._id.toString()
-        });
-        console.log(`💰 AUTO-BID OUTBID: Sent outbid notification to user ${userId} (coins not deducted)`);
+        };
+
+        console.log(`💰 AUTO-BID OUTBID: Emitting to room 'user-${userId.toString()}' with data:`, JSON.stringify(outbidData, null, 2));
+        io.to(`user-${userId.toString()}`).emit('coin-balance-updated', outbidData);
+        console.log(`✅ AUTO-BID OUTBID: Event emitted successfully`);
       }
     } else {
       // Normal bid - freeze the coins
