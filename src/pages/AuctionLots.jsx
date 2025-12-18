@@ -351,8 +351,19 @@ const AuctionLots = () => {
     try {
       setSubmittingBid(prev => ({ ...prev, [lotNumber]: true }));
 
-      // Send lot number with bid for catalog phase
-      const response = await api.post(`/auctions/${id}/bid`, { amount, lotNumber });
+      // PROXY BIDDING LOGIC: If amount > minBid, treat as reserve/max bid
+      let maxBid = null;
+      let actualBid = amount;
+
+      if (amount > minBid) {
+        // User entered higher than minimum - this becomes their maximum bid (hidden)
+        maxBid = amount;
+        actualBid = minBid; // Place minimum bid publicly
+        console.log(`🎯 PROXY BID: Public bid ₹${actualBid.toLocaleString()}, Hidden max ₹${maxBid.toLocaleString()}`);
+      }
+
+      // Send lot number with bid for catalog phase, and maxBid for proxy bidding
+      const response = await api.post(`/auctions/${id}/bid`, { amount: actualBid, maxBid, lotNumber });
 
       console.log('🎯 BID RESPONSE:', {
         success: response.success,
@@ -364,6 +375,13 @@ const AuctionLots = () => {
       // Response interceptor already extracts data, so check response.success not response.data.success
       if (response.success) {
         console.log('✅ Setting bidStatus to SUCCESS for lot', lotNumber);
+
+        // Show success message with proxy bid info
+        if (maxBid) {
+          toast.success(`✅ Bid placed with reserve of ₹${maxBid.toLocaleString('en-IN')}! System will auto-bid up to this amount.`);
+        } else {
+          toast.success('✅ Bid placed successfully!');
+        }
 
         // Show success status on card
         setBidStatus(prev => {
