@@ -48,6 +48,7 @@ const AuctionInvoiceManagement = () => {
 
   // Global Commission state
   const [globalCommission, setGlobalCommission] = useState(12);
+  const [commissionCutoffDate, setCommissionCutoffDate] = useState(new Date().toISOString().split('T')[0]); // Today's date
 
   const [formData, setFormData] = useState({
     auctionId: '',
@@ -265,20 +266,28 @@ const AuctionInvoiceManagement = () => {
             </tr>
           </thead>
           <tbody>
-            ${(invoice.lots || [invoice.lotDetails]).map((lot, idx) => {
-              const lotCommission = ((lot.hammerPrice || 0) * globalCommission) / 100;
-              return `
-              <tr>
-                <td>${lot.lotNumber || invoice.lotNumbers?.[idx] || invoice.lotNumber || 'N/A'}</td>
-                <td>${lot.description}</td>
-                <td>${lot.hsnCode || '97050090'}</td>
-                <td>${lot.quantity || 1}</td>
-                <td>${invoice.gst.itemGSTRate}%</td>
-                <td>₹${(lot.hammerPrice || 0).toLocaleString()}</td>
-                <td style="color: #666; font-style: italic;">₹${lotCommission.toLocaleString()}</td>
-              </tr>
-              `;
-            }).join('')}
+            ${(() => {
+              // Check if invoice date is after cutoff date
+              const invoiceDate = new Date(invoice.invoiceDate);
+              const cutoffDate = new Date(commissionCutoffDate);
+              const useGlobalCommission = invoiceDate >= cutoffDate;
+              const commissionRate = useGlobalCommission ? globalCommission : (invoice.buyerDetails?.commissionPercentage || 12);
+
+              return (invoice.lots || [invoice.lotDetails]).map((lot, idx) => {
+                const lotCommission = ((lot.hammerPrice || 0) * commissionRate) / 100;
+                return `
+                <tr>
+                  <td>${lot.lotNumber || invoice.lotNumbers?.[idx] || invoice.lotNumber || 'N/A'}</td>
+                  <td>${lot.description}</td>
+                  <td>${lot.hsnCode || '97050090'}</td>
+                  <td>${lot.quantity || 1}</td>
+                  <td>${invoice.gst.itemGSTRate}%</td>
+                  <td>₹${(lot.hammerPrice || 0).toLocaleString()}</td>
+                  <td style="color: #666; font-style: italic;">₹${lotCommission.toLocaleString()}</td>
+                </tr>
+                `;
+              }).join('');
+            })()}
             <tr>
               <td colspan="6"><strong>Packing & Forwarding Charges</strong></td>
               <td><strong>₹${invoice.packingForwardingCharges.amount.toLocaleString()}</strong></td>
@@ -290,10 +299,16 @@ const AuctionInvoiceManagement = () => {
           <p>Gross Amount: ₹${invoice.amounts.grossAmount.toLocaleString()}</p>
           ${(() => {
             const totalHammerPrice = (invoice.lots || [invoice.lotDetails]).reduce((sum, lot) => sum + (lot.hammerPrice || 0), 0);
-            const totalCommission = (totalHammerPrice * globalCommission) / 100;
+            // Check if invoice date is after cutoff date
+            const invoiceDate = new Date(invoice.invoiceDate);
+            const cutoffDate = new Date(commissionCutoffDate);
+            const useGlobalCommission = invoiceDate >= cutoffDate;
+            const commissionRate = useGlobalCommission ? globalCommission : (invoice.buyerDetails?.commissionPercentage || 12);
+
+            const totalCommission = (totalHammerPrice * commissionRate) / 100;
             return `
             <p style="color: #666; font-style: italic;">
-              Commission (${globalCommission}%) - Display Only:
+              Commission (${commissionRate}%) - Display Only:
               ₹${totalCommission.toLocaleString()}
             </p>
             `;
@@ -947,7 +962,7 @@ const AuctionInvoiceManagement = () => {
 
       {/* Global Commission Setting */}
       <div className="mb-4 bg-purple-50 border border-purple-200 rounded-lg p-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <label className="text-sm font-semibold text-purple-900 whitespace-nowrap">
             Commission (%):
           </label>
@@ -960,8 +975,18 @@ const AuctionInvoiceManagement = () => {
             onChange={(e) => setGlobalCommission(parseFloat(e.target.value) || 0)}
             className="w-20 px-2 py-1 text-sm border border-purple-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
+          <span className="text-sm text-gray-600">|</span>
+          <label className="text-sm font-semibold text-purple-900 whitespace-nowrap">
+            Apply from date:
+          </label>
+          <input
+            type="date"
+            value={commissionCutoffDate}
+            onChange={(e) => setCommissionCutoffDate(e.target.value)}
+            className="px-2 py-1 text-sm border border-purple-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
           <p className="text-xs text-gray-600 italic">
-            Updates in real-time • Display only, not added to total
+            Invoices before this date keep their original commission • Display only, not added to total
           </p>
         </div>
       </div>
@@ -1153,11 +1178,22 @@ const AuctionInvoiceManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-purple-600 italic">
                     ₹{(() => {
                       const totalHammerPrice = invoice.lots?.reduce((sum, lot) => sum + (lot.hammerPrice || 0), 0) || 0;
-                      const commission = (totalHammerPrice * globalCommission) / 100;
+                      // Check if invoice date is after cutoff date
+                      const invoiceDate = new Date(invoice.invoiceDate);
+                      const cutoffDate = new Date(commissionCutoffDate);
+                      const useGlobalCommission = invoiceDate >= cutoffDate;
+
+                      const commissionRate = useGlobalCommission ? globalCommission : (invoice.buyerDetails?.commissionPercentage || 12);
+                      const commission = (totalHammerPrice * commissionRate) / 100;
                       return commission.toLocaleString();
                     })()}
                     <span className="text-xs text-gray-500 ml-1">
-                      ({globalCommission}%)
+                      ({(() => {
+                        const invoiceDate = new Date(invoice.invoiceDate);
+                        const cutoffDate = new Date(commissionCutoffDate);
+                        const useGlobalCommission = invoiceDate >= cutoffDate;
+                        return useGlobalCommission ? globalCommission : (invoice.buyerDetails?.commissionPercentage || 12);
+                      })()}%)
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
