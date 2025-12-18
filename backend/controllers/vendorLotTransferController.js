@@ -117,6 +117,18 @@ export const transferLots = async (req, res) => {
       });
     }
 
+    // Helper function to normalize vendor code (VEN001 or VEN0001 -> VEN0001)
+    const normalizeVendorCode = (code) => {
+      if (!code) return null;
+      const match = code.match(/^(VEN)(\d+)$/);
+      if (match) {
+        const prefix = match[1];
+        const number = match[2].padStart(4, '0'); // Normalize to 4 digits
+        return `${prefix}${number}`;
+      }
+      return code;
+    };
+
     // Verify all lots exist and belong to fromVendor
     for (const lotNum of lotNumbers) {
       const lot = auction.lots.find(l => l.lotNumber === lotNum);
@@ -126,8 +138,11 @@ export const transferLots = async (req, res) => {
           message: `Lot ${lotNum} not found in auction`
         });
       }
-      // Compare vendorId (vendor code) with source vendor's code
-      if (lot.vendorId !== fromVendor.vendorCode) {
+      // Compare vendorId (vendor code) with source vendor's code (normalized)
+      const normalizedLotVendorId = normalizeVendorCode(lot.vendorId);
+      const normalizedFromVendorCode = normalizeVendorCode(fromVendor.vendorCode);
+
+      if (normalizedLotVendorId !== normalizedFromVendorCode) {
         return res.status(400).json({
           success: false,
           message: `Lot ${lotNum} does not belong to the source vendor (expected ${fromVendor.vendorCode}, found ${lot.vendorId})`
