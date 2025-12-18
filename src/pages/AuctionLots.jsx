@@ -347,6 +347,15 @@ const AuctionLots = () => {
 
   // Handle bid submission for a specific lot
   const handlePlaceBid = async (lotNumber) => {
+    // Check if user is logged in
+    if (!currentUser) {
+      toast.info('Please login to place a bid');
+      // Save current page URL to redirect back after login
+      const returnUrl = `/auction-lots/${id}`;
+      navigate(`/auth?redirect=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+
     const amount = parseInt(bidAmounts[lotNumber]);
 
     if (!amount || amount <= 0) {

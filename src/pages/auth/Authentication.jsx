@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link, useSearchParams } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, LogIn, UserPlus, Phone } from 'lucide-react';
 import posterImage from '../../assets/poster.jpg';
 import { API_BASE_URL } from '../../constants/api';
@@ -8,6 +8,8 @@ import CenterNotification from '../../components/common/CenterNotification';
 const Authentication = ({ setUser }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get('redirect'); // Get redirect URL from query params
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -190,11 +192,19 @@ const Authentication = ({ setUser }) => {
         setShowNotification(true);
 
         setTimeout(() => {
-          if (location.state?.from === '/checkout' && location.state?.cartItems) {
+          // Priority 1: Check if there's a redirect URL (from bid attempt)
+          if (redirectUrl) {
+            console.log('Redirecting back to:', redirectUrl);
+            navigate(redirectUrl);
+          }
+          // Priority 2: Check if user came from checkout
+          else if (location.state?.from === '/checkout' && location.state?.cartItems) {
             navigate('/checkout', {
               state: { cartItems: location.state.cartItems }
             });
-          } else {
+          }
+          // Default: Redirect to home
+          else {
             navigate('/');
           }
         }, 3000);
@@ -281,17 +291,25 @@ const Authentication = ({ setUser }) => {
           console.log('Legacy Role:', data.data.legacyRole);
 
           setTimeout(() => {
-            // Check if user came from checkout
-            if (location.state?.from === '/checkout' && location.state?.cartItems) {
+            // Priority 1: Check if there's a redirect URL (from bid attempt)
+            if (redirectUrl) {
+              console.log('Redirecting back to:', redirectUrl);
+              navigate(redirectUrl);
+            }
+            // Priority 2: Check if user came from checkout
+            else if (location.state?.from === '/checkout' && location.state?.cartItems) {
               console.log('Redirecting back to checkout with cart items...');
               navigate('/checkout', {
                 state: { cartItems: location.state.cartItems }
               });
-            } else if (data.data.isAdmin || data.data.isSuperAdmin || data.data.legacyRole === 'admin' || data.data.legacyRole === 'superadmin') {
-              // Redirect based on role
+            }
+            // Priority 3: Redirect admins to dashboard
+            else if (data.data.isAdmin || data.data.isSuperAdmin || data.data.legacyRole === 'admin' || data.data.legacyRole === 'superadmin') {
               console.log('Redirecting to admin dashboard...');
               navigate('/admin/dashboard');
-            } else {
+            }
+            // Default: Redirect to home
+            else {
               console.log('Redirecting to home...');
               navigate('/');
             }
