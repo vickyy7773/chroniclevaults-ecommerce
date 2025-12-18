@@ -1885,7 +1885,53 @@ export const placeBid = async (req, res) => {
             auction.totalBids = auction.bids.length;
             autoBidTriggered = true;
 
-            // The current user's frozen coins will be unfrozen in the freeze/unfreeze logic below
+            // OUTBID NOTIFICATION: Current user (who just placed bid) got outbid by auto-bid
+            // Unfreeze current user's coins and send notification
+            const io = req.app.get('io');
+
+            if (auction.isLotBidding) {
+              // LOT BIDDING: Unfreeze current user's coins for this lot
+              const unfreezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+              const unfreezeResult = await unfreezeCoinsForLot(userId, auction._id, unfreezeLotNumber);
+
+              if (unfreezeResult.success && unfreezeResult.unfrozenAmount > 0) {
+                console.log(`🔓 AUTO-BID OUTBID - LOT ${unfreezeLotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for outbid user ${userId}`);
+
+                // Send outbid notification to current user
+                if (io) {
+                  io.to(`user-${userId.toString()}`).emit('coin-balance-updated', {
+                    auctionCoins: unfreezeResult.user.auctionCoins,
+                    frozenCoins: unfreezeResult.user.frozenCoins,
+                    reason: 'Outbid - coins refunded',
+                    lotNumber: unfreezeLotNumber,
+                    auctionId: auction._id.toString()
+                  });
+                  console.log(`💰 AUTO-BID OUTBID: Sent outbid notification to user ${userId} who was outbid by auto-bid`);
+                }
+              }
+            } else {
+              // NORMAL AUCTION: Unfreeze current user's coins
+              const currentUser = await User.findById(userId);
+              if (currentUser && currentUser.frozenCoins > 0) {
+                currentUser.auctionCoins += currentUser.frozenCoins;
+                const unfrozenAmount = currentUser.frozenCoins;
+                currentUser.frozenCoins = 0;
+                await currentUser.save();
+                console.log(`🔓 AUTO-BID OUTBID: Unfroze ${unfrozenAmount} coins for outbid user ${userId}`);
+
+                // Send outbid notification
+                if (io) {
+                  io.to(`user-${userId.toString()}`).emit('coin-balance-updated', {
+                    auctionCoins: currentUser.auctionCoins,
+                    frozenCoins: currentUser.frozenCoins,
+                    reason: 'Outbid - coins refunded',
+                    auctionId: auction._id.toString()
+                  });
+                  console.log(`💰 AUTO-BID OUTBID: Sent outbid notification to user ${userId} who was outbid by auto-bid`);
+                }
+              }
+            }
+
             // Now freeze the reserve bidder's coins for the auto-bid
             if (auction.isLotBidding) {
               // LOT BIDDING: Use per-lot freeze for auto-bid
