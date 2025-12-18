@@ -939,10 +939,10 @@ const AuctionInvoiceManagement = () => {
       </div>
 
       {/* Global Commission Setting */}
-      <div className="mb-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
-        <div className="flex items-center gap-4">
-          <label className="font-semibold text-purple-900">
-            Global Commission (%):
+      <div className="mb-4 bg-purple-50 border border-purple-200 rounded-lg p-3">
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-semibold text-purple-900 whitespace-nowrap">
+            Commission (%):
           </label>
           <input
             type="number"
@@ -951,10 +951,16 @@ const AuctionInvoiceManagement = () => {
             step="0.1"
             value={globalCommission}
             onChange={(e) => setGlobalCommission(parseFloat(e.target.value) || 0)}
-            className="w-32 px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-20 px-2 py-1 text-sm border border-purple-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
-          <p className="text-sm text-gray-600 italic">
-            This commission is for display only and will not be added to total payable
+          <button
+            onClick={() => toast.success('Commission updated for display!')}
+            className="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
+          >
+            Save
+          </button>
+          <p className="text-xs text-gray-600 italic">
+            Display only, not added to total
           </p>
         </div>
       </div>
