@@ -401,8 +401,15 @@ const AuctionLots = () => {
       if (amount > minBid) {
         // User entered higher than minimum - this becomes their maximum bid (hidden)
         maxBid = amount;
-        actualBid = minBid; // Place minimum bid publicly
-        console.log(`🎯 PROXY BID: Public bid ₹${actualBid.toLocaleString()}, Hidden max ₹${maxBid.toLocaleString()}`);
+
+        // If lot has reserve price and user's max bid covers it, start bid at reserve price
+        if (lot.reservePrice && amount >= lot.reservePrice && lot.reservePrice > minBid) {
+          actualBid = lot.reservePrice; // Start at reserve price
+          console.log(`🎯 PROXY BID WITH RESERVE: Public bid ₹${actualBid.toLocaleString()} (Reserve), Hidden max ₹${maxBid.toLocaleString()}`);
+        } else {
+          actualBid = minBid; // Place minimum bid publicly
+          console.log(`🎯 PROXY BID: Public bid ₹${actualBid.toLocaleString()}, Hidden max ₹${maxBid.toLocaleString()}`);
+        }
       }
 
       // Send lot number with bid for catalog phase, and maxBid for proxy bidding
