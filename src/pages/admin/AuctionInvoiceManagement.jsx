@@ -405,7 +405,7 @@ const AuctionInvoiceManagement = () => {
               </div>
               <div class="calc-row">
                 <span>(+) Shipping:</span>
-                <span>FREE (₹0)</span>
+                <span>₹0</span>
               </div>
               ${(invoice.insuranceCharges?.amount > 0 && !invoice.insuranceCharges?.declined) ? `
               <div class="calc-row">
@@ -1533,19 +1533,6 @@ const AuctionInvoiceManagement = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Packing & Forwarding Charges (₹)</label>
-                    <input
-                      type="number"
-                      value={formData.packingForwardingCharges?.amount || selectedInvoice.packingForwardingCharges?.amount || 0}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        packingForwardingCharges: { ...formData.packingForwardingCharges, amount: parseFloat(e.target.value) || 0 }
-                      })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                    />
                   </div>
 
                   <div className="mb-4">
