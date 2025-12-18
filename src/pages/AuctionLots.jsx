@@ -219,6 +219,34 @@ const AuctionLots = () => {
     };
   }, [id]);
 
+  // Join personal room when currentUser loads (for outbid notifications)
+  useEffect(() => {
+    if (!currentUser || !currentUser._id || !socketRef.current) return;
+
+    // Join immediately if already connected
+    if (socketRef.current.connected) {
+      socketRef.current.emit('join-user-room', currentUser._id);
+      console.log(`👤 [USER LOAD] Joined personal room: user-${currentUser._id}`);
+    }
+
+    // Also join on reconnect
+    const handleReconnect = () => {
+      if (currentUser && currentUser._id) {
+        socketRef.current.emit('join-user-room', currentUser._id);
+        console.log(`👤 [RECONNECT] Joined personal room: user-${currentUser._id}`);
+      }
+    };
+
+    socketRef.current.on('connect', handleReconnect);
+
+    // Cleanup
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off('connect', handleReconnect);
+      }
+    };
+  }, [currentUser]);
+
   // Fetch current user on mount
   useEffect(() => {
     const fetchCurrentUser = async () => {
