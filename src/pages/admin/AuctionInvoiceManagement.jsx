@@ -224,151 +224,250 @@ const AuctionInvoiceManagement = () => {
   };
 
   const generateInvoiceHTML = (invoice) => {
+    // Calculate commission
+    const invoiceDate = new Date(invoice.invoiceDate);
+    const cutoffDate = new Date(commissionCutoffDate);
+    const useGlobalCommission = invoiceDate >= cutoffDate;
+    const commissionRate = useGlobalCommission ? globalCommission : (invoice.buyerDetails?.commissionPercentage || 12);
+    const totalHammerPrice = (invoice.lots || [invoice.lotDetails]).reduce((sum, lot) => sum + (lot.hammerPrice || 0), 0);
+    const totalCommission = (totalHammerPrice * commissionRate) / 100;
+
+    // Calculate GST on commission (9% CGST + 9% SGST)
+    const cgstOnCommission = (totalCommission * 9) / 100;
+    const sgstOnCommission = (totalCommission * 9) / 100;
+
     return `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Invoice ${invoice.invoiceNumber}</title>
+        <title>Tax Invoice - ${invoice.invoiceNumber}</title>
         <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; }
-          .invoice-details { margin: 20px 0; }
-          .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          .table th, .table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          .table th { background-color: #f2f2f2; }
-          .total { font-weight: bold; font-size: 18px; }
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; font-size: 11px; padding: 15px; line-height: 1.4; }
+          .container { max-width: 210mm; margin: 0 auto; }
+
+          /* Header */
+          .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+          .company-info { flex: 1; }
+          .company-name { font-size: 20px; font-weight: bold; color: #d35400; margin-bottom: 2px; }
+          .tagline { font-size: 10px; color: #666; margin-bottom: 5px; }
+          .contact-info { font-size: 9px; line-height: 1.6; }
+
+          /* Title */
+          .invoice-title { text-align: center; font-size: 16px; font-weight: bold; margin: 15px 0; text-decoration: underline; }
+
+          /* Two column layout */
+          .two-col { display: flex; gap: 20px; margin-bottom: 15px; }
+          .col-left { flex: 1; }
+          .col-right { flex: 1; }
+
+          .section-title { font-weight: bold; margin-bottom: 5px; font-size: 10px; }
+          .info-row { margin-bottom: 3px; font-size: 10px; }
+          .label { display: inline-block; width: 100px; font-weight: bold; }
+
+          /* Table */
+          .table-container { margin: 15px 0; }
+          table { width: 100%; border-collapse: collapse; font-size: 10px; }
+          th, td { border: 1px solid #000; padding: 5px; text-align: left; }
+          th { background-color: #e8e8e8; font-weight: bold; text-align: center; }
+          td { text-align: center; }
+          td.desc { text-align: left; }
+
+          /* Payment section */
+          .payment-section { display: flex; gap: 20px; margin-top: 15px; }
+          .payment-detail { flex: 0 0 45%; border: 1px solid #000; padding: 10px; }
+          .payment-calc { flex: 1; border: 1px solid #000; padding: 10px; }
+          .calc-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 10px; }
+          .calc-row.total { font-weight: bold; border-top: 2px solid #000; padding-top: 5px; margin-top: 5px; }
+
+          /* Words */
+          .amount-words { margin: 15px 0; padding: 8px; border: 1px solid #000; font-size: 10px; }
+
+          /* Remittance */
+          .remittance { margin: 10px 0; font-size: 9px; font-style: italic; }
+
+          /* Bank details */
+          .bank-section { display: flex; gap: 10px; margin: 15px 0; }
+          .bank-box { flex: 1; border: 1px solid #000; padding: 10px; font-size: 9px; }
+          .bank-box h4 { font-size: 10px; margin-bottom: 5px; }
+
+          /* Signatures */
+          .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+          .sign-box { text-align: center; }
+          .sign-line { border-top: 1px solid #000; width: 200px; margin-top: 50px; padding-top: 5px; font-size: 9px; }
+
+          /* Footer */
+          .footer { margin-top: 20px; border-top: 2px solid #333; padding-top: 10px; text-align: center; font-size: 9px; }
+
+          @media print {
+            body { padding: 0; }
+            .container { max-width: 100%; }
+          }
         </style>
       </head>
       <body>
-        <div class="header">
-          <h1>${invoice.companyDetails.name}</h1>
-          <p>GSTIN: ${invoice.companyDetails.gstin}</p>
-          <h2>Tax Invoice</h2>
-        </div>
-
-        <div class="invoice-details">
-          <p><strong>Invoice No:</strong> ${invoice.invoiceNumber}</p>
-          <p><strong>Date:</strong> ${new Date(invoice.invoiceDate).toLocaleDateString()}</p>
-          <p><strong>Buyer:</strong> ${invoice.buyerDetails.name}</p>
-          <p><strong>Email:</strong> ${invoice.buyerDetails.email}</p>
-          <p><strong>Phone:</strong> ${invoice.buyerDetails.phone}</p>
-          ${invoice.buyerDetails.gstin ? `<p><strong>GSTIN:</strong> ${invoice.buyerDetails.gstin}</p>` : ''}
-          ${invoice.buyerDetails.pan ? `<p><strong>PAN:</strong> ${invoice.buyerDetails.pan}</p>` : ''}
-        </div>
-
-        <div style="display: flex; gap: 40px; margin: 20px 0;">
-          <div style="flex: 1;">
-            <h3 style="margin-bottom: 10px; border-bottom: 2px solid #333; padding-bottom: 5px;">Billing Address</h3>
-            <p>${invoice.billingAddress?.street || ''}</p>
-            <p>${invoice.billingAddress?.city || ''}, ${invoice.billingAddress?.state || ''} - ${invoice.billingAddress?.zipCode || ''}</p>
+        <div class="container">
+          <!-- Header -->
+          <div class="header">
+            <div class="company-info">
+              <div class="company-name">CHRONICLE VAULTS</div>
+              <div class="tagline">Buy, Sell, Auction • Vintage Coins | Stamps | Collectibles</div>
+              <div class="contact-info">
+                16/189, Netajinagar, Meghaninagar, Ahmedabad-380016, Gujarat, India<br>
+                Tel: +91 84608 49878<br>
+                Email: chroniclevaults@gmail.com<br>
+                Web: chroniclevaults.com
+              </div>
+            </div>
           </div>
-          <div style="flex: 1;">
-            <h3 style="margin-bottom: 10px; border-bottom: 2px solid #333; padding-bottom: 5px;">Shipping Address</h3>
-            <p>${invoice.shippingAddress?.street || ''}</p>
-            <p>${invoice.shippingAddress?.city || ''}, ${invoice.shippingAddress?.state || ''} - ${invoice.shippingAddress?.zipCode || ''}</p>
+
+          <!-- Title -->
+          <div class="invoice-title">Tax Invoice</div>
+
+          <!-- Consignee and Invoice Details -->
+          <div class="two-col">
+            <div class="col-left">
+              <div class="section-title">Consignee:</div>
+              <div class="info-row"><strong>${invoice.buyerDetails.name}</strong></div>
+              <div class="info-row">${invoice.shippingAddress?.street || invoice.billingAddress?.street || ''}</div>
+              <div class="info-row">${invoice.shippingAddress?.city || invoice.billingAddress?.city || ''}, ${invoice.shippingAddress?.state || invoice.billingAddress?.state || ''} - ${invoice.shippingAddress?.zipCode || invoice.billingAddress?.zipCode || ''}</div>
+              <div class="info-row">Email: ${invoice.buyerDetails.email || ''}</div>
+              <div class="info-row">Mobile: ${invoice.buyerDetails.phone || ''}</div>
+              <div class="info-row">State Code: ${invoice.billingAddress?.stateCode || '24'}</div>
+              <div class="info-row">GST NO: ${invoice.buyerDetails.gstin || 'N/A'}</div>
+            </div>
+            <div class="col-right">
+              <div class="info-row"><span class="label">Auction No.:</span> ${invoice.auctionId || 'N/A'}</div>
+              <div class="info-row"><span class="label">Auction Date:</span> ${invoice.auctionDate ? new Date(invoice.auctionDate).toLocaleDateString() : 'N/A'}</div>
+              <div class="info-row"><span class="label">Invoice No.:</span> ${invoice.invoiceNumber}</div>
+              <div class="info-row"><span class="label">Invoice Date:</span> ${new Date(invoice.invoiceDate).toLocaleDateString()}</div>
+              <div class="info-row"><span class="label">Bidder No.:</span> ${invoice.buyerDetails.buyerNumber || 'N/A'}</div>
+              <div class="info-row"><span class="label">GST No:</span> ${invoice.buyerDetails.gstin || 'N/A'}</div>
+            </div>
           </div>
-        </div>
 
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Lot#</th>
-              <th>Description</th>
-              <th>HSN Code</th>
-              <th>Qty</th>
-              <th>GST %</th>
-              <th>Hammer Price (₹)</th>
-              <th style="color: #666;">Commission (₹)</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${(() => {
-              // Check if invoice date is after cutoff date
-              const invoiceDate = new Date(invoice.invoiceDate);
-              const cutoffDate = new Date(commissionCutoffDate);
-              const useGlobalCommission = invoiceDate >= cutoffDate;
-              const commissionRate = useGlobalCommission ? globalCommission : (invoice.buyerDetails?.commissionPercentage || 12);
-
-              return (invoice.lots || [invoice.lotDetails]).map((lot, idx) => {
-                const lotCommission = ((lot.hammerPrice || 0) * commissionRate) / 100;
-                return `
+          <!-- Lot Table -->
+          <div class="table-container">
+            <table>
+              <thead>
                 <tr>
-                  <td>${lot.lotNumber || invoice.lotNumbers?.[idx] || invoice.lotNumber || 'N/A'}</td>
-                  <td>${lot.description}</td>
-                  <td>${lot.hsnCode || '97050090'}</td>
-                  <td>${lot.quantity || 1}</td>
-                  <td>${invoice.gst.itemGSTRate}%</td>
-                  <td>₹${(lot.hammerPrice || 0).toLocaleString()}</td>
-                  <td style="color: #666; font-style: italic;">₹${lotCommission.toLocaleString()}</td>
+                  <th style="width: 40px;">Sr.</th>
+                  <th style="width: 60px;">Lot#</th>
+                  <th>Description</th>
+                  <th style="width: 40px;">Qty</th>
+                  <th style="width: 80px;">HSN Number</th>
+                  <th style="width: 60px;">GST(%)</th>
+                  <th style="width: 100px;">Amount (₹)</th>
                 </tr>
-                `;
-              }).join('');
-            })()}
-            <tr>
-              <td colspan="6"><strong>Packing & Forwarding Charges</strong></td>
-              <td><strong>₹${invoice.packingForwardingCharges.amount.toLocaleString()}</strong></td>
-            </tr>
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                ${(invoice.lots || [invoice.lotDetails]).map((lot, idx) => `
+                  <tr>
+                    <td>${idx + 1}</td>
+                    <td>${lot.lotNumber || invoice.lotNumbers?.[idx] || invoice.lotNumber || 'N/A'}</td>
+                    <td class="desc">${lot.description || lot.detailedDescription || ''}</td>
+                    <td>${lot.quantity || 1}</td>
+                    <td>9705</td>
+                    <td>5.00</td>
+                    <td>₹${(lot.hammerPrice || 0).toLocaleString()}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
 
-        <div style="text-align: right; margin-top: 20px;">
-          <p>Gross Amount: ₹${invoice.amounts.grossAmount.toLocaleString()}</p>
-          ${(() => {
-            const totalHammerPrice = (invoice.lots || [invoice.lotDetails]).reduce((sum, lot) => sum + (lot.hammerPrice || 0), 0);
-            // Check if invoice date is after cutoff date
-            const invoiceDate = new Date(invoice.invoiceDate);
-            const cutoffDate = new Date(commissionCutoffDate);
-            const useGlobalCommission = invoiceDate >= cutoffDate;
-            const commissionRate = useGlobalCommission ? globalCommission : (invoice.buyerDetails?.commissionPercentage || 12);
+          <!-- Payment Detail and Calculation -->
+          <div class="payment-section">
+            <div class="payment-detail">
+              <div class="section-title">Payment Detail</div>
+              <div class="info-row"><span class="label">Payment Mode:</span> Cash / Cheque / Contra</div>
+              <div class="info-row"><span class="label">Bank Name:</span> </div>
+              <div class="info-row"><span class="label">Cheque No:</span> </div>
+              <div class="info-row"><span class="label">Cheque Date:</span> </div>
+              <div class="info-row"><span class="label">Amount in Rs:</span> </div>
+            </div>
+            <div class="payment-calc">
+              <div class="calc-row">
+                <span>Total Hammer Price:</span>
+                <span>₹${totalHammerPrice.toLocaleString()}</span>
+              </div>
+              <div class="calc-row">
+                <span>(+)Commission (${commissionRate}%):</span>
+                <span>₹${totalCommission.toLocaleString()}</span>
+              </div>
+              <div class="calc-row">
+                <span>(+)CGST On Hammer (2.5%) on (${totalHammerPrice}):</span>
+                <span>₹${(invoice.gst.cgst || 0).toLocaleString()}</span>
+              </div>
+              <div class="calc-row">
+                <span>(+)SGST On Hammer (2.5%) on (${totalHammerPrice}):</span>
+                <span>₹${(invoice.gst.sgst || 0).toLocaleString()}</span>
+              </div>
+              <div class="calc-row">
+                <span>(+) Shipping & Insurance:</span>
+                <span>₹${(invoice.packingForwardingCharges?.amount || 0).toLocaleString()}</span>
+              </div>
+              <div class="calc-row">
+                <span>(+)CGST on Service @ 9%:</span>
+                <span>₹${cgstOnCommission.toLocaleString()}</span>
+              </div>
+              <div class="calc-row">
+                <span>(+)SGST on Service @ 9%:</span>
+                <span>₹${sgstOnCommission.toLocaleString()}</span>
+              </div>
+              <div class="calc-row">
+                <span>Round Off:</span>
+                <span>₹${invoice.amounts.roundOff.toFixed(2)}</span>
+              </div>
+              <div class="calc-row total">
+                <span>Total Payable (₹):</span>
+                <span>₹${invoice.amounts.totalPayable.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
 
-            const totalCommission = (totalHammerPrice * commissionRate) / 100;
-            return `
-            <p style="color: #666; font-style: italic;">
-              Commission (${commissionRate}%) - Display Only:
-              ₹${totalCommission.toLocaleString()}
-            </p>
-            `;
-          })()}
-          <p>${invoice.gst.type}: ₹${invoice.amounts.totalGST.toLocaleString()}</p>
-          <p>Round Off: ₹${invoice.amounts.roundOff.toFixed(2)}</p>
-          <p class="total">Total Payable: ₹${invoice.amounts.totalPayable.toLocaleString()}</p>
-        </div>
+          <!-- Amount in Words -->
+          <div class="amount-words">
+            <strong>Amount in words:</strong> Rs. ${numberToWords(invoice.amounts.totalPayable)} Only
+          </div>
 
-        <div style="margin-top: 50px;">
-          <p><strong>Amount in Words:</strong></p>
-          <p>Rs. ${numberToWords(invoice.amounts.totalPayable)} Only</p>
-        </div>
+          <!-- Remittance Instruction -->
+          <div class="remittance">
+            <strong>Remittance Instruction:</strong> Payment in full is due within seven(7) days of the date of invoice. *Shipping charge will be added as per the instruction
+          </div>
 
-        <div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px;">
-          <h3 style="margin-top: 0; margin-bottom: 10px; color: #333;">Bank Details for Payment</h3>
-          <table style="width: 100%; border: none;">
-            <tr>
-              <td style="border: none; padding: 5px;"><strong>Bank Name:</strong></td>
-              <td style="border: none; padding: 5px;">${invoice.companyDetails.bankDetails?.bankName || 'N/A'}</td>
-            </tr>
-            <tr>
-              <td style="border: none; padding: 5px;"><strong>Account Name:</strong></td>
-              <td style="border: none; padding: 5px;">${invoice.companyDetails.bankDetails?.accountName || 'N/A'}</td>
-            </tr>
-            <tr>
-              <td style="border: none; padding: 5px;"><strong>Account Number:</strong></td>
-              <td style="border: none; padding: 5px;">${invoice.companyDetails.bankDetails?.accountNumber || 'N/A'}</td>
-            </tr>
-            <tr>
-              <td style="border: none; padding: 5px;"><strong>IFSC Code:</strong></td>
-              <td style="border: none; padding: 5px;">${invoice.companyDetails.bankDetails?.ifsc || 'N/A'}</td>
-            </tr>
-            <tr>
-              <td style="border: none; padding: 5px;"><strong>Branch:</strong></td>
-              <td style="border: none; padding: 5px;">${invoice.companyDetails.bankDetails?.branch || 'N/A'}</td>
-            </tr>
-          </table>
-        </div>
+          <!-- Bank Transfer Details -->
+          <div class="bank-section">
+            <div class="bank-box">
+              <h4>Bank Transfer To:</h4>
+              <div><strong>A/C Name:</strong> urhistory</div>
+              <div><strong>Bank:</strong> Saraswat Bank, cgroad, Ahmedabad</div>
+              <div><strong>A/c No:</strong> 610000000016716</div>
+              <div><strong>RTGS/NEFT IFSC code:</strong> SRCB000362</div>
+            </div>
+            <div class="bank-box">
+              <div style="text-align: right; margin-top: 20px;">
+                <strong>For, Chronicle Vaults</strong>
+              </div>
+            </div>
+          </div>
 
-        <div style="margin-top: 50px; text-align: right;">
-          <p>For ${invoice.companyDetails.name}</p>
-          <br><br>
-          <p>Authorised Signatory</p>
+          <!-- Signatures -->
+          <div class="signature-section">
+            <div class="sign-box">
+              <div class="sign-line">Receiver's Sign</div>
+              <div style="margin-top: 10px; font-size: 9px;">Date: _______________</div>
+            </div>
+            <div class="sign-box">
+              <div class="sign-line">Auth. Signatory</div>
+              <div style="margin-top: 10px; font-size: 9px;">Subject To Ahmedabad Jurisdiction</div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="footer">
+            <div>GST NO: 24BCZPD7594Q1ZE &nbsp;&nbsp;&nbsp; PAN NO: BCZPD7594Q &nbsp;&nbsp;&nbsp; HSN 9705 – CGST @2.5% + SGST @2.5% (On Goods) | CGST @9% + SGST @9% (On Commission/Service)</div>
+          </div>
         </div>
       </body>
       </html>
