@@ -404,9 +404,15 @@ const AuctionInvoiceManagement = () => {
                 <span>₹${(invoice.gst.sgst || 0).toLocaleString()}</span>
               </div>
               <div class="calc-row">
-                <span>(+) Shipping & Insurance:</span>
-                <span>₹${(invoice.packingForwardingCharges?.amount || 0).toLocaleString()}</span>
+                <span>(+) Shipping:</span>
+                <span>FREE (₹0)</span>
               </div>
+              ${(invoice.insuranceCharges?.amount > 0 && !invoice.insuranceCharges?.declined) ? `
+              <div class="calc-row">
+                <span>(+) Insurance:</span>
+                <span>₹${(invoice.insuranceCharges?.amount || 0).toLocaleString()}</span>
+              </div>
+              ` : ''}
               <div class="calc-row">
                 <span>(+)CGST on Service @ 9%:</span>
                 <span>₹${cgstOnCommission.toLocaleString()}</span>
@@ -1540,6 +1546,24 @@ const AuctionInvoiceManagement = () => {
                       })}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
                     />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Insurance Charges (₹) - Optional</label>
+                    <input
+                      type="number"
+                      value={formData.insuranceCharges?.amount || selectedInvoice.insuranceCharges?.amount || 0}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        insuranceCharges: {
+                          amount: parseFloat(e.target.value) || 0,
+                          declined: parseFloat(e.target.value) === 0
+                        }
+                      })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter insurance amount (optional)"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Leave as 0 if insurance is not required</p>
                   </div>
 
                   {/* Lots Display */}
