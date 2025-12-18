@@ -109,7 +109,7 @@ export const transferLots = async (req, res) => {
           message: `Lot ${lotNum} not found in auction`
         });
       }
-      if (lot.vendor?.toString() !== fromVendorId) {
+      if (lot.vendorId?.toString() !== fromVendorId.toString()) {
         return res.status(400).json({
           success: false,
           message: `Lot ${lotNum} does not belong to the source vendor`
@@ -155,11 +155,11 @@ export const transferLots = async (req, res) => {
       await sourceInvoice.save();
     }
 
-    // 5. Update lot vendor in auction document
+    // 5. Update lot vendorId in auction document
     for (const lotNum of lotNumbers) {
       const lot = auction.lots.find(l => l.lotNumber === lotNum);
       if (lot) {
-        lot.vendor = toVendorId;
+        lot.vendorId = toVendorId;
       }
     }
     await auction.save();
