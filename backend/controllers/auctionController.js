@@ -2141,6 +2141,7 @@ export const placeBid = async (req, res) => {
         auction,
         latestBid: auction.bids[auction.bids.length - 1],
         autoBidTriggered,
+        systemBidPlaced, // Include system reserve bid flag for frontend
         previousReserveBidAmount,
         remainingCoins: user.auctionCoins
       }

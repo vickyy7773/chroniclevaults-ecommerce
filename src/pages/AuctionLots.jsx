@@ -426,21 +426,28 @@ const AuctionLots = () => {
 
       // Response interceptor already extracts data, so check response.success not response.data.success
       if (response.success) {
-        console.log('✅ Setting bidStatus to SUCCESS for lot', lotNumber);
+        // Check if user was immediately outbid by auto-bid or system reserve bid
+        const wasOutbid = response.data?.autoBidTriggered || response.data?.systemBidPlaced;
 
-        // Show success message with proxy bid info
-        if (maxBid) {
-          toast.success(`✅ Bid placed with reserve of ₹${maxBid.toLocaleString('en-IN')}! System will auto-bid up to this amount.`);
+        if (wasOutbid) {
+          console.log('🚨 User was immediately outbid, NOT setting success status (outbid notification will come via socket)');
         } else {
-          toast.success('✅ Bid placed successfully!');
-        }
+          console.log('✅ Setting bidStatus to SUCCESS for lot', lotNumber);
 
-        // Show success status on card
-        setBidStatus(prev => {
-          const newStatus = { ...prev, [lotNumber]: 'success' };
-          console.log('✅ New bidStatus:', newStatus);
-          return newStatus;
-        });
+          // Show success message with proxy bid info
+          if (maxBid) {
+            toast.success(`✅ Bid placed with reserve of ₹${maxBid.toLocaleString('en-IN')}! System will auto-bid up to this amount.`);
+          } else {
+            toast.success('✅ Bid placed successfully!');
+          }
+
+          // Show success status on card (ONLY if not outbid)
+          setBidStatus(prev => {
+            const newStatus = { ...prev, [lotNumber]: 'success' };
+            console.log('✅ New bidStatus:', newStatus);
+            return newStatus;
+          });
+        }
 
         // Clear the bid amount for this lot
         setBidAmounts(prev => ({ ...prev, [lotNumber]: '' }));
