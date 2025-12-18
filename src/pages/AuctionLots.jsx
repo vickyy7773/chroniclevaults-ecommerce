@@ -105,14 +105,7 @@ const AuctionLots = () => {
 
   // Calculate current increment based on bid slabs
   const getCurrentIncrement = (currentBid, incrementSlabs) => {
-    console.log('🔍 CATALOG INCREMENT DEBUG:', {
-      currentBid,
-      hasSlabs: !!incrementSlabs,
-      slabsLength: incrementSlabs?.length || 0
-    });
-
     if (!incrementSlabs || incrementSlabs.length === 0) {
-      console.log('⚠️ No slabs provided, using defaults');
       // Default slabs if not provided
       const defaultSlabs = [
         { minPrice: 1, maxPrice: 1999, increment: 100 },
@@ -128,19 +121,14 @@ const AuctionLots = () => {
       incrementSlabs = defaultSlabs;
     }
 
-    console.log('🔍 Checking slabs:', incrementSlabs);
-
     for (let slab of incrementSlabs) {
       const matches = currentBid >= slab.minPrice && currentBid < slab.maxPrice;
-      console.log(`  Slab [${slab.minPrice}-${slab.maxPrice}]: ${currentBid} >= ${slab.minPrice} && ${currentBid} < ${slab.maxPrice} = ${matches}, increment: ${slab.increment}`);
       if (matches) {
-        console.log(`  ✅ Matched! Returning increment: ${slab.increment}`);
         return slab.increment;
       }
     }
     // If currentBid is beyond all slabs, use the last slab's increment
     const fallback = incrementSlabs[incrementSlabs.length - 1]?.increment || 100;
-    console.log(`  ❌ No match! Using fallback: ${fallback}`);
     return fallback;
   };
 
@@ -803,12 +791,7 @@ const AuctionLots = () => {
                       </div>
 
                       {/* Bid Status Badge */}
-                      {(() => {
-                        if (bidStatus[lot.lotNumber]) {
-                          console.log('🎨 RENDERING BID STATUS for lot', lot.lotNumber, ':', bidStatus[lot.lotNumber]);
-                        }
-                        return bidStatus[lot.lotNumber];
-                      })() && (
+                      {bidStatus[lot.lotNumber] && (
                         <div className={`p-3 rounded-lg text-center font-bold text-sm animate-pulse ${
                           bidStatus[lot.lotNumber] === 'success'
                             ? 'bg-green-100 text-green-800 border-2 border-green-400'
