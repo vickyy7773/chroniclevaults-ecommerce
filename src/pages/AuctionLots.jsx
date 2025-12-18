@@ -319,10 +319,21 @@ const AuctionLots = () => {
       console.log('💰 Coin balance updated:', data);
 
       if (data.reason === 'Outbid - coins refunded') {
+        // Show toast notification
         toast.warning(`⚠️ Outbid on Lot ${data.lotNumber}! ₹${data.auctionCoins.toLocaleString()} coins refunded`, {
           autoClose: 5000,
           position: 'top-center'
         });
+
+        // Show red OUTBID indicator on card
+        if (data.lotNumber) {
+          setBidStatus(prev => ({ ...prev, [data.lotNumber]: 'outbid' }));
+
+          // Auto-clear after 10 seconds
+          setTimeout(() => {
+            setBidStatus(prev => ({ ...prev, [data.lotNumber]: null }));
+          }, 10000);
+        }
       } else if (data.reason === 'Bid placed - coins deducted') {
         toast.info(`💰 Coins updated: ₹${data.auctionCoins.toLocaleString()} available`, {
           autoClose: 3000
