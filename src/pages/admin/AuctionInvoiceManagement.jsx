@@ -46,9 +46,15 @@ const AuctionInvoiceManagement = () => {
   const [loadingUnsoldLots, setLoadingUnsoldLots] = useState(false);
   const [currentAuctionForUnsold, setCurrentAuctionForUnsold] = useState(null);
 
-  // Global Commission state
-  const [globalCommission, setGlobalCommission] = useState(12);
-  const [commissionCutoffDate, setCommissionCutoffDate] = useState(new Date().toISOString().split('T')[0]); // Today's date
+  // Global Commission state - Load from localStorage or use defaults
+  const [globalCommission, setGlobalCommission] = useState(() => {
+    const saved = localStorage.getItem('globalCommission');
+    return saved ? parseFloat(saved) : 12;
+  });
+  const [commissionCutoffDate, setCommissionCutoffDate] = useState(() => {
+    const saved = localStorage.getItem('commissionCutoffDate');
+    return saved || new Date().toISOString().split('T')[0];
+  });
 
   const [formData, setFormData] = useState({
     auctionId: '',
@@ -204,6 +210,16 @@ const AuctionInvoiceManagement = () => {
       printWindow.print();
     } catch (error) {
       toast.error('Failed to download PDF');
+    }
+  };
+
+  const handleSaveCommissionSettings = () => {
+    try {
+      localStorage.setItem('globalCommission', globalCommission.toString());
+      localStorage.setItem('commissionCutoffDate', commissionCutoffDate);
+      toast.success('Commission settings saved successfully!');
+    } catch (error) {
+      toast.error('Failed to save commission settings');
     }
   };
 
@@ -985,6 +1001,12 @@ const AuctionInvoiceManagement = () => {
             onChange={(e) => setCommissionCutoffDate(e.target.value)}
             className="px-2 py-1 text-sm border border-purple-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
+          <button
+            onClick={handleSaveCommissionSettings}
+            className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors font-medium"
+          >
+            Save
+          </button>
           <p className="text-xs text-gray-600 italic">
             Invoices before this date keep their original commission • Display only, not added to total
           </p>
