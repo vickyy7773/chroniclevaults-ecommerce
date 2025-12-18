@@ -1995,10 +1995,11 @@ export const placeBid = async (req, res) => {
 
     // RESERVE PRICE AUTO-BIDDING: Trigger system auto-bid to push toward reserve price
     // Works in BOTH catalog and live phases
+    let systemBidPlaced = false;
     if (isInCatalogPhase || isInLivePhase) {
       // Use the lot that user just bid on (currentLotIndex), not the auction's active lot
       const lotIndexForSystemBid = auction.isLotBidding ? currentLotIndex : null;
-      const systemBidPlaced = await placeReservePriceAutoBid(auction, lotIndexForSystemBid);
+      systemBidPlaced = await placeReservePriceAutoBid(auction, lotIndexForSystemBid);
 
       if (systemBidPlaced) {
         const phaseText = isInCatalogPhase ? 'catalog' : 'live';
@@ -2008,11 +2009,11 @@ export const placeBid = async (req, res) => {
       }
     }
 
-    // Freeze the full bid amount (UNLESS user was outbid by auto-bid)
+    // Freeze the full bid amount (UNLESS user was outbid by auto-bid OR system reserve bid)
     const freezeAmount = amount;
 
-    // Check if auto-bid triggered and outbid the current user
-    if (autoBidTriggered) {
+    // Check if auto-bid triggered and outbid the current user (proxy bid OR system reserve bid)
+    if (autoBidTriggered || systemBidPlaced) {
       // User got outbid by auto-bid - DON'T freeze their coins, send outbid notification instead
       console.log(`🚨 AUTO-BID OUTBID: User ${userId} was immediately outbid by auto-bid, skipping freeze and sending notification`);
 
