@@ -352,7 +352,7 @@ const AuctionLots = () => {
       toast.info('Please login to place a bid');
       // Save current page URL to redirect back after login
       const returnUrl = `/auction-lots/${id}`;
-      navigate(`/auth?redirect=${encodeURIComponent(returnUrl)}`);
+      navigate(`/authentication?redirect=${encodeURIComponent(returnUrl)}`);
       return;
     }
 
