@@ -302,13 +302,8 @@ const AuctionLots = () => {
           ) + 1;
 
           if (outbidLotNumber > 0) {
-            // Show outbid status on card
+            // Show outbid status on card (will persist until new bid)
             setBidStatus(prev => ({ ...prev, [outbidLotNumber]: 'outbid' }));
-
-            // Auto-clear after 10 seconds
-            setTimeout(() => {
-              setBidStatus(prev => ({ ...prev, [outbidLotNumber]: null }));
-            }, 10000);
           }
         }
       }
@@ -325,14 +320,9 @@ const AuctionLots = () => {
           position: 'top-center'
         });
 
-        // Show red OUTBID indicator on card
+        // Show red OUTBID indicator on card (will persist until new bid)
         if (data.lotNumber) {
           setBidStatus(prev => ({ ...prev, [data.lotNumber]: 'outbid' }));
-
-          // Auto-clear after 10 seconds
-          setTimeout(() => {
-            setBidStatus(prev => ({ ...prev, [data.lotNumber]: null }));
-          }, 10000);
         }
       } else if (data.reason === 'Bid placed - coins deducted') {
         toast.info(`💰 Coins updated: ₹${data.auctionCoins.toLocaleString()} available`, {
