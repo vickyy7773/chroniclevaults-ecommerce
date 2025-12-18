@@ -40,7 +40,7 @@ const auctionInvoiceSchema = new mongoose.Schema({
     gstin: String,
     pan: String,
     buyerNumber: String,
-    commissionPercentage: { type: Number, default: 10 } // For display only
+    commissionPercentage: { type: Number, default: 12 } // For display only
   },
 
   // Billing Address
@@ -69,7 +69,7 @@ const auctionInvoiceSchema = new mongoose.Schema({
     hsnCode: { type: String, default: '97050090' },
     quantity: { type: Number, default: 1 },
     hammerPrice: { type: Number, required: true },
-    commissionRate: { type: Number, default: 10 }, // Percentage (for display only)
+    commissionRate: { type: Number, default: 12 }, // Percentage (for display only)
     commissionAmount: { type: Number, default: 0 } // Calculated (for display only, not added to total)
   }],
 

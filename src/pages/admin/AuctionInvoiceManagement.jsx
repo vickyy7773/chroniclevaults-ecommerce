@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Edit2, Download, Trash2, DollarSign, Search, Eye, X, Filter, ArrowRightLeft } from 'lucide-react';
+import { FileText, Edit2, Download, Trash2, Search, Eye, X, Filter, ArrowRightLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useSearchParams } from 'react-router-dom';
 import auctionInvoiceService from '../../services/auctionInvoiceService';
@@ -46,11 +46,8 @@ const AuctionInvoiceManagement = () => {
   const [loadingUnsoldLots, setLoadingUnsoldLots] = useState(false);
   const [currentAuctionForUnsold, setCurrentAuctionForUnsold] = useState(null);
 
-  // Commission Edit states
-  const [showCommissionModal, setShowCommissionModal] = useState(false);
-  const [commissionInvoice, setCommissionInvoice] = useState(null);
-  const [commissionPercentage, setCommissionPercentage] = useState(10);
-  const [updatingCommission, setUpdatingCommission] = useState(false);
+  // Global Commission state
+  const [globalCommission, setGlobalCommission] = useState(12);
 
   const [formData, setFormData] = useState({
     auctionId: '',
@@ -875,40 +872,6 @@ const AuctionInvoiceManagement = () => {
     }
   };
 
-  // Commission Edit Functions
-  const openCommissionModal = (invoice) => {
-    setCommissionInvoice(invoice);
-    setCommissionPercentage(invoice.buyerDetails?.commissionPercentage || 10);
-    setShowCommissionModal(true);
-  };
-
-  const handleUpdateCommission = async () => {
-    if (!commissionInvoice) return;
-
-    if (commissionPercentage < 0 || commissionPercentage > 100) {
-      toast.error('Commission percentage must be between 0 and 100');
-      return;
-    }
-
-    try {
-      setUpdatingCommission(true);
-      const response = await api.put(`/auction-invoices/${commissionInvoice._id}/commission`, {
-        commissionPercentage
-      });
-
-      if (response.success) {
-        toast.success('Commission updated successfully');
-        setShowCommissionModal(false);
-        setCommissionInvoice(null);
-        fetchInvoices(); // Refresh invoices
-      }
-    } catch (error) {
-      console.error('Update commission error:', error);
-      toast.error(error.response?.data?.message || 'Failed to update commission');
-    } finally {
-      setUpdatingCommission(false);
-    }
-  };
 
   const filteredUnsoldBuyers = auctionBuyers.filter(buyerData => {
     if (!unsoldBuyerSearch) return true;
@@ -969,10 +932,31 @@ const AuctionInvoiceManagement = () => {
             onClick={() => openUnsoldLotsModal(selectedAuctionFilter)}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
-            <DollarSign className="w-5 h-5" />
+            <FileText className="w-5 h-5" />
             Assign Unsold Lots
           </button>
         )}
+      </div>
+
+      {/* Global Commission Setting */}
+      <div className="mb-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <div className="flex items-center gap-4">
+          <label className="font-semibold text-purple-900">
+            Global Commission (%):
+          </label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            value={globalCommission}
+            onChange={(e) => setGlobalCommission(parseFloat(e.target.value) || 0)}
+            className="w-32 px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+          <p className="text-sm text-gray-600 italic">
+            This commission is for display only and will not be added to total payable
+          </p>
+        </div>
       </div>
 
       {/* Filters Section */}
@@ -1114,6 +1098,7 @@ const AuctionInvoiceManagement = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Buyer</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lot #</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Commission</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">GST Type</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -1158,6 +1143,12 @@ const AuctionInvoiceManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                     ₹{invoice.amounts?.totalPayable?.toLocaleString()}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-purple-600 italic">
+                    ₹{(invoice.amounts?.totalCommission || 0).toLocaleString()}
+                    <span className="text-xs text-gray-500 ml-1">
+                      ({invoice.buyerDetails?.commissionPercentage || globalCommission}%)
+                    </span>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
                       {invoice.gst?.type}
@@ -1183,13 +1174,6 @@ const AuctionInvoiceManagement = () => {
                           <ArrowRightLeft className="w-4 h-4" />
                         </button>
                       )}
-                      <button
-                        onClick={() => openCommissionModal(invoice)}
-                        className="text-purple-600 hover:text-purple-900"
-                        title="Edit Commission"
-                      >
-                        <DollarSign className="w-4 h-4" />
-                      </button>
                       <button
                         onClick={() => openEditModal(invoice)}
                         className="text-blue-600 hover:text-blue-900"
@@ -1945,80 +1929,6 @@ const AuctionInvoiceManagement = () => {
                   {assigningUnsold ? 'Assigning...' : `Assign ${Object.keys(selectedUnsoldLots).length} Lot(s)`}
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Commission Edit Modal */}
-      {showCommissionModal && commissionInvoice && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Edit Commission</h2>
-              <button
-                onClick={() => {
-                  setShowCommissionModal(false);
-                  setCommissionInvoice(null);
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <p className="text-sm text-gray-600">Invoice Number</p>
-                <p className="font-semibold">{commissionInvoice.invoiceNumber}</p>
-                <p className="text-sm text-gray-600 mt-2">Buyer</p>
-                <p className="font-semibold">{commissionInvoice.buyerDetails?.name}</p>
-                <p className="text-sm text-gray-600 mt-2">Total Hammer Price</p>
-                <p className="font-semibold">₹{commissionInvoice.amounts?.grossAmount?.toLocaleString()}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Commission Percentage (%)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  value={commissionPercentage}
-                  onChange={(e) => setCommissionPercentage(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Enter commission percentage"
-                />
-                <p className="text-sm text-gray-500 mt-2">
-                  Commission Amount: ₹{((commissionInvoice.amounts?.grossAmount || 0) * commissionPercentage / 100).toLocaleString()}
-                </p>
-                <p className="text-xs text-amber-600 mt-2 italic">
-                  Note: Commission is for display only and will not be added to the total payable amount.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowCommissionModal(false);
-                  setCommissionInvoice(null);
-                }}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleUpdateCommission}
-                disabled={updatingCommission}
-                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {updatingCommission ? 'Updating...' : 'Update Commission'}
-              </button>
             </div>
           </div>
         </div>
