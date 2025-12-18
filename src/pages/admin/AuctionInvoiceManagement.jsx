@@ -1975,17 +1975,30 @@ const AuctionInvoiceManagement = () => {
                               <input
                                 type="checkbox"
                                 checked={isSelected}
-                                onChange={() => toggleUnsoldLotSelection(lot.lotNumber, lot.estimateMin || 0)}
+                                onChange={() => toggleUnsoldLotSelection(lot.lotNumber, lot.startingPrice || lot.reservePrice || 0)}
                                 className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
                               />
                               <div className="flex-1">
                                 <div className="font-medium text-lg">Lot #{lot.lotNumber}</div>
-                                <div className="text-sm text-gray-600">{lot.description}</div>
-                                {lot.estimateMin && lot.estimateMax && (
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    Estimate: ₹{lot.estimateMin?.toLocaleString()} - ₹{lot.estimateMax?.toLocaleString()}
+                                <div className="text-sm text-gray-600 mb-1">{lot.description}</div>
+
+                                {/* ALWAYS show pricing information */}
+                                <div className="flex gap-2 text-xs mt-2 flex-wrap bg-gradient-to-r from-blue-50 to-orange-50 p-2.5 rounded-lg border-2 border-blue-200">
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-gray-600">Starting:</span>
+                                    <span className="font-bold text-blue-700">₹{(lot.startingPrice || 0).toLocaleString()}</span>
                                   </div>
-                                )}
+                                  <span className="text-gray-400">|</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-gray-600">Reserve:</span>
+                                    <span className="font-bold text-orange-700">₹{(lot.reservePrice || 0).toLocaleString()}</span>
+                                  </div>
+                                  <span className="text-gray-400">|</span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-gray-600">Last Bid:</span>
+                                    <span className="font-bold text-green-700">₹{(lot.currentBid || 0).toLocaleString()}</span>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                             {isSelected && (
