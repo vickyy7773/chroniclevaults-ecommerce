@@ -265,7 +265,9 @@ const AuctionInvoiceManagement = () => {
             </tr>
           </thead>
           <tbody>
-            ${(invoice.lots || [invoice.lotDetails]).map((lot, idx) => `
+            ${(invoice.lots || [invoice.lotDetails]).map((lot, idx) => {
+              const lotCommission = ((lot.hammerPrice || 0) * globalCommission) / 100;
+              return `
               <tr>
                 <td>${lot.lotNumber || invoice.lotNumbers?.[idx] || invoice.lotNumber || 'N/A'}</td>
                 <td>${lot.description}</td>
@@ -273,9 +275,10 @@ const AuctionInvoiceManagement = () => {
                 <td>${lot.quantity || 1}</td>
                 <td>${invoice.gst.itemGSTRate}%</td>
                 <td>₹${(lot.hammerPrice || 0).toLocaleString()}</td>
-                <td style="color: #666; font-style: italic;">₹${(lot.commissionAmount || 0).toLocaleString()}</td>
+                <td style="color: #666; font-style: italic;">₹${lotCommission.toLocaleString()}</td>
               </tr>
-            `).join('')}
+              `;
+            }).join('')}
             <tr>
               <td colspan="6"><strong>Packing & Forwarding Charges</strong></td>
               <td><strong>₹${invoice.packingForwardingCharges.amount.toLocaleString()}</strong></td>
@@ -285,12 +288,16 @@ const AuctionInvoiceManagement = () => {
 
         <div style="text-align: right; margin-top: 20px;">
           <p>Gross Amount: ₹${invoice.amounts.grossAmount.toLocaleString()}</p>
-          ${invoice.amounts.totalCommission ? `
+          ${(() => {
+            const totalHammerPrice = (invoice.lots || [invoice.lotDetails]).reduce((sum, lot) => sum + (lot.hammerPrice || 0), 0);
+            const totalCommission = (totalHammerPrice * globalCommission) / 100;
+            return `
             <p style="color: #666; font-style: italic;">
-              Commission (${invoice.buyerDetails?.commissionPercentage || 10}%) - Display Only:
-              ₹${invoice.amounts.totalCommission.toLocaleString()}
+              Commission (${globalCommission}%) - Display Only:
+              ₹${totalCommission.toLocaleString()}
             </p>
-          ` : ''}
+            `;
+          })()}
           <p>${invoice.gst.type}: ₹${invoice.amounts.totalGST.toLocaleString()}</p>
           <p>Round Off: ₹${invoice.amounts.roundOff.toFixed(2)}</p>
           <p class="total">Total Payable: ₹${invoice.amounts.totalPayable.toLocaleString()}</p>
@@ -953,14 +960,8 @@ const AuctionInvoiceManagement = () => {
             onChange={(e) => setGlobalCommission(parseFloat(e.target.value) || 0)}
             className="w-20 px-2 py-1 text-sm border border-purple-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
-          <button
-            onClick={() => toast.success('Commission updated for display!')}
-            className="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
-          >
-            Save
-          </button>
           <p className="text-xs text-gray-600 italic">
-            Display only, not added to total
+            Updates in real-time • Display only, not added to total
           </p>
         </div>
       </div>
@@ -1150,9 +1151,13 @@ const AuctionInvoiceManagement = () => {
                     ₹{invoice.amounts?.totalPayable?.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-purple-600 italic">
-                    ₹{(invoice.amounts?.totalCommission || 0).toLocaleString()}
+                    ₹{(() => {
+                      const totalHammerPrice = invoice.lots?.reduce((sum, lot) => sum + (lot.hammerPrice || 0), 0) || 0;
+                      const commission = (totalHammerPrice * globalCommission) / 100;
+                      return commission.toLocaleString();
+                    })()}
                     <span className="text-xs text-gray-500 ml-1">
-                      ({invoice.buyerDetails?.commissionPercentage || globalCommission}%)
+                      ({globalCommission}%)
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
