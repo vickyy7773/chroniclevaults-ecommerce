@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, admin } from '../middleware/authMiddleware.js';
+import { protect, admin } from '../middleware/auth.js';
 import {
   getAuctionVendors,
   transferLots
