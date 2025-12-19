@@ -167,16 +167,18 @@ const AuctionLots = () => {
     const isProduction = backendUrl.includes('chroniclevaults.com');
 
     socketRef.current = io(backendUrl, {
-      transports: isProduction ? ['polling'] : ['polling', 'websocket'],
+      transports: ['polling', 'websocket'], // Allow both in production for better reliability
       reconnection: true,
-      reconnectionDelay: 3000,
-      reconnectionDelayMax: 10000,
-      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: Infinity, // NEVER give up reconnecting!
       path: '/socket.io',
-      upgrade: !isProduction,
+      upgrade: true, // Always allow upgrade to websocket
       forceNew: false,
       timeout: 20000,
-      autoConnect: true
+      autoConnect: true,
+      pingTimeout: 60000, // Keep connection alive
+      pingInterval: 25000 // Send ping every 25 seconds
     });
 
     socketRef.current.on('connect', () => {
