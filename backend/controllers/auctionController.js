@@ -1632,6 +1632,7 @@ export const placeBid = async (req, res) => {
 
     // RESERVE BID LOGIC
     let autoBidTriggered = false;
+    let systemBidPlaced = false;
     let previousReserveBidAmount = null;
 
     // If user is placing a reserve bid (maxBid)
@@ -1670,6 +1671,62 @@ export const placeBid = async (req, res) => {
 
         auction.currentBid = amount;
         auction.totalBids = auction.bids.length;
+
+        // IMPORTANT: Existing reserve bidder should auto-bid to beat this new lower bid!
+        if (auction.highestReserveBid > amount && auction.reserveBidder && auction.reserveBidder.toString() !== userId.toString()) {
+          console.log(`🚀 AUTO-BID FOR EXISTING RESERVE: Existing reserve bidder (₹${auction.highestReserveBid}) will auto-bid to beat new bid (₹${amount})`);
+
+          const increment = auction.getCurrentIncrement();
+          const autoBidAmount = Math.min(amount + increment, auction.highestReserveBid);
+
+          console.log(`💰 AUTO-BID AMOUNT: min(${amount} + ${increment}, ${auction.highestReserveBid}) = ₹${autoBidAmount}`);
+
+          // Unfreeze new bidder's coins (they're being outbid immediately)
+          if (auction.isLotBidding) {
+            const unfreezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+            const unfreezeResult = await unfreezeCoinsForLot(userId, auction._id, unfreezeLotNumber);
+            if (unfreezeResult.success) {
+              console.log(`🔓 LOT ${unfreezeLotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for outbid user ${userId}`);
+            }
+          }
+
+          // Place auto-bid for existing reserve bidder
+          if (auction.isLotBidding && currentLot) {
+            currentLot.bids.push({
+              user: auction.reserveBidder,
+              amount: autoBidAmount,
+              maxBid: auction.highestReserveBid,
+              isReserveBidder: true,
+              isAutoBid: true,
+              isCatalogBid: isInCatalogPhase,
+              timestamp: new Date()
+            });
+            currentLot.currentBid = autoBidAmount;
+          } else {
+            auction.bids.push({
+              user: auction.reserveBidder,
+              amount: autoBidAmount,
+              maxBid: auction.highestReserveBid,
+              isReserveBidder: true,
+              isAutoBid: true,
+              isCatalogBid: isInCatalogPhase
+            });
+          }
+
+          auction.currentBid = autoBidAmount;
+          auction.totalBids = auction.bids.length;
+          autoBidTriggered = true;
+          systemBidPlaced = true;
+
+          // Freeze coins for existing reserve bidder's auto-bid
+          if (auction.isLotBidding) {
+            const freezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+            await freezeCoinsForLot(auction.reserveBidder, auction._id, freezeLotNumber, autoBidAmount);
+            console.log(`🔒 LOT ${freezeLotNumber}: Froze ${autoBidAmount} coins for existing reserve bidder ${auction.reserveBidder}`);
+          }
+
+          console.log(`✅ AUTO-BID PLACED: Existing reserve bidder auto-bid at ₹${autoBidAmount}, reserve: ₹${auction.highestReserveBid}`);
+        }
       } else {
         console.log(`✅ NEW maxBid (${maxBid}) > EXISTING reserve (${auction.highestReserveBid || 'none'}) - Will place bid and check for auto-bid`);
         // User's reserve bid is higher than existing reserve bid (or no existing reserve bid)
