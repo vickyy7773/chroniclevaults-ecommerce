@@ -301,20 +301,36 @@ const AuctionLots = () => {
 
     // Listen for coin balance updates (when outbid)
     const handleCoinBalanceUpdate = (data) => {
-      console.log('💰 CATALOG - Coin balance update received:', {
+      console.log('💰💰💰 CATALOG - Coin balance update received:', {
         reason: data.reason,
         lotNumber: data.lotNumber,
         auctionCoins: data.auctionCoins,
-        currentUserLoaded: !!currentUser
+        frozenCoins: data.frozenCoins,
+        currentUserLoaded: !!currentUser,
+        fullData: JSON.stringify(data)
       });
 
       if (data.reason === 'Outbid - coins refunded') {
-        console.log('🚨 OUTBID DETECTED! Lot:', data.lotNumber);
+        console.log('🚨🚨🚨 OUTBID DETECTED! Lot:', data.lotNumber);
+        console.log('🚨 FULL OUTBID DATA:', JSON.stringify(data, null, 2));
 
-        // Show toast notification
+        // Show VERY LOUD toast notification
+        toast.error(`🚨 YOU ARE OUTBID! 🚨\nLot ${data.lotNumber}\n₹${data.auctionCoins.toLocaleString()} refunded`, {
+          autoClose: 10000,
+          position: 'top-center',
+          style: {
+            background: '#ff0000',
+            color: '#ffffff',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            textAlign: 'center'
+          }
+        });
+
+        // Also show warning toast
         toast.warning(`⚠️ Outbid on Lot ${data.lotNumber}! ₹${data.auctionCoins.toLocaleString()} coins refunded`, {
-          autoClose: 5000,
-          position: 'top-center'
+          autoClose: 8000,
+          position: 'top-right'
         });
 
         // Show red OUTBID indicator on card (will persist until new bid)
@@ -327,9 +343,12 @@ const AuctionLots = () => {
           });
         }
       } else if (data.reason === 'Bid placed - coins deducted') {
+        console.log('✅ Bid placed - coins deducted:', data.auctionCoins);
         toast.info(`💰 Coins updated: ₹${data.auctionCoins.toLocaleString()} available`, {
           autoClose: 3000
         });
+      } else {
+        console.log('ℹ️ Other coin balance update:', data.reason);
       }
     };
 
