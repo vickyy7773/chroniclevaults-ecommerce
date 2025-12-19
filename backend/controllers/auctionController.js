@@ -1755,41 +1755,44 @@ export const placeBid = async (req, res) => {
           // Get the increment for the next bid
           const increment = auction.getCurrentIncrement();
 
-          // Auto-increment to the previous reserve bid amount
+          // STEP 1: Auto-bid for OLD reserve bidder (who is being outbid) up to their max
+          const oldReserveBidder = auction.reserveBidder;
+          const oldMaxBid = auction.highestReserveBid;
+
           if (auction.isLotBidding && currentLot) {
-            // LOT BIDDING: Auto-bid in current lot
+            // LOT BIDDING: Auto-bid for OLD reserve bidder
             currentLot.bids.push({
-              user: userId,
-              amount: auction.highestReserveBid,
-              maxBid: maxBid,
-              isReserveBidder: false,
+              user: oldReserveBidder,  // OLD reserve bidder, NOT new bidder!
+              amount: oldMaxBid,
+              maxBid: oldMaxBid,
+              isReserveBidder: true,
               isAutoBid: true,
               isCatalogBid: isInCatalogPhase,
               timestamp: new Date()
             });
-            currentLot.currentBid = auction.highestReserveBid;
+            currentLot.currentBid = oldMaxBid;
           } else {
-            // NORMAL AUCTION: Auto-bid in main bids array
+            // NORMAL AUCTION: Auto-bid for OLD reserve bidder
             auction.bids.push({
-              user: userId,
-              amount: auction.highestReserveBid,
-              maxBid: maxBid,
-              isReserveBidder: false,
+              user: oldReserveBidder,  // OLD reserve bidder, NOT new bidder!
+              amount: oldMaxBid,
+              maxBid: oldMaxBid,
+              isReserveBidder: true,
               isAutoBid: true,
               isCatalogBid: isInCatalogPhase
             });
           }
 
-          auction.currentBid = auction.highestReserveBid;
+          auction.currentBid = oldMaxBid;
           auction.totalBids = auction.bids.length;
 
-          // NOW: Auto-bid ONE MORE INCREMENT to make new bidder win
-          const finalBidAmount = auction.highestReserveBid + increment;
+          // STEP 2: Auto-bid for NEW bidder ONE INCREMENT higher to beat old reserve bidder
+          const finalBidAmount = oldMaxBid + increment;
 
           if (auction.isLotBidding && currentLot) {
-            // LOT BIDDING: Place final winning auto-bid
+            // LOT BIDDING: Auto-bid for NEW bidder to win
             currentLot.bids.push({
-              user: userId,
+              user: userId,  // NEW bidder wins
               amount: finalBidAmount,
               maxBid: maxBid,
               isReserveBidder: false,
@@ -1799,9 +1802,9 @@ export const placeBid = async (req, res) => {
             });
             currentLot.currentBid = finalBidAmount;
           } else {
-            // NORMAL AUCTION: Place final winning auto-bid
+            // NORMAL AUCTION: Auto-bid for NEW bidder to win
             auction.bids.push({
-              user: userId,
+              user: userId,  // NEW bidder wins
               amount: finalBidAmount,
               maxBid: maxBid,
               isReserveBidder: false,
