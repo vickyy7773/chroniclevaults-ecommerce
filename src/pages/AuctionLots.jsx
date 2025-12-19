@@ -311,25 +311,11 @@ const AuctionLots = () => {
       });
 
       if (data.reason === 'Outbid - coins refunded') {
-        console.log('🚨🚨🚨 OUTBID DETECTED! Lot:', data.lotNumber);
-        console.log('🚨 FULL OUTBID DATA:', JSON.stringify(data, null, 2));
+        console.log('🚨 OUTBID DETECTED! Lot:', data.lotNumber);
 
-        // Show VERY LOUD toast notification
-        toast.error(`🚨 YOU ARE OUTBID! 🚨\nLot ${data.lotNumber}\n₹${data.auctionCoins.toLocaleString()} refunded`, {
-          autoClose: 10000,
-          position: 'top-center',
-          style: {
-            background: '#ff0000',
-            color: '#ffffff',
-            fontSize: '18px',
-            fontWeight: 'bold',
-            textAlign: 'center'
-          }
-        });
-
-        // Also show warning toast
+        // Show outbid notification (top-right, less intrusive)
         toast.warning(`⚠️ Outbid on Lot ${data.lotNumber}! ₹${data.auctionCoins.toLocaleString()} coins refunded`, {
-          autoClose: 8000,
+          autoClose: 5000,
           position: 'top-right'
         });
 
