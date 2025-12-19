@@ -2061,7 +2061,6 @@ export const placeBid = async (req, res) => {
 
     // RESERVE PRICE AUTO-BIDDING: Trigger system auto-bid to push toward reserve price
     // Works in BOTH catalog and live phases
-    let systemBidPlaced = false;
     if (isInCatalogPhase || isInLivePhase) {
       // Use the lot that user just bid on (currentLotIndex), not the auction's active lot
       const lotIndexForSystemBid = auction.isLotBidding ? currentLotIndex : null;
