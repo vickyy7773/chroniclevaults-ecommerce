@@ -2017,24 +2017,38 @@ export const placeBid = async (req, res) => {
 
     // Check if auto-bid triggered and outbid the current user (proxy bid OR system reserve bid)
     if (autoBidTriggered || systemBidPlaced) {
-      // User got outbid by auto-bid - DON'T freeze their coins, send outbid notification instead
-      console.log(`🚨 AUTO-BID OUTBID: User ${userId} was immediately outbid by auto-bid, skipping freeze and sending notification`);
+      // Check if user is still the winner (reserve bidder) or got outbid
+      const isUserStillWinner = auction.reserveBidder && auction.reserveBidder.toString() === userId.toString();
 
-      const io = req.app.get('io');
-      const freezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+      if (isUserStillWinner) {
+        // User WON via auto-bidding - DON'T send outbid notification!
+        console.log(`✅ AUTO-BID WIN: User ${userId} won via auto-bidding at ₹${auction.currentBid}, reserve: ₹${auction.highestReserveBid}`);
+        // Freeze coins for the winning auto-bid
+        if (auction.isLotBidding) {
+          const freezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+          await freezeCoinsForLot(userId, auction._id, freezeLotNumber, auction.currentBid);
+          console.log(`🔒 LOT ${freezeLotNumber}: Froze ${auction.currentBid} coins for winning bidder ${userId}`);
+        }
+      } else {
+        // User got outbid by auto-bid - send outbid notification
+        console.log(`🚨 AUTO-BID OUTBID: User ${userId} was immediately outbid by auto-bid, skipping freeze and sending notification`);
 
-      if (io) {
-        const outbidData = {
-          auctionCoins: user.auctionCoins, // No change in coins since we didn't freeze
-          frozenCoins: 0,
-          reason: 'Outbid - coins refunded',
-          lotNumber: auction.isLotBidding ? freezeLotNumber : undefined,
-          auctionId: auction._id.toString()
-        };
+        const io = req.app.get('io');
+        const freezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
 
-        console.log(`💰 AUTO-BID OUTBID: Emitting to room 'user-${userId.toString()}' with data:`, JSON.stringify(outbidData, null, 2));
-        io.to(`user-${userId.toString()}`).emit('coin-balance-updated', outbidData);
-        console.log(`✅ AUTO-BID OUTBID: Event emitted successfully`);
+        if (io) {
+          const outbidData = {
+            auctionCoins: user.auctionCoins, // No change in coins since we didn't freeze
+            frozenCoins: 0,
+            reason: 'Outbid - coins refunded',
+            lotNumber: auction.isLotBidding ? freezeLotNumber : undefined,
+            auctionId: auction._id.toString()
+          };
+
+          console.log(`💰 AUTO-BID OUTBID: Emitting to room 'user-${userId.toString()}' with data:`, JSON.stringify(outbidData, null, 2));
+          io.to(`user-${userId.toString()}`).emit('coin-balance-updated', outbidData);
+          console.log(`✅ AUTO-BID OUTBID: Event emitted successfully`);
+        }
       }
     } else {
       // Normal bid - freeze the coins
