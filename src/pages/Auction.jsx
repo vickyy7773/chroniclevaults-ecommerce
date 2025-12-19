@@ -110,13 +110,13 @@ const AuctionPage = () => {
     const isProduction = backendUrl.includes('chroniclevaults.com');
 
     socketRef.current = io(backendUrl, {
-      transports: ['polling', 'websocket'], // Allow both in production for better reliability
+      transports: ['polling'], // Use polling only - server doesn't support websocket properly
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       reconnectionAttempts: Infinity, // NEVER give up reconnecting!
       path: '/socket.io',
-      upgrade: true, // Always allow upgrade to websocket
+      upgrade: false, // Disable websocket upgrade - server blocking it
       forceNew: false,
       timeout: 20000,
       autoConnect: true,
