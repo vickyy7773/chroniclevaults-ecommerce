@@ -224,6 +224,15 @@ const auctionSchema = new mongoose.Schema({
       ref: 'User',
       default: null
     },
+    reserveBidder: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null // User with highest reserve bid for THIS lot
+    },
+    highestReserveBid: {
+      type: Number,
+      default: null // Highest reserve bid for THIS lot (hidden from users)
+    },
     status: {
       type: String,
       enum: ['Upcoming', 'Active', 'Sold', 'Unsold', 'Ended'],
