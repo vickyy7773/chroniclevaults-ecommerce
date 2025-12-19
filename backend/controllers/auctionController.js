@@ -1636,8 +1636,11 @@ export const placeBid = async (req, res) => {
 
     // If user is placing a reserve bid (maxBid)
     if (maxBid) {
+      console.log(`🔍 RESERVE BID CHECK: maxBid=${maxBid}, existing highestReserveBid=${auction.highestReserveBid}, amount=${amount}`);
+
       // Check if there's an existing higher reserve bid
       if (auction.highestReserveBid && maxBid <= auction.highestReserveBid) {
+        console.log(`❌ NEW maxBid (${maxBid}) <= EXISTING reserve (${auction.highestReserveBid}) - Will place normal bid and trigger auto-bid`);
         // User's reserve bid is lower than existing reserve bid
         // Place the normal bid only
 
@@ -1668,6 +1671,7 @@ export const placeBid = async (req, res) => {
         auction.currentBid = amount;
         auction.totalBids = auction.bids.length;
       } else {
+        console.log(`✅ NEW maxBid (${maxBid}) > EXISTING reserve (${auction.highestReserveBid || 'none'}) - Will place bid and check for auto-bid`);
         // User's reserve bid is higher than existing reserve bid (or no existing reserve bid)
         // First, place the current bid
 
@@ -1699,7 +1703,9 @@ export const placeBid = async (req, res) => {
         auction.totalBids = auction.bids.length;
 
         // If there was a previous reserve bid, automatically jump to that amount
+        console.log(`🔍 CHECKING AUTO-BID: highestReserveBid=${auction.highestReserveBid}, amount=${amount}, should auto-bid? ${auction.highestReserveBid && auction.highestReserveBid > amount}`);
         if (auction.highestReserveBid && auction.highestReserveBid > amount) {
+          console.log(`🚀 AUTO-BID TRIGGERED! Old reserve: ₹${auction.highestReserveBid}, New bid: ₹${amount}, Will jump to ₹${auction.highestReserveBid}`);
           previousReserveBidAmount = auction.highestReserveBid;
 
           // OUTBID NOTIFICATION: Previous reserve bidder is being overtaken
