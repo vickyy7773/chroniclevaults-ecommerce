@@ -1741,13 +1741,23 @@ export const placeBid = async (req, res) => {
         // First, place the current bid
 
         // Calculate minimum bid (for proxy bidding, place minimum not full amount)
-        const currentBidAmount = (auction.isLotBidding && currentLot) ? currentLot.currentBid : auction.currentBid;
-        const minBidRequired = currentBidAmount ? currentBidAmount + auction.getCurrentIncrement() : (currentLot?.startingPrice || auction.startingPrice || 0);
+        // IMPORTANT: Check if there are ACTUAL bids, not just if currentBid is set
+        const hasBids = (auction.isLotBidding && currentLot)
+          ? (currentLot.bids && currentLot.bids.length > 0)
+          : (auction.bids && auction.bids.length > 0);
+
+        const currentBidAmount = hasBids
+          ? ((auction.isLotBidding && currentLot) ? currentLot.currentBid : auction.currentBid)
+          : 0;
+
+        const minBidRequired = (currentBidAmount && currentBidAmount > 0)
+          ? currentBidAmount + auction.getCurrentIncrement()
+          : (currentLot?.startingPrice || auction.startingPrice || 0);
 
         // If maxBid provided and significantly higher than minimum, place minimum (proxy bidding)
         const bidAmountToPlace = (maxBid && maxBid > minBidRequired) ? minBidRequired : amount;
 
-        console.log(`💰 PROXY BID CALC: amount=${amount}, maxBid=${maxBid}, minRequired=${minBidRequired}, placing=${bidAmountToPlace}`);
+        console.log(`💰 PROXY BID CALC: hasBids=${hasBids}, amount=${amount}, maxBid=${maxBid}, currentBid=${currentBidAmount}, minRequired=${minBidRequired}, placing=${bidAmountToPlace}`);
 
         if (auction.isLotBidding && currentLot) {
           // LOT BIDDING: Place bid in current lot's bids array
