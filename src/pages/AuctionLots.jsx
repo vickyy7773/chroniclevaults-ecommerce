@@ -415,10 +415,10 @@ const AuctionLots = () => {
       let actualBid = amount;
 
       if (amount > minBid) {
-        // User entered higher than minimum - place at entered amount (NOT minimum)
-        maxBid = amount;
-        actualBid = amount; // Place at exact entered amount
-        console.log(`🎯 BID PLACED: Amount ₹${actualBid.toLocaleString()}, Max ₹${maxBid.toLocaleString()}`);
+        // User entered higher than minimum - this is HIDDEN max reserve
+        maxBid = amount; // Hidden max for auto-bidding
+        actualBid = minBid; // Place MINIMUM publicly (hidden reserve)
+        console.log(`🎯 PROXY BID: Public ₹${actualBid.toLocaleString()}, Hidden max ₹${maxBid.toLocaleString()}`);
       }
 
       // Send lot number with bid for catalog phase, and maxBid for proxy bidding
@@ -441,11 +441,13 @@ const AuctionLots = () => {
         } else {
           console.log('✅ Setting bidStatus to SUCCESS for lot', lotNumber);
 
-          // Show success message with proxy bid info
-          if (maxBid) {
+          // Show success message
+          if (maxBid && maxBid > actualBid) {
+            // Only show "reserve" when maxBid is HIGHER than actualBid (hidden reserve exists)
             toast.success(`✅ Bid placed with reserve of ₹${maxBid.toLocaleString('en-IN')}! System will auto-bid up to this amount.`);
           } else {
-            toast.success('✅ Bid placed successfully!');
+            // Direct bid - show the amount placed
+            toast.success(`✅ Bid placed successfully at ₹${actualBid.toLocaleString('en-IN')}!`);
           }
 
           // Show success status on card (ONLY if not outbid)
