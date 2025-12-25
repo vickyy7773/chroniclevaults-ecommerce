@@ -2122,18 +2122,20 @@ export const placeBid = async (req, res) => {
     }
 
     // FREEZE/UNFREEZE LOGIC
-    // Find who was leading before this bid
-    let bidsBeforeThis;
-    if (auction.isLotBidding && currentLot) {
-      // LOT BIDDING: Check previous bids in current lot
-      bidsBeforeThis = currentLot.bids.slice(0, -1);
-    } else {
-      // NORMAL AUCTION: Check previous bids in main array
-      bidsBeforeThis = auction.bids.slice(0, -1);
-    }
+    // IMPORTANT: Skip if auto-bid was triggered, because we already handled freeze/unfreeze in auto-bid logic
+    if (!autoBidTriggered) {
+      // Find who was leading before this bid
+      let bidsBeforeThis;
+      if (auction.isLotBidding && currentLot) {
+        // LOT BIDDING: Check previous bids in current lot
+        bidsBeforeThis = currentLot.bids.slice(0, -1);
+      } else {
+        // NORMAL AUCTION: Check previous bids in main array
+        bidsBeforeThis = auction.bids.slice(0, -1);
+      }
 
-    let outbidUserId = null;
-    let outbidUserNewBalance = null;
+      let outbidUserId = null;
+      let outbidUserNewBalance = null;
 
     if (bidsBeforeThis.length > 0) {
       const sortedPrevBids = [...bidsBeforeThis].sort((a, b) => b.amount - a.amount);
@@ -2197,6 +2199,9 @@ export const placeBid = async (req, res) => {
           }
         }
       }
+    }
+    } else {
+      console.log(`⏭️  SKIP FREEZE/UNFREEZE: Auto-bid already handled freeze/unfreeze logic`);
     }
 
     // Update lastBidTime for Going, Going, Gone timer
