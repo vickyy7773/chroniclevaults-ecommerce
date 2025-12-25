@@ -2122,6 +2122,10 @@ export const placeBid = async (req, res) => {
     }
 
     // FREEZE/UNFREEZE LOGIC
+    // Declare variables OUTSIDE the if block so they're accessible later
+    let outbidUserId = null;
+    let outbidUserNewBalance = null;
+
     // IMPORTANT: Skip if auto-bid was triggered, because we already handled freeze/unfreeze in auto-bid logic
     if (!autoBidTriggered) {
       // Find who was leading before this bid
@@ -2133,9 +2137,6 @@ export const placeBid = async (req, res) => {
         // NORMAL AUCTION: Check previous bids in main array
         bidsBeforeThis = auction.bids.slice(0, -1);
       }
-
-      let outbidUserId = null;
-      let outbidUserNewBalance = null;
 
     if (bidsBeforeThis.length > 0) {
       const sortedPrevBids = [...bidsBeforeThis].sort((a, b) => b.amount - a.amount);
