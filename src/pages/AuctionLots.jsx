@@ -415,10 +415,10 @@ const AuctionLots = () => {
       let actualBid = amount;
 
       if (amount > minBid) {
-        // User entered higher than minimum - this is HIDDEN max reserve
-        maxBid = amount; // Hidden max for auto-bidding
-        actualBid = minBid; // Place MINIMUM publicly (hidden reserve)
-        console.log(`🎯 PROXY BID: Public ₹${actualBid.toLocaleString()}, Hidden max ₹${maxBid.toLocaleString()}`);
+        // User entered higher than minimum - send full amount to backend
+        maxBid = amount; // Send as max bid
+        actualBid = amount; // Send FULL entered amount (₹3,000 → backend will handle)
+        console.log(`🎯 BID: Sending ₹${actualBid.toLocaleString()} to backend`);
       }
 
       // Send lot number with bid for catalog phase, and maxBid for proxy bidding
