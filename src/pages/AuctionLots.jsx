@@ -443,8 +443,12 @@ const AuctionLots = () => {
         } else {
           console.log('✅ Setting bidStatus to SUCCESS for lot', lotNumber);
 
-          // Show success message (don't reveal reserve amount)
-          toast.success('✅ Bid placed successfully!');
+          // Show success message with proxy bid info
+          if (maxBid) {
+            toast.success(`✅ Bid placed with reserve of ₹${maxBid.toLocaleString('en-IN')}! System will auto-bid up to this amount.`);
+          } else {
+            toast.success('✅ Bid placed successfully!');
+          }
 
           // Show success status on card (ONLY if not outbid)
           setBidStatus(prev => {
