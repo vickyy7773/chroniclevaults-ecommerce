@@ -395,8 +395,15 @@ const AuctionLots = () => {
       minBid = lot.startingPrice || lot.estimatedPrice?.min || 0;
     }
 
+    // Validation 1: Minimum bid check
     if (amount < minBid) {
       toast.error(`Minimum bid is ₹${minBid.toLocaleString('en-IN')}`);
+      return;
+    }
+
+    // Validation 2: Must be divisible by 50
+    if (amount % 50 !== 0) {
+      toast.error('Bid amount must be divisible by ₹50 (e.g., ₹1050, ₹1100, ₹2000)');
       return;
     }
 

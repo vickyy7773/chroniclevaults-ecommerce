@@ -731,6 +731,12 @@ const AuctionPage = () => {
         toast.error(`Minimum bid is ₹${minBid.toLocaleString()}`);
         return;
       }
+
+      // Must be divisible by 50
+      if (amount % 50 !== 0) {
+        toast.error('Bid amount must be divisible by ₹50');
+        return;
+      }
     } else {
       // NORMAL AUCTION: Use increment slab validation
       const currentIncrement = getCurrentIncrement(auction);
@@ -741,6 +747,12 @@ const AuctionPage = () => {
 
       if (amount < minBid) {
         toast.error(`Minimum bid is ₹${minBid.toLocaleString()}`);
+        return;
+      }
+
+      // Must be divisible by 50
+      if (amount % 50 !== 0) {
+        toast.error('Bid amount must be divisible by ₹50');
         return;
       }
     }
