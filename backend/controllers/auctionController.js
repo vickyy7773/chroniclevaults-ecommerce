@@ -1777,10 +1777,24 @@ export const placeBid = async (req, res) => {
           ? currentBidAmount + auction.getCurrentIncrement()
           : (currentLot?.startingPrice || auction.startingPrice || 0);
 
-        // If maxBid provided and significantly higher than minimum, place minimum (proxy bidding)
-        const bidAmountToPlace = (maxBid && maxBid > minBidRequired) ? minBidRequired : amount;
+        // SMART PROXY BIDDING: Only use proxy bidding if maxBid is SIGNIFICANTLY higher than minimum
+        // If user's bid is close to minimum (within 3 increments), place the FULL amount (regular bid)
+        // If user's bid is much higher (more than 3 increments), place minimum (proxy bid)
+        const increment = auction.getCurrentIncrement();
+        const proxyThreshold = minBidRequired + (increment * 3); // 3 increments above minimum
 
-        console.log(`💰 PROXY BID CALC: hasBids=${hasBids}, amount=${amount}, maxBid=${maxBid}, currentBid=${currentBidAmount}, minRequired=${minBidRequired}, placing=${bidAmountToPlace}`);
+        let bidAmountToPlace;
+        if (maxBid && maxBid > proxyThreshold) {
+          // PROXY BIDDING: Amount is much higher, place minimum
+          bidAmountToPlace = minBidRequired;
+          console.log(`🎯 PROXY BID: User bid ₹${amount} is >> minimum ₹${minBidRequired}, placing minimum`);
+        } else {
+          // REGULAR BID: Amount is close to minimum, place full amount
+          bidAmountToPlace = amount;
+          console.log(`💰 REGULAR BID: User bid ₹${amount} is close to minimum ₹${minBidRequired}, placing full amount`);
+        }
+
+        console.log(`💰 BID CALC: hasBids=${hasBids}, amount=${amount}, maxBid=${maxBid}, currentBid=${currentBidAmount}, minRequired=${minBidRequired}, threshold=${proxyThreshold}, placing=${bidAmountToPlace}`);
 
         if (auction.isLotBidding && currentLot) {
           // LOT BIDDING: Place bid in current lot's bids array
