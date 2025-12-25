@@ -792,7 +792,7 @@ const AuctionLots = () => {
                           </>
                         ) : (
                           <>
-                            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Starting Price</p>
+                            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Opening Bid</p>
                             <p className="text-xl font-bold text-gray-900">₹{(lot.startingPrice || lot.estimatedPrice?.min || 0).toLocaleString('en-IN')}</p>
                           </>
                         )}
