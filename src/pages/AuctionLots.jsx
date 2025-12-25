@@ -415,12 +415,10 @@ const AuctionLots = () => {
       let actualBid = amount;
 
       if (amount > minBid) {
-        // User entered higher than minimum - this becomes their maximum bid (hidden)
+        // User entered higher than minimum - place at entered amount (NOT minimum)
         maxBid = amount;
-
-        // Proxy bidding: Place minimum publicly, keep max hidden
-        actualBid = minBid;
-        console.log(`🎯 PROXY BID: Public bid ₹${actualBid.toLocaleString()}, Hidden max ₹${maxBid.toLocaleString()}`);
+        actualBid = amount; // Place at exact entered amount
+        console.log(`🎯 BID PLACED: Amount ₹${actualBid.toLocaleString()}, Max ₹${maxBid.toLocaleString()}`);
       }
 
       // Send lot number with bid for catalog phase, and maxBid for proxy bidding
