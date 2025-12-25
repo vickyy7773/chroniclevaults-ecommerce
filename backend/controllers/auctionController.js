@@ -1740,31 +1740,40 @@ export const placeBid = async (req, res) => {
         // User's reserve bid is higher than existing reserve bid (or no existing reserve bid)
         // First, place the current bid
 
+        // Calculate minimum bid (for proxy bidding, place minimum not full amount)
+        const currentBidAmount = (auction.isLotBidding && currentLot) ? currentLot.currentBid : auction.currentBid;
+        const minBidRequired = currentBidAmount ? currentBidAmount + auction.getCurrentIncrement() : (currentLot?.startingPrice || auction.startingPrice || 0);
+
+        // If maxBid provided and significantly higher than minimum, place minimum (proxy bidding)
+        const bidAmountToPlace = (maxBid && maxBid > minBidRequired) ? minBidRequired : amount;
+
+        console.log(`💰 PROXY BID CALC: amount=${amount}, maxBid=${maxBid}, minRequired=${minBidRequired}, placing=${bidAmountToPlace}`);
+
         if (auction.isLotBidding && currentLot) {
           // LOT BIDDING: Place bid in current lot's bids array
           currentLot.bids.push({
             user: userId,
-            amount,
+            amount: bidAmountToPlace,  // Place minimum for proxy bids
             maxBid: maxBid,
-            isReserveBidder: false,
+            isReserveBidder: true,  // This is a reserve bidder
             isAutoBid: false,
             isCatalogBid: isInCatalogPhase,
             timestamp: new Date()
           });
-          currentLot.currentBid = amount;
+          currentLot.currentBid = bidAmountToPlace;  // Set current bid to minimum
         } else {
           // NORMAL AUCTION: Place in main bids array
           auction.bids.push({
             user: userId,
-            amount,
+            amount: bidAmountToPlace,  // Place minimum for proxy bids
             maxBid: maxBid,
-            isReserveBidder: false,
+            isReserveBidder: true,  // This is a reserve bidder
             isAutoBid: false,
             isCatalogBid: isInCatalogPhase
           });
         }
 
-        auction.currentBid = amount;
+        auction.currentBid = bidAmountToPlace;  // Set current bid to minimum
         auction.totalBids = auction.bids.length;
 
         // If there was a previous reserve bid, automatically jump to that amount
