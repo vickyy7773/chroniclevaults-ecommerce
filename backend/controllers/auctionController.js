@@ -1786,9 +1786,110 @@ export const placeBid = async (req, res) => {
         auction.currentBid = bidAmountToPlace;  // Set current bid to minimum
         auction.totalBids = auction.bids.length;
 
-        // If there was a previous reserve bid, automatically jump to that amount
-        console.log(`🔍 CHECKING AUTO-BID: highestReserveBid=${existingHighestReserveBid}, amount=${amount}, should auto-bid? ${existingHighestReserveBid && existingHighestReserveBid > amount}`);
-        if (existingHighestReserveBid && existingHighestReserveBid > amount) {
+        // PROXY BIDDING AUTO-BID LOGIC
+        // Case 1: New reserve bid is HIGHER than existing reserve (e.g., ₹20,000 vs ₹10,000)
+        // Case 2: Existing reserve is HIGHER than new bid (e.g., ₹10,000 vs ₹5,000)
+        console.log(`🔍 CHECKING AUTO-BID: existingReserve=${existingHighestReserveBid}, newMaxBid=${maxBid}, newAmount=${amount}`);
+
+        if (existingHighestReserveBid && existingReserveBidder && existingReserveBidder.toString() !== userId.toString()) {
+          // There's an existing reserve bidder (different from current user)
+          const increment = auction.getCurrentIncrement();
+
+          if (maxBid > existingHighestReserveBid) {
+            // CASE 1: New reserve bid BEATS old reserve bid
+            // Example: Old reserve ₹10,000, New reserve ₹20,000
+            // Action: Reveal old reserve (₹10,000), auto-bid new bidder to ₹10,100
+            console.log(`🚀 NEW RESERVE BEATS OLD! Old: ₹${existingHighestReserveBid}, New: ₹${maxBid}`);
+
+            // Unfreeze old reserve bidder's coins
+            const io = req.app.get('io');
+            if (auction.isLotBidding) {
+              const unfreezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+              const unfreezeResult = await unfreezeCoinsForLot(existingReserveBidder, auction._id, unfreezeLotNumber);
+              if (unfreezeResult.success && unfreezeResult.unfrozenAmount > 0) {
+                console.log(`🔓 OLD RESERVE OUTBID - LOT ${unfreezeLotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for ${existingReserveBidder}`);
+                if (io) {
+                  io.to(`user-${existingReserveBidder.toString()}`).emit('coin-balance-updated', {
+                    auctionCoins: unfreezeResult.user.auctionCoins,
+                    frozenCoins: unfreezeResult.user.frozenCoins,
+                    reason: 'Outbid - coins refunded',
+                    lotNumber: unfreezeLotNumber,
+                    auctionId: auction._id.toString()
+                  });
+                }
+              }
+            } else {
+              const oldReserveBidderUser = await User.findById(existingReserveBidder);
+              if (oldReserveBidderUser && oldReserveBidderUser.frozenCoins > 0) {
+                oldReserveBidderUser.auctionCoins += oldReserveBidderUser.frozenCoins;
+                oldReserveBidderUser.frozenCoins = 0;
+                await oldReserveBidderUser.save();
+                if (io) {
+                  io.to(`user-${existingReserveBidder.toString()}`).emit('coin-balance-updated', {
+                    auctionCoins: oldReserveBidderUser.auctionCoins,
+                    frozenCoins: oldReserveBidderUser.frozenCoins,
+                    reason: 'Outbid - coins refunded',
+                    auctionId: auction._id.toString()
+                  });
+                }
+              }
+            }
+
+            // STEP 1: Reveal old reserve bidder's max bid
+            if (auction.isLotBidding && currentLot) {
+              currentLot.bids.push({
+                user: existingReserveBidder,
+                amount: existingHighestReserveBid,
+                maxBid: existingHighestReserveBid,
+                isReserveBidder: true,
+                isAutoBid: true,
+                isCatalogBid: isInCatalogPhase,
+                timestamp: new Date()
+              });
+              currentLot.currentBid = existingHighestReserveBid;
+            } else {
+              auction.bids.push({
+                user: existingReserveBidder,
+                amount: existingHighestReserveBid,
+                maxBid: existingHighestReserveBid,
+                isReserveBidder: true,
+                isAutoBid: true,
+                isCatalogBid: isInCatalogPhase
+              });
+            }
+            auction.currentBid = existingHighestReserveBid;
+            auction.totalBids = auction.bids.length;
+
+            // STEP 2: Auto-bid new bidder one increment higher
+            const winningBidAmount = existingHighestReserveBid + increment;
+            if (auction.isLotBidding && currentLot) {
+              currentLot.bids.push({
+                user: userId,
+                amount: winningBidAmount,
+                maxBid: maxBid,
+                isReserveBidder: true,
+                isAutoBid: true,
+                isCatalogBid: isInCatalogPhase,
+                timestamp: new Date()
+              });
+              currentLot.currentBid = winningBidAmount;
+            } else {
+              auction.bids.push({
+                user: userId,
+                amount: winningBidAmount,
+                maxBid: maxBid,
+                isReserveBidder: true,
+                isAutoBid: true,
+                isCatalogBid: isInCatalogPhase
+              });
+            }
+            auction.currentBid = winningBidAmount;
+            auction.totalBids = auction.bids.length;
+            autoBidTriggered = true;
+
+            console.log(`✅ NEW RESERVE WINS: Old ₹${existingHighestReserveBid} revealed, New bidder at ₹${winningBidAmount}, New reserve ₹${maxBid}`);
+          } else if (existingHighestReserveBid > amount) {
+            // CASE 2: Existing reserve is higher than new bid (original logic)
           console.log(`🚀 AUTO-BID TRIGGERED! Old reserve: ₹${existingHighestReserveBid}, New bid: ₹${amount}, Will jump to ₹${existingHighestReserveBid}`);
           previousReserveBidAmount = existingHighestReserveBid;
 
@@ -1906,6 +2007,7 @@ export const placeBid = async (req, res) => {
           auction.currentBid = finalBidAmount;
           auction.totalBids = auction.bids.length;
           autoBidTriggered = true;
+          }
         }
 
         // Update the highest reserve bid and reserve bidder
