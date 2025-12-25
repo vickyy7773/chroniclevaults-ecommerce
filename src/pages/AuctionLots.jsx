@@ -765,17 +765,9 @@ const AuctionLots = () => {
                         <p className="text-xs font-semibold text-black uppercase mb-1">Estimated Price</p>
                         <p className="text-lg font-bold text-black">
                           {(() => {
-                            // Both prices exist and are greater than 0
-                            if (lot.startingPrice > 0 && lot.reservePrice > 0) {
-                              return `₹${lot.startingPrice.toLocaleString('en-IN')} - ₹${lot.reservePrice.toLocaleString('en-IN')}`;
-                            }
-                            // Only starting price exists
-                            else if (lot.startingPrice > 0) {
+                            // Show starting price if available
+                            if (lot.startingPrice > 0) {
                               return `₹${lot.startingPrice.toLocaleString('en-IN')}`;
-                            }
-                            // Only reserve price exists (rare case)
-                            else if (lot.reservePrice > 0) {
-                              return `₹${lot.reservePrice.toLocaleString('en-IN')}`;
                             }
                             // Fallback to estimated price
                             else if (lot.estimatedPrice?.min && lot.estimatedPrice?.max) {
