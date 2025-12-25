@@ -760,9 +760,9 @@ const AuctionLots = () => {
                   {/* Pricing and Bidding */}
                   <div className="md:col-span-1">
                     <div className="space-y-4">
-                      {/* Opening Bid */}
+                      {/* Estimated Price */}
                       <div>
-                        <p className="text-xs font-semibold text-black uppercase mb-1">Opening Bid</p>
+                        <p className="text-xs font-semibold text-black uppercase mb-1">Estimated Price</p>
                         <p className="text-lg font-bold text-black">
                           {(() => {
                             // Show starting price if available
