@@ -1647,7 +1647,30 @@ export const placeBid = async (req, res) => {
     if (maxBid) {
       console.log(`🔍 RESERVE BID CHECK: maxBid=${maxBid}, existing highestReserveBid=${existingHighestReserveBid}, amount=${amount}, isLotBidding=${auction.isLotBidding}, lotNumber=${lotNumber}`);
 
-      // Check if there's an existing higher reserve bid
+      // SPECIAL CASE: Same user updating their own reserve bid
+      if (existingReserveBidder && existingReserveBidder.toString() === userId.toString()) {
+        console.log(`🔄 SAME USER updating reserve: old ₹${existingHighestReserveBid} → new ₹${maxBid}`);
+
+        // Just update the reserve amount, don't place new bid
+        auction.highestReserveBid = maxBid;
+        auction.reserveBidder = userId;
+
+        if (auction.isLotBidding && currentLot) {
+          currentLot.highestReserveBid = maxBid;
+          currentLot.reserveBidder = userId;
+        }
+
+        await auction.save();
+
+        return res.json({
+          success: true,
+          message: `Reserve bid updated to ₹${maxBid.toLocaleString('en-IN')}`,
+          auction: auction.toJSON(),
+          updatedReserve: true
+        });
+      }
+
+      // Check if there's an existing higher reserve bid (from DIFFERENT user)
       if (existingHighestReserveBid && maxBid <= existingHighestReserveBid) {
         console.log(`❌ NEW maxBid (${maxBid}) <= EXISTING reserve (${existingHighestReserveBid}) - Will place normal bid and trigger auto-bid`);
         // User's reserve bid is lower than existing reserve bid
