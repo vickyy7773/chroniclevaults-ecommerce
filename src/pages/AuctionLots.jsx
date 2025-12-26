@@ -521,7 +521,7 @@ const AuctionLots = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
         <button
-          onClick={() => navigate(`/auction-catalog/${id}`)}
+          onClick={() => navigate(`/auction/${id}/catalog`)}
           className="flex items-center gap-2 text-gray-600 hover:text-accent-600 mb-6 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
