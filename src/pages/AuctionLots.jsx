@@ -518,6 +518,34 @@ const AuctionLots = () => {
           <span className="font-medium">Back to Catalog</span>
         </button>
 
+        {/* Auction Info Header */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Start:</p>
+              <p className="font-semibold text-gray-900">
+                {new Date(auction.startTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, {new Date(auction.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+              </p>
+            </div>
+            {currentUser && (
+              <div>
+                <p className="text-sm text-gray-600 mb-1">User:</p>
+                <p className="font-semibold text-gray-900">{currentUser.name || currentUser.email}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-sm text-gray-600 mb-1">ID:</p>
+              <p className="font-semibold text-gray-900">{auction.auctionCode || `AUC-${auction._id?.slice(-8)}`}</p>
+            </div>
+            {currentUser && (
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Coins:</p>
+                <p className="font-semibold text-green-600">₹{(currentUser.auctionCoins || 0).toLocaleString('en-IN')}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Filter Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Filter Lots</h3>
