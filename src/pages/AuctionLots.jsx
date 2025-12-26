@@ -310,6 +310,16 @@ const AuctionLots = () => {
         fullData: JSON.stringify(data)
       });
 
+      // Update currentUser's coin balance in real-time
+      if (currentUser && data.auctionCoins !== undefined) {
+        setCurrentUser(prev => ({
+          ...prev,
+          auctionCoins: data.auctionCoins,
+          frozenCoins: data.frozenCoins
+        }));
+        console.log('✅ Updated currentUser coins:', data.auctionCoins);
+      }
+
       if (data.reason === 'Outbid - coins refunded') {
         console.log('🚨 OUTBID DETECTED! Lot:', data.lotNumber);
 
