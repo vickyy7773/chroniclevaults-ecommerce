@@ -350,9 +350,31 @@ const AuctionLots = () => {
         }
       } else if (data.reason === 'Bid placed - coins deducted') {
         console.log('✅ Bid placed - coins deducted:', data.auctionCoins);
-        toast.info(`💰 Coins updated: ₹${data.auctionCoins.toLocaleString()} available`, {
+
+        // Show success notification
+        toast.success(`✅ Bid placed successfully! ₹${data.auctionCoins.toLocaleString()} coins remaining`, {
           autoClose: 3000
         });
+
+        // Show green SUCCESS indicator on card (auto-clears after 10 seconds)
+        if (data.lotNumber) {
+          console.log('🎨 Setting bidStatus to SUCCESS for lot', data.lotNumber);
+          setBidStatus(prev => {
+            const newStatus = { ...prev, [data.lotNumber]: 'success' };
+            console.log('🎨 New bidStatus:', newStatus);
+            return newStatus;
+          });
+
+          // Auto-clear success status after 10 seconds
+          setTimeout(() => {
+            setBidStatus(prev => {
+              const clearedStatus = { ...prev };
+              delete clearedStatus[data.lotNumber];
+              console.log('🧹 Auto-cleared success status for lot', data.lotNumber);
+              return clearedStatus;
+            });
+          }, 10000);
+        }
       } else {
         console.log('ℹ️ Other coin balance update:', data.reason);
       }
@@ -457,36 +479,13 @@ const AuctionLots = () => {
         const wasOutbid = response.data?.autoBidTriggered || response.data?.systemBidPlaced;
 
         if (wasOutbid) {
-          console.log('🚨 User was immediately outbid, NOT setting success status (outbid notification will come via socket)');
+          console.log('🚨 User was immediately outbid, status will be set via socket event');
         } else {
-          console.log('✅ Setting bidStatus to SUCCESS for lot', lotNumber);
-
-          // Show success message
-          if (maxBid && maxBid > actualBid) {
-            // Only show "reserve" when maxBid is HIGHER than actualBid (hidden reserve exists)
-            toast.success(`✅ Bid placed with reserve of ₹${maxBid.toLocaleString('en-IN')}! System will auto-bid up to this amount.`);
-          } else {
-            // Direct bid - show the amount placed
-            toast.success(`✅ Bid placed successfully at ₹${actualBid.toLocaleString('en-IN')}!`);
-          }
-
-          // Show success status on card (ONLY if not outbid, auto-clears after 10 seconds)
-          setBidStatus(prev => {
-            const newStatus = { ...prev, [lotNumber]: 'success' };
-            console.log('✅ New bidStatus:', newStatus);
-            return newStatus;
-          });
-
-          // Auto-clear success status after 10 seconds
-          setTimeout(() => {
-            setBidStatus(prev => {
-              const clearedStatus = { ...prev };
-              delete clearedStatus[lotNumber];
-              console.log('🧹 Auto-cleared success status for lot', lotNumber);
-              return clearedStatus;
-            });
-          }, 10000);
+          console.log('✅ Bid placed successfully, status will be set via coin-balance-updated socket event');
         }
+
+        // Don't set success status here - let the coin-balance-updated event handle it
+        // This ensures consistent status updates based on coin deduction/refund
 
         // Clear the bid amount for this lot
         setBidAmounts(prev => ({ ...prev, [lotNumber]: '' }));
