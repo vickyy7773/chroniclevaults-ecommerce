@@ -59,39 +59,6 @@ const UserDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-gray-700 to-gray-800 text-white py-6 px-8">
-        <h1 className="text-3xl font-bold">My Account</h1>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-300">
-        <div className="container mx-auto px-4">
-          <div className="flex space-x-2 overflow-x-auto">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = tab.id === activeTab;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabClick(tab)}
-                  className={`px-6 py-3 font-semibold text-sm whitespace-nowrap border-b-4 transition-all ${
-                    isActive
-                      ? 'bg-amber-800 text-white border-amber-900'
-                      : 'bg-gray-200 text-gray-700 border-transparent hover:bg-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon className="w-4 h-4" />
-                    <span>{tab.label}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Page Size Selector */}
@@ -114,7 +81,7 @@ const UserDashboard = () => {
         {/* Auction Wise Bidding Limit Information Table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Table Header */}
-          <div className="bg-blue-300 text-gray-800 py-3 px-4">
+          <div className="bg-accent-100 text-gray-800 py-3 px-4">
             <h2 className="text-lg font-semibold text-center">
               Auction Wise Bidding Limit Information
             </h2>
@@ -123,12 +90,12 @@ const UserDashboard = () => {
           {/* Table */}
           {loading ? (
             <div className="flex justify-center items-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-600"></div>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-blue-200">
+                <thead className="bg-accent-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
                       Auction no.
