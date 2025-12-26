@@ -101,7 +101,8 @@ const AppContent = () => {
                           location.pathname === '/checkout' ||
                           location.pathname === '/profile' ||
                           location.pathname.startsWith('/admin') ||
-                          location.pathname.startsWith('/auction/');
+                          location.pathname.startsWith('/auction/') ||
+                          location.pathname.startsWith('/auction-lots/');
 
   // Show shopping features (search, cart, wishlist) on all pages
   const hideShoppingFeatures = false;
