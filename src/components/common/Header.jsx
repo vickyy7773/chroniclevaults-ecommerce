@@ -108,7 +108,7 @@ const Header = ({
 
   // Generate navigation links dynamically from categories or auction-specific links
   const navigationLinks = isAuctionsPage ? [
-    { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/userdashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/my-bidding', label: 'My Bidding', icon: Gavel },
     { to: '/my-watchlist', label: 'My Watchlist', icon: Eye },
     { to: '/my-wantlist', label: 'My WantList', icon: List },
