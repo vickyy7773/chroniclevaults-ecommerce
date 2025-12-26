@@ -95,42 +95,6 @@ const AuctionsPage = () => {
         </div>
       </div>
 
-      {/* Auction Navigation Menu */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="container mx-auto px-4">
-          <nav className="flex items-center justify-center space-x-1 py-4">
-            <button
-              onClick={() => navigate('/admin/dashboard')}
-              className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:text-accent-600 hover:bg-accent-50 rounded-lg transition-all font-medium"
-            >
-              <LayoutDashboard className="w-5 h-5" />
-              <span>Dashboard</span>
-            </button>
-            <button
-              onClick={() => navigate('/my-bidding')}
-              className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:text-accent-600 hover:bg-accent-50 rounded-lg transition-all font-medium"
-            >
-              <Gavel className="w-5 h-5" />
-              <span>My Bidding</span>
-            </button>
-            <button
-              onClick={() => navigate('/my-invoice')}
-              className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:text-accent-600 hover:bg-accent-50 rounded-lg transition-all font-medium"
-            >
-              <FileText className="w-5 h-5" />
-              <span>My Invoice</span>
-            </button>
-            <button
-              onClick={() => navigate('/profile')}
-              className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:text-accent-600 hover:bg-accent-50 rounded-lg transition-all font-medium"
-            >
-              <User className="w-5 h-5" />
-              <span>My Profile</span>
-            </button>
-          </nav>
-        </div>
-      </div>
-
       <div className="container mx-auto px-4 py-8">
         {/* Filter Tabs */}
         <div className="flex items-center justify-center space-x-2 mb-8">
