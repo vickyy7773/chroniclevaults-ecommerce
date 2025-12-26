@@ -37,7 +37,13 @@ const Header = ({
 
   // Check if current page is home page or auctions page
   const isHomePage = location.pathname === '/';
-  const isAuctionsPage = location.pathname === '/auctions';
+  const isAuctionsPage = location.pathname === '/auctions' ||
+                         location.pathname === '/userdashboard' ||
+                         location.pathname === '/my-bidding' ||
+                         location.pathname === '/my-watchlist' ||
+                         location.pathname === '/my-wantlist' ||
+                         location.pathname === '/my-invoice' ||
+                         (location.pathname === '/profile' && document.referrer.includes('/auctions'));
 
   // Fetch categories from API
   useEffect(() => {
