@@ -462,22 +462,10 @@ const AuctionLots = () => {
         const wasOutbid = response.data?.autoBidTriggered || response.data?.systemBidPlaced;
 
         if (wasOutbid) {
-          console.log('🚨 User was immediately outbid');
+          console.log('🚨 User was immediately outbid - socket event will handle status display');
 
-          // When immediately outbid, show REGULAR bid success (not reserve bid success)
-          // Then socket event will overwrite with outbid status
-          setBidStatus(prev => {
-            const newStatus = { ...prev, [lotNumber]: 'success' };
-            console.log(`🎨 Setting bidStatus to SUCCESS (immediately outbid) for lot`, lotNumber);
-            return newStatus;
-          });
-
-          // Show regular success toast (NOT reserve bid toast)
-          toast.success(`✅ Bid placed successfully!`, {
-            autoClose: 2000
-          });
-
-          // Socket event will soon overwrite with outbid status
+          // DON'T set any status here - socket event has already set or will set outbid status
+          // Setting status here would overwrite the outbid status from socket event (race condition)
         } else {
           console.log('✅ Bid placed successfully');
 
