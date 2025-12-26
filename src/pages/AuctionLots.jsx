@@ -351,30 +351,9 @@ const AuctionLots = () => {
       } else if (data.reason === 'Bid placed - coins deducted') {
         console.log('✅ Bid placed - coins deducted:', data.auctionCoins);
 
-        // Show success notification
-        toast.success(`✅ Bid placed successfully! ₹${data.auctionCoins.toLocaleString()} coins remaining`, {
-          autoClose: 3000
-        });
-
-        // Show green SUCCESS indicator on card (auto-clears after 10 seconds)
-        if (data.lotNumber) {
-          console.log('🎨 Setting bidStatus to SUCCESS for lot', data.lotNumber);
-          setBidStatus(prev => {
-            const newStatus = { ...prev, [data.lotNumber]: 'success' };
-            console.log('🎨 New bidStatus:', newStatus);
-            return newStatus;
-          });
-
-          // Auto-clear success status after 10 seconds
-          setTimeout(() => {
-            setBidStatus(prev => {
-              const clearedStatus = { ...prev };
-              delete clearedStatus[data.lotNumber];
-              console.log('🧹 Auto-cleared success status for lot', data.lotNumber);
-              return clearedStatus;
-            });
-          }, 10000);
-        }
+        // Success indicator already shown in handleBid when API response succeeds
+        // This socket event just confirms the coin deduction happened
+        // No need to show duplicate notification or status update
       } else {
         console.log('ℹ️ Other coin balance update:', data.reason);
       }
@@ -455,12 +434,16 @@ const AuctionLots = () => {
       // PROXY BIDDING LOGIC: If amount > minBid, treat as reserve/max bid
       let maxBid = null;
       let actualBid = amount;
+      let isReserveBid = false;
 
       if (amount > minBid) {
         // Send FULL amount - backend will handle reserve/proxy logic
         maxBid = amount; // Max for auto-bidding
         actualBid = amount; // FULL amount (backend decides if reserve or regular)
-        console.log(`🎯 SENDING: Amount ₹${actualBid.toLocaleString()}, MaxBid ₹${maxBid.toLocaleString()}`);
+        isReserveBid = true;
+        console.log(`🎯 SENDING RESERVE BID: Amount ₹${actualBid.toLocaleString()}, MaxBid ₹${maxBid.toLocaleString()}`);
+      } else {
+        console.log(`🎯 SENDING REGULAR BID: Amount ₹${actualBid.toLocaleString()}`);
       }
 
       // Send lot number with bid for catalog phase, and maxBid for proxy bidding
@@ -481,11 +464,36 @@ const AuctionLots = () => {
         if (wasOutbid) {
           console.log('🚨 User was immediately outbid, status will be set via socket event');
         } else {
-          console.log('✅ Bid placed successfully, status will be set via coin-balance-updated socket event');
-        }
+          console.log('✅ Bid placed successfully');
 
-        // Don't set success status here - let the coin-balance-updated event handle it
-        // This ensures consistent status updates based on coin deduction/refund
+          // Show success indicator immediately - different status for reserve vs regular bids
+          setBidStatus(prev => {
+            const newStatus = { ...prev, [lotNumber]: isReserveBid ? 'reserve-success' : 'success' };
+            console.log(`🎨 Setting bidStatus to ${isReserveBid ? 'RESERVE-SUCCESS' : 'SUCCESS'} for lot`, lotNumber);
+            return newStatus;
+          });
+
+          // Auto-clear success status after 10 seconds
+          setTimeout(() => {
+            setBidStatus(prev => {
+              const clearedStatus = { ...prev };
+              delete clearedStatus[lotNumber];
+              console.log('🧹 Auto-cleared success status for lot', lotNumber);
+              return clearedStatus;
+            });
+          }, 10000);
+
+          // Show success toast notification with different message for reserve bids
+          if (isReserveBid) {
+            toast.success(`🎯 Reserve Bid Placed Successfully! Max bid: ₹${actualBid.toLocaleString()}`, {
+              autoClose: 3000
+            });
+          } else {
+            toast.success(`✅ Bid placed successfully!`, {
+              autoClose: 3000
+            });
+          }
+        }
 
         // Clear the bid amount for this lot
         setBidAmounts(prev => ({ ...prev, [lotNumber]: '' }));
@@ -860,11 +868,14 @@ const AuctionLots = () => {
                         <div className={`p-3 rounded-lg text-center font-bold text-sm animate-pulse ${
                           bidStatus[lot.lotNumber] === 'success'
                             ? 'bg-green-100 text-green-800 border-2 border-green-400'
+                            : bidStatus[lot.lotNumber] === 'reserve-success'
+                            ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
                             : bidStatus[lot.lotNumber] === 'outbid'
                             ? 'bg-red-100 text-red-800 border-2 border-red-400'
-                            : 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                            : 'bg-purple-100 text-purple-800 border-2 border-purple-400'
                         }`}>
                           {bidStatus[lot.lotNumber] === 'success' && '✅ Bid Placed Successfully!'}
+                          {bidStatus[lot.lotNumber] === 'reserve-success' && '🎯 Reserve Bid Placed Successfully!'}
                           {bidStatus[lot.lotNumber] === 'outbid' && '⚠️ You Are Outbid!'}
                           {bidStatus[lot.lotNumber] === 'winning' && '🎉 You Are Winning!'}
                         </div>
@@ -877,6 +888,12 @@ const AuctionLots = () => {
                           placeholder="Enter bid amount"
                           value={bidAmounts[lot.lotNumber] || ''}
                           onChange={(e) => setBidAmounts(prev => ({ ...prev, [lot.lotNumber]: e.target.value }))}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handlePlaceBid(lot.lotNumber);
+                            }
+                          }}
                           className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                           disabled={submittingBid[lot.lotNumber]}
                         />
@@ -884,7 +901,11 @@ const AuctionLots = () => {
 
                       {/* Submit Bid Button */}
                       <button
-                        onClick={() => handlePlaceBid(lot.lotNumber)}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePlaceBid(lot.lotNumber);
+                        }}
                         disabled={submittingBid[lot.lotNumber]}
                         className="w-full px-4 py-2.5 bg-accent-600 text-white rounded hover:bg-accent-700 transition-colors font-semibold flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
                       >
