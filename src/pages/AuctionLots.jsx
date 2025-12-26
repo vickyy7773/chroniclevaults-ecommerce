@@ -464,26 +464,20 @@ const AuctionLots = () => {
         if (wasOutbid) {
           console.log('🚨 User was immediately outbid');
 
-          // For reserve bids, STILL show success message briefly before outbid status arrives
-          if (isReserveBid) {
-            console.log('🎯 Showing reserve bid success before outbid notification');
+          // When immediately outbid, show REGULAR bid success (not reserve bid success)
+          // Then socket event will overwrite with outbid status
+          setBidStatus(prev => {
+            const newStatus = { ...prev, [lotNumber]: 'success' };
+            console.log(`🎨 Setting bidStatus to SUCCESS (immediately outbid) for lot`, lotNumber);
+            return newStatus;
+          });
 
-            // Show reserve bid success for 2 seconds before socket event overwrites with outbid
-            setBidStatus(prev => {
-              const newStatus = { ...prev, [lotNumber]: 'reserve-success' };
-              console.log(`🎨 Setting bidStatus to RESERVE-SUCCESS for lot`, lotNumber);
-              return newStatus;
-            });
+          // Show regular success toast (NOT reserve bid toast)
+          toast.success(`✅ Bid placed successfully!`, {
+            autoClose: 2000
+          });
 
-            // Show toast notification
-            toast.success(`🎯 Reserve Bid Placed Successfully! Max bid: ₹${actualBid.toLocaleString()}`, {
-              autoClose: 2000
-            });
-
-            // Socket event will overwrite with outbid status
-          } else {
-            console.log('❌ Regular bid immediately outbid, waiting for socket event');
-          }
+          // Socket event will soon overwrite with outbid status
         } else {
           console.log('✅ Bid placed successfully');
 
