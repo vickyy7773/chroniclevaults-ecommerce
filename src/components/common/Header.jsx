@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ShoppingCart, Search, Heart, User, Menu, Eye, Truck, BadgeCheck, Shield, Mail,
-  X, ChevronDown, Home, Star, TrendingUp, Award, Package, LogOut, AlertTriangle, Gavel, Clock
+  X, ChevronDown, Home, Star, TrendingUp, Award, Package, LogOut, AlertTriangle, Gavel, Clock,
+  LayoutDashboard, FileText, List
 } from 'lucide-react';
 import { FaWhatsapp, FaFacebookF, FaInstagram, FaLinkedinIn, FaTwitter } from 'react-icons/fa';
 import logoImage from '../../assets/fixed logo.png';
@@ -34,8 +35,9 @@ const Header = ({
   const [categories, setCategories] = useState([]);
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null);
 
-  // Check if current page is home page
+  // Check if current page is home page or auctions page
   const isHomePage = location.pathname === '/';
+  const isAuctionsPage = location.pathname === '/auctions';
 
   // Fetch categories from API
   useEffect(() => {
@@ -104,8 +106,15 @@ const Header = ({
     'default': Package
   };
 
-  // Generate navigation links dynamically from categories
-  const navigationLinks = [
+  // Generate navigation links dynamically from categories or auction-specific links
+  const navigationLinks = isAuctionsPage ? [
+    { to: '/userdashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/my-bidding', label: 'My Bidding', icon: Gavel },
+    { to: '/my-watchlist', label: 'My Watchlist', icon: Eye },
+    { to: '/my-wantlist', label: 'My WantList', icon: List },
+    { to: '/my-invoice', label: 'My Invoice', icon: FileText },
+    { to: '/profile', label: 'My Profile', icon: User }
+  ] : [
     { to: '/', label: 'Home', icon: Home },
     ...categories
       .filter(cat => cat.type === 'main' && cat.isActive)
