@@ -23,6 +23,7 @@ const ProductDetail = lazy(() => import('./pages/products/ProductDetail'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const Profile = lazy(() => import('./pages/Profile'));
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
+const MyBidding = lazy(() => import('./pages/MyBidding'));
 
 // Info Pages
 const AboutUs = lazy(() => import('./pages/info/AboutUs'));
@@ -599,6 +600,7 @@ const AppContent = () => {
             } />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/userdashboard" element={<UserDashboard />} />
+            <Route path="/my-bidding" element={<MyBidding />} />
             <Route path="/profile" element={<Profile user={user} onLogout={handleLogout} />} />
             <Route path="/invoice/:orderId" element={<InvoicePreview />} />
             {/* Dynamic Category Pages - Any category from database */}
