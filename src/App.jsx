@@ -100,6 +100,7 @@ const AppContent = () => {
   const hideHeaderFooter = location.pathname === '/authentication' ||
                           location.pathname === '/checkout' ||
                           location.pathname === '/profile' ||
+                          location.pathname === '/auctions' ||
                           location.pathname.startsWith('/admin') ||
                           location.pathname.startsWith('/auction/') ||
                           location.pathname.startsWith('/auction-lots/');

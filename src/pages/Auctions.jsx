@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Gavel, Clock, TrendingUp, Users, Filter, BookOpen } from 'lucide-react';
+import { Gavel, Clock, TrendingUp, Users, Filter, BookOpen, LayoutDashboard, FileText, User } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
 
@@ -92,6 +92,42 @@ const AuctionsPage = () => {
           <p className="text-center text-lg text-white/90 max-w-2xl mx-auto">
             Discover rare collectibles and bid on exclusive items in real-time auctions
           </p>
+        </div>
+      </div>
+
+      {/* Auction Navigation Menu */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="container mx-auto px-4">
+          <nav className="flex items-center justify-center space-x-1 py-4">
+            <button
+              onClick={() => navigate('/admin/dashboard')}
+              className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:text-accent-600 hover:bg-accent-50 rounded-lg transition-all font-medium"
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              <span>Dashboard</span>
+            </button>
+            <button
+              onClick={() => navigate('/my-bidding')}
+              className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:text-accent-600 hover:bg-accent-50 rounded-lg transition-all font-medium"
+            >
+              <Gavel className="w-5 h-5" />
+              <span>My Bidding</span>
+            </button>
+            <button
+              onClick={() => navigate('/my-invoice')}
+              className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:text-accent-600 hover:bg-accent-50 rounded-lg transition-all font-medium"
+            >
+              <FileText className="w-5 h-5" />
+              <span>My Invoice</span>
+            </button>
+            <button
+              onClick={() => navigate('/profile')}
+              className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:text-accent-600 hover:bg-accent-50 rounded-lg transition-all font-medium"
+            >
+              <User className="w-5 h-5" />
+              <span>My Profile</span>
+            </button>
+          </nav>
         </div>
       </div>
 
