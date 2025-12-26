@@ -329,7 +329,7 @@ const AuctionLots = () => {
           position: 'top-right'
         });
 
-        // Show red OUTBID indicator on card (will persist until new bid)
+        // Show red OUTBID indicator on card (auto-clears after 10 seconds)
         if (data.lotNumber) {
           console.log('🎨 Setting bidStatus to OUTBID for lot', data.lotNumber);
           setBidStatus(prev => {
@@ -337,6 +337,16 @@ const AuctionLots = () => {
             console.log('🎨 New bidStatus:', newStatus);
             return newStatus;
           });
+
+          // Auto-clear outbid status after 10 seconds
+          setTimeout(() => {
+            setBidStatus(prev => {
+              const clearedStatus = { ...prev };
+              delete clearedStatus[data.lotNumber];
+              console.log('🧹 Auto-cleared outbid status for lot', data.lotNumber);
+              return clearedStatus;
+            });
+          }, 10000);
         }
       } else if (data.reason === 'Bid placed - coins deducted') {
         console.log('✅ Bid placed - coins deducted:', data.auctionCoins);
@@ -460,12 +470,22 @@ const AuctionLots = () => {
             toast.success(`✅ Bid placed successfully at ₹${actualBid.toLocaleString('en-IN')}!`);
           }
 
-          // Show success status on card (ONLY if not outbid)
+          // Show success status on card (ONLY if not outbid, auto-clears after 10 seconds)
           setBidStatus(prev => {
             const newStatus = { ...prev, [lotNumber]: 'success' };
             console.log('✅ New bidStatus:', newStatus);
             return newStatus;
           });
+
+          // Auto-clear success status after 10 seconds
+          setTimeout(() => {
+            setBidStatus(prev => {
+              const clearedStatus = { ...prev };
+              delete clearedStatus[lotNumber];
+              console.log('🧹 Auto-cleared success status for lot', lotNumber);
+              return clearedStatus;
+            });
+          }, 10000);
         }
 
         // Clear the bid amount for this lot
