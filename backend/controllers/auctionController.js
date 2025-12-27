@@ -1771,9 +1771,19 @@ export const placeBid = async (req, res) => {
       } else {
         console.log(`✅ NEW maxBid (${maxBid}) > EXISTING reserve (${existingHighestReserveBid || 'none'}) - Will place bid and check for auto-bid`);
         // User's reserve bid is higher than existing reserve bid (or no existing reserve bid)
-        // First, place the current bid
 
-        // Calculate minimum bid (for proxy bidding, place minimum not full amount)
+        // ⚠️ CRITICAL CHECK: Is this a reserve-vs-reserve battle? Check BEFORE placing any bid
+        const isReserveVsReserve = existingHighestReserveBid && existingReserveBidder &&
+                                    existingReserveBidder.toString() !== userId.toString() &&
+                                    maxBid > existingHighestReserveBid;
+
+        if (isReserveVsReserve) {
+          // RESERVE VS RESERVE: Skip proxy bidding, handle specially
+          console.log(`🎯 RESERVE VS RESERVE detected! Skipping proxy logic.`);
+          // Don't place any bid here - will be handled in lines 1841+ after this block
+        } else {
+          // NORMAL PROXY BIDDING: No existing reserve OR new reserve doesn't beat old
+          // Calculate minimum bid (for proxy bidding, place minimum not full amount)
         // IMPORTANT: Check if there are ACTUAL bids, not just if currentBid is set
         const hasBids = (auction.isLotBidding && currentLot)
           ? (currentLot.bids && currentLot.bids.length > 0)
@@ -1830,8 +1840,10 @@ export const placeBid = async (req, res) => {
           });
         }
 
-        auction.currentBid = bidAmountToPlace;  // Set current bid to minimum
-        auction.totalBids = auction.bids.length;
+          auction.currentBid = bidAmountToPlace;  // Set current bid to minimum
+          auction.totalBids = auction.bids.length;
+        }
+        // END of if-else (isReserveVsReserve check)
 
         // PROXY BIDDING AUTO-BID LOGIC
         // Case 1: New reserve bid is HIGHER than existing reserve (e.g., ₹20,000 vs ₹10,000)
