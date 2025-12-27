@@ -1923,9 +1923,10 @@ export const placeBid = async (req, res) => {
             }
             auction.currentBid = newBidAmount;
             auction.totalBids = auction.bids.length;
-            autoBidTriggered = true;
+            // DON'T set autoBidTriggered = true here! New user is WINNING, not outbid!
+            // autoBidTriggered should only be true if the auto-bid BEAT the current user
 
-            console.log(`✅ NEW RESERVE WINS: Old ₹${existingHighestReserveBid} revealed, New bidder at ₹${newBidAmount} (EXACT bid, no increment!), New reserve ₹${maxBid}`);
+            console.log(`✅ NEW RESERVE WINS: Old ₹${existingHighestReserveBid} revealed, New bidder at ₹${newBidAmount} WINS (not outbid!), New reserve ₹${maxBid}`);
           } else if (existingHighestReserveBid > amount) {
             // CASE 2: Existing reserve is higher than new bid (original logic)
           console.log(`🚀 AUTO-BID TRIGGERED! Old reserve: ₹${existingHighestReserveBid}, New bid: ₹${amount}, Will jump to ₹${existingHighestReserveBid}`);
