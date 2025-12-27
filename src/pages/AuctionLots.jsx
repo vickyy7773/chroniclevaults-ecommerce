@@ -10,6 +10,7 @@ const AuctionLots = () => {
   const navigate = useNavigate();
   const socketRef = useRef(null);
   const currentUserRef = useRef(null); // Ref to avoid stale closures in socket handlers
+  const statusTimeoutsRef = useRef({}); // Track timeouts to prevent stale clears
   const [auction, setAuction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImages, setSelectedImages] = useState({}); // Track selected image for each lot
@@ -337,6 +338,12 @@ const AuctionLots = () => {
 
         // Show red OUTBID indicator on card (auto-clears after 10 seconds)
         if (data.lotNumber) {
+          // Clear any existing timeout for this lot to prevent stale clears
+          if (statusTimeoutsRef.current[data.lotNumber]) {
+            clearTimeout(statusTimeoutsRef.current[data.lotNumber]);
+            console.log('🧹 Cleared old timeout for lot', data.lotNumber);
+          }
+
           console.log('🎨 Setting bidStatus to OUTBID for lot', data.lotNumber);
           setBidStatus(prev => {
             const newStatus = { ...prev, [data.lotNumber]: 'outbid' };
@@ -345,14 +352,17 @@ const AuctionLots = () => {
           });
 
           // Auto-clear outbid status after 10 seconds
-          setTimeout(() => {
+          const timeoutId = setTimeout(() => {
             setBidStatus(prev => {
               const clearedStatus = { ...prev };
               delete clearedStatus[data.lotNumber];
               console.log('🧹 Auto-cleared outbid status for lot', data.lotNumber);
               return clearedStatus;
             });
+            delete statusTimeoutsRef.current[data.lotNumber];
           }, 10000);
+
+          statusTimeoutsRef.current[data.lotNumber] = timeoutId;
         }
       } else if (data.reason === 'Bid placed - coins deducted') {
         console.log('✅ Bid placed - coins deducted:', data.auctionCoins);
@@ -475,6 +485,12 @@ const AuctionLots = () => {
         } else {
           console.log('✅ Bid placed successfully');
 
+          // Clear any existing timeout for this lot to prevent stale clears
+          if (statusTimeoutsRef.current[lotNumber]) {
+            clearTimeout(statusTimeoutsRef.current[lotNumber]);
+            console.log('🧹 Cleared old timeout for lot', lotNumber);
+          }
+
           // Show success indicator immediately - different status for reserve vs regular bids
           setBidStatus(prev => {
             const newStatus = { ...prev, [lotNumber]: isReserveBid ? 'reserve-success' : 'success' };
@@ -483,14 +499,17 @@ const AuctionLots = () => {
           });
 
           // Auto-clear success status after 10 seconds
-          setTimeout(() => {
+          const timeoutId = setTimeout(() => {
             setBidStatus(prev => {
               const clearedStatus = { ...prev };
               delete clearedStatus[lotNumber];
               console.log('🧹 Auto-cleared success status for lot', lotNumber);
               return clearedStatus;
             });
+            delete statusTimeoutsRef.current[lotNumber];
           }, 10000);
+
+          statusTimeoutsRef.current[lotNumber] = timeoutId;
 
           // Show success toast notification with different message for reserve bids
           if (isReserveBid) {
