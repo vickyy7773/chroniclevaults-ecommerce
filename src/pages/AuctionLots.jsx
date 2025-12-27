@@ -512,6 +512,16 @@ const AuctionLots = () => {
         lotNumber
       });
 
+      // Log full response data for debugging
+      console.log('📊 FULL BID RESPONSE DATA:', {
+        autoBidTriggered: response.data?.autoBidTriggered,
+        systemBidPlaced: response.data?.systemBidPlaced,
+        currentBid: response.data?.auction?.lots?.[lotNumber - 1]?.currentBid,
+        yourBid: actualBid,
+        highestBidder: response.data?.auction?.lots?.[lotNumber - 1]?.highestBidder,
+        message: response.data?.message
+      });
+
       // Response interceptor already extracts data, so check response.success not response.data.success
       if (response.success) {
         // Check if user was immediately outbid by auto-bid or system reserve bid
@@ -519,6 +529,12 @@ const AuctionLots = () => {
 
         if (wasOutbid) {
           console.log('🚨 User was immediately outbid - showing outbid status immediately');
+          console.log('❓ WHY OUTBID?', {
+            autoBidTriggered: response.data?.autoBidTriggered,
+            systemBidPlaced: response.data?.systemBidPlaced,
+            yourBidAmount: actualBid,
+            currentBidNow: response.data?.auction?.lots?.[lotNumber - 1]?.currentBid
+          });
 
           // Clear any existing timeout for this lot to prevent stale clears
           if (statusTimeoutsRef.current[lotNumber]) {
