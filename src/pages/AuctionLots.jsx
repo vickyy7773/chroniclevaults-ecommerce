@@ -137,9 +137,25 @@ const AuctionLots = () => {
 
       console.log('🔍 Checking bid status from server for user:', currentUser._id);
 
+      // DEBUG: Check what bids look like
+      const lotsWithBids = auctionData.lots?.filter(lot => lot.bids && lot.bids.length > 0);
+      console.log('🔬 DEBUG: Lots with ANY bids:', lotsWithBids?.length);
+      if (lotsWithBids && lotsWithBids.length > 0) {
+        const firstLotWithBids = lotsWithBids[0];
+        console.log('🔬 DEBUG: First lot with bids - Lot', firstLotWithBids.lotNumber);
+        console.log('🔬 DEBUG: Sample bid:', firstLotWithBids.bids[0]);
+        console.log('🔬 DEBUG: Sample bid.userId type:', typeof firstLotWithBids.bids[0]?.userId);
+        console.log('🔬 DEBUG: currentUser._id type:', typeof currentUser._id);
+      }
+
       // Get all lots where user has placed bids
       const lotsWithUserBids = auctionData.lots?.filter(lot => {
-        return lot.bids?.some(bid => bid.userId === currentUser._id);
+        return lot.bids?.some(bid => {
+          // Convert both to strings for comparison
+          const bidUserId = String(bid.userId);
+          const currentUserId = String(currentUser._id);
+          return bidUserId === currentUserId;
+        });
       }) || [];
 
       console.log('📊 Found', lotsWithUserBids.length, 'lots with user bids');
