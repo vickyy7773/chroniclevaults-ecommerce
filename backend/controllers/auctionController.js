@@ -1772,10 +1772,22 @@ export const placeBid = async (req, res) => {
         console.log(`✅ NEW maxBid (${maxBid}) > EXISTING reserve (${existingHighestReserveBid || 'none'}) - Will place bid and check for auto-bid`);
         // User's reserve bid is higher than existing reserve bid (or no existing reserve bid)
 
+        // 🔍 CHECK: Was this user previously a reserve bidder who got outbid?
+        // If yes, treat as returning reserve bidder (use proxy bidding, keep hidden)
+        // If no, treat as new reserve vs reserve battle (reveal both)
+        const userPreviousBids = (auction.isLotBidding && currentLot)
+          ? (currentLot.bids || []).filter(b => b.user && b.user.toString() === userId.toString())
+          : (auction.bids || []).filter(b => b.user && b.user.toString() === userId.toString());
+
+        const wasPreviousReserveBidder = userPreviousBids.some(b => b.isReserveBidder === true);
+        console.log(`🔍 User ${userId} previous bids count: ${userPreviousBids.length}, was reserve bidder: ${wasPreviousReserveBidder}`);
+
         // ⚠️ CRITICAL CHECK: Is this a reserve-vs-reserve battle? Check BEFORE placing any bid
+        // BUT: If user was previously a reserve bidder, treat as normal reserve update (keep hidden)
         const isReserveVsReserve = existingHighestReserveBid && existingReserveBidder &&
                                     existingReserveBidder.toString() !== userId.toString() &&
-                                    maxBid > existingHighestReserveBid;
+                                    maxBid > existingHighestReserveBid &&
+                                    !wasPreviousReserveBidder; // NEW: Exclude returning reserve bidders
 
         if (isReserveVsReserve) {
           // RESERVE VS RESERVE: Skip proxy bidding, handle specially
