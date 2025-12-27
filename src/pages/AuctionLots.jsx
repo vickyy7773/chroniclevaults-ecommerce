@@ -9,6 +9,7 @@ const AuctionLots = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const socketRef = useRef(null);
+  const currentUserRef = useRef(null); // Ref to avoid stale closures in socket handlers
   const [auction, setAuction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImages, setSelectedImages] = useState({}); // Track selected image for each lot
@@ -257,6 +258,11 @@ const AuctionLots = () => {
     fetchCurrentUser();
   }, []);
 
+  // Sync currentUserRef with currentUser state
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
+
   // Real-time bid update listener with personalized notifications
   useEffect(() => {
     console.log('🔧 CATALOG - Bid listener useEffect triggered. Socket:', !!socketRef.current, 'User:', currentUser?._id, 'ID:', id);
@@ -282,11 +288,11 @@ const AuctionLots = () => {
         setAuction(data.auction);
 
         // Check if current user was outbid and get the lot number (only if user is loaded)
-        if (currentUser && data.outbidUser && data.outbidUser.userId === currentUser._id) {
+        if (currentUserRef.current && data.outbidUser && data.outbidUser.userId === currentUserRef.current._id) {
           // Find which lot user was outbid on
           const outbidLotNumber = data.auction.lots?.findIndex(lot =>
             lot.bids?.some(bid =>
-              bid.user?.toString() === currentUser._id &&
+              bid.user?.toString() === currentUserRef.current._id &&
               bid.amount < lot.currentBid
             )
           ) + 1;
@@ -306,12 +312,12 @@ const AuctionLots = () => {
         lotNumber: data.lotNumber,
         auctionCoins: data.auctionCoins,
         frozenCoins: data.frozenCoins,
-        currentUserLoaded: !!currentUser,
+        currentUserLoaded: !!currentUserRef.current,
         fullData: JSON.stringify(data)
       });
 
       // Update currentUser's coin balance in real-time
-      if (currentUser && data.auctionCoins !== undefined) {
+      if (currentUserRef.current && data.auctionCoins !== undefined) {
         setCurrentUser(prev => ({
           ...prev,
           auctionCoins: data.auctionCoins,
@@ -373,7 +379,7 @@ const AuctionLots = () => {
         socketRef.current.off('coin-balance-updated');
       }
     };
-  }, [currentUser, id]);
+  }, [id]); // Only re-run when auction ID changes, not when currentUser changes
 
   // Handle bid submission for a specific lot
   const handlePlaceBid = async (lotNumber) => {
