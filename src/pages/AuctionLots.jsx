@@ -1024,14 +1024,14 @@ const AuctionLots = () => {
                           handlePlaceBid(lot.lotNumber);
                         }}
                         disabled={submittingBid[lot.lotNumber]}
-                        className={`w-full px-4 py-2.5 text-white rounded transition-colors font-semibold flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed ${
+                        className={`w-full px-4 py-2.5 rounded transition-colors font-semibold flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed ${
                           bidStatus[lot.lotNumber] === 'outbid'
-                            ? 'bg-red-600 hover:bg-red-700'
+                            ? 'bg-red-600 hover:bg-red-700 text-white'
                             : bidStatus[lot.lotNumber] === 'success' || bidStatus[lot.lotNumber] === 'winning'
-                            ? 'bg-green-600 hover:bg-green-700'
+                            ? 'bg-green-600 hover:bg-green-700 text-white'
                             : bidStatus[lot.lotNumber] === 'reserve-success' || bidStatus[lot.lotNumber] === 'reserve-updated'
-                            ? 'bg-blue-600 hover:bg-blue-700'
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : 'bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-300'
                         }`}
                       >
                         {submittingBid[lot.lotNumber] ? (
