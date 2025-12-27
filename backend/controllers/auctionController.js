@@ -1651,7 +1651,16 @@ export const placeBid = async (req, res) => {
       if (existingReserveBidder && existingReserveBidder.toString() === userId.toString()) {
         console.log(`🔄 SAME USER updating reserve: old ₹${existingHighestReserveBid} → new ₹${maxBid}`);
 
-        // Just update the reserve amount, don't place new bid
+        // VALIDATION: Only allow INCREASING reserve, not decreasing
+        if (maxBid <= existingHighestReserveBid) {
+          console.log(`❌ Cannot LOWER reserve: ₹${existingHighestReserveBid} → ₹${maxBid} not allowed`);
+          return res.status(400).json({
+            success: false,
+            message: `Your reserve bid of ₹${existingHighestReserveBid.toLocaleString('en-IN')} is already placed. You can only increase it, not decrease.`
+          });
+        }
+
+        // Allow INCREASING reserve
         auction.highestReserveBid = maxBid;
         auction.reserveBidder = userId;
 
@@ -1662,9 +1671,10 @@ export const placeBid = async (req, res) => {
 
         await auction.save();
 
+        console.log(`✅ Reserve INCREASED: ₹${existingHighestReserveBid} → ₹${maxBid}`);
         return res.json({
           success: true,
-          message: `Reserve bid updated to ₹${maxBid.toLocaleString('en-IN')}`,
+          message: `Reserve bid increased to ₹${maxBid.toLocaleString('en-IN')}`,
           auction: auction.toJSON(),
           updatedReserve: true
         });
