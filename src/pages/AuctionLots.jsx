@@ -487,20 +487,13 @@ const AuctionLots = () => {
     try {
       setSubmittingBid(prev => ({ ...prev, [lotNumber]: true }));
 
-      // PROXY BIDDING LOGIC: If amount > minBid, treat as reserve/max bid
-      let maxBid = null;
-      let actualBid = amount;
-      let isReserveBid = false;
+      // eBay-STYLE PROXY BIDDING: ALWAYS treat every bid as a max/reserve bid
+      // User enters their maximum - system automatically competes for them
+      const maxBid = amount;
+      const actualBid = amount;
+      const isReserveBid = true;
 
-      if (amount > minBid) {
-        // Send FULL amount - backend will handle reserve/proxy logic
-        maxBid = amount; // Max for auto-bidding
-        actualBid = amount; // FULL amount (backend decides if reserve or regular)
-        isReserveBid = true;
-        console.log(`🎯 SENDING RESERVE BID: Amount ₹${actualBid.toLocaleString()}, MaxBid ₹${maxBid.toLocaleString()}`);
-      } else {
-        console.log(`🎯 SENDING REGULAR BID: Amount ₹${actualBid.toLocaleString()}`);
-      }
+      console.log(`🎯 SENDING PROXY BID: Amount ₹${actualBid.toLocaleString()}, MaxBid ₹${maxBid.toLocaleString()}`);
 
       // Send lot number with bid for catalog phase, and maxBid for proxy bidding
       const response = await api.post(`/auctions/${id}/bid`, { amount: actualBid, maxBid, lotNumber });
@@ -610,16 +603,10 @@ const AuctionLots = () => {
 
           statusTimeoutsRef.current[lotNumber] = timeoutId;
 
-          // Show success toast notification with different message for reserve bids
-          if (isReserveBid) {
-            toast.success(`🎯 Reserve Bid Placed Successfully! Max bid: ₹${actualBid.toLocaleString()}`, {
-              autoClose: 3000
-            });
-          } else {
-            toast.success(`✅ Bid placed successfully!`, {
-              autoClose: 3000
-            });
-          }
+          // Show success toast notification (all bids are now proxy/max bids)
+          toast.success(`✅ Bid placed successfully! Max bid: ₹${actualBid.toLocaleString()}`, {
+            autoClose: 3000
+          });
         }
 
         // Clear the bid amount for this lot
@@ -1001,8 +988,7 @@ const AuctionLots = () => {
                             ? 'bg-red-100 text-red-800 border-2 border-red-400'
                             : 'bg-purple-100 text-purple-800 border-2 border-purple-400'
                         }`}>
-                          {bidStatus[lot.lotNumber] === 'success' && '✅ Bid Placed Successfully!'}
-                          {bidStatus[lot.lotNumber] === 'reserve-success' && '🎯 Reserve Bid Placed Successfully!'}
+                          {(bidStatus[lot.lotNumber] === 'success' || bidStatus[lot.lotNumber] === 'reserve-success') && '✅ Bid Placed Successfully!'}
                           {bidStatus[lot.lotNumber] === 'outbid' && '⚠️ You Are Outbid!'}
                           {bidStatus[lot.lotNumber] === 'winning' && '🎉 You Are Winning!'}
                         </div>
