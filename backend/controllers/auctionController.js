@@ -2061,6 +2061,11 @@ export const placeBid = async (req, res) => {
     } else {
       // Normal bid without reserve bid
 
+      // IMPORTANT: Store previous current bid BEFORE placing new bid (for auto-bid logic)
+      const previousCurrentBid = (auction.isLotBidding && currentLot)
+        ? (currentLot.currentBid || 0)
+        : (auction.currentBid || 0);
+
       if (auction.isLotBidding && currentLot) {
         // LOT BIDDING: Place bid in current lot's bids array
         currentLot.bids.push({
@@ -2089,12 +2094,20 @@ export const placeBid = async (req, res) => {
       // IMPORTANT: Use lot-level reserve for lot bidding!
       if (existingHighestReserveBid && existingReserveBidder && existingReserveBidder.toString() !== userId.toString()) {
         // There's a reserve bidder (not the current bidder)
-        console.log(`🎯 Normal bid auto-bid check: existingReserve=₹${existingHighestReserveBid}, bidder=${existingReserveBidder}, lotNumber=${lotNumber}`);
-        const increment = auction.getCurrentIncrement();
-        const autoBidAmount = amount + increment;
+        console.log(`🎯 Normal bid auto-bid check: existingReserve=₹${existingHighestReserveBid}, bidder=${existingReserveBidder}, previousBid=₹${previousCurrentBid}, newBid=₹${amount}, lotNumber=${lotNumber}`);
 
-        if (autoBidAmount <= existingHighestReserveBid) {
-          // Reserve bidder can auto-bid
+        // NEW LOGIC: Reserve bidder should compete if their reserve is higher than the PREVIOUS bid
+        // This reveals their max even if they can't beat the new bid (like eBay proxy bidding)
+        if (existingHighestReserveBid > previousCurrentBid) {
+          const increment = auction.getCurrentIncrement();
+
+          // Calculate target: Try to beat new bid OR bid up to reserve max, whichever is LOWER
+          const targetToBeatNewBid = amount + increment;
+          const autoBidAmount = Math.min(targetToBeatNewBid, existingHighestReserveBid);
+
+          console.log(`💡 Reserve reveal logic: target=₹${targetToBeatNewBid}, reserveMax=₹${existingHighestReserveBid}, autoBid=₹${autoBidAmount}`);
+
+          // Reserve bidder competes up to their max
           const reserveBidderUser = await User.findById(existingReserveBidder);
 
           if (reserveBidderUser && reserveBidderUser.auctionCoins >= autoBidAmount) {
