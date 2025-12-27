@@ -433,6 +433,10 @@ const AuctionLots = () => {
 
   // Handle bid submission for a specific lot
   const handlePlaceBid = async (lotNumber) => {
+    // PRESERVE SCROLL POSITION - save current scroll position to prevent auto-scroll to top
+    const scrollPosition = window.scrollY || window.pageYOffset;
+    console.log('📍 Saving scroll position:', scrollPosition);
+
     // Check if user is logged in
     if (!currentUser) {
       toast.info('Please login to place a bid');
@@ -661,6 +665,13 @@ const AuctionLots = () => {
       toast.error(errorMessage);
     } finally {
       setSubmittingBid(prev => ({ ...prev, [lotNumber]: false }));
+
+      // RESTORE SCROLL POSITION - prevent page from jumping to top after bid placement
+      // Use setTimeout to ensure DOM has updated before scrolling
+      setTimeout(() => {
+        window.scrollTo(0, scrollPosition);
+        console.log('📍 Restored scroll position:', scrollPosition);
+      }, 0);
     }
   };
 
