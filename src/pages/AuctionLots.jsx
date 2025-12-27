@@ -478,10 +478,40 @@ const AuctionLots = () => {
         const wasOutbid = response.data?.autoBidTriggered || response.data?.systemBidPlaced;
 
         if (wasOutbid) {
-          console.log('🚨 User was immediately outbid - socket event will handle status display');
+          console.log('🚨 User was immediately outbid - showing outbid status immediately');
 
-          // DON'T set any status here - socket event has already set or will set outbid status
-          // Setting status here would overwrite the outbid status from socket event (race condition)
+          // Clear any existing timeout for this lot to prevent stale clears
+          if (statusTimeoutsRef.current[lotNumber]) {
+            clearTimeout(statusTimeoutsRef.current[lotNumber]);
+            console.log('🧹 Cleared old timeout for lot', lotNumber);
+          }
+
+          // Show outbid status immediately (don't wait for socket event that might not come)
+          console.log('🎨 Setting bidStatus to OUTBID for lot', lotNumber);
+          setBidStatus(prev => {
+            const newStatus = { ...prev, [lotNumber]: 'outbid' };
+            console.log('🎨 New bidStatus:', newStatus);
+            return newStatus;
+          });
+
+          // Show outbid notification
+          toast.warning(`⚠️ You were outbid on Lot ${lotNumber}!`, {
+            autoClose: 5000,
+            position: 'top-right'
+          });
+
+          // Auto-clear outbid status after 10 seconds
+          const timeoutId = setTimeout(() => {
+            setBidStatus(prev => {
+              const clearedStatus = { ...prev };
+              delete clearedStatus[lotNumber];
+              console.log('🧹 Auto-cleared outbid status for lot', lotNumber);
+              return clearedStatus;
+            });
+            delete statusTimeoutsRef.current[lotNumber];
+          }, 10000);
+
+          statusTimeoutsRef.current[lotNumber] = timeoutId;
         } else {
           console.log('✅ Bid placed successfully');
 
