@@ -491,7 +491,6 @@ const AuctionLots = () => {
       // User enters their maximum - system automatically competes for them
       const maxBid = amount;
       const actualBid = amount;
-      const isReserveBid = true;
 
       console.log(`🎯 SENDING PROXY BID: Amount ₹${actualBid.toLocaleString()}, MaxBid ₹${maxBid.toLocaleString()}`);
 
@@ -583,10 +582,23 @@ const AuctionLots = () => {
             console.log('🧹 Cleared old timeout for lot', lotNumber);
           }
 
-          // Show success indicator immediately - different status for reserve vs regular bids
+          // Show success indicator immediately - different status based on bid type
+          let statusType = 'success';
+          if (response.data?.updatedReserve) {
+            statusType = 'reserve-updated';
+          } else {
+            const lotData = response.data?.auction?.lots?.[lotNumber - 1];
+            const currentBidAmount = lotData?.currentBid || 0;
+            if (currentBidAmount < actualBid) {
+              statusType = 'reserve-success'; // Bid in reserve
+            } else {
+              statusType = 'success'; // Winning bid
+            }
+          }
+
           setBidStatus(prev => {
-            const newStatus = { ...prev, [lotNumber]: isReserveBid ? 'reserve-success' : 'success' };
-            console.log(`🎨 Setting bidStatus to ${isReserveBid ? 'RESERVE-SUCCESS' : 'SUCCESS'} for lot`, lotNumber);
+            const newStatus = { ...prev, [lotNumber]: statusType };
+            console.log(`🎨 Setting bidStatus to ${statusType.toUpperCase()} for lot`, lotNumber);
             return newStatus;
           });
 
@@ -603,10 +615,29 @@ const AuctionLots = () => {
 
           statusTimeoutsRef.current[lotNumber] = timeoutId;
 
-          // Show success toast notification (all bids are now proxy/max bids)
-          toast.success(`✅ Bid placed successfully! Max bid: ₹${actualBid.toLocaleString()}`, {
-            autoClose: 3000
-          });
+          // Show success toast notification with different messages
+          if (response.data?.updatedReserve) {
+            // Reserve updated
+            toast.success(`🔼 Your reserve updated to ₹${actualBid.toLocaleString()}`, {
+              autoClose: 3000
+            });
+          } else {
+            // Check if this is a reserve bid (amount placed is less than max bid)
+            const lotData = response.data?.auction?.lots?.[lotNumber - 1];
+            const currentBidAmount = lotData?.currentBid || 0;
+
+            if (currentBidAmount < actualBid) {
+              // Reserve bid - current bid is less than what user bid
+              toast.success(`🎯 Your bid in reserve! Max: ₹${actualBid.toLocaleString()}`, {
+                autoClose: 3000
+              });
+            } else {
+              // Normal winning bid
+              toast.success(`✅ Bid placed successfully at ₹${actualBid.toLocaleString()}!`, {
+                autoClose: 3000
+              });
+            }
+          }
         }
 
         // Clear the bid amount for this lot
@@ -984,11 +1015,15 @@ const AuctionLots = () => {
                             ? 'bg-green-100 text-green-800 border-2 border-green-400'
                             : bidStatus[lot.lotNumber] === 'reserve-success'
                             ? 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                            : bidStatus[lot.lotNumber] === 'reserve-updated'
+                            ? 'bg-indigo-100 text-indigo-800 border-2 border-indigo-400'
                             : bidStatus[lot.lotNumber] === 'outbid'
                             ? 'bg-red-100 text-red-800 border-2 border-red-400'
                             : 'bg-purple-100 text-purple-800 border-2 border-purple-400'
                         }`}>
-                          {(bidStatus[lot.lotNumber] === 'success' || bidStatus[lot.lotNumber] === 'reserve-success') && '✅ Bid Placed Successfully!'}
+                          {bidStatus[lot.lotNumber] === 'success' && '✅ Bid Placed Successfully!'}
+                          {bidStatus[lot.lotNumber] === 'reserve-success' && '🎯 Your Bid In Reserve!'}
+                          {bidStatus[lot.lotNumber] === 'reserve-updated' && '🔼 Reserve Updated!'}
                           {bidStatus[lot.lotNumber] === 'outbid' && '⚠️ You Are Outbid!'}
                           {bidStatus[lot.lotNumber] === 'winning' && '🎉 You Are Winning!'}
                         </div>
