@@ -525,15 +525,28 @@ const AuctionLots = () => {
       // Response interceptor already extracts data, so check response.success not response.data.success
       if (response.success) {
         // Check if user was immediately outbid by auto-bid or system reserve bid
-        const wasOutbid = response.data?.autoBidTriggered || response.data?.systemBidPlaced;
+        const wasOutbidByBackend = response.data?.autoBidTriggered || response.data?.systemBidPlaced;
+        const currentBidAmount = response.data?.auction?.lots?.[lotNumber - 1]?.currentBid || 0;
 
-        if (wasOutbid) {
-          console.log('🚨 User was immediately outbid - showing outbid status immediately');
+        // FRONTEND FIX: Backend sometimes incorrectly sets autoBidTriggered even when user is winning
+        // If user's bid is HIGHER than current bid, they are NOT outbid (backend bug workaround)
+        const actuallyOutbid = wasOutbidByBackend && (actualBid <= currentBidAmount);
+
+        console.log('🔍 OUTBID CHECK:', {
+          wasOutbidByBackend,
+          actuallyOutbid,
+          yourBid: actualBid,
+          currentBid: currentBidAmount,
+          logic: actualBid > currentBidAmount ? 'You are WINNING!' : 'You are outbid'
+        });
+
+        if (actuallyOutbid) {
+          console.log('🚨 User was actually outbid - showing outbid status');
           console.log('❓ WHY OUTBID?', {
             autoBidTriggered: response.data?.autoBidTriggered,
             systemBidPlaced: response.data?.systemBidPlaced,
             yourBidAmount: actualBid,
-            currentBidNow: response.data?.auction?.lots?.[lotNumber - 1]?.currentBid
+            currentBidNow: currentBidAmount
           });
 
           // Clear any existing timeout for this lot to prevent stale clears
