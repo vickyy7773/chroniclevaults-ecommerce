@@ -1834,9 +1834,9 @@ export const placeBid = async (req, res) => {
 
           if (maxBid > existingHighestReserveBid) {
             // CASE 1: New reserve bid BEATS old reserve bid
-            // Example: Old reserve ₹10,000, New reserve ₹20,000
-            // Action: Reveal old reserve (₹10,000), auto-bid new bidder to ₹10,100
-            console.log(`🚀 NEW RESERVE BEATS OLD! Old: ₹${existingHighestReserveBid}, New: ₹${maxBid}`);
+            // Example: Old reserve ₹11,000, New reserve ₹11,100
+            // Action: Reveal old reserve (₹11,000), place new bid at EXACT amount (₹11,100) - NO auto-increment!
+            console.log(`🚀 NEW RESERVE BEATS OLD! Old: ₹${existingHighestReserveBid}, New: ₹${maxBid}, Placing at: ₹${bidAmountToPlace}`);
 
             // Unfreeze old reserve bidder's coins
             const io = req.app.get('io');
@@ -1897,34 +1897,35 @@ export const placeBid = async (req, res) => {
             auction.currentBid = existingHighestReserveBid;
             auction.totalBids = auction.bids.length;
 
-            // STEP 2: Auto-bid new bidder one increment higher
-            const winningBidAmount = existingHighestReserveBid + increment;
+            // STEP 2: Place new bidder's EXACT bid (what they entered) - NO auto-increment!
+            // If they bid ₹11,100, current bid becomes ₹11,100 (not ₹11,500!)
+            const newBidAmount = bidAmountToPlace; // Use their EXACT bid amount
             if (auction.isLotBidding && currentLot) {
               currentLot.bids.push({
                 user: userId,
-                amount: winningBidAmount,
+                amount: newBidAmount,
                 maxBid: maxBid,
                 isReserveBidder: true,
-                isAutoBid: true,
+                isAutoBid: false, // NOT auto-bid, this is their actual bid!
                 isCatalogBid: isInCatalogPhase,
                 timestamp: new Date()
               });
-              currentLot.currentBid = winningBidAmount;
+              currentLot.currentBid = newBidAmount;
             } else {
               auction.bids.push({
                 user: userId,
-                amount: winningBidAmount,
+                amount: newBidAmount,
                 maxBid: maxBid,
                 isReserveBidder: true,
-                isAutoBid: true,
+                isAutoBid: false, // NOT auto-bid, this is their actual bid!
                 isCatalogBid: isInCatalogPhase
               });
             }
-            auction.currentBid = winningBidAmount;
+            auction.currentBid = newBidAmount;
             auction.totalBids = auction.bids.length;
             autoBidTriggered = true;
 
-            console.log(`✅ NEW RESERVE WINS: Old ₹${existingHighestReserveBid} revealed, New bidder at ₹${winningBidAmount}, New reserve ₹${maxBid}`);
+            console.log(`✅ NEW RESERVE WINS: Old ₹${existingHighestReserveBid} revealed, New bidder at ₹${newBidAmount} (EXACT bid, no increment!), New reserve ₹${maxBid}`);
           } else if (existingHighestReserveBid > amount) {
             // CASE 2: Existing reserve is higher than new bid (original logic)
           console.log(`🚀 AUTO-BID TRIGGERED! Old reserve: ₹${existingHighestReserveBid}, New bid: ₹${amount}, Will jump to ₹${existingHighestReserveBid}`);
