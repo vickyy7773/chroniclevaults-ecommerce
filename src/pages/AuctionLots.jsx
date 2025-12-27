@@ -437,8 +437,15 @@ const AuctionLots = () => {
     const scrollPosition = window.scrollY || window.pageYOffset;
     console.log('📍 Saving scroll position:', scrollPosition);
 
+    // PREVENT SCROLL DURING BID - lock scroll position during entire process
+    const preventScroll = () => {
+      window.scrollTo(0, scrollPosition);
+    };
+    window.addEventListener('scroll', preventScroll);
+
     // Check if user is logged in
     if (!currentUser) {
+      window.removeEventListener('scroll', preventScroll);
       toast.info('Please login to place a bid');
       // Save current page URL to redirect back after login
       const returnUrl = `/auction-lots/${id}`;
@@ -449,11 +456,13 @@ const AuctionLots = () => {
     const amount = parseInt(bidAmounts[lotNumber]);
 
     if (!amount || amount <= 0) {
+      window.removeEventListener('scroll', preventScroll);
       toast.error('Please enter a valid bid amount');
       return;
     }
 
     if (amount % 50 !== 0) {
+      window.removeEventListener('scroll', preventScroll);
       toast.error('Bid amount must be divisible by 50');
       return;
     }
@@ -461,6 +470,7 @@ const AuctionLots = () => {
     // Find the lot
     const lot = auction?.lots?.find(l => l.lotNumber === lotNumber);
     if (!lot) {
+      window.removeEventListener('scroll', preventScroll);
       toast.error('Lot not found');
       return;
     }
@@ -478,12 +488,14 @@ const AuctionLots = () => {
 
     // Validation 1: Minimum bid check
     if (amount < minBid) {
+      window.removeEventListener('scroll', preventScroll);
       toast.error(`Minimum bid is ₹${minBid.toLocaleString('en-IN')}`);
       return;
     }
 
     // Validation 2: Must be divisible by 50
     if (amount % 50 !== 0) {
+      window.removeEventListener('scroll', preventScroll);
       toast.error('Bid amount must be divisible by ₹50 (e.g., ₹1050, ₹1100, ₹2000)');
       return;
     }
@@ -666,12 +678,13 @@ const AuctionLots = () => {
     } finally {
       setSubmittingBid(prev => ({ ...prev, [lotNumber]: false }));
 
-      // RESTORE SCROLL POSITION - prevent page from jumping to top after bid placement
-      // Use setTimeout to ensure DOM has updated before scrolling
-      setTimeout(() => {
-        window.scrollTo(0, scrollPosition);
+      // RESTORE SCROLL POSITION - remove scroll lock and restore position
+      // Use requestAnimationFrame for better timing with browser render cycle
+      window.removeEventListener('scroll', preventScroll);
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollPosition, behavior: 'instant' });
         console.log('📍 Restored scroll position:', scrollPosition);
-      }, 0);
+      });
     }
   };
 
