@@ -1836,7 +1836,7 @@ export const placeBid = async (req, res) => {
             // CASE 1: New reserve bid BEATS old reserve bid
             // Example: Old reserve ₹11,000, New reserve ₹11,100
             // Action: Reveal old reserve (₹11,000), place new bid at EXACT amount (₹11,100) - NO auto-increment!
-            console.log(`🚀 NEW RESERVE BEATS OLD! Old: ₹${existingHighestReserveBid}, New: ₹${maxBid}, Placing at: ₹${bidAmountToPlace}`);
+            console.log(`🚀 NEW RESERVE BEATS OLD! Old: ₹${existingHighestReserveBid}, New: ₹${maxBid}, Placing at: ₹${amount}`);
 
             // Unfreeze old reserve bidder's coins
             const io = req.app.get('io');
@@ -1899,7 +1899,7 @@ export const placeBid = async (req, res) => {
 
             // STEP 2: Place new bidder's EXACT bid (what they entered) - NO auto-increment!
             // If they bid ₹11,100, current bid becomes ₹11,100 (not ₹11,500!)
-            const newBidAmount = bidAmountToPlace; // Use their EXACT bid amount
+            const newBidAmount = amount; // Use their EXACT full bid amount (not proxy minimum!)
             if (auction.isLotBidding && currentLot) {
               currentLot.bids.push({
                 user: userId,
