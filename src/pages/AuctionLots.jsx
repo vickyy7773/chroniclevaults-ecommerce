@@ -151,8 +151,8 @@ const AuctionLots = () => {
       // Get all lots where user has placed bids
       const lotsWithUserBids = auctionData.lots?.filter(lot => {
         return lot.bids?.some(bid => {
-          // Convert both to strings for comparison
-          const bidUserId = String(bid.userId);
+          // bid.user._id (not bid.userId!) - populated user object
+          const bidUserId = String(bid.user?._id || bid.userId || '');
           const currentUserId = String(currentUser._id);
           return bidUserId === currentUserId;
         });
@@ -168,7 +168,10 @@ const AuctionLots = () => {
 
         for (const lot of lotsWithUserBids) {
           // Find user's max bid for this lot
-          const userBids = lot.bids.filter(bid => bid.userId === currentUser._id);
+          const userBids = lot.bids.filter(bid => {
+            const bidUserId = String(bid.user?._id || bid.userId || '');
+            return bidUserId === String(currentUser._id);
+          });
           const userMaxBid = Math.max(...userBids.map(bid => bid.amount));
 
           // Get current highest bid
@@ -179,7 +182,7 @@ const AuctionLots = () => {
             .filter(bid => bid.amount === currentBid)
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
 
-          const isUserWinning = currentHighestBid?.userId === currentUser._id;
+          const isUserWinning = String(currentHighestBid?.user?._id || currentHighestBid?.userId || '') === String(currentUser._id);
 
           console.log(`📌 Lot ${lot.lotNumber}:`, {
             userMaxBid,
