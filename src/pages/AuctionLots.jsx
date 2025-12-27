@@ -112,11 +112,91 @@ const AuctionLots = () => {
       setLoading(true);
       const response = await api.get(`/auctions/${id}`);
       setAuction(response.data);
+
+      console.log('📦 Auction loaded, currentUser:', currentUser?._id || 'NOT_LOADED');
+      // After loading auction, check actual bid status from server
+      // (will only work if currentUser is already loaded)
+      await checkBidStatusFromServer(response.data);
     } catch (error) {
       console.error('Fetch auction error:', error);
       toast.error('Failed to load auction lots');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Check actual bid status from server and update localStorage
+  const checkBidStatusFromServer = async (auctionData) => {
+    try {
+      console.log('🔍 checkBidStatusFromServer called, currentUser:', currentUser?._id || 'NULL', 'auctionData:', !!auctionData);
+
+      if (!currentUser) {
+        console.log('⚠️ Skipping bid status check - currentUser not loaded yet');
+        return;
+      }
+
+      console.log('🔍 Checking bid status from server for user:', currentUser._id);
+
+      // Get all lots where user has placed bids
+      const lotsWithUserBids = auctionData.lots?.filter(lot => {
+        return lot.bids?.some(bid => bid.userId === currentUser._id);
+      }) || [];
+
+      console.log('📊 Found', lotsWithUserBids.length, 'lots with user bids');
+
+      if (lotsWithUserBids.length === 0) return;
+
+      // Use functional setState to avoid dependency on bidStatus
+      setBidStatus(prevBidStatus => {
+        const newBidStatus = { ...prevBidStatus };
+
+        for (const lot of lotsWithUserBids) {
+          // Find user's max bid for this lot
+          const userBids = lot.bids.filter(bid => bid.userId === currentUser._id);
+          const userMaxBid = Math.max(...userBids.map(bid => bid.amount));
+
+          // Get current highest bid
+          const currentBid = lot.currentBid || 0;
+
+          // Find current highest bidder
+          const currentHighestBid = lot.bids
+            .filter(bid => bid.amount === currentBid)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+
+          const isUserWinning = currentHighestBid?.userId === currentUser._id;
+
+          console.log(`📌 Lot ${lot.lotNumber}:`, {
+            userMaxBid,
+            currentBid,
+            isUserWinning,
+            currentStatus: prevBidStatus[lot.lotNumber]
+          });
+
+          // Update status based on actual situation
+          if (isUserWinning) {
+            // User is winning
+            if (currentBid < userMaxBid) {
+              // User has reserve bid
+              newBidStatus[lot.lotNumber] = 'reserve-success';
+              console.log(`✅ Lot ${lot.lotNumber}: User winning with reserve`);
+            } else {
+              // User is winning at max bid
+              newBidStatus[lot.lotNumber] = 'success';
+              console.log(`✅ Lot ${lot.lotNumber}: User winning at max bid`);
+            }
+          } else {
+            // User is NOT winning - outbid!
+            newBidStatus[lot.lotNumber] = 'outbid';
+            console.log(`🚨 Lot ${lot.lotNumber}: User is OUTBID!`);
+          }
+        }
+
+        console.log('✅ Bid status updated from server:', newBidStatus);
+        return newBidStatus;
+      });
+
+    } catch (error) {
+      console.error('Error checking bid status:', error);
     }
   };
 
@@ -246,13 +326,22 @@ const AuctionLots = () => {
 
     socketRef.current.on('connect', handleReconnect);
 
+    // Check bid status from server when user loads (in case they were outbid while away)
+    if (auction) {
+      console.log('🔍 [useEffect] User and auction both loaded, checking bid status from server...');
+      console.log('🔍 [useEffect] currentUser:', currentUser._id, 'auction lots:', auction.lots?.length);
+      checkBidStatusFromServer(auction);
+    } else {
+      console.log('⚠️ [useEffect] User loaded but auction not available yet');
+    }
+
     // Cleanup
     return () => {
       if (socketRef.current) {
         socketRef.current.off('connect', handleReconnect);
       }
     };
-  }, [currentUser]);
+  }, [currentUser, auction]);
 
   // Fetch current user on mount
   useEffect(() => {
