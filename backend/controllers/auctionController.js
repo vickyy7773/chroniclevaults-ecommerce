@@ -1862,8 +1862,8 @@ export const placeBid = async (req, res) => {
         // Case 2: Existing reserve is HIGHER than new bid (e.g., ₹10,000 vs ₹5,000)
         console.log(`🔍 CHECKING AUTO-BID: existingReserve=${existingHighestReserveBid}, newMaxBid=${maxBid}, newAmount=${amount}`);
 
-        if (existingHighestReserveBid && existingReserveBidder && existingReserveBidder.toString() !== userId.toString()) {
-          // There's an existing reserve bidder (different from current user)
+        if (existingHighestReserveBid && existingReserveBidder && existingReserveBidder.toString() !== userId.toString() && !wasPreviousReserveBidder) {
+          // There's an existing reserve bidder (different from current user) AND user is NOT a returning reserve bidder
           const increment = auction.getCurrentIncrement();
 
           if (maxBid > existingHighestReserveBid) {
