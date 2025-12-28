@@ -446,20 +446,10 @@ const AuctionLots = () => {
         // Update auction state with new bid data
         setAuction(data.auction);
 
-        // Check if current user was outbid and get the lot number (only if user is loaded)
-        if (currentUserRef.current && data.outbidUser && data.outbidUser.userId === currentUserRef.current._id) {
-          // Find which lot user was outbid on
-          const outbidLotNumber = data.auction.lots?.findIndex(lot =>
-            lot.bids?.some(bid =>
-              bid.user?.toString() === currentUserRef.current._id &&
-              bid.amount < lot.currentBid
-            )
-          ) + 1;
-
-          if (outbidLotNumber > 0) {
-            // Show outbid status on card (will persist until new bid)
-            setBidStatus(prev => ({ ...prev, [outbidLotNumber]: 'outbid' }));
-          }
+        // Recheck bid status using proper tie-breaking logic (reserve bidder priority!)
+        if (currentUserRef.current) {
+          console.log('🔍 SOCKET - Rechecking bid status with tie-breaking logic...');
+          checkBidStatusFromServer(data.auction);
         }
       }
     };
