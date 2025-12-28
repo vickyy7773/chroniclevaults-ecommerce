@@ -1769,340 +1769,226 @@ export const placeBid = async (req, res) => {
           console.log(`✅ AUTO-BID PLACED: Existing reserve bidder auto-bid at ₹${autoBidAmount}, reserve: ₹${existingHighestReserveBid}`);
         }
       } else {
-        console.log(`✅ NEW maxBid (${maxBid}) > EXISTING reserve (${existingHighestReserveBid || 'none'}) - Will place bid and check for auto-bid`);
+        console.log(`✅ NEW maxBid (${maxBid}) > EXISTING reserve (${existingHighestReserveBid || 'none'}) - SLAB-BASED LOGIC`);
         // User's reserve bid is higher than existing reserve bid (or no existing reserve bid)
 
-        // STEP 1: Calculate proxy threshold FIRST (before any checks)
-        // IMPORTANT: Check if there are ACTUAL bids, not just if currentBid is set
-        const hasBids = (auction.isLotBidding && currentLot)
-          ? (currentLot.bids && currentLot.bids.length > 0)
-          : (auction.bids && auction.bids.length > 0);
+        const increment = auction.getCurrentIncrement();
 
-        const currentBidAmount = hasBids
-          ? ((auction.isLotBidding && currentLot) ? currentLot.currentBid : auction.currentBid)
+        // Check if beating an existing reserve from different user
+        const isBeatingReserve = existingHighestReserveBid && existingReserveBidder &&
+                                  existingReserveBidder.toString() !== userId.toString() &&
+                                  maxBid > existingHighestReserveBid;
+
+        // Calculate RESERVE SLAB THRESHOLD (reserve + 1 increment)
+        const reserveSlabThreshold = existingHighestReserveBid
+          ? existingHighestReserveBid + increment
           : 0;
 
-        const minBidRequired = (currentBidAmount && currentBidAmount > 0)
-          ? currentBidAmount + auction.getCurrentIncrement()
-          : (currentLot?.startingPrice || auction.startingPrice || 0);
+        // Determine bid type
+        const isNormalBid = isBeatingReserve && maxBid < reserveSlabThreshold;
+        const isReserveBid = isBeatingReserve && maxBid >= reserveSlabThreshold;
 
-        // SMART PROXY BIDDING: Only use proxy bidding if maxBid is SIGNIFICANTLY higher than minimum
-        // If user's bid is close to minimum (within 3 increments), place the FULL amount (regular bid)
-        // If user's bid is much higher (more than 3 increments), place minimum (proxy bid)
-        const increment = auction.getCurrentIncrement();
-        const proxyThreshold = minBidRequired + (increment * 3); // 3 increments above minimum
+        console.log(`🎯 SLAB CHECK: reserve=₹${existingHighestReserveBid}, slab=₹${reserveSlabThreshold}, newBid=₹${maxBid}, isNormal=${isNormalBid}, isReserve=${isReserveBid}`);
 
-        // STEP 2: Check if bid exceeds proxy threshold (should use proxy bidding regardless of reserve battle)
-        const shouldUseProxyBidding = maxBid && maxBid > proxyThreshold;
+        if (isNormalBid) {
+          // CASE: Reserve < bid < slab (e.g., ₹6,000 < ₹6,100 < ₹6,500)
+          // Reveal old reserve, place as normal bid (NOT reserve)
+          console.log(`💰 NORMAL BID: ₹${maxBid} is between reserve ₹${existingHighestReserveBid} and slab ₹${reserveSlabThreshold}`);
 
-        // STEP 3: Check if this is a reserve-vs-reserve battle
-        const isReserveVsReserve = existingHighestReserveBid && existingReserveBidder &&
-                                    existingReserveBidder.toString() !== userId.toString() &&
-                                    maxBid > existingHighestReserveBid;
-
-        // STEP 4: Check if reserves are CLOSE (difference less than one increment)
-        // RULE: If two reserves are very close (₹25,000 vs ₹25,200), reveal both even if exceeds threshold
-        const reserveDifference = isReserveVsReserve ? (maxBid - existingHighestReserveBid) : 0;
-        const areReservesClose = isReserveVsReserve && reserveDifference < increment;
-
-        // STEP 5: Decide: Proxy bidding OR Reserve-vs-reserve revelation
-        // RULE 1: If reserves are CLOSE (< 1 increment apart), ALWAYS reveal both (even if exceeds threshold)
-        // RULE 2: If reserves are FAR and bid exceeds threshold, use proxy bidding
-        if (isReserveVsReserve && (areReservesClose || !shouldUseProxyBidding)) {
-          // RESERVE VS RESERVE: Either close reserves OR bid below threshold - Reveal both
-          if (areReservesClose) {
-            console.log(`🎯 CLOSE RESERVE BATTLE! Old: ₹${existingHighestReserveBid}, New: ₹${maxBid}, Diff: ₹${reserveDifference} < increment ₹${increment}, revealing both.`);
+          // Unfreeze old reserve bidder's coins
+          const io = req.app.get('io');
+          if (auction.isLotBidding) {
+            const unfreezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+            const unfreezeResult = await unfreezeCoinsForLot(existingReserveBidder, auction._id, unfreezeLotNumber);
+            if (unfreezeResult.success && unfreezeResult.unfrozenAmount > 0) {
+              console.log(`🔓 OLD RESERVE OUTBID - LOT ${unfreezeLotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for ${existingReserveBidder}`);
+              if (io) {
+                io.to(`user-${existingReserveBidder.toString()}`).emit('coin-balance-updated', {
+                  auctionCoins: unfreezeResult.user.auctionCoins,
+                  frozenCoins: unfreezeResult.user.frozenCoins,
+                  reason: 'Outbid - coins refunded',
+                  lotNumber: unfreezeLotNumber,
+                  auctionId: auction._id.toString()
+                });
+              }
+            }
           } else {
-            console.log(`🎯 RESERVE VS RESERVE detected! Bid ₹${maxBid} <= threshold ₹${proxyThreshold}, revealing both.`);
-          }
-          // Don't place any bid here - will be handled in lines 1860+ after this block
-        } else {
-          // PROXY BIDDING: Either no reserve battle OR bid exceeds threshold AND reserves are far apart
-          if (shouldUseProxyBidding && isReserveVsReserve) {
-            console.log(`💎 FAR RESERVE BATTLE: Bid ₹${maxBid} > threshold ₹${proxyThreshold} AND diff ₹${reserveDifference} >= increment ₹${increment}, using proxy bidding`);
-          } else if (shouldUseProxyBidding) {
-            console.log(`💎 PROXY BIDDING: Bid ₹${maxBid} > threshold ₹${proxyThreshold}, placing minimum`);
-          } else {
-            console.log(`💰 NORMAL BIDDING: No reserve battle or bid close to minimum`);
-          }
-
-        let bidAmountToPlace;
-        if (maxBid && maxBid > proxyThreshold) {
-          // PROXY BIDDING: Amount is much higher, place minimum
-          bidAmountToPlace = minBidRequired;
-          console.log(`🎯 PROXY BID: User bid ₹${amount} is >> minimum ₹${minBidRequired}, placing minimum`);
-        } else {
-          // REGULAR BID: Amount is close to minimum, place full amount
-          bidAmountToPlace = amount;
-          console.log(`💰 REGULAR BID: User bid ₹${amount} is close to minimum ₹${minBidRequired}, placing full amount`);
-        }
-
-        console.log(`💰 BID CALC: hasBids=${hasBids}, amount=${amount}, maxBid=${maxBid}, currentBid=${currentBidAmount}, minRequired=${minBidRequired}, threshold=${proxyThreshold}, placing=${bidAmountToPlace}`);
-
-        if (auction.isLotBidding && currentLot) {
-          // LOT BIDDING: Place bid in current lot's bids array
-          currentLot.bids.push({
-            user: userId,
-            amount: bidAmountToPlace,  // Place minimum for proxy bids
-            maxBid: maxBid,
-            isReserveBidder: true,  // This is a reserve bidder
-            isAutoBid: false,
-            isCatalogBid: isInCatalogPhase,
-            timestamp: new Date()
-          });
-          currentLot.currentBid = bidAmountToPlace;  // Set current bid to minimum
-        } else {
-          // NORMAL AUCTION: Place in main bids array
-          auction.bids.push({
-            user: userId,
-            amount: bidAmountToPlace,  // Place minimum for proxy bids
-            maxBid: maxBid,
-            isReserveBidder: true,  // This is a reserve bidder
-            isAutoBid: false,
-            isCatalogBid: isInCatalogPhase
-          });
-        }
-
-          auction.currentBid = bidAmountToPlace;  // Set current bid to minimum
-          auction.totalBids = auction.bids.length;
-        }
-        // END of if-else (isReserveVsReserve check)
-
-        // PROXY BIDDING AUTO-BID LOGIC
-        // Case 1: New reserve bid is HIGHER than existing reserve (e.g., ₹20,000 vs ₹10,000)
-        // Case 2: Existing reserve is HIGHER than new bid (e.g., ₹10,000 vs ₹5,000)
-        console.log(`🔍 CHECKING AUTO-BID: existingReserve=${existingHighestReserveBid}, newMaxBid=${maxBid}, newAmount=${amount}, shouldUseProxy=${shouldUseProxyBidding}, areReservesClose=${areReservesClose}`);
-
-        if (existingHighestReserveBid && existingReserveBidder && existingReserveBidder.toString() !== userId.toString() && (areReservesClose || !shouldUseProxyBidding)) {
-          // There's an existing reserve bidder (different from current user) AND (reserves are close OR bid is NOT using proxy bidding)
-          const increment = auction.getCurrentIncrement();
-
-          if (maxBid > existingHighestReserveBid) {
-            // CASE 1: New reserve bid BEATS old reserve bid (and bid is CLOSE to minimum)
-            // Example: Old reserve ₹11,000, New reserve ₹11,100 (close to minimum)
-            // Action: Reveal old reserve (₹11,000), place new bid at EXACT amount (₹11,100) - NO auto-increment!
-            console.log(`🚀 NEW RESERVE BEATS OLD! Old: ₹${existingHighestReserveBid}, New: ₹${maxBid}, Placing at: ₹${amount} (revealing both)`);
-
-            // Unfreeze old reserve bidder's coins
-            const io = req.app.get('io');
-            if (auction.isLotBidding) {
-              const unfreezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
-              const unfreezeResult = await unfreezeCoinsForLot(existingReserveBidder, auction._id, unfreezeLotNumber);
-              if (unfreezeResult.success && unfreezeResult.unfrozenAmount > 0) {
-                console.log(`🔓 OLD RESERVE OUTBID - LOT ${unfreezeLotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for ${existingReserveBidder}`);
-                if (io) {
-                  io.to(`user-${existingReserveBidder.toString()}`).emit('coin-balance-updated', {
-                    auctionCoins: unfreezeResult.user.auctionCoins,
-                    frozenCoins: unfreezeResult.user.frozenCoins,
-                    reason: 'Outbid - coins refunded',
-                    lotNumber: unfreezeLotNumber,
-                    auctionId: auction._id.toString()
-                  });
-                }
-              }
-            } else {
-              const oldReserveBidderUser = await User.findById(existingReserveBidder);
-              if (oldReserveBidderUser && oldReserveBidderUser.frozenCoins > 0) {
-                oldReserveBidderUser.auctionCoins += oldReserveBidderUser.frozenCoins;
-                oldReserveBidderUser.frozenCoins = 0;
-                await oldReserveBidderUser.save();
-                if (io) {
-                  io.to(`user-${existingReserveBidder.toString()}`).emit('coin-balance-updated', {
-                    auctionCoins: oldReserveBidderUser.auctionCoins,
-                    frozenCoins: oldReserveBidderUser.frozenCoins,
-                    reason: 'Outbid - coins refunded',
-                    auctionId: auction._id.toString()
-                  });
-                }
-              }
-            }
-
-            // STEP 1: Reveal old reserve bidder's max bid
-            if (auction.isLotBidding && currentLot) {
-              currentLot.bids.push({
-                user: existingReserveBidder,
-                amount: existingHighestReserveBid,
-                maxBid: existingHighestReserveBid,
-                isReserveBidder: true,
-                isAutoBid: true,
-                isCatalogBid: isInCatalogPhase,
-                timestamp: new Date()
-              });
-              currentLot.currentBid = existingHighestReserveBid;
-            } else {
-              auction.bids.push({
-                user: existingReserveBidder,
-                amount: existingHighestReserveBid,
-                maxBid: existingHighestReserveBid,
-                isReserveBidder: true,
-                isAutoBid: true,
-                isCatalogBid: isInCatalogPhase
-              });
-            }
-            auction.currentBid = existingHighestReserveBid;
-            auction.totalBids = auction.bids.length;
-
-            // STEP 2: Place new bidder's EXACT bid (what they entered) - NO auto-increment!
-            // If they bid ₹11,100, current bid becomes ₹11,100 (not ₹11,500!)
-            const newBidAmount = amount; // Use their EXACT full bid amount (not proxy minimum!)
-            if (auction.isLotBidding && currentLot) {
-              currentLot.bids.push({
-                user: userId,
-                amount: newBidAmount,
-                maxBid: maxBid,
-                isReserveBidder: true,
-                isAutoBid: false, // NOT auto-bid, this is their actual bid!
-                isCatalogBid: isInCatalogPhase,
-                timestamp: new Date()
-              });
-              currentLot.currentBid = newBidAmount;
-            } else {
-              auction.bids.push({
-                user: userId,
-                amount: newBidAmount,
-                maxBid: maxBid,
-                isReserveBidder: true,
-                isAutoBid: false, // NOT auto-bid, this is their actual bid!
-                isCatalogBid: isInCatalogPhase
-              });
-            }
-            auction.currentBid = newBidAmount;
-            auction.totalBids = auction.bids.length;
-            // DON'T set autoBidTriggered = true here! New user is WINNING, not outbid!
-            // autoBidTriggered should only be true if the auto-bid BEAT the current user
-
-            console.log(`✅ NEW RESERVE WINS: Old ₹${existingHighestReserveBid} revealed, New bidder at ₹${newBidAmount} WINS (not outbid!), New reserve ₹${maxBid}`);
-          } else if (existingHighestReserveBid > amount) {
-            // CASE 2: Existing reserve is higher than new bid (original logic)
-          console.log(`🚀 AUTO-BID TRIGGERED! Old reserve: ₹${existingHighestReserveBid}, New bid: ₹${amount}, Will jump to ₹${existingHighestReserveBid}`);
-          previousReserveBidAmount = existingHighestReserveBid;
-
-          // OUTBID NOTIFICATION: Previous reserve bidder is being overtaken
-          if (existingReserveBidder && existingReserveBidder.toString() !== userId.toString()) {
-            const io = req.app.get('io');
-
-            if (auction.isLotBidding) {
-              // LOT BIDDING: Unfreeze previous reserve bidder's coins for this lot
-              const unfreezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
-              const unfreezeResult = await unfreezeCoinsForLot(existingReserveBidder, auction._id, unfreezeLotNumber);
-
-              if (unfreezeResult.success && unfreezeResult.unfrozenAmount > 0) {
-                console.log(`🔓 PROXY OUTBID - LOT ${unfreezeLotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for previous reserve bidder ${existingReserveBidder}`);
-
-                // Send outbid notification
-                if (io) {
-                  const outbidData = {
-                    auctionCoins: unfreezeResult.user.auctionCoins,
-                    frozenCoins: unfreezeResult.user.frozenCoins,
-                    reason: 'Outbid - coins refunded',
-                    lotNumber: unfreezeLotNumber,
-                    auctionId: auction._id.toString()
-                  };
-                  console.log(`💰 PROXY OUTBID: Emitting to room 'user-${existingReserveBidder.toString()}' with data:`, JSON.stringify(outbidData, null, 2));
-                  io.to(`user-${existingReserveBidder.toString()}`).emit('coin-balance-updated', outbidData);
-                  console.log(`✅ PROXY OUTBID: Event emitted successfully`);
-                }
-              }
-            } else {
-              // NORMAL AUCTION: Unfreeze previous reserve bidder's coins
-              const previousReserveBidder = await User.findById(existingReserveBidder);
-              if (previousReserveBidder && previousReserveBidder.frozenCoins > 0) {
-                previousReserveBidder.auctionCoins += previousReserveBidder.frozenCoins;
-                const unfrozenAmount = previousReserveBidder.frozenCoins;
-                previousReserveBidder.frozenCoins = 0;
-                await previousReserveBidder.save();
-                console.log(`🔓 PROXY OUTBID: Unfroze ${unfrozenAmount} coins for previous reserve bidder ${existingReserveBidder}`);
-
-                // Send outbid notification
-                if (io) {
-                  io.to(`user-${existingReserveBidder.toString()}`).emit('coin-balance-updated', {
-                    auctionCoins: previousReserveBidder.auctionCoins,
-                    frozenCoins: previousReserveBidder.frozenCoins,
-                    reason: 'Outbid - coins refunded',
-                    auctionId: auction._id.toString()
-                  });
-                  console.log(`💰 PROXY OUTBID: Sent outbid notification to previous reserve bidder ${existingReserveBidder}`);
-                }
+            const oldReserveBidderUser = await User.findById(existingReserveBidder);
+            if (oldReserveBidderUser && oldReserveBidderUser.frozenCoins > 0) {
+              oldReserveBidderUser.auctionCoins += oldReserveBidderUser.frozenCoins;
+              oldReserveBidderUser.frozenCoins = 0;
+              await oldReserveBidderUser.save();
+              if (io) {
+                io.to(`user-${existingReserveBidder.toString()}`).emit('coin-balance-updated', {
+                  auctionCoins: oldReserveBidderUser.auctionCoins,
+                  frozenCoins: oldReserveBidderUser.frozenCoins,
+                  reason: 'Outbid - coins refunded',
+                  auctionId: auction._id.toString()
+                });
               }
             }
           }
 
-          // Get the increment for the next bid
-          const increment = auction.getCurrentIncrement();
-
-          // STEP 1: Auto-bid for OLD reserve bidder (who is being outbid) up to their max
-          const oldReserveBidder = existingReserveBidder;
-          const oldMaxBid = existingHighestReserveBid;
-
+          // STEP 1: Reveal old reserve bidder's max bid
           if (auction.isLotBidding && currentLot) {
-            // LOT BIDDING: Auto-bid for OLD reserve bidder
             currentLot.bids.push({
-              user: oldReserveBidder,  // OLD reserve bidder, NOT new bidder!
-              amount: oldMaxBid,
-              maxBid: oldMaxBid,
+              user: existingReserveBidder,
+              amount: existingHighestReserveBid,
+              maxBid: existingHighestReserveBid,
               isReserveBidder: true,
               isAutoBid: true,
               isCatalogBid: isInCatalogPhase,
               timestamp: new Date()
             });
-            currentLot.currentBid = oldMaxBid;
+            currentLot.currentBid = existingHighestReserveBid;
           } else {
-            // NORMAL AUCTION: Auto-bid for OLD reserve bidder
             auction.bids.push({
-              user: oldReserveBidder,  // OLD reserve bidder, NOT new bidder!
-              amount: oldMaxBid,
-              maxBid: oldMaxBid,
+              user: existingReserveBidder,
+              amount: existingHighestReserveBid,
+              maxBid: existingHighestReserveBid,
               isReserveBidder: true,
               isAutoBid: true,
               isCatalogBid: isInCatalogPhase
             });
           }
-
-          auction.currentBid = oldMaxBid;
+          auction.currentBid = existingHighestReserveBid;
           auction.totalBids = auction.bids.length;
 
-          // STEP 2: Auto-bid for NEW bidder ONE INCREMENT higher to beat old reserve bidder
-          const finalBidAmount = oldMaxBid + increment;
-
+          // STEP 2: Place new bidder's bid as NORMAL BID (not reserve)
           if (auction.isLotBidding && currentLot) {
-            // LOT BIDDING: Auto-bid for NEW bidder to win
             currentLot.bids.push({
-              user: userId,  // NEW bidder wins
-              amount: finalBidAmount,
+              user: userId,
+              amount: amount,
               maxBid: maxBid,
-              isReserveBidder: false,
+              isReserveBidder: false, // NOT a reserve bidder!
+              isAutoBid: false,
+              isCatalogBid: isInCatalogPhase,
+              timestamp: new Date()
+            });
+            currentLot.currentBid = amount;
+          } else {
+            auction.bids.push({
+              user: userId,
+              amount: amount,
+              maxBid: maxBid,
+              isReserveBidder: false, // NOT a reserve bidder!
+              isAutoBid: false,
+              isCatalogBid: isInCatalogPhase
+            });
+          }
+          auction.currentBid = amount;
+          auction.totalBids = auction.bids.length;
+
+          console.log(`✅ NORMAL BID PLACED: Old reserve ₹${existingHighestReserveBid} revealed, New bid ₹${amount} wins (NOT reserve)`);
+
+        } else if (isReserveBid) {
+          // CASE: Bid >= slab (e.g., ₹6,600 >= ₹6,500)
+          // Reveal old reserve ONLY, new bid becomes hidden reserve
+          console.log(`💎 RESERVE BID: ₹${maxBid} >= slab ₹${reserveSlabThreshold}, creating HIDDEN reserve`);
+
+          // Unfreeze old reserve bidder's coins
+          const io = req.app.get('io');
+          if (auction.isLotBidding) {
+            const unfreezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+            const unfreezeResult = await unfreezeCoinsForLot(existingReserveBidder, auction._id, unfreezeLotNumber);
+            if (unfreezeResult.success && unfreezeResult.unfrozenAmount > 0) {
+              console.log(`🔓 OLD RESERVE OUTBID - LOT ${unfreezeLotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for ${existingReserveBidder}`);
+              if (io) {
+                io.to(`user-${existingReserveBidder.toString()}`).emit('coin-balance-updated', {
+                  auctionCoins: unfreezeResult.user.auctionCoins,
+                  frozenCoins: unfreezeResult.user.frozenCoins,
+                  reason: 'Outbid - coins refunded',
+                  lotNumber: unfreezeLotNumber,
+                  auctionId: auction._id.toString()
+                });
+              }
+            }
+          } else {
+            const oldReserveBidderUser = await User.findById(existingReserveBidder);
+            if (oldReserveBidderUser && oldReserveBidderUser.frozenCoins > 0) {
+              oldReserveBidderUser.auctionCoins += oldReserveBidderUser.frozenCoins;
+              oldReserveBidderUser.frozenCoins = 0;
+              await oldReserveBidderUser.save();
+              if (io) {
+                io.to(`user-${existingReserveBidder.toString()}`).emit('coin-balance-updated', {
+                  auctionCoins: oldReserveBidderUser.auctionCoins,
+                  frozenCoins: oldReserveBidderUser.frozenCoins,
+                  reason: 'Outbid - coins refunded',
+                  auctionId: auction._id.toString()
+                });
+              }
+            }
+          }
+
+          // STEP 1: Reveal old reserve bidder's max bid ONLY
+          if (auction.isLotBidding && currentLot) {
+            currentLot.bids.push({
+              user: existingReserveBidder,
+              amount: existingHighestReserveBid,
+              maxBid: existingHighestReserveBid,
+              isReserveBidder: true,
               isAutoBid: true,
               isCatalogBid: isInCatalogPhase,
               timestamp: new Date()
             });
-            currentLot.currentBid = finalBidAmount;
+            currentLot.currentBid = existingHighestReserveBid;
+
+            // STEP 2: Update lot reserve to new bidder (HIDDEN)
+            currentLot.highestReserveBid = maxBid;
+            currentLot.reserveBidder = userId;
           } else {
-            // NORMAL AUCTION: Auto-bid for NEW bidder to win
             auction.bids.push({
-              user: userId,  // NEW bidder wins
-              amount: finalBidAmount,
-              maxBid: maxBid,
-              isReserveBidder: false,
+              user: existingReserveBidder,
+              amount: existingHighestReserveBid,
+              maxBid: existingHighestReserveBid,
+              isReserveBidder: true,
               isAutoBid: true,
               isCatalogBid: isInCatalogPhase
             });
+
+            // STEP 2: Update auction reserve to new bidder (HIDDEN)
+            auction.highestReserveBid = maxBid;
+            auction.reserveBidder = userId;
           }
 
-          auction.currentBid = finalBidAmount;
+          auction.currentBid = existingHighestReserveBid;
           auction.totalBids = auction.bids.length;
-          autoBidTriggered = true;
+
+          console.log(`✅ RESERVE BID PLACED: Old reserve ₹${existingHighestReserveBid} revealed, New reserve ₹${maxBid} HIDDEN`);
+
+        } else {
+          // NO RESERVE BATTLE: Normal proxy bidding
+          console.log(`🔄 NO RESERVE BATTLE: Placing normal bid`);
+
+          if (auction.isLotBidding && currentLot) {
+            currentLot.bids.push({
+              user: userId,
+              amount: amount,
+              maxBid: maxBid,
+              isReserveBidder: true,
+              isAutoBid: false,
+              isCatalogBid: isInCatalogPhase,
+              timestamp: new Date()
+            });
+            currentLot.currentBid = amount;
+            currentLot.highestReserveBid = maxBid;
+            currentLot.reserveBidder = userId;
+          } else {
+            auction.bids.push({
+              user: userId,
+              amount: amount,
+              maxBid: maxBid,
+              isReserveBidder: true,
+              isAutoBid: false,
+              isCatalogBid: isInCatalogPhase
+            });
           }
-        }
+          auction.currentBid = amount;
+          auction.totalBids = auction.bids.length;
+          auction.highestReserveBid = maxBid;
+          auction.reserveBidder = userId;
 
-        // Update the highest reserve bid and reserve bidder
-        auction.highestReserveBid = maxBid;
-        auction.reserveBidder = userId;
-
-        // IMPORTANT: Also update lot-level reserve fields for lot bidding
-        if (auction.isLotBidding && currentLot) {
-          currentLot.highestReserveBid = maxBid;
-          currentLot.reserveBidder = userId;
-          console.log(`✅ Updated LOT ${lotNumber} reserve: bidder=${userId}, highestReserveBid=₹${maxBid}`);
+          console.log(`✅ NORMAL RESERVE PLACED: Current ₹${amount}, Reserve ₹${maxBid}`);
         }
       }
     } else {
