@@ -152,6 +152,49 @@ export const deductFrozenCoins = async (userId, auctionId, lotNumber, amount) =>
 };
 
 /**
+ * Get current winning bid using proper tie-breaking logic
+ * Priority: highest amount > earliest timestamp > manual bid > earliest ObjectId
+ * @param {Array} bids - Array of bid objects
+ * @returns {Object|null} - Winning bid object or null
+ */
+export const getCurrentWinningBid = (bids) => {
+  if (!bids || bids.length === 0) return null;
+
+  // Find highest bid amount
+  const highestAmount = Math.max(...bids.map(b => b.amount));
+
+  // Filter to only bids at highest amount
+  const bidsAtHighestAmount = bids.filter(b => b.amount === highestAmount);
+
+  // Sort using tie-breaking logic: timestamp > manual bid > ObjectId
+  const sortedBids = bidsAtHighestAmount.sort((a, b) => {
+    const timeA = new Date(a.createdAt || a.timestamp).getTime();
+    const timeB = new Date(b.createdAt || b.timestamp).getTime();
+
+    // If timestamps are equal, prioritize non-auto bids over auto-bids
+    if (timeA === timeB) {
+      // Manual bids (isAutoBid: false) win over auto-bids (isAutoBid: true)
+      const aIsAuto = a.isAutoBid === true;
+      const bIsAuto = b.isAutoBid === true;
+
+      if (aIsAuto !== bIsAuto) {
+        return aIsAuto ? 1 : -1; // non-auto bid comes first
+      }
+
+      // If both have same auto-bid status, use ObjectId (earlier ObjectId = earlier bid)
+      const idA = (a._id || '').toString();
+      const idB = (b._id || '').toString();
+      return idA.localeCompare(idB);
+    }
+
+    // Otherwise, oldest timestamp wins
+    return timeA - timeB;
+  });
+
+  return sortedBids[0];
+};
+
+/**
  * Auto-bid for reserve price protection (system bids to push price toward reserve)
  * @param {Object} auction - Auction object
  * @param {Number} lotIndex - Lot index (for lot bidding) or null for regular auction
@@ -1700,10 +1743,12 @@ export const placeBid = async (req, res) => {
           ? (currentLot.currentBid || 0)
           : (auction.currentBid || 0);
 
-        const currentWinner = (auction.isLotBidding && currentLot && currentLot.bids.length > 0)
-          ? currentLot.bids[currentLot.bids.length - 1].user
-          : (auction.bids.length > 0 ? auction.bids[auction.bids.length - 1].user : null);
+        // Use proper tie-breaking logic to determine current winner
+        const currentWinningBid = (auction.isLotBidding && currentLot && currentLot.bids.length > 0)
+          ? getCurrentWinningBid(currentLot.bids)
+          : (auction.bids.length > 0 ? getCurrentWinningBid(auction.bids) : null);
 
+        const currentWinner = currentWinningBid?.user;
         const someoneElseWinning = currentWinner && currentWinner.toString() !== userId.toString();
 
         if (someoneElseWinning && maxBid > currentBidAmount) {
@@ -2572,7 +2617,7 @@ export const getUserBids = async (req, res) => {
           endTime: auction.endTime
         },
         bids: userAuctionBids,
-        isWinning: auction.bids[auction.bids.length - 1]?.user._id.toString() === userId.toString()
+        isWinning: getCurrentWinningBid(auction.bids)?.user._id.toString() === userId.toString()
       };
     });
 
