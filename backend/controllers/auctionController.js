@@ -1648,7 +1648,24 @@ export const placeBid = async (req, res) => {
       ? (currentLot.bids && currentLot.bids.length > 0)
       : (auction.bids && auction.bids.length > 0);
 
-    const isTrueReserveBid = maxBid && (maxBid > amount || (!hasBidsAlready && maxBid === amount));
+    // Calculate minimum required bid to determine if this is reserve or normal
+    const currentBidAmount = hasBidsAlready
+      ? ((auction.isLotBidding && currentLot) ? currentLot.currentBid : auction.currentBid)
+      : 0;
+
+    const minBidRequired = (currentBidAmount && currentBidAmount > 0)
+      ? currentBidAmount + auction.getCurrentIncrement()
+      : (currentLot?.startingPrice || auction.startingPrice || 0);
+
+    // TRUE reserve bid logic:
+    // 1. maxBid > amount (different max)
+    // 2. amount > minRequired (bidding more than minimum = reserve)
+    // 3. First bid with maxBid (no existing bids)
+    const isTrueReserveBid = maxBid && (
+      maxBid > amount ||
+      amount > minBidRequired ||
+      (!hasBidsAlready && maxBid === amount)
+    );
 
     // If user is placing a reserve bid (maxBid)
     if (isTrueReserveBid) {
