@@ -1644,7 +1644,8 @@ export const placeBid = async (req, res) => {
       : auction.reserveBidder;
 
     // If user is placing a reserve bid (maxBid)
-    if (maxBid) {
+    // IMPORTANT: If maxBid === amount, it's a NORMAL bid (not reserve)
+    if (maxBid && maxBid !== amount) {
       console.log(`🔍 RESERVE BID CHECK: maxBid=${maxBid}, existing highestReserveBid=${existingHighestReserveBid}, amount=${amount}, isLotBidding=${auction.isLotBidding}, lotNumber=${lotNumber}`);
 
       // SPECIAL CASE: Same user updating their own reserve bid
