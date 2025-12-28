@@ -206,9 +206,21 @@ const auctionSchema = new mongoose.Schema({
         required: false // Not required for system/reserve bids
       },
       amount: Number,
+      maxBid: {
+        type: Number,
+        default: null // Maximum bid amount (for proxy/reserve bidding)
+      },
       timestamp: {
         type: Date,
         default: Date.now
+      },
+      isReserveBidder: {
+        type: Boolean,
+        default: false // True if this user has a reserve bid
+      },
+      isAutoBid: {
+        type: Boolean,
+        default: false // True if this is an automatic bid
       },
       isSystemBid: {
         type: Boolean,
