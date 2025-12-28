@@ -1800,16 +1800,28 @@ export const placeBid = async (req, res) => {
                                     existingReserveBidder.toString() !== userId.toString() &&
                                     maxBid > existingHighestReserveBid;
 
-        // STEP 4: Decide: Proxy bidding OR Reserve-vs-reserve revelation
-        // RULE: If bid is significantly higher (exceeds threshold), ALWAYS use proxy bidding (even in reserve battle)
-        if (isReserveVsReserve && !shouldUseProxyBidding) {
-          // RESERVE VS RESERVE + bid is CLOSE to minimum: Reveal both bids
-          console.log(`🎯 RESERVE VS RESERVE detected! Bid ₹${maxBid} <= threshold ₹${proxyThreshold}, revealing both.`);
+        // STEP 4: Check if reserves are CLOSE (difference less than one increment)
+        // RULE: If two reserves are very close (₹25,000 vs ₹25,200), reveal both even if exceeds threshold
+        const reserveDifference = isReserveVsReserve ? (maxBid - existingHighestReserveBid) : 0;
+        const areReservesClose = isReserveVsReserve && reserveDifference < increment;
+
+        // STEP 5: Decide: Proxy bidding OR Reserve-vs-reserve revelation
+        // RULE 1: If reserves are CLOSE (< 1 increment apart), ALWAYS reveal both (even if exceeds threshold)
+        // RULE 2: If reserves are FAR and bid exceeds threshold, use proxy bidding
+        if (isReserveVsReserve && (areReservesClose || !shouldUseProxyBidding)) {
+          // RESERVE VS RESERVE: Either close reserves OR bid below threshold - Reveal both
+          if (areReservesClose) {
+            console.log(`🎯 CLOSE RESERVE BATTLE! Old: ₹${existingHighestReserveBid}, New: ₹${maxBid}, Diff: ₹${reserveDifference} < increment ₹${increment}, revealing both.`);
+          } else {
+            console.log(`🎯 RESERVE VS RESERVE detected! Bid ₹${maxBid} <= threshold ₹${proxyThreshold}, revealing both.`);
+          }
           // Don't place any bid here - will be handled in lines 1860+ after this block
         } else {
-          // PROXY BIDDING: Either no reserve battle OR bid exceeds threshold
-          if (shouldUseProxyBidding) {
-            console.log(`💎 PROXY BIDDING: Bid ₹${maxBid} > threshold ₹${proxyThreshold}, placing minimum (even if reserve battle)`);
+          // PROXY BIDDING: Either no reserve battle OR bid exceeds threshold AND reserves are far apart
+          if (shouldUseProxyBidding && isReserveVsReserve) {
+            console.log(`💎 FAR RESERVE BATTLE: Bid ₹${maxBid} > threshold ₹${proxyThreshold} AND diff ₹${reserveDifference} >= increment ₹${increment}, using proxy bidding`);
+          } else if (shouldUseProxyBidding) {
+            console.log(`💎 PROXY BIDDING: Bid ₹${maxBid} > threshold ₹${proxyThreshold}, placing minimum`);
           } else {
             console.log(`💰 NORMAL BIDDING: No reserve battle or bid close to minimum`);
           }
@@ -1859,10 +1871,10 @@ export const placeBid = async (req, res) => {
         // PROXY BIDDING AUTO-BID LOGIC
         // Case 1: New reserve bid is HIGHER than existing reserve (e.g., ₹20,000 vs ₹10,000)
         // Case 2: Existing reserve is HIGHER than new bid (e.g., ₹10,000 vs ₹5,000)
-        console.log(`🔍 CHECKING AUTO-BID: existingReserve=${existingHighestReserveBid}, newMaxBid=${maxBid}, newAmount=${amount}, shouldUseProxy=${shouldUseProxyBidding}`);
+        console.log(`🔍 CHECKING AUTO-BID: existingReserve=${existingHighestReserveBid}, newMaxBid=${maxBid}, newAmount=${amount}, shouldUseProxy=${shouldUseProxyBidding}, areReservesClose=${areReservesClose}`);
 
-        if (existingHighestReserveBid && existingReserveBidder && existingReserveBidder.toString() !== userId.toString() && !shouldUseProxyBidding) {
-          // There's an existing reserve bidder (different from current user) AND bid is NOT using proxy bidding
+        if (existingHighestReserveBid && existingReserveBidder && existingReserveBidder.toString() !== userId.toString() && (areReservesClose || !shouldUseProxyBidding)) {
+          // There's an existing reserve bidder (different from current user) AND (reserves are close OR bid is NOT using proxy bidding)
           const increment = auction.getCurrentIncrement();
 
           if (maxBid > existingHighestReserveBid) {
