@@ -1772,18 +1772,7 @@ export const placeBid = async (req, res) => {
         console.log(`✅ NEW maxBid (${maxBid}) > EXISTING reserve (${existingHighestReserveBid || 'none'}) - Will place bid and check for auto-bid`);
         // User's reserve bid is higher than existing reserve bid (or no existing reserve bid)
 
-        // ⚠️ CRITICAL CHECK: Is this a reserve-vs-reserve battle? Check BEFORE placing any bid
-        const isReserveVsReserve = existingHighestReserveBid && existingReserveBidder &&
-                                    existingReserveBidder.toString() !== userId.toString() &&
-                                    maxBid > existingHighestReserveBid;
-
-        if (isReserveVsReserve) {
-          // RESERVE VS RESERVE: Skip proxy bidding, handle specially
-          console.log(`🎯 RESERVE VS RESERVE detected! Skipping proxy logic.`);
-          // Don't place any bid here - will be handled in lines 1841+ after this block
-        } else {
-          // NORMAL PROXY BIDDING: No existing reserve OR new reserve doesn't beat old
-          // Calculate minimum bid (for proxy bidding, place minimum not full amount)
+        // STEP 1: Calculate proxy threshold FIRST (before any checks)
         // IMPORTANT: Check if there are ACTUAL bids, not just if currentBid is set
         const hasBids = (auction.isLotBidding && currentLot)
           ? (currentLot.bids && currentLot.bids.length > 0)
@@ -1802,6 +1791,28 @@ export const placeBid = async (req, res) => {
         // If user's bid is much higher (more than 3 increments), place minimum (proxy bid)
         const increment = auction.getCurrentIncrement();
         const proxyThreshold = minBidRequired + (increment * 3); // 3 increments above minimum
+
+        // STEP 2: Check if bid exceeds proxy threshold (should use proxy bidding regardless of reserve battle)
+        const shouldUseProxyBidding = maxBid && maxBid > proxyThreshold;
+
+        // STEP 3: Check if this is a reserve-vs-reserve battle
+        const isReserveVsReserve = existingHighestReserveBid && existingReserveBidder &&
+                                    existingReserveBidder.toString() !== userId.toString() &&
+                                    maxBid > existingHighestReserveBid;
+
+        // STEP 4: Decide: Proxy bidding OR Reserve-vs-reserve revelation
+        // RULE: If bid is significantly higher (exceeds threshold), ALWAYS use proxy bidding (even in reserve battle)
+        if (isReserveVsReserve && !shouldUseProxyBidding) {
+          // RESERVE VS RESERVE + bid is CLOSE to minimum: Reveal both bids
+          console.log(`🎯 RESERVE VS RESERVE detected! Bid ₹${maxBid} <= threshold ₹${proxyThreshold}, revealing both.`);
+          // Don't place any bid here - will be handled in lines 1860+ after this block
+        } else {
+          // PROXY BIDDING: Either no reserve battle OR bid exceeds threshold
+          if (shouldUseProxyBidding) {
+            console.log(`💎 PROXY BIDDING: Bid ₹${maxBid} > threshold ₹${proxyThreshold}, placing minimum (even if reserve battle)`);
+          } else {
+            console.log(`💰 NORMAL BIDDING: No reserve battle or bid close to minimum`);
+          }
 
         let bidAmountToPlace;
         if (maxBid && maxBid > proxyThreshold) {
@@ -1848,17 +1859,17 @@ export const placeBid = async (req, res) => {
         // PROXY BIDDING AUTO-BID LOGIC
         // Case 1: New reserve bid is HIGHER than existing reserve (e.g., ₹20,000 vs ₹10,000)
         // Case 2: Existing reserve is HIGHER than new bid (e.g., ₹10,000 vs ₹5,000)
-        console.log(`🔍 CHECKING AUTO-BID: existingReserve=${existingHighestReserveBid}, newMaxBid=${maxBid}, newAmount=${amount}`);
+        console.log(`🔍 CHECKING AUTO-BID: existingReserve=${existingHighestReserveBid}, newMaxBid=${maxBid}, newAmount=${amount}, shouldUseProxy=${shouldUseProxyBidding}`);
 
-        if (existingHighestReserveBid && existingReserveBidder && existingReserveBidder.toString() !== userId.toString()) {
-          // There's an existing reserve bidder (different from current user)
+        if (existingHighestReserveBid && existingReserveBidder && existingReserveBidder.toString() !== userId.toString() && !shouldUseProxyBidding) {
+          // There's an existing reserve bidder (different from current user) AND bid is NOT using proxy bidding
           const increment = auction.getCurrentIncrement();
 
           if (maxBid > existingHighestReserveBid) {
-            // CASE 1: New reserve bid BEATS old reserve bid
-            // Example: Old reserve ₹11,000, New reserve ₹11,100
+            // CASE 1: New reserve bid BEATS old reserve bid (and bid is CLOSE to minimum)
+            // Example: Old reserve ₹11,000, New reserve ₹11,100 (close to minimum)
             // Action: Reveal old reserve (₹11,000), place new bid at EXACT amount (₹11,100) - NO auto-increment!
-            console.log(`🚀 NEW RESERVE BEATS OLD! Old: ₹${existingHighestReserveBid}, New: ₹${maxBid}, Placing at: ₹${amount}`);
+            console.log(`🚀 NEW RESERVE BEATS OLD! Old: ₹${existingHighestReserveBid}, New: ₹${maxBid}, Placing at: ₹${amount} (revealing both)`);
 
             // Unfreeze old reserve bidder's coins
             const io = req.app.get('io');
