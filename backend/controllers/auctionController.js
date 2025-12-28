@@ -1717,6 +1717,34 @@ export const placeBid = async (req, res) => {
 
         await auction.save();
 
+        // EMIT SOCKET EVENT for real-time update
+        const io = req.app.get('io');
+        if (io) {
+          const auctionObject = JSON.parse(JSON.stringify(auction));
+
+          // Get latest bid
+          let latestBid;
+          if (auction.isLotBidding && currentLot && currentLot.bids && currentLot.bids.length > 0) {
+            latestBid = currentLot.bids[currentLot.bids.length - 1];
+          } else if (auction.bids && auction.bids.length > 0) {
+            latestBid = auction.bids[auction.bids.length - 1];
+          }
+
+          console.log(`📡 RESERVE UPDATE: Emitting bid-placed event for auction ${auction._id}`);
+          io.to(`auction-${auction._id}`).emit('bid-placed', {
+            auction: auctionObject,
+            latestBid,
+            autoBidTriggered: someoneElseWinning && maxBid > currentBidAmount,
+            previousReserveBidAmount: null
+          });
+
+          // Reset timer if auto-bid was placed
+          if (someoneElseWinning && maxBid > currentBidAmount) {
+            const resetPhaseTimer = require('../utils/timerHelpers').resetPhaseTimer;
+            await resetPhaseTimer(auction._id, io);
+          }
+        }
+
         return res.json({
           success: true,
           message: `Reserve bid increased to ₹${maxBid.toLocaleString('en-IN')}`,
