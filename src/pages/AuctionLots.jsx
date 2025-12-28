@@ -178,9 +178,22 @@ const AuctionLots = () => {
           const currentBid = lot.currentBid || 0;
 
           // Find current highest bidder (first bidder wins ties - "first come, first served")
+          // When timestamps are equal, reserve bidder wins (they placed the bid first)
           const currentHighestBid = lot.bids
             .filter(bid => bid.amount === currentBid)
-            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0];
+            .sort((a, b) => {
+              const timeA = new Date(a.createdAt || a.timestamp).getTime();
+              const timeB = new Date(b.createdAt || b.timestamp).getTime();
+
+              // If timestamps are equal, reserve bidder wins
+              if (timeA === timeB) {
+                if (a.isReserveBidder && !b.isReserveBidder) return -1;
+                if (!a.isReserveBidder && b.isReserveBidder) return 1;
+              }
+
+              // Otherwise, oldest timestamp wins
+              return timeA - timeB;
+            })[0];
 
           // Handle both cases: user as object {_id, name, email} or user as string (just ID)
           const bidUserId = typeof currentHighestBid?.user === 'string'
