@@ -178,15 +178,24 @@ const AuctionLots = () => {
           const currentBid = lot.currentBid || 0;
 
           // Find current highest bidder (first bidder wins ties - "first come, first served")
-          // Use ObjectId for tie-breaking when timestamps are equal (ObjectIds are sequential)
+          // Priority: timestamp > manual bid > ObjectId
           const currentHighestBid = lot.bids
             .filter(bid => bid.amount === currentBid)
             .sort((a, b) => {
               const timeA = new Date(a.createdAt || a.timestamp).getTime();
               const timeB = new Date(b.createdAt || b.timestamp).getTime();
 
-              // If timestamps are equal, use ObjectId for tie-breaking (earlier ObjectId = earlier bid)
+              // If timestamps are equal, prioritize non-auto bids over auto-bids
               if (timeA === timeB) {
+                // Manual bids (isAutoBid: false) win over auto-bids (isAutoBid: true)
+                const aIsAuto = a.isAutoBid === true;
+                const bIsAuto = b.isAutoBid === true;
+
+                if (aIsAuto !== bIsAuto) {
+                  return aIsAuto ? 1 : -1; // non-auto bid comes first
+                }
+
+                // If both have same auto-bid status, use ObjectId (earlier ObjectId = earlier bid)
                 const idA = a._id || '';
                 const idB = b._id || '';
                 return idA.localeCompare(idB);
