@@ -2006,35 +2006,46 @@ export const placeBid = async (req, res) => {
           // NO RESERVE BATTLE: Normal proxy bidding
           console.log(`🔄 NO RESERVE BATTLE: Placing normal bid`);
 
+          // PROXY BIDDING: If this is first bid, place starting price (not full amount)
+          const hasBids = (auction.isLotBidding && currentLot)
+            ? (currentLot.bids && currentLot.bids.length > 0)
+            : (auction.bids && auction.bids.length > 0);
+
+          const bidAmountToPlace = hasBids
+            ? amount  // Has existing bids, place user's amount
+            : (currentLot?.startingPrice || auction.startingPrice || amount);  // First bid, use starting price
+
+          console.log(`💎 PROXY BID: hasBids=${hasBids}, placing ₹${bidAmountToPlace}, reserve ₹${maxBid}`);
+
           if (auction.isLotBidding && currentLot) {
             currentLot.bids.push({
               user: userId,
-              amount: amount,
+              amount: bidAmountToPlace,
               maxBid: maxBid,
               isReserveBidder: true,
               isAutoBid: false,
               isCatalogBid: isInCatalogPhase,
               timestamp: new Date()
             });
-            currentLot.currentBid = amount;
+            currentLot.currentBid = bidAmountToPlace;
             currentLot.highestReserveBid = maxBid;
             currentLot.reserveBidder = userId;
           } else {
             auction.bids.push({
               user: userId,
-              amount: amount,
+              amount: bidAmountToPlace,
               maxBid: maxBid,
               isReserveBidder: true,
               isAutoBid: false,
               isCatalogBid: isInCatalogPhase
             });
           }
-          auction.currentBid = amount;
+          auction.currentBid = bidAmountToPlace;
           auction.totalBids = auction.bids.length;
           auction.highestReserveBid = maxBid;
           auction.reserveBidder = userId;
 
-          console.log(`✅ NORMAL RESERVE PLACED: Current ₹${amount}, Reserve ₹${maxBid}`);
+          console.log(`✅ NORMAL RESERVE PLACED: Current ₹${bidAmountToPlace}, Reserve ₹${maxBid}`);
         }
       }
     } else {
