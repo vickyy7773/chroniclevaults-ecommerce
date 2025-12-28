@@ -1909,7 +1909,8 @@ export const placeBid = async (req, res) => {
         auction.totalBids = auction.bids.length;
 
         // IMPORTANT: Existing reserve bidder should auto-bid to beat this new lower bid!
-        if (existingHighestReserveBid >= amount && existingReserveBidder && existingReserveBidder.toString() !== userId.toString()) {
+        // Only trigger if reserve is HIGHER (not equal) - manual bid wins ties
+        if (existingHighestReserveBid > amount && existingReserveBidder && existingReserveBidder.toString() !== userId.toString()) {
           console.log(`🚀 AUTO-BID FOR EXISTING RESERVE: Existing reserve bidder (₹${existingHighestReserveBid}) will auto-bid to beat new bid (₹${amount})`);
 
           const increment = auction.getCurrentIncrement();
