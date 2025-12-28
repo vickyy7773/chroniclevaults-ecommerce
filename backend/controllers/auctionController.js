@@ -1772,22 +1772,10 @@ export const placeBid = async (req, res) => {
         console.log(`✅ NEW maxBid (${maxBid}) > EXISTING reserve (${existingHighestReserveBid || 'none'}) - Will place bid and check for auto-bid`);
         // User's reserve bid is higher than existing reserve bid (or no existing reserve bid)
 
-        // 🔍 CHECK: Was this user previously a reserve bidder who got outbid?
-        // If yes, treat as returning reserve bidder (use proxy bidding, keep hidden)
-        // If no, treat as new reserve vs reserve battle (reveal both)
-        const userPreviousBids = (auction.isLotBidding && currentLot)
-          ? (currentLot.bids || []).filter(b => b.user && b.user.toString() === userId.toString())
-          : (auction.bids || []).filter(b => b.user && b.user.toString() === userId.toString());
-
-        const wasPreviousReserveBidder = userPreviousBids.some(b => b.isReserveBidder === true);
-        console.log(`🔍 User ${userId} previous bids count: ${userPreviousBids.length}, was reserve bidder: ${wasPreviousReserveBidder}`);
-
         // ⚠️ CRITICAL CHECK: Is this a reserve-vs-reserve battle? Check BEFORE placing any bid
-        // BUT: If user was previously a reserve bidder, treat as normal reserve update (keep hidden)
         const isReserveVsReserve = existingHighestReserveBid && existingReserveBidder &&
                                     existingReserveBidder.toString() !== userId.toString() &&
-                                    maxBid > existingHighestReserveBid &&
-                                    !wasPreviousReserveBidder; // NEW: Exclude returning reserve bidders
+                                    maxBid > existingHighestReserveBid;
 
         if (isReserveVsReserve) {
           // RESERVE VS RESERVE: Skip proxy bidding, handle specially
@@ -1862,8 +1850,8 @@ export const placeBid = async (req, res) => {
         // Case 2: Existing reserve is HIGHER than new bid (e.g., ₹10,000 vs ₹5,000)
         console.log(`🔍 CHECKING AUTO-BID: existingReserve=${existingHighestReserveBid}, newMaxBid=${maxBid}, newAmount=${amount}`);
 
-        if (existingHighestReserveBid && existingReserveBidder && existingReserveBidder.toString() !== userId.toString() && !wasPreviousReserveBidder) {
-          // There's an existing reserve bidder (different from current user) AND user is NOT a returning reserve bidder
+        if (existingHighestReserveBid && existingReserveBidder && existingReserveBidder.toString() !== userId.toString()) {
+          // There's an existing reserve bidder (different from current user)
           const increment = auction.getCurrentIncrement();
 
           if (maxBid > existingHighestReserveBid) {
