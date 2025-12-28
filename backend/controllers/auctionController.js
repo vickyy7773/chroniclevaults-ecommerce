@@ -1643,8 +1643,15 @@ export const placeBid = async (req, res) => {
       ? currentLot.reserveBidder
       : auction.reserveBidder;
 
+    // Check if this is a TRUE reserve bid (maxBid > amount) or normal bid (maxBid === amount)
+    const hasBidsAlready = (auction.isLotBidding && currentLot)
+      ? (currentLot.bids && currentLot.bids.length > 0)
+      : (auction.bids && auction.bids.length > 0);
+
+    const isTrueReserveBid = maxBid && (maxBid > amount || (!hasBidsAlready && maxBid === amount));
+
     // If user is placing a reserve bid (maxBid)
-    if (maxBid) {
+    if (isTrueReserveBid) {
       console.log(`🔍 RESERVE BID CHECK: maxBid=${maxBid}, existing highestReserveBid=${existingHighestReserveBid}, amount=${amount}, isLotBidding=${auction.isLotBidding}, lotNumber=${lotNumber}`);
 
       // SPECIAL CASE: Same user updating their own reserve bid
