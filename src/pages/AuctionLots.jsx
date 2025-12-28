@@ -177,40 +177,39 @@ const AuctionLots = () => {
           // Get current highest bid
           const currentBid = lot.currentBid || 0;
 
-          // Find current highest bidder (first bidder wins ties - "first come, first served")
-          // Priority: timestamp > reserve bidder auto-bid > manual bid > other auto-bid > ObjectId
+          // Find current highest bidder
+          // Priority: reserve bidder auto-bid > manual bid > timestamp > ObjectId
           const currentHighestBid = lot.bids
             .filter(bid => bid.amount === currentBid)
             .sort((a, b) => {
+              // FIRST: Reserve bidder auto-bid ALWAYS wins (they placed reserve first!)
+              const aIsReserve = a.isReserveBidder === true && a.isAutoBid === true;
+              const bIsReserve = b.isReserveBidder === true && b.isAutoBid === true;
+
+              if (aIsReserve !== bIsReserve) {
+                return aIsReserve ? -1 : 1; // reserve bidder auto-bid comes first
+              }
+
+              // SECOND: Manual bids win over other auto-bids
+              const aIsAuto = a.isAutoBid === true;
+              const bIsAuto = b.isAutoBid === true;
+
+              if (aIsAuto !== bIsAuto) {
+                return aIsAuto ? 1 : -1; // non-auto bid comes first
+              }
+
+              // THIRD: Oldest timestamp wins
               const timeA = new Date(a.createdAt || a.timestamp).getTime();
               const timeB = new Date(b.createdAt || b.timestamp).getTime();
 
-              // If timestamps are equal, apply priority rules
-              if (timeA === timeB) {
-                // FIRST: Reserve bidder auto-bid wins (they placed reserve first)
-                const aIsReserve = a.isReserveBidder === true && a.isAutoBid === true;
-                const bIsReserve = b.isReserveBidder === true && b.isAutoBid === true;
-
-                if (aIsReserve !== bIsReserve) {
-                  return aIsReserve ? -1 : 1; // reserve bidder auto-bid comes first
-                }
-
-                // SECOND: Manual bids win over other auto-bids
-                const aIsAuto = a.isAutoBid === true;
-                const bIsAuto = b.isAutoBid === true;
-
-                if (aIsAuto !== bIsAuto) {
-                  return aIsAuto ? 1 : -1; // non-auto bid comes first
-                }
-
-                // THIRD: Use ObjectId (earlier ObjectId = earlier bid)
-                const idA = a._id || '';
-                const idB = b._id || '';
-                return idA.localeCompare(idB);
+              if (timeA !== timeB) {
+                return timeA - timeB;
               }
 
-              // Otherwise, oldest timestamp wins
-              return timeA - timeB;
+              // FOURTH: Use ObjectId (earlier ObjectId = earlier bid)
+              const idA = a._id || '';
+              const idB = b._id || '';
+              return idA.localeCompare(idB);
             })[0];
 
           // Handle both cases: user as object {_id, name, email} or user as string (just ID)
