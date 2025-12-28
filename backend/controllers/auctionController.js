@@ -1740,7 +1740,6 @@ export const placeBid = async (req, res) => {
 
           // Reset timer if auto-bid was placed
           if (someoneElseWinning && maxBid > currentBidAmount) {
-            const resetPhaseTimer = require('../utils/timerHelpers').resetPhaseTimer;
             await resetPhaseTimer(auction._id, io);
           }
         }
