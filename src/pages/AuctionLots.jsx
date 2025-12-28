@@ -182,7 +182,11 @@ const AuctionLots = () => {
             .filter(bid => bid.amount === currentBid)
             .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0];
 
-          const isUserWinning = String(currentHighestBid?.user?._id || currentHighestBid?.userId || '') === String(currentUser._id);
+          // Handle both cases: user as object {_id, name, email} or user as string (just ID)
+          const bidUserId = typeof currentHighestBid?.user === 'string'
+            ? currentHighestBid.user
+            : currentHighestBid?.user?._id || currentHighestBid?.userId || '';
+          const isUserWinning = String(bidUserId) === String(currentUser._id);
 
           console.log(`📌 Lot ${lot.lotNumber}:`, {
             userMaxBid,
