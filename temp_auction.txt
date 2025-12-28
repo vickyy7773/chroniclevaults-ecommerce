@@ -1,0 +1,19 @@
+LOT 5 Analysis (currentBid: 70000):
+Last two bids at ₹70,000:
+1. vikram (690cf2ba) - amount: 70000, manual bid, timestamp: 2025-12-28T19:26:01.949Z, _id: 69518449e67799494fa1b03b
+2. vicky (69144f7f) - amount: 70000, AUTO-BID, timestamp: 2025-12-28T19:26:01.954Z, _id: 69518449e67799494fa1b047
+
+vikram bid FIRST (timestamp ...949Z)
+vicky auto-bid AFTER (timestamp ...954Z) - 5ms later
+
+Winner should be: vikram (first bidder)
+
+LOT 7 Analysis (currentBid: 40000):
+Last bids at ₹40,000:
+1. vicky (69144f7f) - amount: 40000, manual bid, timestamp: 2025-12-28T19:46:46.997Z
+2. vikram (690cf2ba) - amount: 40000, AUTO-BID, timestamp: 2025-12-28T19:46:47.001Z
+
+vicky bid FIRST (manual, ...997Z)
+vikram auto-bid AFTER (...001Z) - 4ms later
+
+Winner should be: vicky (first bidder + manual bid priority)

@@ -166,14 +166,22 @@ export const getCurrentWinningBid = (bids) => {
   // Filter to only bids at highest amount
   const bidsAtHighestAmount = bids.filter(b => b.amount === highestAmount);
 
-  // Sort using tie-breaking logic: timestamp > manual bid > ObjectId
+  // Sort using tie-breaking logic: timestamp > reserve bidder > manual bid > ObjectId
   const sortedBids = bidsAtHighestAmount.sort((a, b) => {
     const timeA = new Date(a.createdAt || a.timestamp).getTime();
     const timeB = new Date(b.createdAt || b.timestamp).getTime();
 
-    // If timestamps are equal, prioritize non-auto bids over auto-bids
+    // If timestamps are equal, apply priority rules
     if (timeA === timeB) {
-      // Manual bids (isAutoBid: false) win over auto-bids (isAutoBid: true)
+      // FIRST: Reserve bidder wins (they placed reserve first, auto-bid just revealing it)
+      const aIsReserve = a.isReserveBidder === true && a.isAutoBid === true;
+      const bIsReserve = b.isReserveBidder === true && b.isAutoBid === true;
+
+      if (aIsReserve !== bIsReserve) {
+        return aIsReserve ? -1 : 1; // reserve bidder auto-bid comes first
+      }
+
+      // SECOND: Manual bids win over other auto-bids
       const aIsAuto = a.isAutoBid === true;
       const bIsAuto = b.isAutoBid === true;
 
@@ -181,7 +189,7 @@ export const getCurrentWinningBid = (bids) => {
         return aIsAuto ? 1 : -1; // non-auto bid comes first
       }
 
-      // If both have same auto-bid status, use ObjectId (earlier ObjectId = earlier bid)
+      // THIRD: If both have same auto-bid status, use ObjectId (earlier ObjectId = earlier bid)
       const idA = (a._id || '').toString();
       const idB = (b._id || '').toString();
       return idA.localeCompare(idB);
@@ -1909,8 +1917,8 @@ export const placeBid = async (req, res) => {
         auction.totalBids = auction.bids.length;
 
         // IMPORTANT: Existing reserve bidder should auto-bid to beat this new lower bid!
-        // Only trigger if reserve is HIGHER (not equal) - manual bid wins ties
-        if (existingHighestReserveBid > amount && existingReserveBidder && existingReserveBidder.toString() !== userId.toString()) {
+        // Trigger when reserve >= amount (reserve bidder placed bid first, auto-bid reveals it)
+        if (existingHighestReserveBid >= amount && existingReserveBidder && existingReserveBidder.toString() !== userId.toString()) {
           console.log(`🚀 AUTO-BID FOR EXISTING RESERVE: Existing reserve bidder (₹${existingHighestReserveBid}) will auto-bid to beat new bid (₹${amount})`);
 
           const increment = auction.getCurrentIncrement();
