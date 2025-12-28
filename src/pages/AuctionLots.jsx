@@ -446,9 +446,12 @@ const AuctionLots = () => {
         // Update auction state with new bid data
         setAuction(data.auction);
 
-        // DON'T recalculate status here - let coin refund event determine outbid status
-        // Coin logic: Coins refunded = Outbid, Coins NOT refunded = Winning
-        // The coin-balance-updated event will handle setting outbid status
+        // HYBRID APPROACH: Recalculate status using tie-breaking logic for immediate feedback
+        // Coin refund events will override this if they come (they are source of truth)
+        if (currentUserRef.current) {
+          console.log('🔍 SOCKET - Rechecking bid status with tie-breaking logic (immediate)...');
+          checkBidStatusFromServer(data.auction);
+        }
       }
     };
 
