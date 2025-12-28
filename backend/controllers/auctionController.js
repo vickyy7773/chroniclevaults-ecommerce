@@ -2083,6 +2083,14 @@ export const placeBid = async (req, res) => {
           auction.currentBid = amount;
           auction.totalBids = auction.bids.length;
 
+          // CRITICAL FIX: Clear old reserve bidder (their reserve was revealed, no longer hidden)
+          if (auction.isLotBidding && currentLot) {
+            currentLot.reserveBidder = null;
+            currentLot.highestReserveBid = null;
+          }
+          auction.reserveBidder = null;
+          auction.highestReserveBid = null;
+
           console.log(`✅ NORMAL BID PLACED: Old reserve ₹${existingHighestReserveBid} revealed, New bid ₹${amount} wins (NOT reserve)`);
 
         } else if (isReserveBid) {
