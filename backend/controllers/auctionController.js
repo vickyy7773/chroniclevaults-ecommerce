@@ -1660,7 +1660,7 @@ export const placeBid = async (req, res) => {
           });
         }
 
-        // Allow INCREASING reserve
+        // Update reserve to new amount
         auction.highestReserveBid = maxBid;
         auction.reserveBidder = userId;
 
@@ -1669,14 +1669,60 @@ export const placeBid = async (req, res) => {
           currentLot.reserveBidder = userId;
         }
 
+        console.log(`✅ Reserve INCREASED: ₹${existingHighestReserveBid} → ₹${maxBid}`);
+
+        // CHECK: Is someone else currently winning? If yes, auto-bid to beat them!
+        const currentBidAmount = (auction.isLotBidding && currentLot)
+          ? (currentLot.currentBid || 0)
+          : (auction.currentBid || 0);
+
+        const currentWinner = (auction.isLotBidding && currentLot && currentLot.bids.length > 0)
+          ? currentLot.bids[currentLot.bids.length - 1].user
+          : (auction.bids.length > 0 ? auction.bids[auction.bids.length - 1].user : null);
+
+        const someoneElseWinning = currentWinner && currentWinner.toString() !== userId.toString();
+
+        if (someoneElseWinning && maxBid > currentBidAmount) {
+          // Someone else is winning, place auto-bid to beat them
+          const increment = auction.getCurrentIncrement();
+          const autoBidAmount = currentBidAmount + increment;
+
+          console.log(`🚀 AUTO-BID after reserve update: Someone else winning at ₹${currentBidAmount}, auto-bidding to ₹${autoBidAmount}`);
+
+          if (auction.isLotBidding && currentLot) {
+            currentLot.bids.push({
+              user: userId,
+              amount: autoBidAmount,
+              maxBid: maxBid,
+              isReserveBidder: true,
+              isAutoBid: true,
+              isCatalogBid: isInCatalogPhase,
+              timestamp: new Date()
+            });
+            currentLot.currentBid = autoBidAmount;
+          } else {
+            auction.bids.push({
+              user: userId,
+              amount: autoBidAmount,
+              maxBid: maxBid,
+              isReserveBidder: true,
+              isAutoBid: true,
+              isCatalogBid: isInCatalogPhase
+            });
+          }
+
+          auction.currentBid = autoBidAmount;
+          auction.totalBids = auction.bids.length;
+        }
+
         await auction.save();
 
-        console.log(`✅ Reserve INCREASED: ₹${existingHighestReserveBid} → ₹${maxBid}`);
         return res.json({
           success: true,
           message: `Reserve bid increased to ₹${maxBid.toLocaleString('en-IN')}`,
           auction: auction.toJSON(),
-          updatedReserve: true
+          updatedReserve: true,
+          autoBidPlaced: someoneElseWinning && maxBid > currentBidAmount
         });
       }
 
