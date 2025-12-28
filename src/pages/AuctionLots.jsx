@@ -177,10 +177,10 @@ const AuctionLots = () => {
           // Get current highest bid
           const currentBid = lot.currentBid || 0;
 
-          // Find current highest bidder
+          // Find current highest bidder (first bidder wins ties - "first come, first served")
           const currentHighestBid = lot.bids
             .filter(bid => bid.amount === currentBid)
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0];
 
           const isUserWinning = String(currentHighestBid?.user?._id || currentHighestBid?.userId || '') === String(currentUser._id);
 
