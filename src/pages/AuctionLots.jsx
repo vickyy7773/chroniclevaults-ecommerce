@@ -179,14 +179,38 @@ const AuctionLots = () => {
 
           // Find current highest bidder
           // Priority: reserve bidder auto-bid > manual bid > timestamp > ObjectId
-          const currentHighestBid = lot.bids
-            .filter(bid => bid.amount === currentBid)
-            .sort((a, b) => {
+          const bidsAtCurrentAmount = lot.bids.filter(bid => bid.amount === currentBid);
+
+          console.log(`🔍 LOT ${lot.lotNumber} - Bids at ₹${currentBid}:`, bidsAtCurrentAmount.map(b => ({
+            user: b.user?._id || b.user,
+            amount: b.amount,
+            isReserveBidder: b.isReserveBidder,
+            isAutoBid: b.isAutoBid,
+            timestamp: b.createdAt || b.timestamp
+          })));
+
+          const currentHighestBid = bidsAtCurrentAmount.sort((a, b) => {
               // FIRST: Reserve bidder auto-bid ALWAYS wins (they placed reserve first!)
               const aIsReserve = a.isReserveBidder === true && a.isAutoBid === true;
               const bIsReserve = b.isReserveBidder === true && b.isAutoBid === true;
 
+              console.log(`🔍 Comparing bids:`, {
+                bidA: {
+                  user: a.user?._id || a.user,
+                  isReserveBidder: a.isReserveBidder,
+                  isAutoBid: a.isAutoBid,
+                  aIsReserve
+                },
+                bidB: {
+                  user: b.user?._id || b.user,
+                  isReserveBidder: b.isReserveBidder,
+                  isAutoBid: b.isAutoBid,
+                  bIsReserve
+                }
+              });
+
               if (aIsReserve !== bIsReserve) {
+                console.log(`✅ WINNER by RESERVE PRIORITY: ${aIsReserve ? 'Bid A (reserve)' : 'Bid B (reserve)'}`);
                 return aIsReserve ? -1 : 1; // reserve bidder auto-bid comes first
               }
 
@@ -195,6 +219,7 @@ const AuctionLots = () => {
               const bIsAuto = b.isAutoBid === true;
 
               if (aIsAuto !== bIsAuto) {
+                console.log(`✅ WINNER by MANUAL PRIORITY: ${!aIsAuto ? 'Bid A (manual)' : 'Bid B (manual)'}`);
                 return aIsAuto ? 1 : -1; // non-auto bid comes first
               }
 
@@ -203,14 +228,23 @@ const AuctionLots = () => {
               const timeB = new Date(b.createdAt || b.timestamp).getTime();
 
               if (timeA !== timeB) {
+                console.log(`✅ WINNER by TIMESTAMP: ${timeA < timeB ? 'Bid A (older)' : 'Bid B (older)'}`);
                 return timeA - timeB;
               }
 
               // FOURTH: Use ObjectId (earlier ObjectId = earlier bid)
               const idA = a._id || '';
               const idB = b._id || '';
+              console.log(`✅ WINNER by OBJECTID: ${idA < idB ? 'Bid A' : 'Bid B'}`);
               return idA.localeCompare(idB);
             })[0];
+
+          console.log(`🎯 LOT ${lot.lotNumber} WINNER:`, {
+            user: currentHighestBid?.user?._id || currentHighestBid?.user,
+            amount: currentHighestBid?.amount,
+            isReserveBidder: currentHighestBid?.isReserveBidder,
+            isAutoBid: currentHighestBid?.isAutoBid
+          });
 
           // Handle both cases: user as object {_id, name, email} or user as string (just ID)
           const bidUserId = typeof currentHighestBid?.user === 'string'
