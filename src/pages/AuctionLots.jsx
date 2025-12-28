@@ -446,11 +446,9 @@ const AuctionLots = () => {
         // Update auction state with new bid data
         setAuction(data.auction);
 
-        // Recheck bid status using proper tie-breaking logic (reserve bidder priority!)
-        if (currentUserRef.current) {
-          console.log('🔍 SOCKET - Rechecking bid status with tie-breaking logic...');
-          checkBidStatusFromServer(data.auction);
-        }
+        // DON'T recalculate status here - let coin refund event determine outbid status
+        // Coin logic: Coins refunded = Outbid, Coins NOT refunded = Winning
+        // The coin-balance-updated event will handle setting outbid status
       }
     };
 
