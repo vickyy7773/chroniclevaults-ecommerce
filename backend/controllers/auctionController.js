@@ -1689,6 +1689,46 @@ export const placeBid = async (req, res) => {
 
           console.log(`🚀 AUTO-BID after reserve update: Someone else winning at ₹${currentBidAmount}, auto-bidding to ₹${autoBidAmount}`);
 
+          // UNFREEZE coins for the user who is being outbid
+          const io = req.app.get('io');
+          if (auction.isLotBidding) {
+            const unfreezeLotNumber = (isInCatalogPhase && lotNumber) ? lotNumber : (auction.lotNumber || 1);
+            const unfreezeResult = await unfreezeCoinsForLot(currentWinner, auction._id, unfreezeLotNumber);
+            if (unfreezeResult.success && unfreezeResult.unfrozenAmount > 0) {
+              console.log(`🔓 OUTBID - LOT ${unfreezeLotNumber}: Unfroze ${unfreezeResult.unfrozenAmount} coins for ${currentWinner}`);
+
+              // Send outbid notification
+              if (io) {
+                io.to(`user-${currentWinner.toString()}`).emit('coin-balance-updated', {
+                  auctionCoins: unfreezeResult.user.auctionCoins,
+                  frozenCoins: unfreezeResult.user.frozenCoins,
+                  reason: 'Outbid - coins refunded',
+                  lotNumber: unfreezeLotNumber,
+                  auctionId: auction._id.toString()
+                });
+                console.log(`📢 OUTBID NOTIFICATION sent to ${currentWinner}`);
+              }
+            }
+          } else {
+            const outbidUser = await User.findById(currentWinner);
+            if (outbidUser && outbidUser.frozenCoins > 0) {
+              outbidUser.auctionCoins += outbidUser.frozenCoins;
+              outbidUser.frozenCoins = 0;
+              await outbidUser.save();
+
+              // Send outbid notification
+              if (io) {
+                io.to(`user-${currentWinner.toString()}`).emit('coin-balance-updated', {
+                  auctionCoins: outbidUser.auctionCoins,
+                  frozenCoins: outbidUser.frozenCoins,
+                  reason: 'Outbid - coins refunded',
+                  auctionId: auction._id.toString()
+                });
+                console.log(`📢 OUTBID NOTIFICATION sent to ${currentWinner}`);
+              }
+            }
+          }
+
           if (auction.isLotBidding && currentLot) {
             currentLot.bids.push({
               user: userId,
@@ -1730,12 +1770,25 @@ export const placeBid = async (req, res) => {
             latestBid = auction.bids[auction.bids.length - 1];
           }
 
-          console.log(`📡 RESERVE UPDATE: Emitting bid-placed event for auction ${auction._id}`);
+          // Include outbid user info if someone was outbid
+          let outbidUserInfo = null;
+          if (someoneElseWinning && maxBid > currentBidAmount) {
+            const outbidUser = await User.findById(currentWinner);
+            if (outbidUser) {
+              outbidUserInfo = {
+                userId: currentWinner.toString(),
+                newBalance: outbidUser.auctionCoins
+              };
+            }
+          }
+
+          console.log(`📡 RESERVE UPDATE: Emitting bid-placed event for auction ${auction._id}, outbid user: ${outbidUserInfo ? outbidUserInfo.userId : 'none'}`);
           io.to(`auction-${auction._id}`).emit('bid-placed', {
             auction: auctionObject,
             latestBid,
             autoBidTriggered: someoneElseWinning && maxBid > currentBidAmount,
-            previousReserveBidAmount: null
+            previousReserveBidAmount: null,
+            outbidUser: outbidUserInfo
           });
 
           // Reset timer if auto-bid was placed
