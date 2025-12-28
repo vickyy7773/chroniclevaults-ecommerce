@@ -178,17 +178,18 @@ const AuctionLots = () => {
           const currentBid = lot.currentBid || 0;
 
           // Find current highest bidder (first bidder wins ties - "first come, first served")
-          // When timestamps are equal, reserve bidder wins (they placed the bid first)
+          // Use ObjectId for tie-breaking when timestamps are equal (ObjectIds are sequential)
           const currentHighestBid = lot.bids
             .filter(bid => bid.amount === currentBid)
             .sort((a, b) => {
               const timeA = new Date(a.createdAt || a.timestamp).getTime();
               const timeB = new Date(b.createdAt || b.timestamp).getTime();
 
-              // If timestamps are equal, reserve bidder wins
+              // If timestamps are equal, use ObjectId for tie-breaking (earlier ObjectId = earlier bid)
               if (timeA === timeB) {
-                if (a.isReserveBidder && !b.isReserveBidder) return -1;
-                if (!a.isReserveBidder && b.isReserveBidder) return 1;
+                const idA = a._id || '';
+                const idB = b._id || '';
+                return idA.localeCompare(idB);
               }
 
               // Otherwise, oldest timestamp wins
