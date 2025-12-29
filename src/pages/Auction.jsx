@@ -1390,14 +1390,6 @@ const AuctionPage = () => {
                                   </span>
                                 )}
                               </p>
-                              <p className="text-sm text-gray-500">
-                                {new Date(bid.timestamp).toLocaleString('en-IN', {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </p>
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0 ml-2">
