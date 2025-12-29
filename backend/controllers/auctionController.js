@@ -2926,6 +2926,44 @@ export const getAllBidsForTracking = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
+    // Get all unique user IDs from bids
+    const userIds = new Set();
+    auctions.forEach(auction => {
+      if (auction.bids) {
+        auction.bids.forEach(bid => {
+          if (bid.user && bid.user._id) {
+            userIds.add(bid.user._id.toString());
+          }
+        });
+      }
+      if (auction.lots) {
+        auction.lots.forEach(lot => {
+          if (lot.bids) {
+            lot.bids.forEach(bid => {
+              if (bid.user && bid.user._id) {
+                userIds.add(bid.user._id.toString());
+              }
+            });
+          }
+        });
+      }
+    });
+
+    // Fetch registration IDs for all users
+    const AuctionRegistration = (await import('../models/AuctionRegistration.js')).default;
+    const registrations = await AuctionRegistration.find({
+      userId: { $in: Array.from(userIds) },
+      status: 'approved'
+    }).select('userId auctionId').lean();
+
+    // Create map of userId -> auctionId (registration ID)
+    const userRegistrationMap = {};
+    registrations.forEach(reg => {
+      if (reg.userId && reg.auctionId) {
+        userRegistrationMap[reg.userId.toString()] = reg.auctionId;
+      }
+    });
+
     // Flatten all bids into events array
     const allEvents = [];
     let eventSeq = 0;
@@ -2962,12 +3000,13 @@ export const getAllBidsForTracking = async (req, res) => {
             // EVENT 1: Bid Placed
             const bidPlacedSeq = eventSeq++;
             const auctionNumber = `AUC-${auction._id.toString().slice(-6).toUpperCase()}`;
+            const userRegistrationId = bid.user ? userRegistrationMap[bid.user._id.toString()] : null;
             allEvents.push({
               _id: `${bid._id}-placed`,
               seq: bidPlacedSeq,
               eventType: bid.isAutoBid ? 'auto_bid' : 'bid_placed',
               auctionId: auction._id,
-              auctionNumber: auctionNumber,
+              auctionNumber: userRegistrationId || auctionNumber,
               auctionTitle: auction.title,
               lotNumber: null,
               bidder: bid.user ? {
@@ -2993,7 +3032,7 @@ export const getAllBidsForTracking = async (req, res) => {
                 seq: eventSeq++,
                 eventType: 'outbid',
                 auctionId: auction._id,
-                auctionNumber: auctionNumber,
+                auctionNumber: userRegistrationId || auctionNumber,
                 auctionTitle: auction.title,
                 lotNumber: null,
                 bidder: bid.user ? {
@@ -3020,7 +3059,7 @@ export const getAllBidsForTracking = async (req, res) => {
                 seq: eventSeq++,
                 eventType: 'winner',
                 auctionId: auction._id,
-                auctionNumber: auctionNumber,
+                auctionNumber: userRegistrationId || auctionNumber,
                 auctionTitle: auction.title,
                 lotNumber: null,
                 bidder: bid.user ? {
@@ -3074,12 +3113,13 @@ export const getAllBidsForTracking = async (req, res) => {
                 // EVENT 1: Bid Placed
                 const bidPlacedSeq = eventSeq++;
                 const auctionNumber = `AUC-${auction._id.toString().slice(-6).toUpperCase()}`;
+                const userRegistrationId = bid.user ? userRegistrationMap[bid.user._id.toString()] : null;
                 allEvents.push({
                   _id: `${bid._id}-placed`,
                   seq: bidPlacedSeq,
                   eventType: bid.isAutoBid ? 'auto_bid' : 'bid_placed',
                   auctionId: auction._id,
-                  auctionNumber: auctionNumber,
+                  auctionNumber: userRegistrationId || auctionNumber,
                   auctionTitle: auction.title,
                   lotNumber: lot.lotNumber,
                   lotTitle: lot.title,
@@ -3106,7 +3146,7 @@ export const getAllBidsForTracking = async (req, res) => {
                     seq: eventSeq++,
                     eventType: 'outbid',
                     auctionId: auction._id,
-                    auctionNumber: auctionNumber,
+                    auctionNumber: userRegistrationId || auctionNumber,
                     auctionTitle: auction.title,
                     lotNumber: lot.lotNumber,
                     lotTitle: lot.title,
@@ -3134,7 +3174,7 @@ export const getAllBidsForTracking = async (req, res) => {
                     seq: eventSeq++,
                     eventType: 'winner',
                     auctionId: auction._id,
-                    auctionNumber: auctionNumber,
+                    auctionNumber: userRegistrationId || auctionNumber,
                     auctionTitle: auction.title,
                     lotNumber: lot.lotNumber,
                     lotTitle: lot.title,
