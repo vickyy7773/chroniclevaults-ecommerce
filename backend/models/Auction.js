@@ -99,6 +99,14 @@ const auctionSchema = new mongoose.Schema({
     isAutoBid: {
       type: Boolean,
       default: false // True if this bid was placed automatically
+    },
+    ipAddress: {
+      type: String,
+      default: null // IP address of the bidder (for admin tracking)
+    },
+    userAgent: {
+      type: String,
+      default: null // Browser/device info (for admin tracking)
     }
   }],
   reserveBidder: {
@@ -229,6 +237,14 @@ const auctionSchema = new mongoose.Schema({
       isCatalogBid: {
         type: Boolean,
         default: false // True if placed during catalog phase (before startTime)
+      },
+      ipAddress: {
+        type: String,
+        default: null // IP address of the bidder (for admin tracking)
+      },
+      userAgent: {
+        type: String,
+        default: null // Browser/device info (for admin tracking)
       }
     }],
     winner: {

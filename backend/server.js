@@ -189,6 +189,17 @@ io.on('connection', (socket) => {
     console.log(`👤 User ${socket.id} left auction room: ${auctionId}`);
   });
 
+  // Generic room join/leave (for admin bid tracking and other features)
+  socket.on('join-room', (roomName) => {
+    socket.join(roomName);
+    console.log(`🔗 User ${socket.id} joined room: ${roomName}`);
+  });
+
+  socket.on('leave-room', (roomName) => {
+    socket.leave(roomName);
+    console.log(`🔗 User ${socket.id} left room: ${roomName}`);
+  });
+
   socket.on('disconnect', () => {
     console.log('👋 User disconnected:', socket.id);
   });

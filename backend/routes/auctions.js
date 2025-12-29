@@ -9,7 +9,8 @@ import {
   getUserBids,
   setReserveBidder,
   addBulkLots,
-  getPriceRealization
+  getPriceRealization,
+  getAllBidsForTracking
 } from '../controllers/auctionController.js';
 import { protect, admin } from '../middleware/auth.js';
 
@@ -18,6 +19,10 @@ const router = express.Router();
 // Public routes
 router.get('/', getAllAuctions);
 router.get('/price-realization', getPriceRealization);
+
+// Admin bid tracking route (MUST be before /:id route)
+router.get('/admin/bid-tracking', protect, admin, getAllBidsForTracking);
+
 router.get('/:id', getAuctionById);
 
 // Protected routes (require authentication)

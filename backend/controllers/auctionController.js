@@ -4,6 +4,23 @@ import User from '../models/User.js';
 import AuctionInvoice from '../models/AuctionInvoice.js';
 
 // ============================================
+// HELPER FUNCTION FOR IP TRACKING
+// ============================================
+
+/**
+ * Extract client IP address from request headers
+ * @param {Object} req - Express request object
+ * @returns {String} - Client IP address
+ */
+const getClientIp = (req) => {
+  return req.headers['x-forwarded-for']?.split(',')[0] ||
+         req.connection?.remoteAddress ||
+         req.socket?.remoteAddress ||
+         req.ip ||
+         'Unknown';
+};
+
+// ============================================
 // HELPER FUNCTIONS FOR PER-LOT COIN MANAGEMENT
 // ============================================
 
@@ -1538,7 +1555,11 @@ export const placeBid = async (req, res) => {
     const { amount, maxBid, lotNumber } = req.body; // Accept lotNumber for catalog phase
     const userId = req.user._id;
 
-    console.log(`🎯 BID REQUEST: amount=${amount}, lotNumber=${lotNumber}, userId=${userId}`);
+    // Capture IP address and user agent for bid tracking
+    const ipAddress = getClientIp(req);
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+
+    console.log(`🎯 BID REQUEST: amount=${amount}, lotNumber=${lotNumber}, userId=${userId}, ip=${ipAddress}`);
 
     const auction = await Auction.findById(req.params.id);
 
@@ -1814,7 +1835,9 @@ export const placeBid = async (req, res) => {
               isReserveBidder: true,
               isAutoBid: true,
               isCatalogBid: isInCatalogPhase,
-              timestamp: new Date()
+              timestamp: new Date(),
+              ipAddress,
+              userAgent
             });
             currentLot.currentBid = autoBidAmount;
           } else {
@@ -1824,7 +1847,9 @@ export const placeBid = async (req, res) => {
               maxBid: maxBid,
               isReserveBidder: true,
               isAutoBid: true,
-              isCatalogBid: isInCatalogPhase
+              isCatalogBid: isInCatalogPhase,
+              ipAddress,
+              userAgent
             });
           }
 
@@ -1898,7 +1923,9 @@ export const placeBid = async (req, res) => {
             isReserveBidder: false,
             isAutoBid: false,
             isCatalogBid: isInCatalogPhase,
-            timestamp: new Date()
+            timestamp: new Date(),
+            ipAddress,
+            userAgent
           });
           currentLot.currentBid = amount;
         } else {
@@ -1909,7 +1936,9 @@ export const placeBid = async (req, res) => {
             maxBid: maxBid,
             isReserveBidder: false,
             isAutoBid: false,
-            isCatalogBid: isInCatalogPhase
+            isCatalogBid: isInCatalogPhase,
+            ipAddress,
+            userAgent
           });
         }
 
@@ -1944,7 +1973,9 @@ export const placeBid = async (req, res) => {
               isReserveBidder: true,
               isAutoBid: true,
               isCatalogBid: isInCatalogPhase,
-              timestamp: new Date()
+              timestamp: new Date(),
+              ipAddress,
+              userAgent
             });
             currentLot.currentBid = autoBidAmount;
           } else {
@@ -1954,7 +1985,9 @@ export const placeBid = async (req, res) => {
               maxBid: existingHighestReserveBid,
               isReserveBidder: true,
               isAutoBid: true,
-              isCatalogBid: isInCatalogPhase
+              isCatalogBid: isInCatalogPhase,
+              ipAddress,
+              userAgent
             });
           }
 
@@ -2042,7 +2075,9 @@ export const placeBid = async (req, res) => {
               isReserveBidder: true,
               isAutoBid: true,
               isCatalogBid: isInCatalogPhase,
-              timestamp: new Date()
+              timestamp: new Date(),
+              ipAddress,
+              userAgent
             });
             currentLot.currentBid = existingHighestReserveBid;
           } else {
@@ -2052,7 +2087,9 @@ export const placeBid = async (req, res) => {
               maxBid: existingHighestReserveBid,
               isReserveBidder: true,
               isAutoBid: true,
-              isCatalogBid: isInCatalogPhase
+              isCatalogBid: isInCatalogPhase,
+              ipAddress,
+              userAgent
             });
           }
           auction.currentBid = existingHighestReserveBid;
@@ -2067,7 +2104,9 @@ export const placeBid = async (req, res) => {
               isReserveBidder: false, // NOT a reserve bidder!
               isAutoBid: false,
               isCatalogBid: isInCatalogPhase,
-              timestamp: new Date()
+              timestamp: new Date(),
+              ipAddress,
+              userAgent
             });
             currentLot.currentBid = amount;
           } else {
@@ -2077,7 +2116,9 @@ export const placeBid = async (req, res) => {
               maxBid: maxBid,
               isReserveBidder: false, // NOT a reserve bidder!
               isAutoBid: false,
-              isCatalogBid: isInCatalogPhase
+              isCatalogBid: isInCatalogPhase,
+              ipAddress,
+              userAgent
             });
           }
           auction.currentBid = amount;
@@ -2141,7 +2182,9 @@ export const placeBid = async (req, res) => {
               isReserveBidder: true,
               isAutoBid: true,
               isCatalogBid: isInCatalogPhase,
-              timestamp: new Date()
+              timestamp: new Date(),
+              ipAddress,
+              userAgent
             });
             currentLot.currentBid = existingHighestReserveBid;
 
@@ -2155,7 +2198,9 @@ export const placeBid = async (req, res) => {
               maxBid: existingHighestReserveBid,
               isReserveBidder: true,
               isAutoBid: true,
-              isCatalogBid: isInCatalogPhase
+              isCatalogBid: isInCatalogPhase,
+              ipAddress,
+              userAgent
             });
 
             // STEP 2: Update auction reserve to new bidder (HIDDEN)
@@ -2199,7 +2244,9 @@ export const placeBid = async (req, res) => {
               isReserveBidder: true,
               isAutoBid: false,
               isCatalogBid: isInCatalogPhase,
-              timestamp: new Date()
+              timestamp: new Date(),
+              ipAddress,
+              userAgent
             });
             currentLot.currentBid = bidAmountToPlace;
             currentLot.highestReserveBid = maxBid;
@@ -2211,7 +2258,9 @@ export const placeBid = async (req, res) => {
               maxBid: maxBid,
               isReserveBidder: true,
               isAutoBid: false,
-              isCatalogBid: isInCatalogPhase
+              isCatalogBid: isInCatalogPhase,
+              ipAddress,
+              userAgent
             });
           }
           auction.currentBid = bidAmountToPlace;
@@ -2286,7 +2335,9 @@ export const placeBid = async (req, res) => {
                 isReserveBidder: true,
                 isAutoBid: true,
                 isCatalogBid: isInCatalogPhase,
-                timestamp: new Date()
+                timestamp: new Date(),
+                ipAddress,
+                userAgent
               });
               currentLot.currentBid = autoBidAmount;
             } else {
@@ -2297,7 +2348,9 @@ export const placeBid = async (req, res) => {
                 maxBid: existingHighestReserveBid,
                 isReserveBidder: true,
                 isAutoBid: true,
-                isCatalogBid: isInCatalogPhase
+                isCatalogBid: isInCatalogPhase,
+                ipAddress,
+                userAgent
               });
             }
 
@@ -2573,7 +2626,30 @@ export const placeBid = async (req, res) => {
         } : null
       });
 
-      console.log('✅ BACKEND - bid-placed event emitted successfully');
+      // Emit to admin bid tracking room for real-time admin updates
+      io.to('admin-bid-tracking').emit('new-bid', {
+        bidId: latestBid._id,
+        auctionId: auction._id,
+        auctionTitle: auction.title,
+        lotNumber: auction.isLotBidding ? (currentLot?.lotNumber || null) : null,
+        lotTitle: auction.isLotBidding ? (currentLot?.title || null) : null,
+        bidder: {
+          id: user._id,
+          name: user.name,
+          email: user.email
+        },
+        amount: latestBid.amount,
+        maxBid: latestBid.maxBid,
+        timestamp: latestBid.timestamp,
+        ipAddress: latestBid.ipAddress,
+        userAgent: latestBid.userAgent,
+        isWinning: true, // New bids are always winning initially
+        isAutoBid: latestBid.isAutoBid || false,
+        isReserveBidder: latestBid.isReserveBidder || false,
+        currentWinningBid: auction.isLotBidding ? currentLot.currentBid : auction.currentBid
+      });
+
+      console.log('✅ BACKEND - bid-placed and new-bid events emitted successfully');
 
       // Reset 3-phase timer on new bid (stays in same phase)
       await resetPhaseTimer(auction._id, io);
@@ -2795,6 +2871,154 @@ export const getPriceRealization = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch price realization data',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get all bids across all auctions (for admin bid tracking)
+// @route   GET /api/auctions/admin/bid-tracking
+// @access  Admin only
+export const getAllBidsForTracking = async (req, res) => {
+  try {
+    const { 
+      auctionId, 
+      status, 
+      startDate, 
+      endDate,
+      page = 1,
+      limit = 50
+    } = req.query;
+
+    // Build query
+    const query = {};
+    
+    if (auctionId) {
+      query._id = auctionId;
+    }
+
+    // Date filtering
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) {
+        query.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        query.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    // Get auctions with bids
+    const auctions = await Auction.find(query)
+      .populate('bids.user', 'name email')
+      .populate('lots.bids.user', 'name email')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Flatten all bids into a single array
+    const allBids = [];
+
+    auctions.forEach(auction => {
+      // Process auction-level bids (non-lot auctions)
+      if (!auction.isLotBidding && auction.bids && auction.bids.length > 0) {
+        auction.bids.forEach(bid => {
+          // Only include bids with IP address (new bids from today onwards)
+          if (bid.ipAddress) {
+            allBids.push({
+              _id: bid._id,
+              auctionId: auction._id,
+              auctionTitle: auction.title,
+              lotNumber: null,
+              bidder: bid.user ? {
+                id: bid.user._id,
+                name: bid.user.name,
+                email: bid.user.email
+              } : { name: 'System Bid', email: 'N/A' },
+              amount: bid.amount,
+              maxBid: bid.maxBid,
+              timestamp: bid.timestamp,
+              ipAddress: bid.ipAddress || 'Not tracked',
+              userAgent: bid.userAgent || 'Not tracked',
+              isAutoBid: bid.isAutoBid || false,
+              isReserveBidder: bid.isReserveBidder || false,
+              isCatalogBid: bid.isCatalogBid || false,
+              currentWinningBid: auction.currentBid,
+              isWinning: bid.amount === auction.currentBid
+            });
+          }
+        });
+      }
+
+      // Process lot-level bids
+      if (auction.isLotBidding && auction.lots) {
+        auction.lots.forEach(lot => {
+          if (lot.bids && lot.bids.length > 0) {
+            lot.bids.forEach(bid => {
+              // Only include bids with IP address
+              if (bid.ipAddress) {
+                allBids.push({
+                  _id: bid._id,
+                  auctionId: auction._id,
+                  auctionTitle: auction.title,
+                  lotNumber: lot.lotNumber,
+                  lotTitle: lot.title,
+                  bidder: bid.user ? {
+                    id: bid.user._id,
+                    name: bid.user.name,
+                    email: bid.user.email
+                  } : { name: 'System Bid', email: 'N/A' },
+                  amount: bid.amount,
+                  maxBid: bid.maxBid,
+                  timestamp: bid.timestamp,
+                  ipAddress: bid.ipAddress || 'Not tracked',
+                  userAgent: bid.userAgent || 'Not tracked',
+                  isAutoBid: bid.isAutoBid || false,
+                  isReserveBidder: bid.isReserveBidder || false,
+                  isCatalogBid: bid.isCatalogBid || false,
+                  isSystemBid: bid.isSystemBid || false,
+                  currentWinningBid: lot.currentBid,
+                  isWinning: bid.amount === lot.currentBid
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+
+    // Sort by timestamp (newest first)
+    allBids.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // Apply status filter after flattening
+    let filteredBids = allBids;
+    if (status === 'winning') {
+      filteredBids = allBids.filter(bid => bid.isWinning);
+    } else if (status === 'outbid') {
+      filteredBids = allBids.filter(bid => !bid.isWinning);
+    }
+
+    // Pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const paginatedBids = filteredBids.slice(startIndex, endIndex);
+
+    res.json({
+      success: true,
+      data: {
+        bids: paginatedBids,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(filteredBids.length / limit),
+          totalBids: filteredBids.length,
+          bidsPerPage: parseInt(limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get all bids error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch bid tracking data',
       error: error.message
     });
   }
