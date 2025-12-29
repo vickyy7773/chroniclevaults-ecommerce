@@ -308,7 +308,7 @@ const BidTracking = () => {
                           {new Date(event.timestamp).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(event.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(event.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                         </p>
                       </td>
                       <td className="px-4 py-3">
@@ -426,7 +426,13 @@ const BidTracking = () => {
 
                       <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
                         <span className="font-mono">{event.ipAddress}</span>
-                        <span>{new Date(event.timestamp).toLocaleString('en-IN')}</span>
+                        <span>{new Date(event.timestamp).toLocaleString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit'
+                        })}</span>
                       </div>
                     </div>
                   </div>

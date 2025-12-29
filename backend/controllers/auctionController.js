@@ -2982,8 +2982,8 @@ export const getAllBidsForTracking = async (req, res) => {
               userAgent: bid.userAgent || 'Not tracked',
               isAutoBid: bid.isAutoBid || false,
               isReserveBidder: bid.isReserveBidder || false,
-              trigger: bid.isAutoBid ? 'Reserve Defense' : 'Manual',
-              description: bid.isAutoBid ? 'Auto-bid executed' : 'Bid placed'
+              trigger: bid.isReserveBidder ? 'Reserve Bidder' : (bid.isAutoBid ? 'Reserve Defense' : 'Manual'),
+              description: bid.isReserveBidder ? 'Reserve bidder placed bid' : (bid.isAutoBid ? 'Auto-bid executed' : 'Bid placed')
             });
 
             // EVENT 2: Outbid (if this bid was outbid)
@@ -3095,8 +3095,8 @@ export const getAllBidsForTracking = async (req, res) => {
                   userAgent: bid.userAgent || 'Not tracked',
                   isAutoBid: bid.isAutoBid || false,
                   isReserveBidder: bid.isReserveBidder || false,
-                  trigger: bid.isAutoBid ? 'Reserve Defense' : 'Manual',
-                  description: bid.isAutoBid ? 'Auto-bid executed' : 'Bid placed'
+                  trigger: bid.isReserveBidder ? 'Reserve Bidder' : (bid.isAutoBid ? 'Reserve Defense' : 'Manual'),
+                  description: bid.isReserveBidder ? 'Reserve bidder placed bid' : (bid.isAutoBid ? 'Auto-bid executed' : 'Bid placed')
                 });
 
                 // EVENT 2: Outbid (if this bid was outbid)
