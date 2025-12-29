@@ -11,6 +11,7 @@ const BidTracking = () => {
   const [filters, setFilters] = useState({
     auctionId: '',
     status: '', // event type filter
+    lotNumber: '',
     startDate: '',
     endDate: '',
     page: 1,
@@ -150,7 +151,7 @@ const BidTracking = () => {
 
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 md:p-6 mb-6 border border-gray-200 dark:border-gray-700">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
           {/* Auction Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -188,6 +189,26 @@ const BidTracking = () => {
             </select>
           </div>
 
+          {/* Lot Number Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Lot Number
+            </label>
+            <select
+              value={filters.lotNumber}
+              onChange={(e) => handleFilterChange('lotNumber', e.target.value)}
+              className="w-full px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="">All Lots</option>
+              <option value="auction-level">Auction Level</option>
+              {[...Array(100)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  Lot #{i + 1}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Date Range */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -215,12 +236,13 @@ const BidTracking = () => {
         </div>
 
         {/* Clear Filters */}
-        {(filters.auctionId || filters.status || filters.startDate || filters.endDate) && (
+        {(filters.auctionId || filters.status || filters.lotNumber || filters.startDate || filters.endDate) && (
           <div className="mt-4 flex justify-end">
             <button
               onClick={() => setFilters({
                 auctionId: '',
                 status: '',
+                lotNumber: '',
                 startDate: '',
                 endDate: '',
                 page: 1,

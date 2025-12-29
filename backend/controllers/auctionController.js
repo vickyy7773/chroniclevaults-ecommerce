@@ -2892,10 +2892,11 @@ export const getPriceRealization = async (req, res) => {
 // @access  Admin only
 export const getAllBidsForTracking = async (req, res) => {
   try {
-    const { 
-      auctionId, 
-      status, 
-      startDate, 
+    const {
+      auctionId,
+      status,
+      lotNumber,
+      startDate,
       endDate,
       page = 1,
       limit = 50
@@ -3202,10 +3203,22 @@ export const getAllBidsForTracking = async (req, res) => {
     // Sort by timestamp (newest first)
     allEvents.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    // Apply event type filter
+    // Apply filters
     let filteredEvents = allEvents;
+
+    // Filter by event type
     if (status) {
-      filteredEvents = allEvents.filter(event => event.eventType === status);
+      filteredEvents = filteredEvents.filter(event => event.eventType === status);
+    }
+
+    // Filter by lot number
+    if (lotNumber) {
+      filteredEvents = filteredEvents.filter(event => {
+        if (lotNumber === 'auction-level') {
+          return !event.lotNumber; // Auction-level bids have no lot number
+        }
+        return event.lotNumber && event.lotNumber.toString() === lotNumber;
+      });
     }
 
     // Pagination
