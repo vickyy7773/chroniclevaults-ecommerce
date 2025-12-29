@@ -3264,3 +3264,123 @@ export const getAllBidsForTracking = async (req, res) => {
     });
   }
 };
+
+// ============================================
+// SALES REPORTS
+// ============================================
+
+/**
+ * Get sales reports with total revenue, sold/unsold items, and auction-wise breakdown
+ * Admin only endpoint
+ */
+export const getSalesReports = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    // Build date filter
+    const dateFilter = {};
+    if (startDate || endDate) {
+      dateFilter.createdAt = {};
+      if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // Include entire end date
+        dateFilter.createdAt.$lte = end;
+      }
+    }
+
+    // Fetch all auctions with date filter
+    const auctions = await Auction.find(dateFilter)
+      .populate('winner', 'name email')
+      .populate('reserveBidder', 'name email')
+      .sort({ createdAt: -1 });
+
+    // Initialize metrics
+    let totalRevenue = 0;
+    let totalSoldItems = 0;
+    let totalUnsoldItems = 0;
+    const auctionWiseData = [];
+
+    // Process each auction
+    for (const auction of auctions) {
+      let auctionRevenue = 0;
+      let auctionSoldItems = 0;
+      let auctionUnsoldItems = 0;
+
+      if (auction.isLotBidding && auction.lots) {
+        // LOT BIDDING: Calculate from lots
+        for (const lot of auction.lots) {
+          if (lot.status === 'Sold' && lot.currentBid) {
+            auctionRevenue += lot.currentBid;
+            auctionSoldItems++;
+            totalSoldItems++;
+          } else if (lot.status === 'Unsold' || lot.status === 'Ended') {
+            auctionUnsoldItems++;
+            totalUnsoldItems++;
+          }
+        }
+      } else {
+        // REGULAR AUCTION: Single item
+        if (auction.status === 'Ended' && auction.winner && auction.currentBid) {
+          auctionRevenue = auction.currentBid;
+          auctionSoldItems = 1;
+          totalSoldItems++;
+        } else if (auction.status === 'Ended' && !auction.winner) {
+          auctionUnsoldItems = 1;
+          totalUnsoldItems++;
+        }
+      }
+
+      totalRevenue += auctionRevenue;
+
+      // Add to auction-wise breakdown
+      auctionWiseData.push({
+        auctionId: auction._id,
+        auctionNumber: auction.auctionNumber || `AUC-${auction._id.toString().slice(-6).toUpperCase()}`,
+        title: auction.title,
+        status: auction.status,
+        isLotBidding: auction.isLotBidding,
+        totalLots: auction.totalLots || (auction.isLotBidding ? auction.lots?.length : 1),
+        revenue: auctionRevenue,
+        soldItems: auctionSoldItems,
+        unsoldItems: auctionUnsoldItems,
+        totalBids: auction.totalBids || auction.bids?.length || 0,
+        startTime: auction.startTime,
+        endTime: auction.endTime,
+        createdAt: auction.createdAt
+      });
+    }
+
+    // Sort auction-wise data by revenue (highest first)
+    auctionWiseData.sort((a, b) => b.revenue - a.revenue);
+
+    res.json({
+      success: true,
+      data: {
+        summary: {
+          totalRevenue,
+          totalSoldItems,
+          totalUnsoldItems,
+          totalItems: totalSoldItems + totalUnsoldItems,
+          totalAuctions: auctions.length,
+          averageRevenuePerSoldItem: totalSoldItems > 0 ? totalRevenue / totalSoldItems : 0,
+          successRate: (totalSoldItems + totalUnsoldItems) > 0
+            ? ((totalSoldItems / (totalSoldItems + totalUnsoldItems)) * 100).toFixed(2)
+            : 0
+        },
+        auctionWise: auctionWiseData,
+        filters: {
+          startDate: startDate || null,
+          endDate: endDate || null
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get sales reports error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch sales reports',
+      error: error.message
+    });
+  }
+};
