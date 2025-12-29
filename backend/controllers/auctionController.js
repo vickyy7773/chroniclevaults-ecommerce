@@ -2961,11 +2961,13 @@ export const getAllBidsForTracking = async (req, res) => {
 
             // EVENT 1: Bid Placed
             const bidPlacedSeq = eventSeq++;
+            const auctionNumber = `AUC-${auction._id.toString().slice(-6).toUpperCase()}`;
             allEvents.push({
               _id: `${bid._id}-placed`,
               seq: bidPlacedSeq,
               eventType: bid.isAutoBid ? 'auto_bid' : 'bid_placed',
               auctionId: auction._id,
+              auctionNumber: auctionNumber,
               auctionTitle: auction.title,
               lotNumber: null,
               bidder: bid.user ? {
@@ -2991,6 +2993,7 @@ export const getAllBidsForTracking = async (req, res) => {
                 seq: eventSeq++,
                 eventType: 'outbid',
                 auctionId: auction._id,
+                auctionNumber: auctionNumber,
                 auctionTitle: auction.title,
                 lotNumber: null,
                 bidder: bid.user ? {
@@ -3017,6 +3020,7 @@ export const getAllBidsForTracking = async (req, res) => {
                 seq: eventSeq++,
                 eventType: 'winner',
                 auctionId: auction._id,
+                auctionNumber: auctionNumber,
                 auctionTitle: auction.title,
                 lotNumber: null,
                 bidder: bid.user ? {
@@ -3069,11 +3073,13 @@ export const getAllBidsForTracking = async (req, res) => {
 
                 // EVENT 1: Bid Placed
                 const bidPlacedSeq = eventSeq++;
+                const auctionNumber = `AUC-${auction._id.toString().slice(-6).toUpperCase()}`;
                 allEvents.push({
                   _id: `${bid._id}-placed`,
                   seq: bidPlacedSeq,
                   eventType: bid.isAutoBid ? 'auto_bid' : 'bid_placed',
                   auctionId: auction._id,
+                  auctionNumber: auctionNumber,
                   auctionTitle: auction.title,
                   lotNumber: lot.lotNumber,
                   lotTitle: lot.title,
@@ -3100,6 +3106,7 @@ export const getAllBidsForTracking = async (req, res) => {
                     seq: eventSeq++,
                     eventType: 'outbid',
                     auctionId: auction._id,
+                    auctionNumber: auctionNumber,
                     auctionTitle: auction.title,
                     lotNumber: lot.lotNumber,
                     lotTitle: lot.title,
@@ -3127,6 +3134,7 @@ export const getAllBidsForTracking = async (req, res) => {
                     seq: eventSeq++,
                     eventType: 'winner',
                     auctionId: auction._id,
+                    auctionNumber: auctionNumber,
                     auctionTitle: auction.title,
                     lotNumber: lot.lotNumber,
                     lotTitle: lot.title,

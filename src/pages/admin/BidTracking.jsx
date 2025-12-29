@@ -278,9 +278,6 @@ const BidTracking = () => {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Trigger
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Related
-                    </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       IP Address
                     </th>
@@ -296,8 +293,8 @@ const BidTracking = () => {
                         {event.seq}
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-xs text-gray-900 dark:text-white font-mono truncate max-w-[100px]" title={event.auctionId}>
-                          {event.auctionId?.slice(-8)}
+                        <p className="text-xs text-gray-900 dark:text-white font-mono font-semibold">
+                          {event.auctionNumber}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[120px]" title={event.auctionTitle}>
                           {event.auctionTitle}
@@ -356,9 +353,6 @@ const BidTracking = () => {
                           {event.trigger}
                         </span>
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap text-center text-gray-600 dark:text-gray-400">
-                        {event.relatedSeq || '-'}
-                      </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <p className="text-xs text-gray-600 dark:text-gray-400 font-mono">
                           {event.ipAddress}
@@ -411,7 +405,7 @@ const BidTracking = () => {
                       </div>
 
                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        Auction: {event.auctionId?.slice(-8)} {event.lotNumber && `• Lot #${event.lotNumber}`}
+                        Auction: <span className="font-mono font-semibold">{event.auctionNumber}</span> {event.lotNumber && `• Lot #${event.lotNumber}`}
                       </p>
                       <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
                         {event.auctionTitle}
@@ -428,11 +422,6 @@ const BidTracking = () => {
                         <p className="text-xs text-gray-600 dark:text-gray-400">
                           <span className="font-semibold">Description:</span> {event.description}
                         </p>
-                        {event.relatedSeq && (
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
-                            <span className="font-semibold">Related:</span> #{event.relatedSeq}
-                          </p>
-                        )}
                       </div>
 
                       <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
