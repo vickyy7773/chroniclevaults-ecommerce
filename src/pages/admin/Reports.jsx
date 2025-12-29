@@ -201,7 +201,7 @@ const Reports = () => {
         <div className="flex items-center gap-3 mb-2">
           <BarChart3 className="w-8 h-8 text-accent-600" />
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Sales Reports
+            Sales Dashboard
           </h1>
         </div>
         <p className="text-gray-600 dark:text-gray-400">
