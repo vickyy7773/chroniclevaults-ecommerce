@@ -2926,8 +2926,9 @@ export const getAllBidsForTracking = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Flatten all bids into a single array
-    const allBids = [];
+    // Flatten all bids into events array
+    const allEvents = [];
+    let eventSeq = 0;
 
     auctions.forEach(auction => {
       // Process auction-level bids (non-lot auctions)
@@ -2939,7 +2940,7 @@ export const getAllBidsForTracking = async (req, res) => {
         // Sort bids by amount (descending) to find who outbid whom
         const sortedBids = [...auction.bids].sort((a, b) => b.amount - a.amount);
 
-        auction.bids.forEach(bid => {
+        auction.bids.forEach((bid, bidIndex) => {
           // Only include bids with IP address (new bids from today onwards)
           if (bid.ipAddress) {
             const isWinningBid = bid.amount === auction.currentBid;
@@ -2952,18 +2953,18 @@ export const getAllBidsForTracking = async (req, res) => {
                 const outbidder = higherBids[higherBids.length - 1]; // Get the lowest higher bid
                 outbidBy = outbidder.user ? {
                   name: outbidder.user.name,
-                  amount: outbidder.amount
+                  amount: outbidder.amount,
+                  timestamp: outbidder.timestamp
                 } : null;
               }
             }
 
-            // Determine status based on auction state
-            // Only show "winner" if auction ended AND bid is winning
-            // Otherwise show "bid_placed" for all other cases (active or ended but not winning)
-            const bidStatus = (isAuctionEnded && isWinningBid) ? 'winner' : 'bid_placed';
-
-            allBids.push({
-              _id: bid._id,
+            // EVENT 1: Bid Placed
+            const bidPlacedSeq = eventSeq++;
+            allEvents.push({
+              _id: `${bid._id}-placed`,
+              seq: bidPlacedSeq,
+              eventType: bid.isAutoBid ? 'auto_bid' : 'bid_placed',
               auctionId: auction._id,
               auctionTitle: auction.title,
               lotNumber: null,
@@ -2979,14 +2980,59 @@ export const getAllBidsForTracking = async (req, res) => {
               userAgent: bid.userAgent || 'Not tracked',
               isAutoBid: bid.isAutoBid || false,
               isReserveBidder: bid.isReserveBidder || false,
-              isCatalogBid: bid.isCatalogBid || false,
-              currentWinningBid: auction.currentBid,
-              isWinning: isWinningBid,
-              auctionEndTime: auction.endTime,
-              isAuctionEnded: isAuctionEnded,
-              status: bidStatus,
-              outbidBy: outbidBy
+              trigger: bid.isAutoBid ? 'Reserve Defense' : 'Manual',
+              description: bid.isAutoBid ? 'Auto-bid executed' : 'Bid placed'
             });
+
+            // EVENT 2: Outbid (if this bid was outbid)
+            if (outbidBy) {
+              allEvents.push({
+                _id: `${bid._id}-outbid`,
+                seq: eventSeq++,
+                eventType: 'outbid',
+                auctionId: auction._id,
+                auctionTitle: auction.title,
+                lotNumber: null,
+                bidder: bid.user ? {
+                  id: bid.user._id,
+                  name: bid.user.name,
+                  email: bid.user.email
+                } : { name: 'System Bid', email: 'N/A' },
+                amount: outbidBy.amount,
+                originalAmount: bid.amount,
+                timestamp: outbidBy.timestamp || bid.timestamp,
+                ipAddress: bid.ipAddress || 'Not tracked',
+                userAgent: bid.userAgent || 'Not tracked',
+                trigger: 'Higher Bid',
+                relatedSeq: bidPlacedSeq,
+                outbidByName: outbidBy.name,
+                description: `Outbid by ${outbidBy.name}`
+              });
+            }
+
+            // EVENT 3: Winner (if auction ended and this is winning bid)
+            if (isAuctionEnded && isWinningBid) {
+              allEvents.push({
+                _id: `${bid._id}-winner`,
+                seq: eventSeq++,
+                eventType: 'winner',
+                auctionId: auction._id,
+                auctionTitle: auction.title,
+                lotNumber: null,
+                bidder: bid.user ? {
+                  id: bid.user._id,
+                  name: bid.user.name,
+                  email: bid.user.email
+                } : { name: 'System Bid', email: 'N/A' },
+                amount: bid.amount,
+                timestamp: auctionEndTime,
+                ipAddress: bid.ipAddress || 'Not tracked',
+                userAgent: bid.userAgent || 'Not tracked',
+                trigger: 'Highest Bid',
+                relatedSeq: bidPlacedSeq,
+                description: 'Winner declared'
+              });
+            }
           }
         });
       }
@@ -3002,7 +3048,7 @@ export const getAllBidsForTracking = async (req, res) => {
             // Sort bids by amount (descending) to find who outbid whom
             const sortedBids = [...lot.bids].sort((a, b) => b.amount - a.amount);
 
-            lot.bids.forEach(bid => {
+            lot.bids.forEach((bid, bidIndex) => {
               // Only include bids with IP address
               if (bid.ipAddress) {
                 const isWinningBid = bid.amount === lot.currentBid;
@@ -3015,16 +3061,18 @@ export const getAllBidsForTracking = async (req, res) => {
                     const outbidder = higherBids[higherBids.length - 1]; // Get the lowest higher bid
                     outbidBy = outbidder.user ? {
                       name: outbidder.user.name,
-                      amount: outbidder.amount
+                      amount: outbidder.amount,
+                      timestamp: outbidder.timestamp
                     } : null;
                   }
                 }
 
-                // Determine status: only "winner" if lot ended AND bid is winning
-                const bidStatus = (isLotEnded && isWinningBid) ? 'winner' : 'bid_placed';
-
-                allBids.push({
-                  _id: bid._id,
+                // EVENT 1: Bid Placed
+                const bidPlacedSeq = eventSeq++;
+                allEvents.push({
+                  _id: `${bid._id}-placed`,
+                  seq: bidPlacedSeq,
+                  eventType: bid.isAutoBid ? 'auto_bid' : 'bid_placed',
                   auctionId: auction._id,
                   auctionTitle: auction.title,
                   lotNumber: lot.lotNumber,
@@ -3041,15 +3089,61 @@ export const getAllBidsForTracking = async (req, res) => {
                   userAgent: bid.userAgent || 'Not tracked',
                   isAutoBid: bid.isAutoBid || false,
                   isReserveBidder: bid.isReserveBidder || false,
-                  isCatalogBid: bid.isCatalogBid || false,
-                  isSystemBid: bid.isSystemBid || false,
-                  currentWinningBid: lot.currentBid,
-                  isWinning: isWinningBid,
-                  auctionEndTime: lotEndTime,
-                  isAuctionEnded: isLotEnded,
-                  status: bidStatus,
-                  outbidBy: outbidBy
+                  trigger: bid.isAutoBid ? 'Reserve Defense' : 'Manual',
+                  description: bid.isAutoBid ? 'Auto-bid executed' : 'Bid placed'
                 });
+
+                // EVENT 2: Outbid (if this bid was outbid)
+                if (outbidBy) {
+                  allEvents.push({
+                    _id: `${bid._id}-outbid`,
+                    seq: eventSeq++,
+                    eventType: 'outbid',
+                    auctionId: auction._id,
+                    auctionTitle: auction.title,
+                    lotNumber: lot.lotNumber,
+                    lotTitle: lot.title,
+                    bidder: bid.user ? {
+                      id: bid.user._id,
+                      name: bid.user.name,
+                      email: bid.user.email
+                    } : { name: 'System Bid', email: 'N/A' },
+                    amount: outbidBy.amount,
+                    originalAmount: bid.amount,
+                    timestamp: outbidBy.timestamp || bid.timestamp,
+                    ipAddress: bid.ipAddress || 'Not tracked',
+                    userAgent: bid.userAgent || 'Not tracked',
+                    trigger: 'Higher Bid',
+                    relatedSeq: bidPlacedSeq,
+                    outbidByName: outbidBy.name,
+                    description: `Outbid by ${outbidBy.name}`
+                  });
+                }
+
+                // EVENT 3: Winner (if lot ended and this is winning bid)
+                if (isLotEnded && isWinningBid) {
+                  allEvents.push({
+                    _id: `${bid._id}-winner`,
+                    seq: eventSeq++,
+                    eventType: 'winner',
+                    auctionId: auction._id,
+                    auctionTitle: auction.title,
+                    lotNumber: lot.lotNumber,
+                    lotTitle: lot.title,
+                    bidder: bid.user ? {
+                      id: bid.user._id,
+                      name: bid.user.name,
+                      email: bid.user.email
+                    } : { name: 'System Bid', email: 'N/A' },
+                    amount: bid.amount,
+                    timestamp: lotEndTime,
+                    ipAddress: bid.ipAddress || 'Not tracked',
+                    userAgent: bid.userAgent || 'Not tracked',
+                    trigger: 'Highest Bid',
+                    relatedSeq: bidPlacedSeq,
+                    description: 'Winner declared'
+                  });
+                }
               }
             });
           }
@@ -3058,30 +3152,28 @@ export const getAllBidsForTracking = async (req, res) => {
     });
 
     // Sort by timestamp (newest first)
-    allBids.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    allEvents.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    // Apply status filter after flattening
-    let filteredBids = allBids;
-    if (status === 'winner') {
-      filteredBids = allBids.filter(bid => bid.status === 'winner');
-    } else if (status === 'bid_placed') {
-      filteredBids = allBids.filter(bid => bid.status === 'bid_placed');
+    // Apply event type filter
+    let filteredEvents = allEvents;
+    if (status) {
+      filteredEvents = allEvents.filter(event => event.eventType === status);
     }
 
     // Pagination
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-    const paginatedBids = filteredBids.slice(startIndex, endIndex);
+    const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
 
     res.json({
       success: true,
       data: {
-        bids: paginatedBids,
+        events: paginatedEvents,
         pagination: {
           currentPage: parseInt(page),
-          totalPages: Math.ceil(filteredBids.length / limit),
-          totalBids: filteredBids.length,
-          bidsPerPage: parseInt(limit)
+          totalPages: Math.ceil(filteredEvents.length / limit),
+          totalEvents: filteredEvents.length,
+          eventsPerPage: parseInt(limit)
         }
       }
     });

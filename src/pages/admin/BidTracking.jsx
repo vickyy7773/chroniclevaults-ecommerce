@@ -5,12 +5,12 @@ import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
 
 const BidTracking = () => {
-  const [bids, setBids] = useState([]);
+  const [events, setEvents] = useState([]);
   const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     auctionId: '',
-    status: '',
+    status: '', // event type filter
     startDate: '',
     endDate: '',
     page: 1,
@@ -19,9 +19,9 @@ const BidTracking = () => {
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
-    totalBids: 0
+    totalEvents: 0
   });
-  const [newBidCount, setNewBidCount] = useState(0);
+  const [newEventCount, setNewEventCount] = useState(0);
   const socketRef = useRef(null);
 
   // Fetch bids on component mount and filter change
@@ -61,41 +61,12 @@ const BidTracking = () => {
         autoClose: 3000
       });
 
-      // Increment new bid counter
-      setNewBidCount(prev => prev + 1);
+      // Increment new event counter
+      setNewEventCount(prev => prev + 1);
 
-      // If on first page, update bids list
+      // Refresh to get new events
       if (filters.page === 1) {
-        setBids(prevBids => {
-          // Add new bid at the top
-          const updatedBids = [data, ...prevBids];
-
-          // Update existing bids for the same auction/lot to show "outbid by" info
-          const finalBids = updatedBids.map(bid => {
-            // Skip if this is the new bid itself
-            if (bid._id === data._id) return bid;
-
-            // Check if this bid is for the same auction/lot
-            const sameAuctionLot = bid.auctionId === data.auctionId &&
-              bid.lotNumber === data.lotNumber;
-
-            if (sameAuctionLot && bid.amount < data.amount) {
-              // This bid has been outbid by the new bid
-              return {
-                ...bid,
-                outbidBy: {
-                  name: data.bidder.name,
-                  amount: data.amount
-                },
-                isWinning: false
-              };
-            }
-
-            return bid;
-          });
-
-          return finalBids.slice(0, filters.limit);
-        });
+        fetchBids();
       }
     });
 
@@ -116,15 +87,15 @@ const BidTracking = () => {
     try {
       setLoading(true);
       const response = await bidTrackingService.getAllBids(filters);
-      console.log('Bids Response:', response);
+      console.log('Events Response:', response);
 
-      setBids(response.data?.bids || []);
+      setEvents(response.data?.events || []);
       setPagination(response.data?.pagination || {});
-      setNewBidCount(0); // Reset counter when refreshing
+      setNewEventCount(0); // Reset counter when refreshing
     } catch (error) {
-      console.error('Error fetching bids:', error);
+      console.error('Error fetching events:', error);
       toast.error('Failed to fetch bid tracking data');
-      setBids([]);
+      setEvents([]);
     } finally {
       setLoading(false);
     }
@@ -159,14 +130,14 @@ const BidTracking = () => {
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
             <Activity className="inline-block" />
             Bid Tracking
-            {newBidCount > 0 && (
+            {newEventCount > 0 && (
               <span className="ml-2 px-3 py-1 bg-red-500 text-white text-sm rounded-full animate-pulse">
-                {newBidCount} new
+                {newEventCount} new
               </span>
             )}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Real-time bid monitoring with IP tracking
+            Real-time event log with complete bid tracking
           </p>
         </div>
         <button
@@ -199,19 +170,21 @@ const BidTracking = () => {
             </select>
           </div>
 
-          {/* Status Filter */}
+          {/* Event Type Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Status
+              Event Type
             </label>
             <select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
               className="w-full px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 dark:bg-gray-700 dark:text-white"
             >
-              <option value="">All Status</option>
-              <option value="winner">Winner 🏆</option>
+              <option value="">All Events</option>
               <option value="bid_placed">Bid Placed</option>
+              <option value="auto_bid">Auto-Bid</option>
+              <option value="outbid">Outbid</option>
+              <option value="winner">Winner 🏆</option>
             </select>
           </div>
 
@@ -267,115 +240,134 @@ const BidTracking = () => {
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-600"></div>
           </div>
-        ) : bids.length === 0 ? (
+        ) : events.length === 0 ? (
           <div className="text-center py-12">
             <Activity className="w-16 h-16 mx-auto text-gray-400 mb-4" />
             <p className="text-gray-500 dark:text-gray-400">
-              No bids found. IP tracking only captures new bids from today onwards.
+              No events found. Event tracking captures all bid activities.
             </p>
           </div>
         ) : (
           <>
             {/* Desktop View - Table */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm">
                 <thead className="bg-gray-50 dark:bg-gray-900">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Bidder
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Seq
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Auction/Lot
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Auction ID
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Amount
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Lot No
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Time
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      User
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Event Type
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Trigger
+                    </th>
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Related
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       IP Address
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Status
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Description
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {bids.map((bid) => (
-                    <tr key={bid._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 rounded-full bg-accent-500 flex items-center justify-center text-white font-bold mr-3">
-                            {bid.bidder.name?.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                              {bid.bidder.name}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {bid.bidder.email}
-                            </p>
-                          </div>
-                        </div>
+                  {events.map((event) => (
+                    <tr key={event._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-3 py-3 whitespace-nowrap text-gray-900 dark:text-white font-medium">
+                        {event.seq}
                       </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {bid.auctionTitle}
+                      <td className="px-4 py-3">
+                        <p className="text-xs text-gray-900 dark:text-white font-mono truncate max-w-[100px]" title={event.auctionId}>
+                          {event.auctionId?.slice(-8)}
                         </p>
-                        {bid.lotNumber && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Lot #{bid.lotNumber}
-                          </p>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <p className="text-sm font-bold text-gray-900 dark:text-white">
-                          ₹{bid.amount.toLocaleString('en-IN')}
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[120px]" title={event.auctionTitle}>
+                          {event.auctionTitle}
                         </p>
-                        {bid.maxBid && bid.maxBid > bid.amount && (
-                          <p className="text-xs text-blue-600 dark:text-blue-400">
-                            Max: ₹{bid.maxBid.toLocaleString('en-IN')}
-                          </p>
-                        )}
-                        {bid.isAutoBid && (
-                          <span className="text-xs text-purple-600 dark:text-purple-400">
-                            Auto-bid
-                          </span>
-                        )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <p className="text-sm text-gray-900 dark:text-white">
-                          {new Date(bid.timestamp).toLocaleDateString()}
+                      <td className="px-3 py-3 whitespace-nowrap text-center text-gray-900 dark:text-white">
+                        {event.lotNumber || '-'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <p className="text-xs text-gray-900 dark:text-white">
+                          {new Date(event.timestamp).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(bid.timestamp).toLocaleTimeString()}
+                          {new Date(event.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <p className="text-xs text-gray-600 dark:text-gray-400 font-mono">
-                          {bid.ipAddress}
+                      <td className="px-4 py-3">
+                        <p className="text-xs font-medium text-gray-900 dark:text-white truncate max-w-[120px]" title={event.bidder.name}>
+                          {event.bidder.name}
                         </p>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {bid.status === 'winner' ? (
-                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400">
-                            🏆 Winner
-                          </span>
-                        ) : bid.outbidBy ? (
-                          <div>
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400">
-                              Outbid by {bid.outbidBy.name}
-                            </span>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              ₹{bid.outbidBy.amount.toLocaleString('en-IN')}
-                            </p>
-                          </div>
-                        ) : (
-                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {event.eventType === 'bid_placed' && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
                             Bid Placed
                           </span>
                         )}
+                        {event.eventType === 'auto_bid' && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400">
+                            Auto-Bid
+                          </span>
+                        )}
+                        {event.eventType === 'outbid' && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400">
+                            Outbid
+                          </span>
+                        )}
+                        {event.eventType === 'winner' && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400">
+                            🏆 Winner
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <p className="text-xs font-bold text-gray-900 dark:text-white">
+                          ₹{event.amount.toLocaleString('en-IN')}
+                        </p>
+                        {event.originalAmount && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Was: ₹{event.originalAmount.toLocaleString('en-IN')}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-xs text-gray-700 dark:text-gray-300">
+                          {event.trigger}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 whitespace-nowrap text-center text-gray-600 dark:text-gray-400">
+                        {event.relatedSeq || '-'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 font-mono">
+                          {event.ipAddress}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-xs text-gray-700 dark:text-gray-300 max-w-[150px]">
+                          {event.description}
+                        </p>
                       </td>
                     </tr>
                   ))}
@@ -385,53 +377,67 @@ const BidTracking = () => {
 
             {/* Mobile View - Cards */}
             <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
-              {bids.map((bid) => (
-                <div key={bid._id} className="p-4">
+              {events.map((event) => (
+                <div key={event._id} className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="w-12 h-12 rounded-full bg-accent-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-                      {bid.bidder.name?.charAt(0).toUpperCase()}
+                      #{event.seq}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {bid.bidder.name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                        {bid.bidder.email}
-                      </p>
-
-                      <p className="text-sm text-gray-900 dark:text-white font-semibold">
-                        {bid.auctionTitle}
-                        {bid.lotNumber && ` - Lot #${bid.lotNumber}`}
-                      </p>
-
-                      <p className="text-lg font-bold text-accent-600 dark:text-accent-400 mt-1">
-                        ₹{bid.amount.toLocaleString('en-IN')}
-                      </p>
-
-                      <div className="flex flex-wrap items-center gap-2 mt-2">
-                        {bid.status === 'winner' ? (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400">
-                            🏆 Winner
-                          </span>
-                        ) : bid.outbidBy ? (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400">
-                            Outbid by {bid.outbidBy.name} @ ₹{bid.outbidBy.amount.toLocaleString('en-IN')}
-                          </span>
-                        ) : (
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {event.bidder.name}
+                        </p>
+                        {event.eventType === 'bid_placed' && (
                           <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
                             Bid Placed
                           </span>
                         )}
-                        {bid.isAutoBid && (
-                          <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 rounded-full text-xs font-medium">
-                            Auto-bid
+                        {event.eventType === 'auto_bid' && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400">
+                            Auto-Bid
+                          </span>
+                        )}
+                        {event.eventType === 'outbid' && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400">
+                            Outbid
+                          </span>
+                        )}
+                        {event.eventType === 'winner' && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400">
+                            🏆 Winner
                           </span>
                         )}
                       </div>
 
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        Auction: {event.auctionId?.slice(-8)} {event.lotNumber && `• Lot #${event.lotNumber}`}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
+                        {event.auctionTitle}
+                      </p>
+
+                      <p className="text-lg font-bold text-accent-600 dark:text-accent-400 mt-1">
+                        ₹{event.amount.toLocaleString('en-IN')}
+                      </p>
+
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          <span className="font-semibold">Trigger:</span> {event.trigger}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          <span className="font-semibold">Description:</span> {event.description}
+                        </p>
+                        {event.relatedSeq && (
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            <span className="font-semibold">Related:</span> #{event.relatedSeq}
+                          </p>
+                        )}
+                      </div>
+
                       <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        <span className="font-mono">{bid.ipAddress}</span>
-                        <span>{new Date(bid.timestamp).toLocaleString()}</span>
+                        <span className="font-mono">{event.ipAddress}</span>
+                        <span>{new Date(event.timestamp).toLocaleString('en-IN')}</span>
                       </div>
                     </div>
                   </div>
@@ -444,8 +450,8 @@ const BidTracking = () => {
               <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Showing {((pagination.currentPage - 1) * filters.limit) + 1} to{' '}
-                  {Math.min(pagination.currentPage * filters.limit, pagination.totalBids)} of{' '}
-                  {pagination.totalBids} bids
+                  {Math.min(pagination.currentPage * filters.limit, pagination.totalEvents)} of{' '}
+                  {pagination.totalEvents} events
                 </p>
                 <div className="flex gap-2">
                   <button
