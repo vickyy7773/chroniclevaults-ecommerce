@@ -2627,7 +2627,15 @@ export const placeBid = async (req, res) => {
       });
 
       // Emit to admin bid tracking room for real-time admin updates
+      // Check if auction/lot has ended to determine status
+      const endTime = auction.isLotBidding
+        ? (currentLot?.endTime ? new Date(currentLot.endTime) : new Date(auction.endTime))
+        : new Date(auction.endTime);
+      const isEnded = endTime < new Date();
+      const bidStatus = (isEnded && true) ? 'winner' : 'bid_placed'; // New bids are winning initially
+
       io.to('admin-bid-tracking').emit('new-bid', {
+        _id: latestBid._id,
         bidId: latestBid._id,
         auctionId: auction._id,
         auctionTitle: auction.title,
@@ -2646,7 +2654,10 @@ export const placeBid = async (req, res) => {
         isWinning: true, // New bids are always winning initially
         isAutoBid: latestBid.isAutoBid || false,
         isReserveBidder: latestBid.isReserveBidder || false,
-        currentWinningBid: auction.isLotBidding ? currentLot.currentBid : auction.currentBid
+        currentWinningBid: auction.isLotBidding ? currentLot.currentBid : auction.currentBid,
+        auctionEndTime: endTime,
+        isAuctionEnded: isEnded,
+        status: bidStatus
       });
 
       console.log('✅ BACKEND - bid-placed and new-bid events emitted successfully');
@@ -2925,10 +2936,26 @@ export const getAllBidsForTracking = async (req, res) => {
         const auctionEndTime = new Date(auction.endTime);
         const isAuctionEnded = auctionEndTime < new Date();
 
+        // Sort bids by amount (descending) to find who outbid whom
+        const sortedBids = [...auction.bids].sort((a, b) => b.amount - a.amount);
+
         auction.bids.forEach(bid => {
           // Only include bids with IP address (new bids from today onwards)
           if (bid.ipAddress) {
             const isWinningBid = bid.amount === auction.currentBid;
+
+            // Find who outbid this bid (next higher bid)
+            let outbidBy = null;
+            if (!isWinningBid) {
+              const higherBids = sortedBids.filter(b => b.amount > bid.amount && b.user);
+              if (higherBids.length > 0) {
+                const outbidder = higherBids[higherBids.length - 1]; // Get the lowest higher bid
+                outbidBy = outbidder.user ? {
+                  name: outbidder.user.name,
+                  amount: outbidder.amount
+                } : null;
+              }
+            }
 
             // Determine status based on auction state
             // Only show "winner" if auction ended AND bid is winning
@@ -2957,7 +2984,8 @@ export const getAllBidsForTracking = async (req, res) => {
               isWinning: isWinningBid,
               auctionEndTime: auction.endTime,
               isAuctionEnded: isAuctionEnded,
-              status: bidStatus
+              status: bidStatus,
+              outbidBy: outbidBy
             });
           }
         });
@@ -2971,10 +2999,26 @@ export const getAllBidsForTracking = async (req, res) => {
             const lotEndTime = lot.endTime ? new Date(lot.endTime) : new Date(auction.endTime);
             const isLotEnded = lotEndTime < new Date();
 
+            // Sort bids by amount (descending) to find who outbid whom
+            const sortedBids = [...lot.bids].sort((a, b) => b.amount - a.amount);
+
             lot.bids.forEach(bid => {
               // Only include bids with IP address
               if (bid.ipAddress) {
                 const isWinningBid = bid.amount === lot.currentBid;
+
+                // Find who outbid this bid (next higher bid)
+                let outbidBy = null;
+                if (!isWinningBid) {
+                  const higherBids = sortedBids.filter(b => b.amount > bid.amount && b.user);
+                  if (higherBids.length > 0) {
+                    const outbidder = higherBids[higherBids.length - 1]; // Get the lowest higher bid
+                    outbidBy = outbidder.user ? {
+                      name: outbidder.user.name,
+                      amount: outbidder.amount
+                    } : null;
+                  }
+                }
 
                 // Determine status: only "winner" if lot ended AND bid is winning
                 const bidStatus = (isLotEnded && isWinningBid) ? 'winner' : 'bid_placed';
@@ -3003,7 +3047,8 @@ export const getAllBidsForTracking = async (req, res) => {
                   isWinning: isWinningBid,
                   auctionEndTime: lotEndTime,
                   isAuctionEnded: isLotEnded,
-                  status: bidStatus
+                  status: bidStatus,
+                  outbidBy: outbidBy
                 });
               }
             });

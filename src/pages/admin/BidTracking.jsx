@@ -329,13 +329,24 @@ const BidTracking = () => {
                         </p>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          bid.status === 'winner'
-                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400'
-                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400'
-                        }`}>
-                          {bid.status === 'winner' ? '🏆 Winner' : 'Bid Placed'}
-                        </span>
+                        {bid.status === 'winner' ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400">
+                            🏆 Winner
+                          </span>
+                        ) : bid.outbidBy ? (
+                          <div>
+                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400">
+                              Outbid by {bid.outbidBy.name}
+                            </span>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              ₹{bid.outbidBy.amount.toLocaleString('en-IN')}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
+                            Bid Placed
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -369,13 +380,19 @@ const BidTracking = () => {
                       </p>
 
                       <div className="flex flex-wrap items-center gap-2 mt-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          bid.status === 'winner'
-                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400'
-                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400'
-                        }`}>
-                          {bid.status === 'winner' ? '🏆 Winner' : 'Bid Placed'}
-                        </span>
+                        {bid.status === 'winner' ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400">
+                            🏆 Winner
+                          </span>
+                        ) : bid.outbidBy ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400">
+                            Outbid by {bid.outbidBy.name} @ ₹{bid.outbidBy.amount.toLocaleString('en-IN')}
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
+                            Bid Placed
+                          </span>
+                        )}
                         {bid.isAutoBid && (
                           <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 rounded-full text-xs font-medium">
                             Auto-bid
