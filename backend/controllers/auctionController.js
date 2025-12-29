@@ -2921,9 +2921,20 @@ export const getAllBidsForTracking = async (req, res) => {
     auctions.forEach(auction => {
       // Process auction-level bids (non-lot auctions)
       if (!auction.isLotBidding && auction.bids && auction.bids.length > 0) {
+        // Check if auction has ended
+        const auctionEndTime = new Date(auction.endTime);
+        const isAuctionEnded = auctionEndTime < new Date();
+
         auction.bids.forEach(bid => {
           // Only include bids with IP address (new bids from today onwards)
           if (bid.ipAddress) {
+            const isWinningBid = bid.amount === auction.currentBid;
+
+            // Determine status based on auction state
+            // Only show "winner" if auction ended AND bid is winning
+            // Otherwise show "bid_placed" for all other cases (active or ended but not winning)
+            const bidStatus = (isAuctionEnded && isWinningBid) ? 'winner' : 'bid_placed';
+
             allBids.push({
               _id: bid._id,
               auctionId: auction._id,
@@ -2943,7 +2954,10 @@ export const getAllBidsForTracking = async (req, res) => {
               isReserveBidder: bid.isReserveBidder || false,
               isCatalogBid: bid.isCatalogBid || false,
               currentWinningBid: auction.currentBid,
-              isWinning: bid.amount === auction.currentBid
+              isWinning: isWinningBid,
+              auctionEndTime: auction.endTime,
+              isAuctionEnded: isAuctionEnded,
+              status: bidStatus
             });
           }
         });
@@ -2953,9 +2967,18 @@ export const getAllBidsForTracking = async (req, res) => {
       if (auction.isLotBidding && auction.lots) {
         auction.lots.forEach(lot => {
           if (lot.bids && lot.bids.length > 0) {
+            // Check if lot has ended (check lot's individual endTime)
+            const lotEndTime = lot.endTime ? new Date(lot.endTime) : new Date(auction.endTime);
+            const isLotEnded = lotEndTime < new Date();
+
             lot.bids.forEach(bid => {
               // Only include bids with IP address
               if (bid.ipAddress) {
+                const isWinningBid = bid.amount === lot.currentBid;
+
+                // Determine status: only "winner" if lot ended AND bid is winning
+                const bidStatus = (isLotEnded && isWinningBid) ? 'winner' : 'bid_placed';
+
                 allBids.push({
                   _id: bid._id,
                   auctionId: auction._id,
@@ -2977,7 +3000,10 @@ export const getAllBidsForTracking = async (req, res) => {
                   isCatalogBid: bid.isCatalogBid || false,
                   isSystemBid: bid.isSystemBid || false,
                   currentWinningBid: lot.currentBid,
-                  isWinning: bid.amount === lot.currentBid
+                  isWinning: isWinningBid,
+                  auctionEndTime: lotEndTime,
+                  isAuctionEnded: isLotEnded,
+                  status: bidStatus
                 });
               }
             });
@@ -2991,10 +3017,10 @@ export const getAllBidsForTracking = async (req, res) => {
 
     // Apply status filter after flattening
     let filteredBids = allBids;
-    if (status === 'winning') {
-      filteredBids = allBids.filter(bid => bid.isWinning);
-    } else if (status === 'outbid') {
-      filteredBids = allBids.filter(bid => !bid.isWinning);
+    if (status === 'winner') {
+      filteredBids = allBids.filter(bid => bid.status === 'winner');
+    } else if (status === 'bid_placed') {
+      filteredBids = allBids.filter(bid => bid.status === 'bid_placed');
     }
 
     // Pagination

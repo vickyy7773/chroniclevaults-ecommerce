@@ -181,8 +181,8 @@ const BidTracking = () => {
               className="w-full px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 dark:bg-gray-700 dark:text-white"
             >
               <option value="">All Status</option>
-              <option value="winning">Winning</option>
-              <option value="outbid">Outbid</option>
+              <option value="winner">Winner 🏆</option>
+              <option value="bid_placed">Bid Placed</option>
             </select>
           </div>
 
@@ -330,11 +330,11 @@ const BidTracking = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          bid.isWinning
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400'
+                          bid.status === 'winner'
+                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400'
                         }`}>
-                          {bid.isWinning ? 'Winning' : 'Outbid'}
+                          {bid.status === 'winner' ? '🏆 Winner' : 'Bid Placed'}
                         </span>
                       </td>
                     </tr>
@@ -370,11 +370,11 @@ const BidTracking = () => {
 
                       <div className="flex flex-wrap items-center gap-2 mt-2">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          bid.isWinning
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400'
+                          bid.status === 'winner'
+                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400'
                         }`}>
-                          {bid.isWinning ? 'Winning' : 'Outbid'}
+                          {bid.status === 'winner' ? '🏆 Winner' : 'Bid Placed'}
                         </span>
                         {bid.isAutoBid && (
                           <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-400 rounded-full text-xs font-medium">
