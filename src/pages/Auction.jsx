@@ -1224,10 +1224,23 @@ const AuctionPage = () => {
               <div className="p-3 space-y-2.5">
                 {/* Current Bid Display */}
                 <div className="text-center py-2.5 border-b border-gray-100">
-                  <p className="text-gray-500 text-base uppercase tracking-wide mb-1">Current Bid</p>
-                  <p className="text-3xl font-black text-accent-600">
-                    ₹{displayCurrentBid.toLocaleString()}
-                  </p>
+                  {/* Show "Opening Bid" if no bids placed, otherwise "Current Bid" */}
+                  {(() => {
+                    const hasBids = auction.isLotBidding && displayLot
+                      ? (displayLot.bids?.length || 0) > 0
+                      : auction.bids.length > 0;
+
+                    return (
+                      <>
+                        <p className="text-gray-500 text-base uppercase tracking-wide mb-1">
+                          {hasBids ? 'Current Bid' : 'Opening Bid'}
+                        </p>
+                        <p className="text-3xl font-black text-accent-600">
+                          ₹{hasBids ? displayCurrentBid.toLocaleString() : displayStartingPrice.toLocaleString()}
+                        </p>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* User Bid Stats */}
@@ -1545,13 +1558,25 @@ const AuctionPage = () => {
                           })()}
 
                           <div className="text-xs text-gray-600 font-medium">
-                            {lot.status === 'Active' || lot.status === 'Upcoming' ? 'Current: ' : 'Final: '}
+                            {/* Show "Opening", "Current", or "Final" based on lot status and bids */}
+                            {(() => {
+                              const lotHasBids = (lot.bids?.length || 0) > 0;
+
+                              if (lot.status === 'Sold' || lot.status === 'Unsold' || lot.status === 'Ended') {
+                                return 'Final: ';
+                              } else if (lotHasBids) {
+                                return 'Current: ';
+                              } else {
+                                return 'Opening: ';
+                              }
+                            })()}
                             <span className={`font-bold text-sm ${
                               lot.status === 'Sold' ? 'text-emerald-600' :
                               lot.status === 'Unsold' ? 'text-red-600' :
                               'text-gray-900'
                             }`}>
-                              ₹{lot.currentBid.toLocaleString()}
+                              {/* Show starting price if no bids, otherwise current bid */}
+                              ₹{(lot.bids?.length || 0) > 0 ? lot.currentBid.toLocaleString() : lot.startingPrice.toLocaleString()}
                             </span>
                           </div>
                           <div className="text-xs text-gray-500 truncate">
