@@ -36,7 +36,8 @@ const BidTracking = () => {
 
   // Socket.io real-time updates
   useEffect(() => {
-    const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    // Remove /api path from VITE_API_URL to get base server URL for socket.io
+    const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
     socketRef.current = io(SOCKET_URL, {
       transports: ['polling', 'websocket'],
