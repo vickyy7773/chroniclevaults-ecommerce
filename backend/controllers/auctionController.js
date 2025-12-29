@@ -3275,22 +3275,29 @@ export const getAllBidsForTracking = async (req, res) => {
  */
 export const getSalesReports = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { auctionId, startDate, endDate } = req.query;
 
-    // Build date filter
-    const dateFilter = {};
+    // Build filter
+    const filter = {};
+
+    // Add auction ID filter if provided
+    if (auctionId) {
+      filter._id = auctionId;
+    }
+
+    // Add date filter
     if (startDate || endDate) {
-      dateFilter.createdAt = {};
-      if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
       if (endDate) {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999); // Include entire end date
-        dateFilter.createdAt.$lte = end;
+        filter.createdAt.$lte = end;
       }
     }
 
-    // Fetch all auctions with date filter
-    const auctions = await Auction.find(dateFilter)
+    // Fetch all auctions with filters
+    const auctions = await Auction.find(filter)
       .populate('winner', 'name email')
       .populate('reserveBidder', 'name email')
       .sort({ createdAt: -1 });

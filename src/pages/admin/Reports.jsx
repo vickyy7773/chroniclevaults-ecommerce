@@ -6,7 +6,9 @@ import { toast } from 'react-toastify';
 const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState(null);
+  const [auctions, setAuctions] = useState([]);
   const [filters, setFilters] = useState({
+    auctionId: '',
     startDate: '',
     endDate: ''
   });
@@ -15,10 +17,24 @@ const Reports = () => {
     fetchReports();
   }, [filters]);
 
+  useEffect(() => {
+    fetchAuctions();
+  }, []);
+
+  const fetchAuctions = async () => {
+    try {
+      const response = await api.get('/auctions');
+      setAuctions(response.data || []);
+    } catch (error) {
+      console.error('Error fetching auctions:', error);
+    }
+  };
+
   const fetchReports = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
+      if (filters.auctionId) params.append('auctionId', filters.auctionId);
       if (filters.startDate) params.append('startDate', filters.startDate);
       if (filters.endDate) params.append('endDate', filters.endDate);
 
@@ -37,7 +53,7 @@ const Reports = () => {
   };
 
   const handleClearFilters = () => {
-    setFilters({ startDate: '', endDate: '' });
+    setFilters({ auctionId: '', startDate: '', endDate: '' });
   };
 
   // Format date for display
@@ -75,7 +91,26 @@ const Reports = () => {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Filter Reports
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Auction Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Auction
+            </label>
+            <select
+              value={filters.auctionId}
+              onChange={(e) => handleFilterChange('auctionId', e.target.value)}
+              className="w-full px-4 py-2.5 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="">All Auctions</option>
+              {auctions.map((auction) => (
+                <option key={auction._id} value={auction._id}>
+                  {auction.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Start Date
