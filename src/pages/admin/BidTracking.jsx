@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 const BidTracking = () => {
   const [events, setEvents] = useState([]);
   const [auctions, setAuctions] = useState([]);
+  const [availableLots, setAvailableLots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     auctionId: '',
@@ -34,6 +35,15 @@ const BidTracking = () => {
   useEffect(() => {
     fetchAuctions();
   }, []);
+
+  // Fetch available lots when auction is selected
+  useEffect(() => {
+    if (filters.auctionId) {
+      fetchAuctionLots(filters.auctionId);
+    } else {
+      setAvailableLots([]);
+    }
+  }, [filters.auctionId]);
 
   // Socket.io real-time updates
   useEffect(() => {
@@ -111,8 +121,35 @@ const BidTracking = () => {
     }
   };
 
+  const fetchAuctionLots = async (auctionId) => {
+    try {
+      const response = await bidTrackingService.getAuctionDetails(auctionId);
+      const auction = response.data;
+
+      // Extract unique lot numbers from auction lots
+      if (auction && auction.lots && Array.isArray(auction.lots)) {
+        const lotNumbers = auction.lots
+          .map(lot => lot.lotNumber)
+          .filter(num => num != null) // Filter out null/undefined
+          .sort((a, b) => a - b); // Sort numerically
+
+        setAvailableLots([...new Set(lotNumbers)]); // Remove duplicates
+      } else {
+        setAvailableLots([]);
+      }
+    } catch (error) {
+      console.error('Error fetching auction lots:', error);
+      setAvailableLots([]);
+    }
+  };
+
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+    // If auction changes, reset lot filter since lot numbers will be different
+    if (key === 'auctionId') {
+      setFilters(prev => ({ ...prev, [key]: value, lotNumber: '', page: 1 }));
+    } else {
+      setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+    }
   };
 
   const handlePageChange = (page) => {
@@ -197,15 +234,22 @@ const BidTracking = () => {
             <select
               value={filters.lotNumber}
               onChange={(e) => handleFilterChange('lotNumber', e.target.value)}
-              className="w-full px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 dark:bg-gray-700 dark:text-white"
+              disabled={!filters.auctionId}
+              className="w-full px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="">All Lots</option>
-              <option value="auction-level">Auction Level</option>
-              {[...Array(100)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  Lot #{i + 1}
-                </option>
-              ))}
+              <option value="">
+                {filters.auctionId ? 'All Lots' : 'Select auction first'}
+              </option>
+              {filters.auctionId && (
+                <>
+                  <option value="auction-level">Auction Level</option>
+                  {availableLots.map(lotNum => (
+                    <option key={lotNum} value={lotNum}>
+                      Lot #{lotNum}
+                    </option>
+                  ))}
+                </>
+              )}
             </select>
           </div>
 
