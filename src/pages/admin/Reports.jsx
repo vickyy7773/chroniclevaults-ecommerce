@@ -70,6 +70,7 @@ const Reports = () => {
 
   // Format currency
   const formatCurrency = (amount) => {
+    if (amount == null || amount === undefined) return '₹0';
     return `₹${amount.toLocaleString('en-IN')}`;
   };
 
