@@ -2174,6 +2174,23 @@ export const placeBid = async (req, res) => {
           }
 
           // STEP 1: Reveal old reserve bidder's max bid ONLY
+          // Calculate current bid amount for proper increment (use lot's current bid in lot bidding)
+          const currentBidForIncrement = (auction.isLotBidding && currentLot)
+            ? (currentLot.currentBid || 0)
+            : (auction.currentBid || 0);
+
+          // Calculate increment based on the revealed reserve amount
+          let incrementForReserve = 50;
+          for (let slab of auction.incrementSlabs) {
+            if (existingHighestReserveBid >= slab.minPrice && existingHighestReserveBid < slab.maxPrice) {
+              incrementForReserve = slab.increment;
+              break;
+            }
+          }
+
+          // New bidder should beat old reserve by increment
+          const newCurrentBid = existingHighestReserveBid + incrementForReserve;
+
           if (auction.isLotBidding && currentLot) {
             currentLot.bids.push({
               user: existingReserveBidder,
@@ -2186,7 +2203,7 @@ export const placeBid = async (req, res) => {
               ipAddress,
               userAgent
             });
-            currentLot.currentBid = existingHighestReserveBid;
+            currentLot.currentBid = newCurrentBid;
 
             // STEP 2: Update lot reserve to new bidder (HIDDEN)
             currentLot.highestReserveBid = maxBid;
@@ -2208,10 +2225,10 @@ export const placeBid = async (req, res) => {
             auction.reserveBidder = userId;
           }
 
-          auction.currentBid = existingHighestReserveBid;
+          auction.currentBid = newCurrentBid;
           auction.totalBids = auction.bids.length;
 
-          console.log(`✅ RESERVE BID PLACED: Old reserve ₹${existingHighestReserveBid} revealed, New reserve ₹${maxBid} HIDDEN`);
+          console.log(`✅ RESERVE BID PLACED: Old reserve ₹${existingHighestReserveBid} revealed, New current bid ₹${newCurrentBid}, New reserve ₹${maxBid} HIDDEN`);
 
         } else {
           // NO RESERVE BATTLE: Normal proxy bidding
