@@ -18,13 +18,13 @@ export const bidTrackingService = {
     if (filters.limit) params.append('limit', filters.limit);
 
     const response = await api.get(`${BID_TRACKING_ENDPOINTS.GET_ALL_BIDS}?${params.toString()}`);
-    return response.data;
+    return response;
   },
 
   // Get auctions list for filter dropdown
   getAuctionsList: async () => {
     const response = await api.get(BID_TRACKING_ENDPOINTS.GET_AUCTIONS_LIST);
-    return response.data;
+    return response;
   }
 };
 
