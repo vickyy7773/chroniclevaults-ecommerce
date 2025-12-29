@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, DollarSign, Package, CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, Package, CheckCircle, XCircle, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
+import * as XLSX from 'xlsx';
 
 const Reports = () => {
   const [loading, setLoading] = useState(true);
@@ -128,6 +129,71 @@ const Reports = () => {
     });
   };
 
+  // Export to Excel
+  const exportToExcel = (type) => {
+    try {
+      // Get the data based on type
+      let dataToExport = [];
+      let fileName = '';
+
+      if (type === 'total') {
+        dataToExport = filteredData.auctionWise;
+        fileName = 'Sales_Report_Total.xlsx';
+      } else if (type === 'sold') {
+        dataToExport = filteredData.auctionWise.filter(auction => auction.soldItems > 0);
+        fileName = 'Sales_Report_Sold.xlsx';
+      } else if (type === 'unsold') {
+        dataToExport = filteredData.auctionWise.filter(auction => auction.unsoldItems > 0);
+        fileName = 'Sales_Report_Unsold.xlsx';
+      }
+
+      if (dataToExport.length === 0) {
+        toast.warning('No data to export');
+        return;
+      }
+
+      // Prepare data for Excel
+      const excelData = dataToExport.map(auction => ({
+        'Auction Number': auction.auctionNumber,
+        'Title': auction.title,
+        'Type': auction.isLotBidding ? `Lot Bidding (${auction.totalLots})` : 'Regular',
+        'Status': auction.status,
+        'Revenue (₹)': auction.revenue,
+        'Sold Items': auction.soldItems,
+        'Unsold Items': auction.unsoldItems,
+        'Total Bids': auction.totalBids,
+        'Date': formatDate(auction.createdAt)
+      }));
+
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 15 }, // Auction Number
+        { wch: 40 }, // Title
+        { wch: 20 }, // Type
+        { wch: 12 }, // Status
+        { wch: 15 }, // Revenue
+        { wch: 12 }, // Sold Items
+        { wch: 12 }, // Unsold Items
+        { wch: 12 }, // Total Bids
+        { wch: 15 }  // Date
+      ];
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
+
+      // Download file
+      XLSX.writeFile(wb, fileName);
+      toast.success(`Excel file downloaded: ${fileName}`);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export data');
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       {/* Header */}
@@ -203,39 +269,67 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* View Type Tabs */}
+      {/* View Type Tabs with Download Buttons */}
       <div className="mb-6">
-        <div className="flex gap-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-2">
-          <button
-            onClick={() => setViewType('total')}
-            className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
-              viewType === 'total'
-                ? 'bg-accent-600 text-white'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            Total View
-          </button>
-          <button
-            onClick={() => setViewType('sold')}
-            className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
-              viewType === 'sold'
-                ? 'bg-green-600 text-white'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            Sold Items
-          </button>
-          <button
-            onClick={() => setViewType('unsold')}
-            className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
-              viewType === 'unsold'
-                ? 'bg-orange-600 text-white'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            Unsold Items
-          </button>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+          {/* View Type Tabs */}
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => setViewType('total')}
+              className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                viewType === 'total'
+                  ? 'bg-accent-600 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              Total View
+            </button>
+            <button
+              onClick={() => setViewType('sold')}
+              className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                viewType === 'sold'
+                  ? 'bg-green-600 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              Sold Items
+            </button>
+            <button
+              onClick={() => setViewType('unsold')}
+              className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                viewType === 'unsold'
+                  ? 'bg-orange-600 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              Unsold Items
+            </button>
+          </div>
+
+          {/* Download Buttons */}
+          <div className="flex gap-2 border-t border-gray-200 dark:border-gray-700 pt-4">
+            <button
+              onClick={() => exportToExcel('total')}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-accent-600 hover:bg-accent-700 text-white rounded-lg transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Download Total
+            </button>
+            <button
+              onClick={() => exportToExcel('sold')}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Download Sold
+            </button>
+            <button
+              onClick={() => exportToExcel('unsold')}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Download Unsold
+            </button>
+          </div>
         </div>
       </div>
 
