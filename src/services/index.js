@@ -12,3 +12,4 @@ export { default as sliderService } from './sliderService';
 export { default as bannerService } from './bannerService';
 export { default as activityService } from './activityService';
 export { default as userSyncService } from './userSyncService';
+export { default as bidTrackingService } from './bidTrackingService';
