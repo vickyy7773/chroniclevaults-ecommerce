@@ -1223,7 +1223,10 @@ const AuctionPage = () => {
 
               <div className="p-3 space-y-2.5">
                 {/* Current Bid Display */}
-                <div className="text-center py-2.5 border-b border-gray-100">
+                <div
+                  key={auction.isLotBidding && displayLot ? `lot-${displayLot.lotNumber}` : 'auction'}
+                  className="text-center py-2.5 border-b border-gray-100"
+                >
                   {/* Show "Opening Bid" if no bids placed, otherwise "Current Bid" */}
                   {(() => {
                     const hasBids = auction.isLotBidding && displayLot
