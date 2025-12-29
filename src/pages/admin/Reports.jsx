@@ -7,6 +7,7 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState(null);
   const [auctions, setAuctions] = useState([]);
+  const [viewType, setViewType] = useState('total'); // 'total', 'sold', 'unsold'
   const [filters, setFilters] = useState({
     auctionId: '',
     startDate: '',
@@ -70,6 +71,47 @@ const Reports = () => {
   const formatCurrency = (amount) => {
     return `₹${amount.toLocaleString('en-IN')}`;
   };
+
+  // Filter auction data based on view type
+  const getFilteredData = () => {
+    if (!reportData) return { auctionWise: [], summary: {} };
+
+    const filteredAuctions = reportData.auctionWise.filter(auction => {
+      if (viewType === 'sold') {
+        return auction.soldItems > 0;
+      } else if (viewType === 'unsold') {
+        return auction.unsoldItems > 0;
+      }
+      return true; // 'total' shows all
+    });
+
+    // Recalculate summary based on filtered auctions
+    let totalRevenue = 0;
+    let totalSoldItems = 0;
+    let totalUnsoldItems = 0;
+
+    filteredAuctions.forEach(auction => {
+      totalRevenue += auction.revenue;
+      totalSoldItems += auction.soldItems;
+      totalUnsoldItems += auction.unsoldItems;
+    });
+
+    const summary = {
+      totalRevenue,
+      totalSoldItems,
+      totalUnsoldItems,
+      totalItems: totalSoldItems + totalUnsoldItems,
+      totalAuctions: filteredAuctions.length,
+      averageRevenuePerSoldItem: totalSoldItems > 0 ? totalRevenue / totalSoldItems : 0,
+      successRate: (totalSoldItems + totalUnsoldItems) > 0
+        ? ((totalSoldItems / (totalSoldItems + totalUnsoldItems)) * 100).toFixed(2)
+        : 0
+    };
+
+    return { auctionWise: filteredAuctions, summary };
+  };
+
+  const filteredData = getFilteredData();
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -146,6 +188,42 @@ const Reports = () => {
         </div>
       </div>
 
+      {/* View Type Tabs */}
+      <div className="mb-6">
+        <div className="flex gap-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-2">
+          <button
+            onClick={() => setViewType('total')}
+            className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+              viewType === 'total'
+                ? 'bg-accent-600 text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            Total View
+          </button>
+          <button
+            onClick={() => setViewType('sold')}
+            className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+              viewType === 'sold'
+                ? 'bg-green-600 text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            Sold Items
+          </button>
+          <button
+            onClick={() => setViewType('unsold')}
+            className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+              viewType === 'unsold'
+                ? 'bg-orange-600 text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            Unsold Items
+          </button>
+        </div>
+      </div>
+
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-600"></div>
@@ -162,10 +240,10 @@ const Reports = () => {
               </div>
               <h3 className="text-sm font-medium opacity-90 mb-1">Total Revenue</h3>
               <p className="text-3xl font-bold mb-2">
-                {formatCurrency(reportData.summary.totalRevenue)}
+                {formatCurrency(filteredData.summary.totalRevenue)}
               </p>
               <p className="text-sm opacity-80">
-                Avg per item: {formatCurrency(Math.round(reportData.summary.averageRevenuePerSoldItem))}
+                Avg per item: {formatCurrency(Math.round(filteredData.summary.averageRevenuePerSoldItem))}
               </p>
             </div>
 
@@ -177,10 +255,10 @@ const Reports = () => {
               </div>
               <h3 className="text-sm font-medium opacity-90 mb-1">Sold Items</h3>
               <p className="text-3xl font-bold mb-2">
-                {reportData.summary.totalSoldItems.toLocaleString()}
+                {filteredData.summary.totalSoldItems.toLocaleString()}
               </p>
               <p className="text-sm opacity-80">
-                Success Rate: {reportData.summary.successRate}%
+                Success Rate: {filteredData.summary.successRate}%
               </p>
             </div>
 
@@ -192,10 +270,10 @@ const Reports = () => {
               </div>
               <h3 className="text-sm font-medium opacity-90 mb-1">Unsold Items</h3>
               <p className="text-3xl font-bold mb-2">
-                {reportData.summary.totalUnsoldItems.toLocaleString()}
+                {filteredData.summary.totalUnsoldItems.toLocaleString()}
               </p>
               <p className="text-sm opacity-80">
-                Total Auctions: {reportData.summary.totalAuctions}
+                Total Auctions: {filteredData.summary.totalAuctions}
               </p>
             </div>
           </div>
@@ -242,8 +320,8 @@ const Reports = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {reportData.auctionWise.length > 0 ? (
-                    reportData.auctionWise.map((auction) => (
+                  {filteredData.auctionWise.length > 0 ? (
+                    filteredData.auctionWise.map((auction) => (
                       <tr
                         key={auction.auctionId}
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
