@@ -64,9 +64,38 @@ const BidTracking = () => {
       // Increment new bid counter
       setNewBidCount(prev => prev + 1);
 
-      // If on first page, prepend new bid to list
+      // If on first page, update bids list
       if (filters.page === 1) {
-        setBids(prevBids => [data, ...prevBids].slice(0, filters.limit));
+        setBids(prevBids => {
+          // Add new bid at the top
+          const updatedBids = [data, ...prevBids];
+
+          // Update existing bids for the same auction/lot to show "outbid by" info
+          const finalBids = updatedBids.map(bid => {
+            // Skip if this is the new bid itself
+            if (bid._id === data._id) return bid;
+
+            // Check if this bid is for the same auction/lot
+            const sameAuctionLot = bid.auctionId === data.auctionId &&
+              bid.lotNumber === data.lotNumber;
+
+            if (sameAuctionLot && bid.amount < data.amount) {
+              // This bid has been outbid by the new bid
+              return {
+                ...bid,
+                outbidBy: {
+                  name: data.bidder.name,
+                  amount: data.amount
+                },
+                isWinning: false
+              };
+            }
+
+            return bid;
+          });
+
+          return finalBids.slice(0, filters.limit);
+        });
       }
     });
 
