@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, DollarSign, Package, CheckCircle, XCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { BarChart3, TrendingUp, DollarSign, Package, CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 
@@ -8,6 +8,7 @@ const Reports = () => {
   const [reportData, setReportData] = useState(null);
   const [auctions, setAuctions] = useState([]);
   const [viewType, setViewType] = useState('total'); // 'total', 'sold', 'unsold'
+  const [expandedAuctions, setExpandedAuctions] = useState(new Set());
   const [filters, setFilters] = useState({
     auctionId: '',
     startDate: '',
@@ -112,6 +113,19 @@ const Reports = () => {
   };
 
   const filteredData = getFilteredData();
+
+  // Toggle auction expansion
+  const toggleAuctionExpansion = (auctionId) => {
+    setExpandedAuctions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(auctionId)) {
+        newSet.delete(auctionId);
+      } else {
+        newSet.add(auctionId);
+      }
+      return newSet;
+    });
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -321,68 +335,155 @@ const Reports = () => {
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {filteredData.auctionWise.length > 0 ? (
-                    filteredData.auctionWise.map((auction) => (
-                      <tr
-                        key={auction.auctionId}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <td className="px-4 py-4">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                              {auction.auctionNumber}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">
-                              {auction.title}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            auction.isLotBidding
-                              ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                          }`}>
-                            {auction.isLotBidding ? `Lot Bidding (${auction.totalLots})` : 'Regular'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            auction.status === 'Active'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                              : auction.status === 'Upcoming'
-                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                          }`}>
-                            {auction.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-right">
-                          <p className="text-sm font-bold text-gray-900 dark:text-white">
-                            {formatCurrency(auction.revenue)}
-                          </p>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-sm font-semibold">
-                            {auction.soldItems}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-sm font-semibold">
-                            {auction.unsoldItems}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {auction.totalBids}
-                          </p>
-                        </td>
-                        <td className="px-4 py-4">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {formatDate(auction.createdAt)}
-                          </p>
-                        </td>
-                      </tr>
-                    ))
+                    filteredData.auctionWise.map((auction) => {
+                      const isExpanded = expandedAuctions.has(auction.auctionId);
+                      const hasLots = auction.isLotBidding && auction.lots && auction.lots.length > 0;
+
+                      return (
+                        <React.Fragment key={auction.auctionId}>
+                          <tr
+                            onClick={() => hasLots && toggleAuctionExpansion(auction.auctionId)}
+                            className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                              hasLots ? 'cursor-pointer' : ''
+                            }`}
+                          >
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-2">
+                                {hasLots && (
+                                  isExpanded ?
+                                    <ChevronUp className="w-4 h-4 text-gray-500 flex-shrink-0" /> :
+                                    <ChevronDown className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                                )}
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {auction.auctionNumber}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">
+                                    {auction.title}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                auction.isLotBidding
+                                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                                  : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                              }`}>
+                                {auction.isLotBidding ? `Lot Bidding (${auction.totalLots})` : 'Regular'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                auction.status === 'Active'
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                  : auction.status === 'Upcoming'
+                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                              }`}>
+                                {auction.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-right">
+                              <p className="text-sm font-bold text-gray-900 dark:text-white">
+                                {formatCurrency(auction.revenue)}
+                              </p>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-sm font-semibold">
+                                {auction.soldItems}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-sm font-semibold">
+                                {auction.unsoldItems}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {auction.totalBids}
+                              </p>
+                            </td>
+                            <td className="px-4 py-4">
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {formatDate(auction.createdAt)}
+                              </p>
+                            </td>
+                          </tr>
+
+                          {/* Expandable Lot Details */}
+                          {isExpanded && hasLots && (
+                            <tr>
+                              <td colSpan="8" className="px-4 py-4 bg-gray-50 dark:bg-gray-900">
+                                <div className="ml-6 space-y-2">
+                                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                                    Lot Details ({auction.lots.length} lots)
+                                  </h4>
+                                  <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                      <thead className="bg-gray-100 dark:bg-gray-800">
+                                        <tr>
+                                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
+                                            Lot #
+                                          </th>
+                                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
+                                            Title
+                                          </th>
+                                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
+                                            Status
+                                          </th>
+                                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
+                                            Opening Bid
+                                          </th>
+                                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
+                                            Final Price
+                                          </th>
+                                          <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
+                                            Bids
+                                          </th>
+                                        </tr>
+                                      </thead>
+                                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        {auction.lots.map((lot) => (
+                                          <tr key={lot.lotNumber} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <td className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-white">
+                                              Lot {lot.lotNumber}
+                                            </td>
+                                            <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
+                                              {lot.title}
+                                            </td>
+                                            <td className="px-3 py-2">
+                                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                                lot.status === 'Sold'
+                                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                  : lot.status === 'Unsold'
+                                                  ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                              }`}>
+                                                {lot.status}
+                                              </span>
+                                            </td>
+                                            <td className="px-3 py-2 text-sm text-right text-gray-600 dark:text-gray-400">
+                                              {formatCurrency(lot.openingBid)}
+                                            </td>
+                                            <td className="px-3 py-2 text-sm text-right font-semibold text-gray-900 dark:text-white">
+                                              {lot.currentBid > 0 ? formatCurrency(lot.currentBid) : '-'}
+                                            </td>
+                                            <td className="px-3 py-2 text-sm text-center text-gray-600 dark:text-gray-400">
+                                              {lot.totalBids}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })
                   ) : (
                     <tr>
                       <td colSpan="8" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">

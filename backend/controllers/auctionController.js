@@ -3340,6 +3340,23 @@ export const getSalesReports = async (req, res) => {
 
       totalRevenue += auctionRevenue;
 
+      // Prepare lot details if it's a lot bidding auction
+      let lotDetails = [];
+      if (auction.isLotBidding && auction.lots) {
+        lotDetails = auction.lots.map(lot => ({
+          lotNumber: lot.lotNumber,
+          title: lot.title,
+          currentBid: lot.currentBid || 0,
+          openingBid: lot.openingBid,
+          status: lot.status,
+          totalBids: lot.bids?.length || 0,
+          winner: lot.winner ? {
+            name: lot.winner.name || 'N/A',
+            email: lot.winner.email || 'N/A'
+          } : null
+        }));
+      }
+
       // Add to auction-wise breakdown
       auctionWiseData.push({
         auctionId: auction._id,
@@ -3354,7 +3371,8 @@ export const getSalesReports = async (req, res) => {
         totalBids: auction.totalBids || auction.bids?.length || 0,
         startTime: auction.startTime,
         endTime: auction.endTime,
-        createdAt: auction.createdAt
+        createdAt: auction.createdAt,
+        lots: lotDetails
       });
     }
 
