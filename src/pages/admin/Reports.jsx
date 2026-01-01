@@ -239,6 +239,8 @@ const Reports = () => {
 
       // Prepare data for Excel
       const excelData = lotsToExport.map(lot => ({
+        'Auction': auction.auctionNumber,
+        'Vendor': auction.vendor?.name || 'N/A',
         'Lot Number': lot.lotNumber,
         'Title': lot.title,
         'Status': lot.status,
@@ -252,6 +254,8 @@ const Reports = () => {
 
       // Set column widths
       ws['!cols'] = [
+        { wch: 15 }, // Auction
+        { wch: 25 }, // Vendor
         { wch: 12 }, // Lot Number
         { wch: 40 }, // Title
         { wch: 12 }, // Status
