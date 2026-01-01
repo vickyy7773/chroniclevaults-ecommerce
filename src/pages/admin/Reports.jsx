@@ -13,7 +13,8 @@ const Reports = () => {
   const [filters, setFilters] = useState({
     auctionId: '',
     startDate: '',
-    endDate: ''
+    endDate: '',
+    vendorId: ''
   });
 
   useEffect(() => {
@@ -56,7 +57,7 @@ const Reports = () => {
   };
 
   const handleClearFilters = () => {
-    setFilters({ auctionId: '', startDate: '', endDate: '' });
+    setFilters({ auctionId: '', startDate: '', endDate: '', vendorId: '' });
   };
 
   // Format date for display
@@ -75,11 +76,36 @@ const Reports = () => {
     return `₹${amount.toLocaleString('en-IN')}`;
   };
 
-  // Filter auction data based on view type
+  // Get unique vendor IDs from all lots
+  const getUniqueVendorIds = () => {
+    if (!reportData) return [];
+
+    const vendorIds = new Set();
+    reportData.auctionWise.forEach(auction => {
+      if (auction.lots && auction.lots.length > 0) {
+        auction.lots.forEach(lot => {
+          if (lot.vendorId) {
+            vendorIds.add(lot.vendorId);
+          }
+        });
+      }
+    });
+
+    return Array.from(vendorIds).sort();
+  };
+
+  // Filter auction data based on view type and vendor
   const getFilteredData = () => {
     if (!reportData) return { auctionWise: [], summary: {} };
 
     const filteredAuctions = reportData.auctionWise.filter(auction => {
+      // Filter by vendor ID (check if any lot has this vendorId)
+      if (filters.vendorId) {
+        const hasVendor = auction.lots && auction.lots.some(lot => lot.vendorId === filters.vendorId);
+        if (!hasVendor) return false;
+      }
+
+      // Filter by view type
       if (viewType === 'sold') {
         return auction.soldItems > 0;
       } else if (viewType === 'unsold') {
@@ -202,19 +228,26 @@ const Reports = () => {
         return;
       }
 
-      // Filter lots based on type
+      // Filter lots based on type and vendor
       let lotsToExport = [];
       let fileName = '';
 
+      // First filter by vendor if selected
+      let vendorFilteredLots = auction.lots;
+      if (filters.vendorId) {
+        vendorFilteredLots = auction.lots.filter(lot => lot.vendorId === filters.vendorId);
+      }
+
+      // Then filter by type
       if (type === 'total') {
-        lotsToExport = auction.lots;
-        fileName = `${auction.auctionNumber}_Lots_Total.xlsx`;
+        lotsToExport = vendorFilteredLots;
+        fileName = `${auction.auctionNumber}_Lots_Total${filters.vendorId ? '_' + filters.vendorId : ''}.xlsx`;
       } else if (type === 'sold') {
-        lotsToExport = auction.lots.filter(lot => lot.status === 'Sold');
-        fileName = `${auction.auctionNumber}_Lots_Sold.xlsx`;
+        lotsToExport = vendorFilteredLots.filter(lot => lot.status === 'Sold');
+        fileName = `${auction.auctionNumber}_Lots_Sold${filters.vendorId ? '_' + filters.vendorId : ''}.xlsx`;
       } else if (type === 'unsold') {
-        lotsToExport = auction.lots.filter(lot => lot.status === 'Unsold' || lot.status === 'Ended');
-        fileName = `${auction.auctionNumber}_Lots_Unsold.xlsx`;
+        lotsToExport = vendorFilteredLots.filter(lot => lot.status === 'Unsold' || lot.status === 'Ended');
+        fileName = `${auction.auctionNumber}_Lots_Unsold${filters.vendorId ? '_' + filters.vendorId : ''}.xlsx`;
       }
 
       if (lotsToExport.length === 0) {
@@ -282,7 +315,7 @@ const Reports = () => {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Filter Reports
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Auction Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -297,6 +330,25 @@ const Reports = () => {
               {auctions.map((auction) => (
                 <option key={auction._id} value={auction._id}>
                   {auction.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Vendor ID Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Vendor ID
+            </label>
+            <select
+              value={filters.vendorId}
+              onChange={(e) => handleFilterChange('vendorId', e.target.value)}
+              className="w-full px-4 py-2.5 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="">All Vendors</option>
+              {getUniqueVendorIds().map((vendorId) => (
+                <option key={vendorId} value={vendorId}>
+                  {vendorId}
                 </option>
               ))}
             </select>
@@ -575,13 +627,19 @@ const Reports = () => {
                           </tr>
 
                           {/* Expandable Lot Details */}
-                          {isExpanded && hasLots && (
+                          {isExpanded && hasLots && (() => {
+                            // Filter lots by vendor if vendor filter is active
+                            const displayLots = filters.vendorId
+                              ? auction.lots.filter(lot => lot.vendorId === filters.vendorId)
+                              : auction.lots;
+
+                            return (
                             <tr>
                               <td colSpan="8" className="px-4 py-4 bg-gray-50 dark:bg-gray-900">
                                 <div className="ml-6 space-y-2">
                                   <div className="flex items-center justify-between mb-3">
                                     <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                      Lot Details ({auction.lots.length} lots)
+                                      Lot Details ({displayLots.length} lots{filters.vendorId ? ` - Vendor: ${filters.vendorId}` : ''})
                                     </h4>
 
                                     {/* Lot Download Buttons */}
@@ -643,7 +701,7 @@ const Reports = () => {
                                         </tr>
                                       </thead>
                                       <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                        {auction.lots.map((lot) => (
+                                        {displayLots.map((lot) => (
                                           <tr key={lot.lotNumber} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                             <td className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-white">
                                               Lot {lot.lotNumber}
@@ -679,7 +737,8 @@ const Reports = () => {
                                 </div>
                               </td>
                             </tr>
-                          )}
+                            );
+                          })()}
                         </React.Fragment>
                       );
                     })
