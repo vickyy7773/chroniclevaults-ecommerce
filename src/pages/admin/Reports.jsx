@@ -8,10 +8,12 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState(null);
   const [auctions, setAuctions] = useState([]);
+  const [vendors, setVendors] = useState([]);
   const [viewType, setViewType] = useState('total'); // 'total', 'sold', 'unsold'
   const [expandedAuctions, setExpandedAuctions] = useState(new Set());
   const [filters, setFilters] = useState({
     auctionId: '',
+    vendorId: '',
     startDate: '',
     endDate: ''
   });
@@ -22,6 +24,7 @@ const Reports = () => {
 
   useEffect(() => {
     fetchAuctions();
+    fetchVendors();
   }, []);
 
   const fetchAuctions = async () => {
@@ -33,11 +36,21 @@ const Reports = () => {
     }
   };
 
+  const fetchVendors = async () => {
+    try {
+      const response = await api.get('/vendors');
+      setVendors(response.data || []);
+    } catch (error) {
+      console.error('Error fetching vendors:', error);
+    }
+  };
+
   const fetchReports = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
       if (filters.auctionId) params.append('auctionId', filters.auctionId);
+      if (filters.vendorId) params.append('vendorId', filters.vendorId);
       if (filters.startDate) params.append('startDate', filters.startDate);
       if (filters.endDate) params.append('endDate', filters.endDate);
 
@@ -56,7 +69,7 @@ const Reports = () => {
   };
 
   const handleClearFilters = () => {
-    setFilters({ auctionId: '', startDate: '', endDate: '' });
+    setFilters({ auctionId: '', vendorId: '', startDate: '', endDate: '' });
   };
 
   // Format date for display
@@ -156,6 +169,7 @@ const Reports = () => {
       const excelData = dataToExport.map(auction => ({
         'Auction Number': auction.auctionNumber,
         'Title': auction.title,
+        'Vendor': auction.vendor?.name || 'N/A',
         'Type': auction.isLotBidding ? `Lot Bidding (${auction.totalLots})` : 'Regular',
         'Status': auction.status,
         'Revenue (₹)': auction.revenue,
@@ -172,6 +186,7 @@ const Reports = () => {
       ws['!cols'] = [
         { wch: 15 }, // Auction Number
         { wch: 40 }, // Title
+        { wch: 25 }, // Vendor
         { wch: 20 }, // Type
         { wch: 12 }, // Status
         { wch: 15 }, // Revenue
@@ -278,7 +293,7 @@ const Reports = () => {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Filter Reports
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* Auction Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -293,6 +308,25 @@ const Reports = () => {
               {auctions.map((auction) => (
                 <option key={auction._id} value={auction._id}>
                   {auction.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Vendor Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Vendor
+            </label>
+            <select
+              value={filters.vendorId}
+              onChange={(e) => handleFilterChange('vendorId', e.target.value)}
+              className="w-full px-4 py-2.5 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="">All Vendors</option>
+              {vendors.map((vendor) => (
+                <option key={vendor._id} value={vendor._id}>
+                  {vendor.businessName || vendor.name}
                 </option>
               ))}
             </select>
@@ -470,6 +504,9 @@ const Reports = () => {
                       Auction
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Vendor
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Type
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -524,6 +561,11 @@ const Reports = () => {
                               </div>
                             </td>
                             <td className="px-4 py-4">
+                              <p className="text-sm text-gray-700 dark:text-gray-300">
+                                {auction.vendor?.name || 'N/A'}
+                              </p>
+                            </td>
+                            <td className="px-4 py-4">
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                 auction.isLotBidding
                                   ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
@@ -573,7 +615,7 @@ const Reports = () => {
                           {/* Expandable Lot Details */}
                           {isExpanded && hasLots && (
                             <tr>
-                              <td colSpan="8" className="px-4 py-4 bg-gray-50 dark:bg-gray-900">
+                              <td colSpan="9" className="px-4 py-4 bg-gray-50 dark:bg-gray-900">
                                 <div className="ml-6 space-y-2">
                                   <div className="flex items-center justify-between mb-3">
                                     <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -681,7 +723,7 @@ const Reports = () => {
                     })
                   ) : (
                     <tr>
-                      <td colSpan="8" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan="9" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                         No auction data available for the selected period
                       </td>
                     </tr>

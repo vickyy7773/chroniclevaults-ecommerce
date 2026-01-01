@@ -3275,7 +3275,7 @@ export const getAllBidsForTracking = async (req, res) => {
  */
 export const getSalesReports = async (req, res) => {
   try {
-    const { auctionId, startDate, endDate } = req.query;
+    const { auctionId, startDate, endDate, vendorId } = req.query;
 
     // Build filter
     const filter = {};
@@ -3283,6 +3283,11 @@ export const getSalesReports = async (req, res) => {
     // Add auction ID filter if provided
     if (auctionId) {
       filter._id = auctionId;
+    }
+
+    // Add vendor ID filter if provided
+    if (vendorId) {
+      filter.vendor = vendorId;
     }
 
     // Add date filter
@@ -3300,6 +3305,7 @@ export const getSalesReports = async (req, res) => {
     const auctions = await Auction.find(filter)
       .populate('winner', 'name email')
       .populate('reserveBidder', 'name email')
+      .populate('vendor', 'name email businessName')
       .sort({ createdAt: -1 });
 
     // Initialize metrics
@@ -3372,6 +3378,11 @@ export const getSalesReports = async (req, res) => {
         startTime: auction.startTime,
         endTime: auction.endTime,
         createdAt: auction.createdAt,
+        vendor: auction.vendor ? {
+          id: auction.vendor._id,
+          name: auction.vendor.name || auction.vendor.businessName || 'N/A',
+          email: auction.vendor.email || 'N/A'
+        } : null,
         lots: lotDetails
       });
     }
