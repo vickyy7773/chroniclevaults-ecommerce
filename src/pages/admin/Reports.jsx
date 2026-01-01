@@ -194,6 +194,70 @@ const Reports = () => {
     }
   };
 
+  // Export lot details to Excel
+  const exportLotsToExcel = (auction, type) => {
+    try {
+      if (!auction.lots || auction.lots.length === 0) {
+        toast.warning('No lot data to export');
+        return;
+      }
+
+      // Filter lots based on type
+      let lotsToExport = [];
+      let fileName = '';
+
+      if (type === 'total') {
+        lotsToExport = auction.lots;
+        fileName = `${auction.auctionNumber}_Lots_Total.xlsx`;
+      } else if (type === 'sold') {
+        lotsToExport = auction.lots.filter(lot => lot.status === 'Sold');
+        fileName = `${auction.auctionNumber}_Lots_Sold.xlsx`;
+      } else if (type === 'unsold') {
+        lotsToExport = auction.lots.filter(lot => lot.status === 'Unsold' || lot.status === 'Ended');
+        fileName = `${auction.auctionNumber}_Lots_Unsold.xlsx`;
+      }
+
+      if (lotsToExport.length === 0) {
+        toast.warning(`No ${type} lots to export`);
+        return;
+      }
+
+      // Prepare data for Excel
+      const excelData = lotsToExport.map(lot => ({
+        'Lot Number': lot.lotNumber,
+        'Title': lot.title,
+        'Status': lot.status,
+        'Opening Bid (₹)': lot.openingBid || 0,
+        'Final Price (₹)': lot.currentBid || 0,
+        'Total Bids': lot.totalBids || 0
+      }));
+
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 12 }, // Lot Number
+        { wch: 40 }, // Title
+        { wch: 12 }, // Status
+        { wch: 15 }, // Opening Bid
+        { wch: 15 }, // Final Price
+        { wch: 12 }  // Total Bids
+      ];
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Lot Details');
+
+      // Download file
+      XLSX.writeFile(wb, fileName);
+      toast.success(`Excel file downloaded: ${fileName}`);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export lot data');
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
       {/* Header */}
@@ -511,9 +575,45 @@ const Reports = () => {
                             <tr>
                               <td colSpan="8" className="px-4 py-4 bg-gray-50 dark:bg-gray-900">
                                 <div className="ml-6 space-y-2">
-                                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                                    Lot Details ({auction.lots.length} lots)
-                                  </h4>
+                                  <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                      Lot Details ({auction.lots.length} lots)
+                                    </h4>
+
+                                    {/* Lot Download Buttons */}
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          exportLotsToExcel(auction, 'total');
+                                        }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-accent-600 hover:bg-accent-700 text-white rounded-lg transition-colors"
+                                      >
+                                        <Download className="w-3.5 h-3.5" />
+                                        Total
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          exportLotsToExcel(auction, 'sold');
+                                        }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                                      >
+                                        <Download className="w-3.5 h-3.5" />
+                                        Sold
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          exportLotsToExcel(auction, 'unsold');
+                                        }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+                                      >
+                                        <Download className="w-3.5 h-3.5" />
+                                        Unsold
+                                      </button>
+                                    </div>
+                                  </div>
                                   <div className="overflow-x-auto">
                                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                       <thead className="bg-gray-100 dark:bg-gray-800">
