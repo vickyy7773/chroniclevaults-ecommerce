@@ -167,7 +167,7 @@ export const getMyOrders = async (req, res) => {
 // @access  Private/Admin
 export const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ isPaid: true })
+    const orders = await Order.find({})
       .populate('user', 'name email phone')
       .sort({ createdAt: -1 });
 
