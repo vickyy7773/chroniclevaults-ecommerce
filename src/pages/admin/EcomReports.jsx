@@ -44,6 +44,11 @@ const EcomReports = () => {
     }
   }, [activeTab, filters]);
 
+  // Debug: Log salesData changes
+  useEffect(() => {
+    console.log('💾 salesData state changed:', salesData);
+  }, [salesData]);
+
   const fetchCategories = async () => {
     try {
       const response = await api.get('/categories');
@@ -86,7 +91,10 @@ const EcomReports = () => {
     params.append('endDate', filters.endDate);
 
     const response = await api.get(`/orders/reports/sales?${params.toString()}`);
+    console.log('📊 Sales API Response:', response.data);
+    console.log('📊 Sales Data to set:', response.data.data);
     setSalesData(response.data.data);
+    console.log('📊 setSalesData called with:', response.data.data);
   };
 
   const fetchOrdersReport = async () => {
