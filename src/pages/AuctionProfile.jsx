@@ -91,12 +91,18 @@ const AuctionProfile = () => {
 
       // Fetch login history
       try {
+        console.log('🔍 Fetching login history...');
         const historyResponse = await loginHistoryAPI.getMyHistory(10);
-        if (historyResponse.success && historyResponse.data) {
+        console.log('📊 Login history response:', historyResponse);
+        if (historyResponse && historyResponse.success && historyResponse.data) {
+          console.log('✅ Setting login history:', historyResponse.data);
           setLoginHistory(historyResponse.data);
+        } else {
+          console.log('⚠️ Response format unexpected:', historyResponse);
         }
       } catch (historyError) {
-        console.log('ℹ️ No login history available');
+        console.error('❌ Login history error:', historyError);
+        console.error('❌ Error details:', historyError.response || historyError.message);
       }
     } catch (error) {
       console.error('❌ Error fetching user data:', error);

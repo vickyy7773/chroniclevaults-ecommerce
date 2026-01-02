@@ -1,6 +1,7 @@
 import express from 'express';
 import User from '../models/User.js';
 import Product from '../models/Product.js';
+import Auction from '../models/Auction.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -252,6 +253,89 @@ router.post('/sync', protect, async (req, res) => {
   } catch (error) {
     console.error('Error syncing cart/wishlist:', error);
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// @route   GET /api/user/my-bidding
+// @desc    Get user's bidding history across all auctions
+// @access  Private
+router.get('/my-bidding', protect, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Find all auctions that have lots
+    const auctions = await Auction.find({
+      isLotBidding: true,
+      'lots.bids.user': userId
+    });
+
+    const biddingHistory = [];
+    let srNo = 1;
+
+    // Loop through each auction
+    for (const auction of auctions) {
+      // Loop through each lot in the auction
+      for (const lot of auction.lots) {
+        // Find user's bids in this lot
+        const userBids = lot.bids.filter(bid =>
+          bid.user && bid.user.toString() === userId.toString()
+        );
+
+        // Process each bid
+        for (const bid of userBids) {
+          // Determine bid status
+          let bidStatus = 'Out Bid';
+
+          // Check if lot has ended
+          const lotEnded = auction.status === 'Ended' ||
+                          (lot.status && lot.status === 'Ended');
+
+          // Get highest bid in this lot
+          const highestBid = lot.bids.length > 0
+            ? Math.max(...lot.bids.map(b => b.amount))
+            : lot.startingPrice;
+
+          // Check if user has the highest bid
+          const userHasHighestBid = bid.amount === highestBid;
+
+          if (lotEnded) {
+            bidStatus = userHasHighestBid ? 'Won' : 'Out Bid';
+          } else {
+            bidStatus = userHasHighestBid ? 'Highest Bid' : 'Out Bid';
+          }
+
+          biddingHistory.push({
+            srNo: srNo++,
+            auctionId: auction._id,
+            auctionNumber: auction.auctionNumber || auction.title,
+            lotNo: lot.lotNumber,
+            lotTitle: lot.title,
+            myBidAmount: bid.amount,
+            maxBidAmount: bid.maxBid || bid.amount,
+            bidDateTime: bid.timestamp,
+            soldFor: lotEnded && lot.winner ? lot.currentBid : null,
+            bidStatus: bidStatus,
+            isAutoBid: bid.isAutoBid || false,
+            isCatalogBid: bid.isCatalogBid || false
+          });
+        }
+      }
+    }
+
+    // Sort by bid date/time (most recent first)
+    biddingHistory.sort((a, b) => new Date(b.bidDateTime) - new Date(a.bidDateTime));
+
+    res.json({
+      success: true,
+      data: biddingHistory
+    });
+
+  } catch (error) {
+    console.error('Error fetching bidding history:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching bidding history'
+    });
   }
 });
 
