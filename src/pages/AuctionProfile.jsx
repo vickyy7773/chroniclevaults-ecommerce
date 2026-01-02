@@ -88,36 +88,26 @@ const AuctionProfile = () => {
         panCard: 'pending'
       });
     } catch (error) {
-      console.error('Error fetching user data:', error);
-      // Mock data for testing
+      console.error('❌ Error fetching user data:', error);
+      console.error('❌ Error details:', error.response || error.message);
+      toast.error('Failed to load profile data');
+
+      // Set empty data instead of dummy data
       setPersonalInfo({
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        phone: '+91 9876543210',
-        address: '123 Main Street, Mumbai, Maharashtra, 400001'
+        name: '',
+        email: '',
+        phone: '',
+        address: ''
       });
 
       setAccountSummary({
-        auctionCoins: 50000,
-        frozenCoins: 12000,
-        totalSpent: 150000,
-        totalWon: 25
+        auctionCoins: 0,
+        frozenCoins: 0,
+        totalSpent: 0,
+        totalWon: 0
       });
 
-      setLoginHistory([
-        {
-          date: '2024-12-27',
-          time: '10:30 AM',
-          ipAddress: '192.168.1.1',
-          device: 'Chrome on Windows'
-        },
-        {
-          date: '2024-12-26',
-          time: '03:15 PM',
-          ipAddress: '192.168.1.1',
-          device: 'Chrome on Windows'
-        }
-      ]);
+      setLoginHistory([]);
     } finally {
       setLoading(false);
     }
