@@ -1,6 +1,6 @@
 import express from 'express';
 import { getLoginHistory, getAllLoginHistory } from '../controllers/loginHistoryController.js';
-import { protect, authorize } from '../middleware/auth.js';
+import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -8,6 +8,6 @@ const router = express.Router();
 router.get('/', protect, getLoginHistory);
 
 // Admin routes
-router.get('/admin/all', protect, authorize('admin', 'superadmin'), getAllLoginHistory);
+router.get('/admin/all', protect, admin, getAllLoginHistory);
 
 export default router;
