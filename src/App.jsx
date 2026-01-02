@@ -608,8 +608,8 @@ const AppContent = () => {
             <Route path="/userdashboard" element={<UserDashboard />} />
             <Route path="/my-bidding" element={<MyBidding />} />
             <Route path="/my-invoice" element={<MyInvoice />} />
-            <Route path="/profile" element={<AuctionProfile />} />
-            <Route path="/profile-ecommerce" element={<Profile user={user} onLogout={handleLogout} />} />
+            <Route path="/profile" element={<Profile user={user} onLogout={handleLogout} />} />
+            <Route path="/auction-profile" element={<AuctionProfile />} />
             <Route path="/invoice/:orderId" element={<InvoicePreview />} />
             {/* Dynamic Category Pages - Any category from database */}
             <Route path="/category/:categoryName" element={

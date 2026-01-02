@@ -19,7 +19,7 @@ const UserDashboard = () => {
     { id: 'watchlist', label: 'My Watchlist', icon: Eye, path: '/my-watchlist' },
     { id: 'wantlist', label: 'My WantList', icon: List, path: '/my-wantlist' },
     { id: 'invoice', label: 'My Invoice', icon: FileText, path: '/my-invoice' },
-    { id: 'profile', label: 'My Profile', icon: User, path: '/profile' }
+    { id: 'profile', label: 'My Profile', icon: User, path: '/auction-profile' }
   ];
 
   // Fetch auction bidding data
