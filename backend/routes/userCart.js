@@ -284,7 +284,7 @@ router.get('/my-bidding', protect, async (req, res) => {
         // Process each bid
         for (const bid of userBids) {
           // Determine bid status
-          let bidStatus = 'Out Bid';
+          let bidStatus = 'Bid Placed';
 
           // Check if lot has ended
           const lotEnded = auction.status === 'Ended' ||
@@ -298,10 +298,23 @@ router.get('/my-bidding', protect, async (req, res) => {
           // Check if user has the highest bid
           const userHasHighestBid = bid.amount === highestBid;
 
+          // Check if user's bid was outbid (someone bid higher after this bid)
+          const wasOutbid = lot.bids.some(b =>
+            b.amount > bid.amount &&
+            new Date(b.timestamp) > new Date(bid.timestamp)
+          );
+
           if (lotEnded) {
             bidStatus = userHasHighestBid ? 'Won' : 'Out Bid';
           } else {
-            bidStatus = userHasHighestBid ? 'Highest Bid' : 'Out Bid';
+            // Auction is still active
+            if (userHasHighestBid) {
+              bidStatus = 'Highest Bid';
+            } else if (wasOutbid) {
+              bidStatus = 'Out Bid';
+            } else {
+              bidStatus = 'Bid Placed';
+            }
           }
 
           biddingHistory.push({
