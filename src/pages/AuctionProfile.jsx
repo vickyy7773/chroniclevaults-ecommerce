@@ -60,8 +60,8 @@ const AuctionProfile = () => {
       // Try to fetch auction registration data
       let registrationData = null;
       try {
-        const regResponse = await api.get(`/auction-registration/user/${userData._id}`);
-        registrationData = regResponse.data;
+        // Note: api.get already unwraps response.data via interceptor
+        registrationData = await api.get(`/auction-registration/user/${userData._id}`);
         console.log('✅ Auction registration data loaded:', registrationData);
       } catch (regError) {
         console.log('ℹ️ No auction registration found for user');
