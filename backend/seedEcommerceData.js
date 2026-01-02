@@ -132,9 +132,10 @@ const seedEcommerceData = async () => {
     console.log(`👤 Using user: ${user.email}`);
     console.log(`📦 Found ${products.length} products`);
 
-    // Clear existing orders (optional)
-    console.log('🗑️  Clearing existing orders...');
-    await Order.deleteMany({});
+    // ⚠️ WARNING: NEVER run this on production!
+    // Uncomment ONLY for development/testing
+    // console.log('🗑️  Clearing existing orders...');
+    // await Order.deleteMany({});
 
     // Create sample orders
     console.log('📝 Creating sample orders...');
