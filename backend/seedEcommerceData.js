@@ -116,7 +116,7 @@ const seedEcommerceData = async () => {
     console.log('✅ MongoDB Connected');
 
     // Get first user and first product
-    const user = await User.findOne({ role: { $in: ['user', 'customer'] } });
+    const user = await User.findOne({ legacyRole: 'user' });
     const products = await Product.find().limit(5);
 
     if (!user) {
