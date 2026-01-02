@@ -63,10 +63,13 @@ const AuctionProfile = () => {
         ? `${defaultAddress.address}, ${defaultAddress.city}, ${defaultAddress.state}, ${defaultAddress.pincode}`
         : '';
 
+      // Get phone from user level or from saved address
+      const phoneNumber = userData.mobileNumber || userData.phone || defaultAddress?.phone || '';
+
       setPersonalInfo({
         name: userData.name || '',
         email: userData.email || '',
-        phone: userData.mobileNumber || userData.phone || '',
+        phone: phoneNumber,
         address: addressString
       });
 
