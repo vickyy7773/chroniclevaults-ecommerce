@@ -1,6 +1,7 @@
 import Order from '../models/Order.js';
 import Cart from '../models/Cart.js';
 import Product from '../models/Product.js';
+import User from '../models/User.js';
 import { logActivity } from '../middleware/activityLogger.js';
 
 // @desc    Create new order
@@ -375,6 +376,410 @@ export const updateOrderTracking = async (req, res) => {
       data: order
     });
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// ============================================
+// E-COMMERCE REPORTS APIs
+// ============================================
+
+// @desc    Get Sales Report (Summary Level - Daily Aggregation)
+// @route   GET /api/orders/reports/sales
+// @access  Private/Admin
+export const getSalesReport = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    // Validate date range
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Start date and end date are required'
+      });
+    }
+
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    // Aggregation pipeline for daily sales summary
+    const salesData = await Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: start, $lte: end }
+        }
+      },
+      {
+        $addFields: {
+          dateOnly: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+          },
+          // Calculate discount (itemsPrice - actual paid for items)
+          discountAmount: {
+            $cond: {
+              if: { $gt: ["$itemsPrice", 0] },
+              then: {
+                $subtract: [
+                  "$itemsPrice",
+                  { $subtract: ["$totalPrice", { $add: ["$taxPrice", "$shippingPrice"] }] }
+                ]
+              },
+              else: 0
+            }
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$dateOnly",
+          totalOrders: { $sum: 1 },
+          completedOrders: {
+            $sum: { $cond: [{ $in: ["$orderStatus", ["Delivered"]] }, 1, 0] }
+          },
+          cancelledOrders: {
+            $sum: { $cond: [{ $eq: ["$orderStatus", "Cancelled"] }, 1, 0] }
+          },
+          grossSales: { $sum: "$itemsPrice" }, // Before discount & tax
+          totalDiscount: { $sum: "$discountAmount" },
+          totalTax: { $sum: "$taxPrice" },
+          totalShipping: { $sum: "$shippingPrice" },
+          netSales: {
+            $sum: {
+              $cond: [
+                { $ne: ["$orderStatus", "Cancelled"] },
+                "$totalPrice",
+                0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      },
+      {
+        $project: {
+          _id: 0,
+          date: "$_id",
+          totalOrders: 1,
+          completedOrders: 1,
+          cancelledOrders: 1,
+          grossSales: { $round: ["$grossSales", 2] },
+          totalDiscount: { $round: ["$totalDiscount", 2] },
+          totalTax: { $round: ["$totalTax", 2] },
+          totalShipping: { $round: ["$totalShipping", 2] },
+          netSales: { $round: ["$netSales", 2] }
+        }
+      }
+    ]);
+
+    // Calculate grand totals
+    const grandTotal = salesData.reduce((acc, day) => ({
+      totalOrders: acc.totalOrders + day.totalOrders,
+      completedOrders: acc.completedOrders + day.completedOrders,
+      cancelledOrders: acc.cancelledOrders + day.cancelledOrders,
+      grossSales: acc.grossSales + day.grossSales,
+      totalDiscount: acc.totalDiscount + day.totalDiscount,
+      totalTax: acc.totalTax + day.totalTax,
+      totalShipping: acc.totalShipping + day.totalShipping,
+      netSales: acc.netSales + day.netSales
+    }), {
+      totalOrders: 0,
+      completedOrders: 0,
+      cancelledOrders: 0,
+      grossSales: 0,
+      totalDiscount: 0,
+      totalTax: 0,
+      totalShipping: 0,
+      netSales: 0
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        dailyData: salesData,
+        summary: grandTotal
+      }
+    });
+  } catch (error) {
+    console.error('Sales report error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Get Order Report (Detailed Level - All Orders)
+// @route   GET /api/orders/reports/orders
+// @access  Private/Admin
+export const getOrderReport = async (req, res) => {
+  try {
+    const { startDate, endDate, status, search, page = 1, limit = 50 } = req.query;
+
+    // Build filter
+    const filter = {};
+
+    // Date range filter
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filter.createdAt = { $gte: start, $lte: end };
+    }
+
+    // Status filter
+    if (status) {
+      filter.orderStatus = status;
+    }
+
+    // Search by order ID or customer
+    let userIds = [];
+    if (search) {
+      // Search in users for name/email/phone
+      const users = await User.find({
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+          { phone: { $regex: search, $options: 'i' } }
+        ]
+      }).select('_id');
+      userIds = users.map(u => u._id);
+    }
+
+    if (search && userIds.length > 0) {
+      filter.$or = [
+        { user: { $in: userIds } }
+      ];
+    }
+
+    // Pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Fetch orders
+    const orders = await Order.find(filter)
+      .populate('user', 'name email phone')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    // Get total count for pagination
+    const totalOrders = await Order.countDocuments(filter);
+
+    // Format data
+    const formattedOrders = orders.map(order => ({
+      orderId: order.orderNumber || `ORD-${order._id.toString().slice(-6).toUpperCase()}`,
+      orderDate: order.createdAt,
+      customerName: order.user?.name || 'N/A',
+      customerEmail: order.user?.email || 'N/A',
+      customerPhone: order.user?.phone || 'N/A',
+      orderAmount: order.totalPrice,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.isPaid ? 'Paid' : 'Unpaid',
+      orderStatus: order.orderStatus,
+      itemsCount: order.orderItems?.length || 0
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        orders: formattedOrders,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(totalOrders / parseInt(limit)),
+          totalOrders,
+          limit: parseInt(limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Order report error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Get Product Report (Performance Based)
+// @route   GET /api/orders/reports/products
+// @access  Private/Admin
+export const getProductReport = async (req, res) => {
+  try {
+    const { category, startDate, endDate } = req.query;
+
+    // Build filter for orders (only completed orders for revenue)
+    const orderFilter = {
+      orderStatus: { $in: ['Delivered'] } // Only completed orders
+    };
+
+    // Date range filter
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      orderFilter.createdAt = { $gte: start, $lte: end };
+    }
+
+    // Aggregate product sales from orders
+    const productSales = await Order.aggregate([
+      { $match: orderFilter },
+      { $unwind: "$orderItems" },
+      {
+        $group: {
+          _id: "$orderItems.product",
+          unitsSold: { $sum: "$orderItems.quantity" },
+          totalRevenue: {
+            $sum: { $multiply: ["$orderItems.price", "$orderItems.quantity"] }
+          }
+        }
+      }
+    ]);
+
+    // Create a map for quick lookup
+    const salesMap = new Map();
+    productSales.forEach(item => {
+      salesMap.set(item._id.toString(), {
+        unitsSold: item.unitsSold,
+        totalRevenue: item.totalRevenue
+      });
+    });
+
+    // Build product filter
+    const productFilter = {};
+    if (category) {
+      productFilter.category = category;
+    }
+
+    // Fetch all products
+    const products = await Product.find(productFilter)
+      .select('_id name category price inStock')
+      .lean();
+
+    // Combine product data with sales data
+    const productReport = products.map(product => {
+      const sales = salesMap.get(product._id.toString()) || {
+        unitsSold: 0,
+        totalRevenue: 0
+      };
+
+      // Determine stock status
+      let stockStatus = 'Out of Stock';
+      if (product.inStock > 10) {
+        stockStatus = 'In Stock';
+      } else if (product.inStock > 0) {
+        stockStatus = 'Low Stock';
+      }
+
+      return {
+        productId: product._id,
+        productName: product.name,
+        category: product.category,
+        sellingPrice: product.price,
+        unitsSold: sales.unitsSold,
+        totalRevenue: Math.round(sales.totalRevenue * 100) / 100,
+        currentStock: product.inStock,
+        stockStatus
+      };
+    });
+
+    // Sort by revenue (highest first)
+    productReport.sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+    res.status(200).json({
+      success: true,
+      data: productReport
+    });
+  } catch (error) {
+    console.error('Product report error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Get Customer Report (Behaviour Based)
+// @route   GET /api/orders/reports/customers
+// @access  Private/Admin
+export const getCustomerReport = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    // Build filter (only completed orders count)
+    const orderFilter = {
+      orderStatus: { $in: ['Delivered'] }
+    };
+
+    // Date range filter (optional)
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      orderFilter.createdAt = { $gte: start, $lte: end };
+    }
+
+    // Aggregate customer data
+    const customerData = await Order.aggregate([
+      { $match: orderFilter },
+      {
+        $group: {
+          _id: "$user",
+          totalOrders: { $sum: 1 },
+          totalSpent: { $sum: "$totalPrice" },
+          lastOrderDate: { $max: "$createdAt" }
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'userDetails'
+        }
+      },
+      {
+        $unwind: "$userDetails"
+      },
+      {
+        $project: {
+          customerId: "$_id",
+          customerName: "$userDetails.name",
+          email: "$userDetails.email",
+          phone: "$userDetails.phone",
+          totalOrders: 1,
+          totalSpent: { $round: ["$totalSpent", 2] },
+          lastOrderDate: 1,
+          customerType: {
+            $cond: {
+              if: { $gt: ["$totalOrders", 1] },
+              then: "Returning",
+              else: "New"
+            }
+          }
+        }
+      },
+      {
+        $sort: { totalSpent: -1 }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: customerData
+    });
+  } catch (error) {
+    console.error('Customer report error:', error);
     res.status(500).json({
       success: false,
       message: error.message

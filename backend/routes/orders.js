@@ -6,11 +6,21 @@ import {
   getAllOrders,
   updateOrderStatus,
   updateOrderToPaid,
-  updateOrderTracking
+  updateOrderTracking,
+  getSalesReport,
+  getOrderReport,
+  getProductReport,
+  getCustomerReport
 } from '../controllers/orderController.js';
 import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// E-commerce Reports Routes (must be before /:id routes)
+router.get('/reports/sales', protect, admin, getSalesReport);
+router.get('/reports/orders', protect, admin, getOrderReport);
+router.get('/reports/products', protect, admin, getProductReport);
+router.get('/reports/customers', protect, admin, getCustomerReport);
 
 // Protected routes - user must be authenticated
 router.route('/')
