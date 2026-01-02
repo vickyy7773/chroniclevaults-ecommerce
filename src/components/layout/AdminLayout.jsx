@@ -296,6 +296,7 @@ const AdminLayout = () => {
         { path: '/admin/bid-tracking', label: 'Bid Tracking' },
         { path: '/admin/sales-dashboard', label: 'Sales Dashboard' },
         { path: '/admin/auction-report', label: 'Auction Report' },
+        { path: '/admin/ecom-reports', label: 'E-Commerce Reports' },
         { path: '/admin/vendor-invoices', label: 'Vendor Invoices' },
         { path: '/admin/lot-transfer', label: 'Lot Transfer' },
         { path: '/admin/image-upload', label: 'Image Upload' },

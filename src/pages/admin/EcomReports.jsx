@@ -7,9 +7,21 @@ import * as XLSX from 'xlsx';
 const EcomReports = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('sales'); // 'sales', 'orders', 'products', 'customers'
+
+  // Set default dates to last 30 days
+  const getDefaultDates = () => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    };
+  };
+
   const [filters, setFilters] = useState({
-    startDate: '',
-    endDate: '',
+    ...getDefaultDates(),
     status: '',
     category: '',
     search: ''
@@ -105,7 +117,7 @@ const EcomReports = () => {
   };
 
   const handleClearFilters = () => {
-    setFilters({ startDate: '', endDate: '', status: '', category: '', search: '' });
+    setFilters({ ...getDefaultDates(), status: '', category: '', search: '' });
   };
 
   const formatDate = (dateString) => {
