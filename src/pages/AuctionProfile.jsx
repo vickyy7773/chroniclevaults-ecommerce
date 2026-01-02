@@ -57,18 +57,40 @@ const AuctionProfile = () => {
       const response = await authService.getCurrentUser();
       const userData = response.data;
 
-      // Get address from savedAddresses if available
-      const defaultAddress = userData.savedAddresses?.find(addr => addr.isDefault) || userData.savedAddresses?.[0];
-      const addressString = defaultAddress
-        ? `${defaultAddress.address}, ${defaultAddress.city}, ${defaultAddress.state}, ${defaultAddress.pincode}`
-        : '';
+      // Try to fetch auction registration data
+      let registrationData = null;
+      try {
+        const regResponse = await api.get(`/auction-registration/user/${userData._id}`);
+        registrationData = regResponse.data;
+        console.log('✅ Auction registration data loaded:', registrationData);
+      } catch (regError) {
+        console.log('ℹ️ No auction registration found for user');
+      }
 
-      // Get phone from user level or from saved address
-      const phoneNumber = userData.mobileNumber || userData.phone || defaultAddress?.phone || '';
+      // Get phone and address from auction registration if available
+      let phoneNumber = '';
+      let addressString = '';
+
+      if (registrationData) {
+        // Prefer data from auction registration
+        phoneNumber = registrationData.mobile || registrationData.phone || '';
+
+        const billingAddr = registrationData.billingAddress;
+        if (billingAddr) {
+          addressString = `${billingAddr.addressLine1}${billingAddr.addressLine2 ? ', ' + billingAddr.addressLine2 : ''}, ${billingAddr.city}, ${billingAddr.state}, ${billingAddr.pinCode}`;
+        }
+      } else {
+        // Fallback to savedAddresses if no auction registration
+        const defaultAddress = userData.savedAddresses?.find(addr => addr.isDefault) || userData.savedAddresses?.[0];
+        addressString = defaultAddress
+          ? `${defaultAddress.address}, ${defaultAddress.city}, ${defaultAddress.state}, ${defaultAddress.pincode}`
+          : '';
+        phoneNumber = userData.mobileNumber || userData.phone || defaultAddress?.phone || '';
+      }
 
       setPersonalInfo({
-        name: userData.name || '',
-        email: userData.email || '',
+        name: userData.name || registrationData?.fullName || '',
+        email: userData.email || registrationData?.email || '',
         phone: phoneNumber,
         address: addressString
       });
