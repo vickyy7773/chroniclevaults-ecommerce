@@ -30,14 +30,14 @@ const Profile = ({ user, onLogout }) => {
   });
   const [addressErrors, setAddressErrors] = useState({});
   const [profileData, setProfileData] = useState({
-    name: user?.name || 'John Doe',
-    email: user?.email || 'john.doe@example.com',
-    phone: user?.phone || '+91 9876543210',
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.mobileNumber || user?.phone || '',
     avatar: user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
-    dateOfBirth: user?.dateOfBirth || '1990-01-15',
-    gender: user?.gender || 'Male',
-    bio: user?.bio || 'Passionate coin collector and numismatist',
-    joinedDate: user?.joinedDate || 'January 2024'
+    dateOfBirth: user?.dateOfBirth || '',
+    gender: user?.gender || '',
+    bio: user?.bio || '',
+    joinedDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ''
   });
 
   const [addresses, setAddresses] = useState([]);
@@ -51,7 +51,29 @@ const Profile = ({ user, onLogout }) => {
   useEffect(() => {
     fetchMyOrders();
     fetchAddresses();
+    fetchUserProfile();
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await authService.getCurrentUser();
+      if (response && response.success && response.data) {
+        const userData = response.data;
+        setProfileData({
+          name: userData.name || '',
+          email: userData.email || '',
+          phone: userData.mobileNumber || userData.phone || '',
+          avatar: userData.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
+          dateOfBirth: userData.dateOfBirth || '',
+          gender: userData.gender || '',
+          bio: userData.bio || '',
+          joinedDate: userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ''
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+    }
+  };
 
   const fetchAddresses = async () => {
     try {
