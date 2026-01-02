@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Lock, History, FileText, Save, Edit2, X, Upload, CheckCircle, XCircle } from 'lucide-react';
+import { User, Lock, History, Save, Edit2, X } from 'lucide-react';
 import api from '../utils/api';
 import { authService } from '../services';
 import { toast } from 'react-toastify';
@@ -34,18 +34,6 @@ const AuctionProfile = () => {
 
   // Login History
   const [loginHistory, setLoginHistory] = useState([]);
-
-  // KYC Documents
-  const [kycDocuments, setKycDocuments] = useState({
-    idProof: null,
-    addressProof: null,
-    panCard: null
-  });
-  const [kycStatus, setKycStatus] = useState({
-    idProof: 'pending',
-    addressProof: 'pending',
-    panCard: 'pending'
-  });
 
   useEffect(() => {
     fetchUserData();
@@ -101,13 +89,8 @@ const AuctionProfile = () => {
         totalWon: userData.totalWon || 0
       });
 
-      // Login history and KYC status - set to defaults (endpoints not implemented yet)
+      // Login history - set to defaults (endpoint not implemented yet)
       setLoginHistory([]);
-      setKycStatus({
-        idProof: 'pending',
-        addressProof: 'pending',
-        panCard: 'pending'
-      });
     } catch (error) {
       console.error('❌ Error fetching user data:', error);
       console.error('❌ Error details:', error.response || error.message);
@@ -175,52 +158,15 @@ const AuctionProfile = () => {
     }
   };
 
-  const handleFileUpload = async (docType, file) => {
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('document', file);
-    formData.append('documentType', docType);
-
-    try {
-      await api.post('/user/upload-kyc', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      toast.success(`${docType} uploaded successfully!`);
-
-      // Update KYC status
-      setKycStatus(prev => ({ ...prev, [docType]: 'uploaded' }));
-    } catch (error) {
-      console.error('Error uploading document:', error);
-      toast.error('Failed to upload document');
-    }
-  };
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN').format(amount);
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'verified':
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case 'uploaded':
-        return <CheckCircle className="w-5 h-5 text-blue-600" />;
-      case 'rejected':
-        return <XCircle className="w-5 h-5 text-red-600" />;
-      default:
-        return <XCircle className="w-5 h-5 text-gray-400" />;
-    }
   };
 
   const tabs = [
     { id: 'personal', label: 'Personal Info', icon: User },
     { id: 'account', label: 'Account Summary', icon: User },
     { id: 'security', label: 'Security', icon: Lock },
-    { id: 'history', label: 'Login History', icon: History },
-    { id: 'kyc', label: 'KYC Documents', icon: FileText }
+    { id: 'history', label: 'Login History', icon: History }
   ];
 
   if (loading) {
@@ -470,84 +416,6 @@ const AuctionProfile = () => {
                     )}
                   </tbody>
                 </table>
-              </div>
-            </div>
-          )}
-
-          {/* KYC Documents Tab */}
-          {activeTab === 'kyc' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">KYC Documents</h2>
-
-              <div className="space-y-6">
-                {/* ID Proof */}
-                <div className="border border-gray-300 rounded-lg p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">ID Proof</h3>
-                    {getStatusIcon(kycStatus.idProof)}
-                  </div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Upload a government-issued ID (Aadhar Card, Passport, Driver's License, etc.)
-                  </p>
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    onChange={(e) => handleFileUpload('idProof', e.target.files[0])}
-                    className="block w-full text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-accent-50 file:text-accent-700
-                      hover:file:bg-accent-100"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">Status: {kycStatus.idProof}</p>
-                </div>
-
-                {/* Address Proof */}
-                <div className="border border-gray-300 rounded-lg p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Address Proof</h3>
-                    {getStatusIcon(kycStatus.addressProof)}
-                  </div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Upload address proof (Utility Bill, Bank Statement, etc.)
-                  </p>
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    onChange={(e) => handleFileUpload('addressProof', e.target.files[0])}
-                    className="block w-full text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-accent-50 file:text-accent-700
-                      hover:file:bg-accent-100"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">Status: {kycStatus.addressProof}</p>
-                </div>
-
-                {/* PAN Card */}
-                <div className="border border-gray-300 rounded-lg p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">PAN Card</h3>
-                    {getStatusIcon(kycStatus.panCard)}
-                  </div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Upload PAN Card for tax purposes
-                  </p>
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    onChange={(e) => handleFileUpload('panCard', e.target.files[0])}
-                    className="block w-full text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-accent-50 file:text-accent-700
-                      hover:file:bg-accent-100"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">Status: {kycStatus.panCard}</p>
-                </div>
               </div>
             </div>
           )}
