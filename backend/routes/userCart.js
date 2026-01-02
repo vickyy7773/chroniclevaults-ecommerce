@@ -284,7 +284,7 @@ router.get('/my-bidding', protect, async (req, res) => {
         // Process each bid
         for (const bid of userBids) {
           // Determine bid status
-          let bidStatus = 'Bid Placed';
+          let bidStatus = 'Bid Placed'; // Default status for all bids
 
           // Check if lot has ended
           const lotEnded = auction.status === 'Ended' ||
@@ -295,27 +295,34 @@ router.get('/my-bidding', protect, async (req, res) => {
             ? Math.max(...lot.bids.map(b => b.amount))
             : lot.startingPrice;
 
-          // Check if user has the highest bid
-          const userHasHighestBid = bid.amount === highestBid;
+          // Check if this is the user's latest/highest bid on this lot
+          const userLatestBid = userBids.length > 0
+            ? Math.max(...userBids.map(b => b.amount))
+            : 0;
+          const isLatestBid = bid.amount === userLatestBid;
 
-          // Check if user's bid was outbid (someone bid higher after this bid)
-          const wasOutbid = lot.bids.some(b =>
-            b.amount > bid.amount &&
-            new Date(b.timestamp) > new Date(bid.timestamp)
-          );
+          // Only update status for the latest bid
+          if (isLatestBid) {
+            // Check if user has the overall highest bid in the lot
+            const userHasHighestBid = bid.amount === highestBid;
 
-          if (lotEnded) {
-            bidStatus = userHasHighestBid ? 'Won' : 'Out Bid';
-          } else {
-            // Auction is still active
-            if (userHasHighestBid) {
-              bidStatus = 'Highest Bid';
-            } else if (wasOutbid) {
-              bidStatus = 'Out Bid';
+            if (lotEnded) {
+              bidStatus = userHasHighestBid ? 'Won' : 'Out Bid';
             } else {
-              bidStatus = 'Bid Placed';
+              // Auction is still active
+              if (userHasHighestBid) {
+                bidStatus = 'Highest Bid';
+              } else {
+                // Check if outbid
+                const wasOutbid = lot.bids.some(b =>
+                  b.amount > bid.amount &&
+                  new Date(b.timestamp) > new Date(bid.timestamp)
+                );
+                bidStatus = wasOutbid ? 'Out Bid' : 'Bid Placed';
+              }
             }
           }
+          // All other (non-latest) bids remain "Bid Placed"
 
           biddingHistory.push({
             srNo: srNo++,
