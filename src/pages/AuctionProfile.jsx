@@ -53,20 +53,27 @@ const AuctionProfile = () => {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/user/profile');
+      const response = await api.get('/auth/me');
+      const userData = response.data;
+
+      // Get address from savedAddresses if available
+      const defaultAddress = userData.savedAddresses?.find(addr => addr.isDefault) || userData.savedAddresses?.[0];
+      const addressString = defaultAddress
+        ? `${defaultAddress.address}, ${defaultAddress.city}, ${defaultAddress.state}, ${defaultAddress.pincode}`
+        : '';
 
       setPersonalInfo({
-        name: response.data.name || '',
-        email: response.data.email || '',
-        phone: response.data.phone || '',
-        address: response.data.address || ''
+        name: userData.name || '',
+        email: userData.email || '',
+        phone: userData.mobileNumber || userData.phone || '',
+        address: addressString
       });
 
       setAccountSummary({
-        auctionCoins: response.data.auctionCoins || 0,
-        frozenCoins: response.data.frozenCoins || 0,
-        totalSpent: response.data.totalSpent || 0,
-        totalWon: response.data.totalWon || 0
+        auctionCoins: userData.auctionCoins || 0,
+        frozenCoins: userData.frozenCoins || 0,
+        totalSpent: userData.totalSpent || 0,
+        totalWon: userData.totalWon || 0
       });
 
       // Fetch login history
