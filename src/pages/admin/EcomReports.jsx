@@ -92,9 +92,8 @@ const EcomReports = () => {
 
     const response = await api.get(`/orders/reports/sales?${params.toString()}`);
     console.log('📊 Sales API Response:', response.data);
-    console.log('📊 Sales Data to set:', response.data.data);
-    setSalesData(response.data.data);
-    console.log('📊 setSalesData called with:', response.data.data);
+    setSalesData(response.data);
+    console.log('📊 setSalesData called with:', response.data);
   };
 
   const fetchOrdersReport = async () => {
@@ -105,7 +104,7 @@ const EcomReports = () => {
     if (filters.search) params.append('search', filters.search);
 
     const response = await api.get(`/orders/reports/orders?${params.toString()}`);
-    setOrdersData(response.data.data);
+    setOrdersData(response.data);
   };
 
   const fetchProductsReport = async () => {
@@ -115,7 +114,7 @@ const EcomReports = () => {
     if (filters.category) params.append('category', filters.category);
 
     const response = await api.get(`/orders/reports/products?${params.toString()}`);
-    setProductsData(response.data.data);
+    setProductsData(response.data);
   };
 
   const fetchCustomersReport = async () => {
@@ -124,7 +123,7 @@ const EcomReports = () => {
     if (filters.endDate) params.append('endDate', filters.endDate);
 
     const response = await api.get(`/orders/reports/customers?${params.toString()}`);
-    setCustomersData(response.data.data);
+    setCustomersData(response.data);
   };
 
   const handleFilterChange = (key, value) => {
