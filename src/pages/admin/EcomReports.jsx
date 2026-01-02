@@ -54,20 +54,27 @@ const EcomReports = () => {
   };
 
   const fetchReportData = async () => {
+    console.log('🔍 fetchReportData called', { activeTab, filters });
     setLoading(true);
     try {
       if (activeTab === 'sales') {
+        console.log('📊 Fetching sales report...');
         await fetchSalesReport();
       } else if (activeTab === 'orders') {
+        console.log('📦 Fetching orders report...');
         await fetchOrdersReport();
       } else if (activeTab === 'products') {
+        console.log('🏷️ Fetching products report...');
         await fetchProductsReport();
       } else if (activeTab === 'customers') {
+        console.log('👥 Fetching customers report...');
         await fetchCustomersReport();
       }
+      console.log('✅ Report data fetched successfully');
     } catch (error) {
-      console.error('Error fetching report:', error);
-      toast.error('Failed to fetch report data');
+      console.error('❌ Error fetching report:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      toast.error(error.response?.data?.message || 'Failed to fetch report data');
     } finally {
       setLoading(false);
     }
@@ -704,6 +711,36 @@ const EcomReports = () => {
             <div className="text-center py-20 text-gray-500 dark:text-gray-400">
               Please select start and end dates to view reports
             </div>
+          )}
+
+          {/* Empty state when data is null but dates are set */}
+          {filters.startDate && filters.endDate && !loading && (
+            <>
+              {activeTab === 'sales' && !salesData && (
+                <div className="text-center py-20 text-gray-500 dark:text-gray-400">
+                  <p className="text-lg mb-2">No sales data available</p>
+                  <p className="text-sm">Try adjusting the date range</p>
+                </div>
+              )}
+              {activeTab === 'orders' && !ordersData && (
+                <div className="text-center py-20 text-gray-500 dark:text-gray-400">
+                  <p className="text-lg mb-2">No orders data available</p>
+                  <p className="text-sm">Try adjusting the filters</p>
+                </div>
+              )}
+              {activeTab === 'products' && !productsData && (
+                <div className="text-center py-20 text-gray-500 dark:text-gray-400">
+                  <p className="text-lg mb-2">No products data available</p>
+                  <p className="text-sm">Try adjusting the filters</p>
+                </div>
+              )}
+              {activeTab === 'customers' && !customersData && (
+                <div className="text-center py-20 text-gray-500 dark:text-gray-400">
+                  <p className="text-lg mb-2">No customers data available</p>
+                  <p className="text-sm">Try adjusting the date range</p>
+                </div>
+              )}
+            </>
           )}
         </>
       )}
