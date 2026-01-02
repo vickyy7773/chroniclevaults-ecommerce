@@ -77,13 +77,9 @@ const AuctionProfile = () => {
         totalWon: userData.totalWon || 0
       });
 
-      // Fetch login history
-      const historyResponse = await api.get('/user/login-history');
-      setLoginHistory(historyResponse.data || []);
-
-      // Fetch KYC status
-      const kycResponse = await api.get('/user/kyc-status');
-      setKycStatus(kycResponse.data || {
+      // Login history and KYC status - set to defaults (endpoints not implemented yet)
+      setLoginHistory([]);
+      setKycStatus({
         idProof: 'pending',
         addressProof: 'pending',
         panCard: 'pending'
