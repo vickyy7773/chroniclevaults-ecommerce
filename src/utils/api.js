@@ -244,4 +244,13 @@ export const dashboardAPI = {
   getTopProducts: () => api.get('/admin/dashboard/top-products'),
 };
 
+// ==================== LOGIN HISTORY APIs ====================
+export const loginHistoryAPI = {
+  // Get user's login history
+  getMyHistory: (limit = 10) => api.get('/login-history', { params: { limit } }),
+
+  // Get all login history (admin)
+  getAll: (params) => api.get('/login-history/admin/all', { params }),
+};
+
 export default api;

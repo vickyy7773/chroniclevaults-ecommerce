@@ -3,6 +3,7 @@ import Role from '../models/Role.js';
 import generateToken from '../utils/generateToken.js';
 import { sendOTPEmail, verifyOTP, sendWelcomeEmail } from '../services/emailService.js';
 import { logLogin } from '../middleware/activityLogger.js';
+import { saveLoginHistory } from './loginHistoryController.js';
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -108,6 +109,8 @@ export const login = async (req, res) => {
 
     if (!isPasswordMatch) {
       console.log('❌ Password mismatch');
+      // Save failed login attempt
+      await saveLoginHistory(user._id, req, false);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -116,6 +119,9 @@ export const login = async (req, res) => {
 
     // Generate token
     const token = generateToken(user._id);
+
+    // Save successful login history for all users
+    await saveLoginHistory(user._id, req, true);
 
     // Log admin login activity
     if (user.legacyRole === 'admin' || user.legacyRole === 'superadmin') {

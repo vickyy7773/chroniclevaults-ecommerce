@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Lock, History, Save, Edit2, X } from 'lucide-react';
-import api from '../utils/api';
+import api, { loginHistoryAPI } from '../utils/api';
 import { authService } from '../services';
 import { toast } from 'react-toastify';
 
@@ -89,8 +89,15 @@ const AuctionProfile = () => {
         totalWon: userData.totalWon || 0
       });
 
-      // Login history - set to defaults (endpoint not implemented yet)
-      setLoginHistory([]);
+      // Fetch login history
+      try {
+        const historyResponse = await loginHistoryAPI.getMyHistory(10);
+        if (historyResponse.success && historyResponse.data) {
+          setLoginHistory(historyResponse.data);
+        }
+      } catch (historyError) {
+        console.log('ℹ️ No login history available');
+      }
     } catch (error) {
       console.error('❌ Error fetching user data:', error);
       console.error('❌ Error details:', error.response || error.message);
@@ -160,6 +167,24 @@ const AuctionProfile = () => {
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN').format(amount);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
   };
 
   const tabs = [
@@ -398,18 +423,18 @@ const AuctionProfile = () => {
                       </tr>
                     ) : (
                       loginHistory.map((entry, index) => (
-                        <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                        <tr key={entry._id || index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                           <td className="px-6 py-3 text-sm text-gray-700 border-b border-gray-200">
-                            {entry.date}
+                            {formatDate(entry.loginTime)}
                           </td>
                           <td className="px-6 py-3 text-sm text-gray-700 border-b border-gray-200">
-                            {entry.time}
+                            {formatTime(entry.loginTime)}
                           </td>
                           <td className="px-6 py-3 text-sm text-gray-700 border-b border-gray-200">
                             {entry.ipAddress}
                           </td>
                           <td className="px-6 py-3 text-sm text-gray-700 border-b border-gray-200">
-                            {entry.device}
+                            {entry.device} • {entry.browser} • {entry.os}
                           </td>
                         </tr>
                       ))
