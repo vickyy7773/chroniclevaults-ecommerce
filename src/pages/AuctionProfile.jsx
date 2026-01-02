@@ -63,8 +63,11 @@ const AuctionProfile = () => {
         // Note: api.get already unwraps response.data via interceptor
         registrationData = await api.get(`/auction-registration/user/${userData._id}`);
         console.log('✅ Auction registration data loaded:', registrationData);
+        console.log('📋 Registration type:', typeof registrationData);
+        console.log('📋 Registration keys:', registrationData ? Object.keys(registrationData) : 'null');
       } catch (regError) {
         console.log('ℹ️ No auction registration found for user');
+        console.log('❌ Error details:', regError.response?.data || regError.message);
       }
 
       // Get phone and address from auction registration if available
