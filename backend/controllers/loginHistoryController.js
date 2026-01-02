@@ -1,5 +1,6 @@
 import LoginHistory from '../models/LoginHistory.js';
-import UAParser from 'ua-parser-js';
+import pkg from 'ua-parser-js';
+const UAParser = pkg;
 
 // @desc    Save login history
 // @route   Internal function (called from auth controller)
