@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Lock, History, FileText, Save, Edit2, X, Upload, CheckCircle, XCircle } from 'lucide-react';
 import api from '../utils/api';
+import { authService } from '../services';
 import { toast } from 'react-toastify';
 
 const AuctionProfile = () => {
@@ -53,7 +54,7 @@ const AuctionProfile = () => {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/auth/me');
+      const response = await authService.getCurrentUser();
       const userData = response.data;
 
       // Get address from savedAddresses if available
