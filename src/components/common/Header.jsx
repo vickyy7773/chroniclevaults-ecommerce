@@ -119,7 +119,7 @@ const Header = ({
     { to: '/my-watchlist', label: 'My Watchlist', icon: Eye },
     { to: '/my-wantlist', label: 'My WantList', icon: List },
     { to: '/my-invoice', label: 'My Invoice', icon: FileText },
-    { to: '/profile', label: 'My Profile', icon: User }
+    { to: '/auction-profile', label: 'My Profile', icon: User }
   ] : [
     { to: '/', label: 'Home', icon: Home },
     ...categories
@@ -251,7 +251,7 @@ const Header = ({
                           <p className="text-xs text-charcoal-700">{user.email}</p>
                         </div>
                         <Link
-                          to="/profile"
+                          to={isAuctionsPage ? "/auction-profile" : "/profile"}
                           className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-charcoal-900 hover:bg-cream-100"
                         >
                           <User className="w-4 h-4" />
@@ -434,7 +434,7 @@ const Header = ({
                     </div>
                     <div className="space-y-2">
                       <Link
-                        to="/profile"
+                        to={isAuctionsPage ? "/auction-profile" : "/profile"}
                         onClick={() => setShowMobileMenu(false)}
                         className="w-full flex items-center justify-center space-x-2 bg-amber-600 hover:bg-amber-700 text-white p-2 rounded transition-all"
                       >
