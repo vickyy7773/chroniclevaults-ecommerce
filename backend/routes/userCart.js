@@ -2,6 +2,7 @@ import express from 'express';
 import User from '../models/User.js';
 import Product from '../models/Product.js';
 import Auction from '../models/Auction.js';
+import CoinAllocation from '../models/CoinAllocation.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -257,77 +258,76 @@ router.post('/sync', protect, async (req, res) => {
 });
 
 // @route   GET /api/user/auction-bidding-info
-// @desc    Get user's bidding limit information per auction
+// @desc    Get user's coin allocation history (date-wise with FIFO usage)
 // @access  Private
 router.get('/auction-bidding-info', protect, async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Get user's auction coins and frozen coins data
+    // Get user's frozen coins data
     const user = await User.findById(userId);
-    const totalAuctionCoins = user.auctionCoins || 0;
-    const currentFrozenCoins = user.frozenCoins || 0;
+    const totalFrozenCoins = user.frozenCoinsPerAuction?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
 
-    // Find all auctions where user has placed bids
-    const auctions = await Auction.find({
-      isLotBidding: true,
-      'lots.bids.user': userId
-    });
+    // Get all coin allocations for this user, sorted by date (oldest first for FIFO)
+    const allocations = await CoinAllocation.find({ userId })
+      .sort({ allocationDate: 1 }) // Oldest first for FIFO calculation
+      .lean();
 
-    const biddingInfo = [];
+    // If no allocations exist, create one from current auctionCoins
+    if (allocations.length === 0 && user.auctionCoins > 0) {
+      const initialAllocation = await CoinAllocation.create({
+        userId,
+        amount: user.auctionCoins + totalFrozenCoins,
+        notes: 'Initial allocation (auto-created)',
+        allocationDate: user.createdAt || new Date()
+      });
+      allocations.push(initialAllocation);
+    }
 
-    // Calculate total frozen coins across all auctions from frozenCoinsPerAuction
-    const totalFrozenAcrossAuctions = user.frozenCoinsPerAuction?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
+    const allocationHistory = [];
+    let remainingUsage = totalFrozenCoins; // Total coins to distribute using FIFO
 
-    for (const auction of auctions) {
-      // Get frozen coins for this specific auction
-      const auctionFrozenData = user.frozenCoinsPerAuction?.find(
-        item => item.auctionId && item.auctionId.toString() === auction._id.toString()
-      );
-      const frozenInThisAuction = auctionFrozenData?.amount || 0;
+    // FIFO: Distribute usage across allocations (oldest first)
+    for (const allocation of allocations) {
+      let used = 0;
+      let remaining = allocation.amount;
 
-      // Calculate actual current bid amount for this auction (sum of highest bids on each lot)
-      let currentBidAmount = 0;
-      for (const lot of auction.lots) {
-        const userBids = lot.bids.filter(bid =>
-          bid.user && bid.user.toString() === userId.toString()
-        );
-
-        // Get the highest bid from this user on this lot
-        if (userBids.length > 0) {
-          const highestBid = Math.max(...userBids.map(b => b.amount));
-          currentBidAmount += highestBid;
+      if (remainingUsage > 0) {
+        if (remainingUsage >= allocation.amount) {
+          // This allocation is fully used
+          used = allocation.amount;
+          remaining = 0;
+          remainingUsage -= allocation.amount;
+        } else {
+          // This allocation is partially used
+          used = remainingUsage;
+          remaining = allocation.amount - remainingUsage;
+          remainingUsage = 0;
         }
       }
 
-      // Bidding limit allocated = total auction coins + already used frozen coins
-      const biddingLimitAllocated = totalAuctionCoins + totalFrozenAcrossAuctions;
-
-      // Bid amount = frozen coins in this auction (or current bid amount if frozen not tracked)
-      const bidAmount = frozenInThisAuction > 0 ? frozenInThisAuction : currentBidAmount;
-
-      // Remaining limit = total coins available (excluding coins frozen in OTHER auctions)
-      const frozenInOtherAuctions = totalFrozenAcrossAuctions - frozenInThisAuction;
-      const remainingLimit = totalAuctionCoins - frozenInOtherAuctions;
-
-      biddingInfo.push({
-        auctionNo: auction.auctionNumber || auction.title,
-        biddingLimit: biddingLimitAllocated,
-        bidAmount: bidAmount,
-        remainingLimit: remainingLimit
+      allocationHistory.push({
+        allocationDate: allocation.allocationDate,
+        biddingLimit: allocation.amount,
+        bidAmount: used,
+        remainingLimit: remaining,
+        notes: allocation.notes || ''
       });
     }
 
+    // Reverse to show newest first
+    allocationHistory.reverse();
+
     res.json({
       success: true,
-      data: biddingInfo
+      data: allocationHistory
     });
 
   } catch (error) {
-    console.error('Error fetching auction bidding info:', error);
+    console.error('Error fetching coin allocation history:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching auction bidding info'
+      message: 'Error fetching coin allocation history'
     });
   }
 });

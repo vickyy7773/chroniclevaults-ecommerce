@@ -30,20 +30,11 @@ const UserDashboard = () => {
   const fetchAuctionData = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API endpoint
       const response = await api.get('/user/auction-bidding-info');
       setAuctionData(response.data || []);
     } catch (error) {
       console.error('Error fetching auction data:', error);
-      // Mock data for now
-      setAuctionData([
-        { auctionNo: 'AUC49', biddingLimit: 100000, bidAmount: 0, remainingLimit: 100000 },
-        { auctionNo: 'AUC47', biddingLimit: 100000, bidAmount: 0, remainingLimit: 100000 },
-        { auctionNo: 'AUC46', biddingLimit: 100000, bidAmount: 41800, remainingLimit: 58200 },
-        { auctionNo: 'AUC41', biddingLimit: 50000, bidAmount: 0, remainingLimit: 50000 },
-        { auctionNo: 'AUC37', biddingLimit: 50000, bidAmount: 0, remainingLimit: 50000 },
-        { auctionNo: 'AUC27', biddingLimit: 50000, bidAmount: 0, remainingLimit: 50000 }
-      ]);
+      setAuctionData([]);
     } finally {
       setLoading(false);
     }
@@ -51,6 +42,15 @@ const UserDashboard = () => {
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN').format(amount);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   };
 
   const handleTabClick = (tab) => {
@@ -98,7 +98,7 @@ const UserDashboard = () => {
                 <thead className="bg-accent-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
-                      Auction no.
+                      Allocation Date
                     </th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
                       Bidding Limit Allocated
@@ -115,26 +115,26 @@ const UserDashboard = () => {
                   {auctionData.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                        No auction data available
+                        No coin allocation data available
                       </td>
                     </tr>
                   ) : (
-                    auctionData.slice(0, pageSize).map((auction, index) => (
+                    auctionData.slice(0, pageSize).map((allocation, index) => (
                       <tr
-                        key={auction.auctionNo}
+                        key={index}
                         className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}
                       >
                         <td className="px-6 py-3 text-sm text-gray-700 border-b border-gray-200">
-                          {auction.auctionNo}
+                          {formatDate(allocation.allocationDate)}
                         </td>
                         <td className="px-6 py-3 text-sm text-gray-700 border-b border-gray-200">
-                          {formatCurrency(auction.biddingLimit)}
+                          {formatCurrency(allocation.biddingLimit)}
                         </td>
                         <td className="px-6 py-3 text-sm text-gray-700 border-b border-gray-200">
-                          {auction.bidAmount > 0 ? formatCurrency(auction.bidAmount) : ''}
+                          {allocation.bidAmount > 0 ? formatCurrency(allocation.bidAmount) : ''}
                         </td>
                         <td className="px-6 py-3 text-sm text-gray-700 border-b border-gray-200">
-                          {formatCurrency(auction.remainingLimit)}
+                          {formatCurrency(allocation.remainingLimit)}
                         </td>
                       </tr>
                     ))
