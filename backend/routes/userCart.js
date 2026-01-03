@@ -332,6 +332,47 @@ router.get('/auction-bidding-info', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/user/my-invoices
+// @desc    Get user's customer invoices (buyer invoices)
+// @access  Private
+router.get('/my-invoices', protect, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Import AuctionInvoice model
+    const AuctionInvoice = (await import('../models/AuctionInvoice.js')).default;
+
+    // Find all invoices where user is the buyer
+    const invoices = await AuctionInvoice.find({ buyer: userId })
+      .populate('auction', 'title auctionNumber')
+      .sort({ invoiceDate: -1 })
+      .lean();
+
+    const invoiceData = invoices.map((invoice, index) => ({
+      srNo: index + 1,
+      auctionId: invoice.auction?._id,
+      auctionNo: invoice.auction?.auctionNumber || invoice.auction?.title || 'N/A',
+      invoiceNo: invoice.invoiceNumber,
+      amount: invoice.totalAfterGst || invoice.grandTotal || 0,
+      invoiceDate: invoice.invoiceDate,
+      pdfUrl: `/api/auction-invoices/${invoice._id}/pdf`,
+      lotNumbers: invoice.lotNumbers
+    }));
+
+    res.json({
+      success: true,
+      data: invoiceData
+    });
+
+  } catch (error) {
+    console.error('Error fetching user invoices:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching invoices'
+    });
+  }
+});
+
 // @route   GET /api/user/my-bidding
 // @desc    Get user's bidding history across all auctions
 // @access  Private
