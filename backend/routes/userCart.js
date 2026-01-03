@@ -263,9 +263,10 @@ router.get('/auction-bidding-info', protect, async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Get user's auction coins (original bidding limit)
+    // Get user's auction coins and frozen coins data
     const user = await User.findById(userId);
-    const originalBiddingLimit = user.auctionCoins || 0;
+    const totalAuctionCoins = user.auctionCoins || 0;
+    const currentFrozenCoins = user.frozenCoins || 0;
 
     // Find all auctions where user has placed bids
     const auctions = await Auction.find({
@@ -275,10 +276,18 @@ router.get('/auction-bidding-info', protect, async (req, res) => {
 
     const biddingInfo = [];
 
-    for (const auction of auctions) {
-      // Calculate total bid amount for this auction
-      let totalBidAmount = 0;
+    // Calculate total frozen coins across all auctions from frozenCoinsPerAuction
+    const totalFrozenAcrossAuctions = user.frozenCoinsPerAuction?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
 
+    for (const auction of auctions) {
+      // Get frozen coins for this specific auction
+      const auctionFrozenData = user.frozenCoinsPerAuction?.find(
+        item => item.auctionId && item.auctionId.toString() === auction._id.toString()
+      );
+      const frozenInThisAuction = auctionFrozenData?.amount || 0;
+
+      // Calculate actual current bid amount for this auction (sum of highest bids on each lot)
+      let currentBidAmount = 0;
       for (const lot of auction.lots) {
         const userBids = lot.bids.filter(bid =>
           bid.user && bid.user.toString() === userId.toString()
@@ -287,17 +296,24 @@ router.get('/auction-bidding-info', protect, async (req, res) => {
         // Get the highest bid from this user on this lot
         if (userBids.length > 0) {
           const highestBid = Math.max(...userBids.map(b => b.amount));
-          totalBidAmount += highestBid;
+          currentBidAmount += highestBid;
         }
       }
 
-      // Use user's auction coins as bidding limit
-      const remainingLimit = originalBiddingLimit - totalBidAmount;
+      // Bidding limit allocated = total auction coins + already used frozen coins
+      const biddingLimitAllocated = totalAuctionCoins + totalFrozenAcrossAuctions;
+
+      // Bid amount = frozen coins in this auction (or current bid amount if frozen not tracked)
+      const bidAmount = frozenInThisAuction > 0 ? frozenInThisAuction : currentBidAmount;
+
+      // Remaining limit = total coins available (excluding coins frozen in OTHER auctions)
+      const frozenInOtherAuctions = totalFrozenAcrossAuctions - frozenInThisAuction;
+      const remainingLimit = totalAuctionCoins - frozenInOtherAuctions;
 
       biddingInfo.push({
         auctionNo: auction.auctionNumber || auction.title,
-        biddingLimit: originalBiddingLimit,
-        bidAmount: totalBidAmount,
+        biddingLimit: biddingLimitAllocated,
+        bidAmount: bidAmount,
         remainingLimit: remainingLimit
       });
     }
