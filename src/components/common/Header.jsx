@@ -119,7 +119,11 @@ const Header = ({
     { to: '/my-watchlist', label: 'My Watchlist', icon: Eye },
     { to: '/my-wantlist', label: 'My WantList', icon: List },
     { to: '/my-invoice', label: 'My Invoice', icon: FileText },
-    { to: '/auction-profile', label: 'My Profile', icon: User }
+    { to: '/auction-profile', label: 'My Profile', icon: User },
+    { to: '/auctions?status=Active', label: 'Current Auction', icon: Gavel },
+    { to: '/auctions?status=Upcoming', label: 'Upcoming Auction', icon: Clock },
+    { to: '/auctions?status=Ended', label: 'Auction Archive', icon: Package },
+    { to: '/price-realization', label: 'Price Realization', icon: TrendingUp }
   ] : [
     { to: '/', label: 'Home', icon: Home },
     ...categories
@@ -144,34 +148,7 @@ const Header = ({
           icon: iconMap[category.name] || iconMap['default'],
           categories: subCategories.length > 0 ? ['All', ...subCategories] : null
         };
-      }),
-    // Auction dropdown with sub-pages
-    {
-      label: 'Auction',
-      icon: Gavel,
-      subItems: [
-        {
-          to: '/auctions?status=Active',
-          label: 'Current Auction',
-          icon: Gavel
-        },
-        {
-          to: '/auctions?status=Upcoming',
-          label: 'Upcoming Auction',
-          icon: Clock
-        },
-        {
-          to: '/auctions?status=Ended',
-          label: 'Auction Archive',
-          icon: Package
-        },
-        {
-          to: '/price-realization',
-          label: 'Price Realization',
-          icon: TrendingUp
-        }
-      ]
-    }
+      })
   ];
 
   return (
