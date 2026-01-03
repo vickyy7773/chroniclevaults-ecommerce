@@ -256,6 +256,63 @@ router.post('/sync', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/user/auction-bidding-info
+// @desc    Get user's bidding limit information per auction
+// @access  Private
+router.get('/auction-bidding-info', protect, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Find all auctions where user has placed bids
+    const auctions = await Auction.find({
+      isLotBidding: true,
+      'lots.bids.user': userId
+    });
+
+    const biddingInfo = [];
+
+    for (const auction of auctions) {
+      // Calculate total bid amount for this auction
+      let totalBidAmount = 0;
+
+      for (const lot of auction.lots) {
+        const userBids = lot.bids.filter(bid =>
+          bid.user && bid.user.toString() === userId.toString()
+        );
+
+        // Get the highest bid from this user on this lot
+        if (userBids.length > 0) {
+          const highestBid = Math.max(...userBids.map(b => b.amount));
+          totalBidAmount += highestBid;
+        }
+      }
+
+      // Use default bidding limit (can be configured later)
+      const biddingLimit = 100000; // Default limit
+      const remainingLimit = biddingLimit - totalBidAmount;
+
+      biddingInfo.push({
+        auctionNo: auction.auctionNumber || auction.title,
+        biddingLimit: biddingLimit,
+        bidAmount: totalBidAmount,
+        remainingLimit: remainingLimit
+      });
+    }
+
+    res.json({
+      success: true,
+      data: biddingInfo
+    });
+
+  } catch (error) {
+    console.error('Error fetching auction bidding info:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching auction bidding info'
+    });
+  }
+});
+
 // @route   GET /api/user/my-bidding
 // @desc    Get user's bidding history across all auctions
 // @access  Private
