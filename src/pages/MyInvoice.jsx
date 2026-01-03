@@ -95,7 +95,13 @@ const MyInvoice = () => {
       toast.success('PDF downloaded successfully');
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      toast.error('Failed to download PDF');
+
+      // Handle 501 Not Implemented error
+      if (error.response?.status === 501) {
+        toast.info('PDF generation is not yet available. Please contact admin for invoice PDF.');
+      } else {
+        toast.error('Failed to download PDF');
+      }
     }
   };
 

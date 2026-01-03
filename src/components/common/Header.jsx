@@ -145,18 +145,26 @@ const Header = ({
           categories: subCategories.length > 0 ? ['All', ...subCategories] : null
         };
       }),
-    // Auctions dropdown
+    // Individual Auction pages
     {
-      to: '/coming-soon',
-      label: 'Auctions',
-      icon: Gavel,
-      categories: ['Current Auction', 'Upcoming Auction', 'Auction Archive', 'Price Realization'],
-      auctionLinks: {
-        'Current Auction': '/coming-soon',
-        'Upcoming Auction': '/coming-soon',
-        'Auction Archive': '/coming-soon',
-        'Price Realization': '/price-realization'
-      }
+      to: '/auctions?status=Active',
+      label: 'Current Auction',
+      icon: Gavel
+    },
+    {
+      to: '/auctions?status=Upcoming',
+      label: 'Upcoming Auction',
+      icon: Clock
+    },
+    {
+      to: '/auctions?status=Ended',
+      label: 'Auction Archive',
+      icon: Package
+    },
+    {
+      to: '/price-realization',
+      label: 'Price Realization',
+      icon: TrendingUp
     }
   ];
 
