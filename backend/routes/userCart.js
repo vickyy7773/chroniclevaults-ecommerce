@@ -263,6 +263,10 @@ router.get('/auction-bidding-info', protect, async (req, res) => {
   try {
     const userId = req.user._id;
 
+    // Get user's auction coins (original bidding limit)
+    const user = await User.findById(userId);
+    const originalBiddingLimit = user.auctionCoins || 0;
+
     // Find all auctions where user has placed bids
     const auctions = await Auction.find({
       isLotBidding: true,
@@ -287,13 +291,12 @@ router.get('/auction-bidding-info', protect, async (req, res) => {
         }
       }
 
-      // Use default bidding limit (can be configured later)
-      const biddingLimit = 100000; // Default limit
-      const remainingLimit = biddingLimit - totalBidAmount;
+      // Use user's auction coins as bidding limit
+      const remainingLimit = originalBiddingLimit - totalBidAmount;
 
       biddingInfo.push({
         auctionNo: auction.auctionNumber || auction.title,
-        biddingLimit: biddingLimit,
+        biddingLimit: originalBiddingLimit,
         bidAmount: totalBidAmount,
         remainingLimit: remainingLimit
       });
