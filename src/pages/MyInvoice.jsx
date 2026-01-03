@@ -38,7 +38,7 @@ const MyInvoice = () => {
     try {
       setLoading(true);
       const response = await api.get('/user/my-invoices');
-      setInvoiceData(response.data.data || []);
+      setInvoiceData(response.data || []);
     } catch (error) {
       console.error('Error fetching invoice data:', error);
       setInvoiceData([]);
