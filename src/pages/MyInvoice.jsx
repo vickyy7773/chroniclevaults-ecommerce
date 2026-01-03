@@ -38,30 +38,11 @@ const MyInvoice = () => {
     try {
       setLoading(true);
       const response = await api.get('/user/my-invoices');
-      setInvoiceData(response.data || []);
+      setInvoiceData(response.data.data || []);
     } catch (error) {
       console.error('Error fetching invoice data:', error);
-      // Mock data
-      setInvoiceData([
-        {
-          srNo: 1,
-          auctionNo: 'AUC47-111',
-          invoiceNo: 'B/AUC47/132',
-          amount: 31135,
-          invoiceDate: '2024-11-08',
-          pdfUrl: '/invoices/sample.pdf',
-          auctionId: '1'
-        },
-        {
-          srNo: 2,
-          auctionNo: 'AUC46-78',
-          invoiceNo: 'B/AUC46/141',
-          amount: 34967,
-          invoiceDate: '2023-12-23',
-          pdfUrl: '/invoices/sample2.pdf',
-          auctionId: '2'
-        }
-      ]);
+      setInvoiceData([]);
+      toast.error('Failed to fetch invoices');
     } finally {
       setLoading(false);
     }
@@ -97,9 +78,21 @@ const MyInvoice = () => {
 
   const handleDownloadPDF = async (invoice) => {
     try {
-      // TODO: Implement actual PDF download
-      toast.info('PDF download will be implemented soon');
-      console.log('Downloading PDF for invoice:', invoice.invoiceNo);
+      const response = await api.get(invoice.pdfUrl, {
+        responseType: 'blob'
+      });
+
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${invoice.invoiceNo}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('PDF downloaded successfully');
     } catch (error) {
       console.error('Error downloading PDF:', error);
       toast.error('Failed to download PDF');
