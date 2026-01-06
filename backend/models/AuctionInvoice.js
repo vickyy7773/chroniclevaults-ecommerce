@@ -170,6 +170,13 @@ const auctionInvoiceSchema = new mongoose.Schema({
     default: 'Draft'
   },
 
+  // Invoice Type
+  invoiceType: {
+    type: String,
+    enum: ['Customer', 'Vendor', 'ASI'],
+    default: 'Customer'
+  },
+
   // Notes
   notes: String,
   termsAndConditions: String
