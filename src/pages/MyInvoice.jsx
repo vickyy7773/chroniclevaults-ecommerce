@@ -181,8 +181,8 @@ const MyInvoice = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-600"></div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto scrollbar-visible">
+              <table className="w-full min-w-[800px]">
                 <thead className="bg-accent-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
@@ -330,6 +330,33 @@ const MyInvoice = () => {
           )}
         </div>
       </div>
+
+      {/* Custom Scrollbar Styles */}
+      <style>{`
+        .scrollbar-visible {
+          scrollbar-width: thin;
+          scrollbar-color: #d97706 #f3f4f6;
+        }
+
+        .scrollbar-visible::-webkit-scrollbar {
+          height: 12px;
+        }
+
+        .scrollbar-visible::-webkit-scrollbar-track {
+          background: #f3f4f6;
+          border-radius: 6px;
+        }
+
+        .scrollbar-visible::-webkit-scrollbar-thumb {
+          background: #d97706;
+          border-radius: 6px;
+          border: 2px solid #f3f4f6;
+        }
+
+        .scrollbar-visible::-webkit-scrollbar-thumb:hover {
+          background: #b45309;
+        }
+      `}</style>
     </div>
   );
 };
