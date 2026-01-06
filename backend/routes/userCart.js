@@ -351,16 +351,31 @@ router.get('/my-invoices', protect, async (req, res) => {
       .sort({ invoiceDate: -1 })
       .lean();
 
-    const invoiceData = invoices.map((invoice, index) => ({
-      srNo: index + 1,
-      auctionId: invoice.auction?._id,
-      auctionNo: invoice.auction?.auctionNumber || invoice.auction?.title || 'N/A',
-      invoiceNo: invoice.invoiceNumber,
-      amount: invoice.amounts?.totalPayable || 0,
-      invoiceDate: invoice.invoiceDate,
-      pdfUrl: `/auction-invoices/${invoice._id}/pdf`,
-      lotNumbers: invoice.lotNumbers
-    }));
+    const invoiceData = invoices.map((invoice, index) => {
+      // Calculate total amount same as PDF (includes commission + GST on commission)
+      const lotsArray = invoice.lots && invoice.lots.length > 0 ? invoice.lots : [];
+      const totalHammerPrice = lotsArray.reduce((sum, lot) => sum + (lot?.hammerPrice || 0), 0);
+      const commissionRate = invoice.buyerDetails?.commissionPercentage || 12;
+      const totalCommission = (totalHammerPrice * commissionRate) / 100;
+      const cgstOnCommission = (totalCommission * 9) / 100;
+      const sgstOnCommission = (totalCommission * 9) / 100;
+      const subtotalWithCommission = totalHammerPrice + totalCommission;
+      const cgstOnHammer = (invoice.gst?.cgst || 0);
+      const sgstOnHammer = (invoice.gst?.sgst || 0);
+      const insuranceAmount = (invoice.insuranceCharges?.amount > 0 && !invoice.insuranceCharges?.declined) ? invoice.insuranceCharges.amount : 0;
+      const grandTotal = Math.round(subtotalWithCommission + cgstOnHammer + sgstOnHammer + cgstOnCommission + sgstOnCommission + insuranceAmount);
+
+      return {
+        srNo: index + 1,
+        auctionId: invoice.auction?._id,
+        auctionNo: invoice.auction?.auctionNumber || invoice.auction?.title || 'N/A',
+        invoiceNo: invoice.invoiceNumber,
+        amount: grandTotal,
+        invoiceDate: invoice.invoiceDate,
+        pdfUrl: `/auction-invoices/${invoice._id}/pdf`,
+        lotNumbers: invoice.lotNumbers
+      };
+    });
 
     res.json({
       success: true,
