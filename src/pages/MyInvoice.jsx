@@ -78,30 +78,18 @@ const MyInvoice = () => {
 
   const handleDownloadPDF = async (invoice) => {
     try {
-      const response = await api.get(invoice.pdfUrl, {
-        responseType: 'blob'
-      });
+      // Fetch HTML content from backend
+      const response = await api.get(invoice.pdfUrl);
+      const htmlContent = response.data;
 
-      // Create blob link to download
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `${invoice.invoiceNo}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      toast.success('PDF downloaded successfully');
+      // Open in new window and print (same as admin)
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.print();
     } catch (error) {
-      console.error('Error downloading PDF:', error);
-
-      // Handle 501 Not Implemented error
-      if (error.response?.status === 501) {
-        toast.info('PDF generation is not yet available. Please contact admin for invoice PDF.');
-      } else {
-        toast.error('Failed to download PDF');
-      }
+      console.error('Error opening invoice:', error);
+      toast.error('Failed to open invoice');
     }
   };
 
