@@ -328,17 +328,12 @@ router.route('/')
   .get(getAllAuctionInvoices)
   .post(createAuctionInvoice);
 
-router.route('/:id')
-  .get(getAuctionInvoiceById)
-  .put(updateAuctionInvoice)
-  .delete(deleteAuctionInvoice);
-
-// Additional routes
+// Additional routes (must be before /:id to avoid conflict)
 router.get('/auction/:auctionId', getInvoicesByAuction);
 router.put('/:id/pay', markInvoiceAsPaid);
 router.put('/:id/commission', updateInvoiceCommission);
 
-// Send invoice to customer
+// Send invoice to customer (must be before /:id route)
 router.put('/:id/send-to-customer', async (req, res) => {
   try {
     const invoice = await AuctionInvoice.findById(req.params.id);
@@ -369,5 +364,11 @@ router.put('/:id/send-to-customer', async (req, res) => {
     });
   }
 });
+
+// Generic /:id routes (must be after specific routes like /send-to-customer)
+router.route('/:id')
+  .get(getAuctionInvoiceById)
+  .put(updateAuctionInvoice)
+  .delete(deleteAuctionInvoice);
 
 export default router;
