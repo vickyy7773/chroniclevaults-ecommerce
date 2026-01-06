@@ -44,6 +44,9 @@ const AuctionProfile = () => {
   // Password Validation Errors
   const [passwordErrors, setPasswordErrors] = useState({});
 
+  // Current Password Error State
+  const [currentPasswordError, setCurrentPasswordError] = useState('');
+
   // Login History
   const [loginHistory, setLoginHistory] = useState([]);
 
@@ -198,6 +201,11 @@ const AuctionProfile = () => {
   const handlePasswordChange = (field, value) => {
     setPasswordData({ ...passwordData, [field]: value });
 
+    // Clear current password error when user types
+    if (currentPasswordError) {
+      setCurrentPasswordError('');
+    }
+
     // Validate new password in real-time
     if (field === 'newPassword') {
       const errors = validatePassword(value);
@@ -235,7 +243,16 @@ const AuctionProfile = () => {
       setPasswordErrors({});
     } catch (error) {
       console.error('Error changing password:', error);
-      toast.error(error.response?.data?.message || 'Failed to change password');
+
+      // Check if error is about incorrect current password
+      const errorMessage = error.response?.data?.message || '';
+      if (errorMessage.toLowerCase().includes('incorrect') ||
+          errorMessage.toLowerCase().includes('current password') ||
+          errorMessage.toLowerCase().includes('wrong')) {
+        setCurrentPasswordError(errorMessage);
+      } else {
+        toast.error(errorMessage || 'Failed to change password');
+      }
     }
   };
 
@@ -511,7 +528,10 @@ const AuctionProfile = () => {
                     <input
                       type={showCurrentPassword ? 'text' : 'password'}
                       value={passwordData.currentPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                      onChange={(e) => {
+                        setPasswordData({ ...passwordData, currentPassword: e.target.value });
+                        if (currentPasswordError) setCurrentPasswordError('');
+                      }}
                       required
                       className="w-full px-4 py-2 pr-12 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-accent-500"
                     />
@@ -562,7 +582,10 @@ const AuctionProfile = () => {
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={passwordData.confirmPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                      onChange={(e) => {
+                        setPasswordData({ ...passwordData, confirmPassword: e.target.value });
+                        if (currentPasswordError) setCurrentPasswordError('');
+                      }}
                       required
                       className="w-full px-4 py-2 pr-12 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-accent-500"
                     />
@@ -575,6 +598,27 @@ const AuctionProfile = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Current Password Error with Forgot Password Link */}
+                {currentPasswordError && (
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-red-800 font-semibold mb-2">
+                          {currentPasswordError}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => navigate('/forgot-password')}
+                          className="text-accent-600 hover:text-accent-700 font-bold text-sm underline"
+                        >
+                          Forgot Password?
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <button
                   type="submit"
