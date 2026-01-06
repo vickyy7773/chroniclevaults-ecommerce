@@ -411,54 +411,25 @@ router.get('/my-bidding', protect, async (req, res) => {
     for (const auction of auctions) {
       // Loop through each lot in the auction
       for (const lot of auction.lots) {
-        // Find user's bids in this lot
-        const userBids = lot.bids.filter(bid =>
-          bid.user && bid.user.toString() === userId.toString()
+        // Find user's bids in this lot, sorted chronologically
+        const userBids = lot.bids
+          .filter(bid => bid.user && bid.user.toString() === userId.toString())
+          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+        // Check if lot has ended
+        const lotEnded = auction.status === 'Ended' || (lot.status && lot.status === 'Ended');
+
+        // Get all bids sorted by time
+        const allBidsSorted = [...lot.bids].sort((a, b) =>
+          new Date(a.timestamp) - new Date(b.timestamp)
         );
 
-        // Process each bid
-        for (const bid of userBids) {
-          // Determine bid status
-          let bidStatus = 'Bid Placed'; // Default status for all bids
+        // Process each user bid to create timeline entries
+        for (let i = 0; i < userBids.length; i++) {
+          const bid = userBids[i];
+          const isLastBid = i === userBids.length - 1;
 
-          // Check if lot has ended
-          const lotEnded = auction.status === 'Ended' ||
-                          (lot.status && lot.status === 'Ended');
-
-          // Get highest bid in this lot
-          const highestBid = lot.bids.length > 0
-            ? Math.max(...lot.bids.map(b => b.amount))
-            : lot.startingPrice;
-
-          // Check if this is the user's latest/highest bid on this lot
-          const userLatestBid = userBids.length > 0
-            ? Math.max(...userBids.map(b => b.amount))
-            : 0;
-          const isLatestBid = bid.amount === userLatestBid;
-
-          // Only update status for the latest bid
-          if (isLatestBid) {
-            // Check if user has the overall highest bid in the lot
-            const userHasHighestBid = bid.amount === highestBid;
-
-            if (lotEnded) {
-              bidStatus = userHasHighestBid ? 'Won' : 'Out Bid';
-            } else {
-              // Auction is still active
-              if (userHasHighestBid) {
-                bidStatus = 'Highest Bid';
-              } else {
-                // Check if outbid
-                const wasOutbid = lot.bids.some(b =>
-                  b.amount > bid.amount &&
-                  new Date(b.timestamp) > new Date(bid.timestamp)
-                );
-                bidStatus = wasOutbid ? 'Out Bid' : 'Bid Placed';
-              }
-            }
-          }
-          // All other (non-latest) bids remain "Bid Placed"
-
+          // 1. Add "Bid Placed" entry
           biddingHistory.push({
             srNo: srNo++,
             auctionId: auction._id,
@@ -468,11 +439,77 @@ router.get('/my-bidding', protect, async (req, res) => {
             myBidAmount: bid.amount,
             maxBidAmount: bid.maxBid || bid.amount,
             bidDateTime: bid.timestamp,
-            soldFor: lotEnded && lot.winner ? lot.currentBid : null,
-            bidStatus: bidStatus,
+            soldFor: null,
+            bidStatus: 'Bid Placed',
             isAutoBid: bid.isAutoBid || false,
             isCatalogBid: bid.isCatalogBid || false
           });
+
+          // 2. Check if this bid was outbid by someone else
+          const outbiddingBid = allBidsSorted.find(b =>
+            new Date(b.timestamp) > new Date(bid.timestamp) &&
+            b.amount > bid.amount &&
+            b.user.toString() !== userId.toString()
+          );
+
+          if (outbiddingBid && !isLastBid) {
+            // Add "Out Bid" entry with timestamp of when outbid happened
+            biddingHistory.push({
+              srNo: srNo++,
+              auctionId: auction._id,
+              auctionNumber: auction.auctionNumber || auction.title,
+              lotNo: lot.lotNumber,
+              lotTitle: lot.title,
+              myBidAmount: bid.amount,
+              maxBidAmount: bid.maxBid || bid.amount,
+              bidDateTime: outbiddingBid.timestamp,
+              soldFor: null,
+              bidStatus: 'Out Bid',
+              isAutoBid: false,
+              isCatalogBid: false
+            });
+          }
+
+          // 3. If this is the last bid, check final status
+          if (isLastBid) {
+            const highestBid = Math.max(...allBidsSorted.map(b => b.amount));
+            const userHasHighestBid = bid.amount === highestBid;
+
+            if (lotEnded) {
+              // Add final Won/Out Bid entry
+              biddingHistory.push({
+                srNo: srNo++,
+                auctionId: auction._id,
+                auctionNumber: auction.auctionNumber || auction.title,
+                lotNo: lot.lotNumber,
+                lotTitle: lot.title,
+                myBidAmount: bid.amount,
+                maxBidAmount: bid.maxBid || bid.amount,
+                bidDateTime: new Date(),
+                soldFor: lot.currentBid,
+                bidStatus: userHasHighestBid ? 'Won' : 'Out Bid',
+                isAutoBid: false,
+                isCatalogBid: false
+              });
+            } else if (!userHasHighestBid && outbiddingBid) {
+              // Still active but currently outbid
+              biddingHistory.push({
+                srNo: srNo++,
+                auctionId: auction._id,
+                auctionNumber: auction.auctionNumber || auction.title,
+                lotNo: lot.lotNumber,
+                lotTitle: lot.title,
+                myBidAmount: bid.amount,
+                maxBidAmount: bid.maxBid || bid.amount,
+                bidDateTime: outbiddingBid.timestamp,
+                soldFor: null,
+                bidStatus: 'Out Bid',
+                isAutoBid: false,
+                isCatalogBid: false
+              });
+            }
+            // If highest bid and active, "Bid Placed" entry is enough (shows as current winning bid)
+          }
         }
       }
     }
