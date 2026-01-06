@@ -356,7 +356,7 @@ router.get('/my-invoices', protect, async (req, res) => {
       auctionId: invoice.auction?._id,
       auctionNo: invoice.auction?.auctionNumber || invoice.auction?.title || 'N/A',
       invoiceNo: invoice.invoiceNumber,
-      amount: invoice.totalAfterGst || invoice.grandTotal || 0,
+      amount: invoice.amounts?.totalPayable || 0,
       invoiceDate: invoice.invoiceDate,
       pdfUrl: `/auction-invoices/${invoice._id}/pdf`,
       lotNumbers: invoice.lotNumbers
