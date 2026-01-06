@@ -342,8 +342,11 @@ router.get('/my-invoices', protect, async (req, res) => {
     // Import AuctionInvoice model
     const AuctionInvoice = (await import('../models/AuctionInvoice.js')).default;
 
-    // Find all invoices where user is the buyer
-    const invoices = await AuctionInvoice.find({ buyer: userId })
+    // Find all invoices where user is the buyer AND invoice is sent to customer
+    const invoices = await AuctionInvoice.find({
+      buyer: userId,
+      sentToCustomer: true
+    })
       .populate('auction', 'title auctionNumber')
       .sort({ invoiceDate: -1 })
       .lean();

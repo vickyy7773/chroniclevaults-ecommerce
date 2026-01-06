@@ -127,6 +127,13 @@ const auctionInvoiceSchema = new mongoose.Schema({
   paidAt: Date,
   paymentMode: String,
 
+  // Customer Visibility
+  sentToCustomer: {
+    type: Boolean,
+    default: false
+  },
+  sentToCustomerAt: Date,
+
   // Shipping Details
   shipping: {
     transportMode: String,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Edit2, Download, Trash2, Search, Eye, X, Filter, ArrowRightLeft } from 'lucide-react';
+import { FileText, Edit2, Download, Trash2, Search, Eye, X, Filter, ArrowRightLeft, Send } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useSearchParams } from 'react-router-dom';
 import auctionInvoiceService from '../../services/auctionInvoiceService';
@@ -210,6 +210,20 @@ const AuctionInvoiceManagement = () => {
       printWindow.print();
     } catch (error) {
       toast.error('Failed to download PDF');
+    }
+  };
+
+  const handleSendToCustomer = async (invoice) => {
+    try {
+      const response = await api.put(`/auction-invoices/${invoice._id}/send-to-customer`);
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+        fetchInvoices(); // Refresh the list to show updated status
+      }
+    } catch (error) {
+      console.error('Error sending invoice to customer:', error);
+      toast.error('Failed to send invoice to customer');
     }
   };
 
@@ -1362,6 +1376,15 @@ const AuctionInvoiceManagement = () => {
                       >
                         <Download className="w-4 h-4" />
                       </button>
+                      {invoice.invoiceType === 'Customer' && (
+                        <button
+                          onClick={() => handleSendToCustomer(invoice)}
+                          className={`${invoice.sentToCustomer ? 'text-purple-600 hover:text-purple-900' : 'text-orange-600 hover:text-orange-900'}`}
+                          title={invoice.sentToCustomer ? 'Remove from customer' : 'Send to customer'}
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
+                      )}
                       <button
                         onClick={() => handleDeleteInvoice(invoice._id)}
                         className="text-red-600 hover:text-red-900"

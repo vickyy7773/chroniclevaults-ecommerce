@@ -338,4 +338,36 @@ router.get('/auction/:auctionId', getInvoicesByAuction);
 router.put('/:id/pay', markInvoiceAsPaid);
 router.put('/:id/commission', updateInvoiceCommission);
 
+// Send invoice to customer
+router.put('/:id/send-to-customer', async (req, res) => {
+  try {
+    const invoice = await AuctionInvoice.findById(req.params.id);
+
+    if (!invoice) {
+      return res.status(404).json({
+        success: false,
+        message: 'Invoice not found'
+      });
+    }
+
+    // Toggle sentToCustomer status
+    invoice.sentToCustomer = !invoice.sentToCustomer;
+    invoice.sentToCustomerAt = invoice.sentToCustomer ? new Date() : null;
+
+    await invoice.save();
+
+    res.json({
+      success: true,
+      message: invoice.sentToCustomer ? 'Invoice sent to customer' : 'Invoice removed from customer',
+      data: invoice
+    });
+  } catch (error) {
+    console.error('Error sending invoice to customer:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error sending invoice to customer'
+    });
+  }
+});
+
 export default router;
