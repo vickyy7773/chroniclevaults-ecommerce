@@ -316,16 +316,19 @@ const AuctionLots = () => {
     return fallback;
   };
 
-  // Auto-redirect to live auction when auction starts
+  // Auto-redirect to live auction when auction starts (but not for ended auctions)
   useEffect(() => {
     if (!auction) return;
+
+    // Don't redirect if auction has ended
+    if (auction.status === 'Ended') return;
 
     const checkAuctionStatus = () => {
       const now = new Date();
       const startTime = new Date(auction.startTime);
 
-      // If auction has started, redirect to live auction page
-      if (now >= startTime) {
+      // If auction has started (and not ended), redirect to live auction page
+      if (now >= startTime && auction.status !== 'Ended') {
         console.log('🔴 Auction started! Redirecting to live auction page...');
         toast.info('Auction has started! Redirecting to live auction...', {
           autoClose: 2000
