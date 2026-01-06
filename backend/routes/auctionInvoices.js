@@ -47,7 +47,7 @@ const numberToWords = (num) => {
 router.get('/:id/pdf', protect, async (req, res) => {
   try {
     const invoice = await AuctionInvoice.findById(req.params.id)
-      .populate('auction', 'title auctionNumber')
+      .populate('auction', 'title auctionNumber startDate')
       .populate('buyer', 'name email phone');
 
     if (!invoice) {
@@ -70,7 +70,8 @@ router.get('/:id/pdf', protect, async (req, res) => {
 
     // Calculate commission (using globalCommission of 12% as default)
     const commissionRate = invoice.buyerDetails?.commissionPercentage || 12;
-    const totalHammerPrice = (invoice.lots || [invoice.lotDetails]).reduce((sum, lot) => sum + (lot.hammerPrice || 0), 0);
+    const lotsArray = invoice.lots && invoice.lots.length > 0 ? invoice.lots : (invoice.lotDetails ? [invoice.lotDetails] : []);
+    const totalHammerPrice = lotsArray.reduce((sum, lot) => sum + (lot?.hammerPrice || 0), 0);
     const totalCommission = (totalHammerPrice * commissionRate) / 100;
 
     // Calculate GST on commission (9% CGST + 9% SGST)
@@ -190,15 +191,15 @@ router.get('/:id/pdf', protect, async (req, res) => {
                 </tr>
               </thead>
               <tbody>
-                ${(invoice.lots || [invoice.lotDetails]).map((lot, idx) => `
+                ${lotsArray.map((lot, idx) => `
                   <tr>
                     <td>${idx + 1}</td>
-                    <td>${lot.lotNumber || invoice.lotNumbers?.[idx] || invoice.lotNumber || 'N/A'}</td>
-                    <td class="desc">${lot.description || lot.detailedDescription || ''}</td>
-                    <td>${lot.quantity || 1}</td>
+                    <td>${lot?.lotNumber || invoice.lotNumbers?.[idx] || invoice.lotNumber || 'N/A'}</td>
+                    <td class="desc">${lot?.description || lot?.detailedDescription || 'N/A'}</td>
+                    <td>${lot?.quantity || 1}</td>
                     <td>9705</td>
                     <td>5.00</td>
-                    <td>₹${(lot.hammerPrice || 0).toLocaleString()}</td>
+                    <td>₹${(lot?.hammerPrice || 0).toLocaleString()}</td>
                   </tr>
                 `).join('')}
               </tbody>
