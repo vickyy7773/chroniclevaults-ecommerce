@@ -181,26 +181,34 @@ const MyInvoice = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-600"></div>
             </div>
           ) : (
-            <div className="overflow-x-auto scrollbar-visible">
-              <table className="w-full min-w-[800px]">
+            <div className="overflow-x-auto scrollbar-visible" style={{ overflowX: 'auto' }}>
+              <table className="w-full" style={{ minWidth: '1000px', tableLayout: 'fixed' }}>
+                <colgroup>
+                  <col style={{ width: '80px' }} />
+                  <col style={{ width: '150px' }} />
+                  <col style={{ width: '200px' }} />
+                  <col style={{ width: '200px' }} />
+                  <col style={{ width: '200px' }} />
+                  <col style={{ width: '170px' }} />
+                </colgroup>
                 <thead className="bg-accent-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300 whitespace-nowrap">
                       Sr No.
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300 whitespace-nowrap">
                       Auction No
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300 whitespace-nowrap">
                       Invoice No
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300 whitespace-nowrap">
                       Amount
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300 whitespace-nowrap">
                       Invoice Date
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-300 whitespace-nowrap">
                       PDF
                     </th>
                   </tr>
