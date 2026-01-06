@@ -15,7 +15,10 @@ import {
   setDefaultAddress,
   sendRegistrationOTP,
   verifyOTPAndRegister,
-  resendOTP
+  resendOTP,
+  forgotPassword,
+  verifyResetToken,
+  resetPassword
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 import { logLogout } from '../middleware/activityLogger.js';
@@ -39,6 +42,12 @@ router.post('/logout', protect, async (req, res) => {
     res.status(500).json({ success: false, message: 'Error logging out' });
   }
 });
+
+// Password reset routes
+router.post('/forgot-password', forgotPassword);
+router.post('/verify-reset-token', verifyResetToken);
+router.post('/reset-password', resetPassword);
+
 router.get('/me', protect, getMe);
 router.put('/updateprofile', protect, updateProfile);
 router.put('/updatepassword', protect, updatePassword);

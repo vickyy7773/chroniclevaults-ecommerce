@@ -13,6 +13,8 @@ import { userSyncService, authService } from './services';
 
 // Lazy load pages for code splitting
 const Authentication = lazy(() => import('./pages/auth/Authentication'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
 const GoogleAuthSuccess = lazy(() => import('./pages/auth/GoogleAuthSuccess'));
 const GoogleAuthError = lazy(() => import('./pages/auth/GoogleAuthError'));
 const FacebookAuthSuccess = lazy(() => import('./pages/auth/FacebookAuthSuccess'));
@@ -106,6 +108,8 @@ const AppContent = () => {
   const location = useLocation();
 
   const hideHeaderFooter = location.pathname === '/authentication' ||
+                          location.pathname === '/forgot-password' ||
+                          location.pathname === '/reset-password' ||
                           location.pathname === '/checkout' ||
                           location.pathname === '/profile' ||
                           location.pathname.startsWith('/admin') ||
@@ -633,6 +637,8 @@ const AppContent = () => {
               />
             } />
             <Route path="/authentication" element={<Authentication setUser={setUser} />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
             <Route path="/auth/google/error" element={<GoogleAuthError />} />
             <Route path="/auth/facebook/success" element={<FacebookAuthSuccess />} />

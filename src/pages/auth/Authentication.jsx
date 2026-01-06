@@ -569,9 +569,9 @@ const Authentication = ({ setUser }) => {
                   <input type="checkbox" className="mr-2 w-4 h-4 rounded accent-accent-500" />
                   <span className="text-sm text-neutral-700 font-semibold">Remember me</span>
                 </label>
-                <a href="#" className="text-sm text-accent-600 hover:text-accent-700 font-bold">
+                <Link to="/forgot-password" className="text-sm text-accent-600 hover:text-accent-700 font-bold">
                   Forgot password?
-                </a>
+                </Link>
               </div>
             )}
 
