@@ -31,7 +31,7 @@ router.get('/:id/pdf', protect, async (req, res) => {
 
     // Check if user is the buyer or an admin
     const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
-    const isBuyer = invoice.buyer && invoice.buyer.toString() === req.user._id.toString();
+    const isBuyer = invoice.buyer && invoice.buyer._id.toString() === req.user._id.toString();
 
     if (!isAdmin && !isBuyer) {
       return res.status(403).json({
