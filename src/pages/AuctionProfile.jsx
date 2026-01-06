@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { User, Lock, History, Save, Edit2, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Lock, History, Save, Edit2, X, AlertCircle, Shield } from 'lucide-react';
 import api, { loginHistoryAPI } from '../utils/api';
 import { authService } from '../services';
 import { toast } from 'react-toastify';
 
 const AuctionProfile = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('personal');
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAuctionVerified, setIsAuctionVerified] = useState(false);
 
   // Personal Information
   const [personalInfo, setPersonalInfo] = useState({
@@ -42,8 +46,30 @@ const AuctionProfile = () => {
   const fetchUserData = async () => {
     try {
       setLoading(true);
+
+      // Check if user is logged in
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoggedIn(false);
+        setLoading(false);
+        // Redirect to login with return URL
+        const returnUrl = encodeURIComponent('/auction-profile');
+        navigate(`/authentication?redirect=${returnUrl}`);
+        return;
+      }
+
+      setIsLoggedIn(true);
       const response = await authService.getCurrentUser();
       const userData = response.data;
+
+      // Check if user is auction verified
+      if (!userData.isAuctionVerified) {
+        setIsAuctionVerified(false);
+        setLoading(false);
+        return; // Will show registration prompt
+      }
+
+      setIsAuctionVerified(true);
 
       // Try to fetch auction registration data
       let registrationData = null;
@@ -204,6 +230,89 @@ const AuctionProfile = () => {
     return (
       <div className="min-h-screen bg-gray-100 flex justify-center items-center">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-accent-600"></div>
+      </div>
+    );
+  }
+
+  // Show registration prompt if user is logged in but not auction verified
+  if (isLoggedIn && !isAuctionVerified) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 flex items-center justify-center px-4">
+        <div className="max-w-2xl w-full">
+          {/* Registration Required Card */}
+          <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-12 text-center border-2 border-amber-200">
+            {/* Icon */}
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full mb-6 shadow-lg">
+              <Shield className="w-12 h-12 text-white" />
+            </div>
+
+            {/* Title */}
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Auction Registration Required
+            </h1>
+
+            {/* Message */}
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-left">
+                  <p className="font-semibold text-amber-900 mb-2">Complete Your Auction Registration First</p>
+                  <p className="text-sm text-amber-800">
+                    To access your auction profile and participate in auctions, you need to complete the auction registration process. This includes submitting your documents and personal information for verification.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Benefits List */}
+            <div className="bg-gray-50 rounded-xl p-6 mb-6 text-left">
+              <h3 className="font-bold text-gray-900 mb-3 text-center">After Registration You Can:</h3>
+              <ul className="space-y-2 text-sm text-gray-700">
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Participate in live auctions</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Place bids on exclusive collectibles</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Track your bidding history</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Manage your auction account</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => navigate('/auction-registration')}
+                className="group relative px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-lg font-bold rounded-xl hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  Complete Registration Now
+                </span>
+              </button>
+
+              <button
+                onClick={() => navigate('/')}
+                className="px-8 py-4 bg-gray-200 text-gray-700 text-lg font-semibold rounded-xl hover:bg-gray-300 transition-all"
+              >
+                Go to Home
+              </button>
+            </div>
+
+            {/* Help Text */}
+            <p className="text-sm text-gray-500 mt-6">
+              Need help? Contact us at <a href="mailto:support@chroniclevaults.com" className="text-amber-600 hover:underline font-semibold">support@chroniclevaults.com</a>
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
