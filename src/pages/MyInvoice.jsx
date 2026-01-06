@@ -79,8 +79,8 @@ const MyInvoice = () => {
   const handleDownloadPDF = async (invoice) => {
     try {
       // Fetch HTML content from backend
-      const response = await api.get(invoice.pdfUrl);
-      const htmlContent = response.data;
+      // Note: api interceptor already returns response.data, so response IS the HTML string
+      const htmlContent = await api.get(invoice.pdfUrl);
 
       // Open in new window and print (same as admin)
       const printWindow = window.open('', '_blank');
