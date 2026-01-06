@@ -152,21 +152,27 @@ router.get('/:id/pdf', protect, async (req, res) => {
           <div class="two-col">
             <div class="col-left">
               <div class="section-title">Consignee:</div>
-              <div class="info-row"><strong>${invoice.buyerDetails.name}</strong></div>
-              <div class="info-row">${invoice.shippingAddress?.street || invoice.billingAddress?.street || ''}</div>
-              <div class="info-row">${invoice.shippingAddress?.city || invoice.billingAddress?.city || ''}, ${invoice.shippingAddress?.state || invoice.billingAddress?.state || ''} - ${invoice.shippingAddress?.zipCode || invoice.billingAddress?.zipCode || ''}</div>
-              <div class="info-row">Email: ${invoice.buyerDetails.email || ''}</div>
-              <div class="info-row">Mobile: ${invoice.buyerDetails.phone || ''}</div>
+              <div class="info-row"><strong>${invoice.buyerDetails?.name || 'N/A'}</strong></div>
+              ${(invoice.shippingAddress?.street || invoice.billingAddress?.street) ? `<div class="info-row">${invoice.shippingAddress?.street || invoice.billingAddress?.street}</div>` : ''}
+              ${(() => {
+                const city = invoice.shippingAddress?.city || invoice.billingAddress?.city || '';
+                const state = invoice.shippingAddress?.state || invoice.billingAddress?.state || '';
+                const zipCode = invoice.shippingAddress?.zipCode || invoice.billingAddress?.zipCode || '';
+                const parts = [city, state, zipCode].filter(p => p);
+                return parts.length > 0 ? `<div class="info-row">${parts.join(', ')}</div>` : '';
+              })()}
+              ${invoice.buyerDetails?.email ? `<div class="info-row">Email: ${invoice.buyerDetails.email}</div>` : ''}
+              ${invoice.buyerDetails?.phone ? `<div class="info-row">Mobile: ${invoice.buyerDetails.phone}</div>` : ''}
               <div class="info-row">State Code: ${invoice.billingAddress?.stateCode || '24'}</div>
-              <div class="info-row">GST NO: ${invoice.buyerDetails.gstin || 'N/A'}</div>
+              <div class="info-row">GST NO: ${invoice.buyerDetails?.gstin || 'N/A'}</div>
             </div>
             <div class="col-right">
               <div class="info-row"><span class="label">Auction No.:</span> ${invoice.auction?._id ? `AUC-${invoice.auction._id.toString().slice(-6).toUpperCase()}` : 'N/A'}</div>
               <div class="info-row"><span class="label">Auction Date:</span> ${invoice.auction?.startDate ? new Date(invoice.auction.startDate).toLocaleDateString() : 'N/A'}</div>
-              <div class="info-row"><span class="label">Invoice No.:</span> ${invoice.invoiceNumber}</div>
-              <div class="info-row"><span class="label">Invoice Date:</span> ${new Date(invoice.invoiceDate).toLocaleDateString()}</div>
-              <div class="info-row"><span class="label">Bidder No.:</span> ${invoice.buyerDetails.buyerNumber || 'N/A'}</div>
-              <div class="info-row"><span class="label">GST No:</span> ${invoice.buyerDetails.gstin || 'N/A'}</div>
+              <div class="info-row"><span class="label">Invoice No.:</span> ${invoice.invoiceNumber || 'N/A'}</div>
+              <div class="info-row"><span class="label">Invoice Date:</span> ${invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : 'N/A'}</div>
+              <div class="info-row"><span class="label">Bidder No.:</span> ${invoice.buyerDetails?.buyerNumber || 'N/A'}</div>
+              <div class="info-row"><span class="label">GST No:</span> ${invoice.buyerDetails?.gstin || 'N/A'}</div>
             </div>
           </div>
 
