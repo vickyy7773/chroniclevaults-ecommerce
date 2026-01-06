@@ -113,6 +113,10 @@ const AuctionLots = () => {
       const response = await api.get(`/auctions/${id}`);
       setAuction(response.data);
 
+      // DEBUG: Log auction status
+      console.log('🔍 DEBUG - Auction Status:', response.data?.status);
+      console.log('🔍 DEBUG - Full Auction Data:', response.data);
+
       console.log('📦 Auction loaded, currentUser:', currentUser?._id || 'NOT_LOADED');
       // After loading auction, check actual bid status from server
       // (will only work if currentUser is already loaded)
@@ -827,6 +831,229 @@ const AuctionLots = () => {
     );
   }
 
+  // DEBUG: Log before conditional check
+  console.log('🔍 DEBUG - Checking auction status:', auction?.status, 'Is Ended?', auction?.status === 'Ended');
+
+  // Render catalog-style view for ended auctions
+  if (auction.status === 'Ended') {
+    console.log('✅ DEBUG - Rendering CATALOG view for ended auction');
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate('/auctions?status=Ended')}
+            className="flex items-center gap-2 text-gray-600 hover:text-accent-600 mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-medium">Back to Auctions</span>
+          </button>
+
+          {/* Auction Header */}
+          <div className="bg-gradient-to-r from-accent-700 to-accent-800 text-white rounded-lg shadow-md p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">{auction.title}</h1>
+                <p className="text-accent-100">{auction.auctionCode || 'Auction Results'}</p>
+                <div className="mt-2 inline-block px-3 py-1 bg-gray-600 text-white text-sm font-semibold rounded">
+                  Auction Ended
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-accent-100 mb-1">Total Lots</p>
+                <p className="text-3xl font-bold">{filteredLots?.length || 0}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Section */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Filter Lots</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Keyword Search */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Keyword</label>
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={filters.keyword}
+                  onChange={(e) => setFilters({...filters, keyword: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select
+                  value={filters.category}
+                  onChange={(e) => setFilters({...filters, category: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                >
+                  <option value="">--Select Category--</option>
+                  {uniqueCategories.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Price Sort */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price Sort</label>
+                <select
+                  value={filters.priceSort}
+                  onChange={(e) => setFilters({...filters, priceSort: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                >
+                  <option value="">--Select--</option>
+                  <option value="low-to-high">Low to High</option>
+                  <option value="high-to-low">High to Low</option>
+                </select>
+              </div>
+
+              {/* Material */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Material</label>
+                <select
+                  value={filters.material}
+                  onChange={(e) => setFilters({...filters, material: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                >
+                  <option value="">--Select Item Material--</option>
+                  {uniqueMaterials.map(material => (
+                    <option key={material} value={material}>{material}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Filter Actions */}
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => setFilters({
+                  keyword: '',
+                  category: '',
+                  priceSort: '',
+                  material: ''
+                })}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+
+          {/* Auction Results Grid */}
+          {filteredLots && filteredLots.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredLots.map((lot, index) => {
+                const estimatedPrice = lot.startingPrice || lot.estimatedPrice?.min || 0;
+                const soldPrice = lot.currentBid || lot.hammerPrice || 0;
+                const isSold = lot.bids && lot.bids.length > 0;
+
+                // Get first image
+                const lotImage = lot.images && lot.images.length > 0
+                  ? lot.images[0]
+                  : lot.image || null;
+
+                return (
+                  <div
+                    key={lot._id || index}
+                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all"
+                  >
+                    {/* Lot Image */}
+                    <div className="relative w-full h-64 bg-gray-200">
+                      {lotImage ? (
+                        <img
+                          src={lotImage}
+                          alt={lot.title}
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23f3f4f6" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="20"%3ENo Image%3C/text%3E%3C/svg%3E';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                          <Gavel className="w-16 h-16 text-gray-400" />
+                        </div>
+                      )}
+                      {/* Lot Number Badge */}
+                      <div className="absolute top-2 left-2 px-3 py-1 bg-accent-600 text-white text-sm font-semibold rounded">
+                        Lot #{lot.lotNumber}
+                      </div>
+                      {/* Status Badge */}
+                      <div className={`absolute top-2 right-2 px-3 py-1 text-white text-sm font-semibold rounded ${
+                        isSold ? 'bg-green-600' : 'bg-gray-600'
+                      }`}>
+                        {isSold ? 'SOLD' : 'UNSOLD'}
+                      </div>
+                    </div>
+
+                    {/* Lot Info */}
+                    <div className="p-4">
+                      {/* Category */}
+                      {lot.category && (
+                        <div className="mb-2">
+                          <span className="px-2 py-1 bg-amber-100 text-amber-900 text-xs font-semibold rounded">
+                            {lot.category}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Title */}
+                      <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+                        {lot.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                        {lot.description || 'No description available'}
+                      </p>
+
+                      {/* Pricing Information */}
+                      <div className="space-y-2 border-t border-gray-200 pt-3">
+                        {/* Estimated Price */}
+                        <div>
+                          <p className="text-xs text-gray-500 font-medium">Estimated Price</p>
+                          <p className="text-base font-bold text-gray-900">
+                            {estimatedPrice > 0
+                              ? `₹${estimatedPrice.toLocaleString('en-IN')}`
+                              : 'Price on request'}
+                          </p>
+                        </div>
+
+                        {/* Sold Price */}
+                        <div>
+                          <p className="text-xs text-gray-500 font-medium">
+                            {isSold ? 'Sold For' : 'Not Sold'}
+                          </p>
+                          <p className={`text-lg font-bold ${isSold ? 'text-green-600' : 'text-gray-400'}`}>
+                            {isSold
+                              ? `₹${soldPrice.toLocaleString('en-IN')}`
+                              : '—'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow-md p-12 text-center">
+              <Gavel className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No Lots Found</h3>
+              <p className="text-gray-600">No lots match your filter criteria.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Render normal bidding view for active/upcoming auctions
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
