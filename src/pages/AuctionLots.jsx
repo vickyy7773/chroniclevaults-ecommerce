@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Gavel, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Gavel, ArrowLeft, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
 import { io } from 'socket.io-client';
@@ -16,6 +16,11 @@ const AuctionLots = () => {
   const [bidAmounts, setBidAmounts] = useState({}); // Track bid amounts for each lot
   const [submittingBid, setSubmittingBid] = useState({}); // Track submission state for each lot
   const [currentUser, setCurrentUser] = useState(null); // Current logged-in user
+
+  // Lightbox states for ended auction catalog view
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxLot, setLightboxLot] = useState(null);
+  const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
 
   // Load bidStatus from localStorage on mount
   const [bidStatus, setBidStatus] = useState(() => {
@@ -584,6 +589,46 @@ const AuctionLots = () => {
     };
   }, [id]); // Only re-run when auction ID changes, not when currentUser changes
 
+  // Open lightbox to view all images for a lot
+  const openLightbox = (lot) => {
+    setLightboxLot(lot);
+    setLightboxImageIndex(0);
+    setLightboxOpen(true);
+  };
+
+  // Close lightbox
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    setLightboxLot(null);
+    setLightboxImageIndex(0);
+  };
+
+  // Navigate to next image in lightbox
+  const nextLightboxImage = () => {
+    if (!lightboxLot?.images) return;
+    setLightboxImageIndex((prev) => (prev + 1) % lightboxLot.images.length);
+  };
+
+  // Navigate to previous image in lightbox
+  const prevLightboxImage = () => {
+    if (!lightboxLot?.images) return;
+    setLightboxImageIndex((prev) => (prev - 1 + lightboxLot.images.length) % lightboxLot.images.length);
+  };
+
+  // Handle keyboard navigation in lightbox
+  useEffect(() => {
+    if (!lightboxOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowRight') nextLightboxImage();
+      if (e.key === 'ArrowLeft') prevLightboxImage();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, lightboxLot]);
+
   // Handle bid submission for a specific lot
   const handlePlaceBid = async (lotNumber) => {
     // PRESERVE SCROLL POSITION - save current scroll position to prevent auto-scroll to top
@@ -952,18 +997,23 @@ const AuctionLots = () => {
                 const soldPrice = lot.currentBid || lot.hammerPrice || 0;
                 const isSold = lot.bids && lot.bids.length > 0;
 
-                // Get first image
-                const lotImage = lot.images && lot.images.length > 0
-                  ? lot.images[0]
-                  : lot.image || null;
+                // Get first image and all images
+                const lotImages = lot.images && lot.images.length > 0
+                  ? lot.images
+                  : lot.image
+                    ? [lot.image]
+                    : [];
+                const lotImage = lotImages[0] || null;
+                const hasMultipleImages = lotImages.length > 1;
 
                 return (
                   <div
                     key={lot._id || index}
-                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all"
+                    onClick={() => openLightbox(lot)}
+                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer"
                   >
                     {/* Lot Image */}
-                    <div className="relative w-full h-64 bg-gray-200">
+                    <div className="relative w-full h-64 bg-gray-200 group">
                       {lotImage ? (
                         <img
                           src={lotImage}
@@ -988,6 +1038,21 @@ const AuctionLots = () => {
                         isSold ? 'bg-green-600' : 'bg-gray-600'
                       }`}>
                         {isSold ? 'SOLD' : 'UNSOLD'}
+                      </div>
+                      {/* Image Count Badge - show if multiple images */}
+                      {hasMultipleImages && (
+                        <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/70 text-white text-xs font-semibold rounded flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                          </svg>
+                          {lotImages.length}
+                        </div>
+                      )}
+                      {/* Click to view overlay */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center">
+                        <span className="opacity-0 group-hover:opacity-100 bg-white/90 px-3 py-1.5 rounded text-sm font-semibold text-gray-900 transition-opacity">
+                          Click to view {hasMultipleImages ? 'all images' : 'image'}
+                        </span>
                       </div>
                     </div>
 
@@ -1046,6 +1111,138 @@ const AuctionLots = () => {
               <Gavel className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-gray-900 mb-2">No Lots Found</h3>
               <p className="text-gray-600">No lots match your filter criteria.</p>
+            </div>
+          )}
+
+          {/* Lightbox Modal for Viewing All Images */}
+          {lightboxOpen && lightboxLot && (
+            <div
+              className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+              onClick={closeLightbox}
+            >
+              <div
+                className="relative w-full max-w-6xl h-full max-h-[90vh] flex flex-col"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Close Button */}
+                <button
+                  onClick={closeLightbox}
+                  className="absolute -top-12 right-0 p-2 text-white hover:text-gray-300 transition-colors z-10"
+                >
+                  <X className="w-8 h-8" />
+                </button>
+
+                {/* Lot Info Header */}
+                <div className="bg-white/10 backdrop-blur-sm text-white p-4 rounded-t-lg mb-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold mb-1">Lot #{lightboxLot.lotNumber} - {lightboxLot.title}</h3>
+                      <p className="text-sm text-gray-200">{lightboxLot.category}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-200">Image {lightboxImageIndex + 1} of {(lightboxLot.images?.length || 0)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main Image Container */}
+                <div className="flex-1 relative bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center">
+                  {lightboxLot.images && lightboxLot.images.length > 0 ? (
+                    <>
+                      <img
+                        src={lightboxLot.images[lightboxImageIndex]}
+                        alt={`${lightboxLot.title} - Image ${lightboxImageIndex + 1}`}
+                        className="max-w-full max-h-full object-contain"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23374151" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="20"%3EImage not available%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+
+                      {/* Navigation Arrows - Only show if multiple images */}
+                      {lightboxLot.images.length > 1 && (
+                        <>
+                          <button
+                            onClick={prevLightboxImage}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full text-white transition-all"
+                          >
+                            <ChevronLeft className="w-8 h-8" />
+                          </button>
+                          <button
+                            onClick={nextLightboxImage}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full text-white transition-all"
+                          >
+                            <ChevronRight className="w-8 h-8" />
+                          </button>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center text-gray-400">
+                      <Gavel className="w-24 h-24 mx-auto mb-4 opacity-50" />
+                      <p>No images available</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Thumbnail Gallery - Only show if multiple images */}
+                {lightboxLot.images && lightboxLot.images.length > 1 && (
+                  <div className="mt-4 bg-white/10 backdrop-blur-sm p-3 rounded-b-lg">
+                    <div className="flex gap-2 overflow-x-auto">
+                      {lightboxLot.images.map((image, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setLightboxImageIndex(idx)}
+                          className={`flex-shrink-0 rounded overflow-hidden border-2 transition-all ${
+                            lightboxImageIndex === idx
+                              ? 'border-accent-500 ring-2 ring-accent-400'
+                              : 'border-gray-600 hover:border-gray-400'
+                          }`}
+                        >
+                          <img
+                            src={image}
+                            alt={`Thumbnail ${idx + 1}`}
+                            className="w-20 h-20 object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect fill="%23374151" width="80" height="80"/%3E%3C/svg%3E';
+                            }}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Lot Details Footer */}
+                <div className="mt-2 bg-white/10 backdrop-blur-sm text-white p-4 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-300 mb-1">Estimated Price</p>
+                      <p className="text-lg font-bold">
+                        ₹{(lightboxLot.startingPrice || lightboxLot.estimatedPrice?.min || 0).toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-300 mb-1">
+                        {lightboxLot.bids && lightboxLot.bids.length > 0 ? 'Sold For' : 'Not Sold'}
+                      </p>
+                      <p className={`text-lg font-bold ${
+                        lightboxLot.bids && lightboxLot.bids.length > 0 ? 'text-green-400' : 'text-gray-400'
+                      }`}>
+                        {lightboxLot.bids && lightboxLot.bids.length > 0
+                          ? `₹${(lightboxLot.currentBid || 0).toLocaleString('en-IN')}`
+                          : '—'}
+                      </p>
+                    </div>
+                  </div>
+                  {lightboxLot.description && (
+                    <div className="mt-3 pt-3 border-t border-white/20">
+                      <p className="text-gray-300 text-sm">{lightboxLot.description}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>
