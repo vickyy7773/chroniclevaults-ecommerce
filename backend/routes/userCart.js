@@ -447,6 +447,7 @@ router.get('/my-bidding', protect, async (req, res) => {
 
           // 2. Check if this bid was outbid by someone else
           const outbiddingBid = allBidsSorted.find(b =>
+            b.user &&
             new Date(b.timestamp) > new Date(bid.timestamp) &&
             b.amount > bid.amount &&
             b.user.toString() !== userId.toString()
