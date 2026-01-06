@@ -181,7 +181,7 @@ const AuctionProfile = () => {
     }
 
     try {
-      await api.post('/user/change-password', {
+      await api.put('/auth/updatepassword', {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
