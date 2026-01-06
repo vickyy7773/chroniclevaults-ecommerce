@@ -38,11 +38,12 @@ const Header = ({
   // Check if current page is home page or auctions page
   const isHomePage = location.pathname === '/';
   const isAuctionsPage = location.pathname === '/auctions' ||
+                         location.pathname.startsWith('/auction') ||
                          location.pathname === '/userdashboard' ||
                          location.pathname === '/my-bidding' ||
-                         location.pathname === '/my-watchlist' ||
-                         location.pathname === '/my-wantlist' ||
                          location.pathname === '/my-invoice' ||
+                         location.pathname === '/auction-profile' ||
+                         location.pathname.startsWith('/price-realization') ||
                          (location.pathname === '/profile' && document.referrer.includes('/auctions'));
 
   // Fetch categories from API
