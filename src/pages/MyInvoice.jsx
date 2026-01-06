@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Download } from 'lucide-react';
+import { Search, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
 
@@ -10,6 +10,7 @@ const MyInvoice = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchAuctions();
@@ -57,10 +58,29 @@ const MyInvoice = () => {
     }
 
     setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filtering
   };
 
   const handleSearch = () => {
     filterData();
+  };
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredData.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setCurrentPage(1); // Reset to first page when changing page size
   };
 
   const formatCurrency = (amount) => {
@@ -138,7 +158,7 @@ const MyInvoice = () => {
               </label>
               <select
                 value={pageSize}
-                onChange={(e) => setPageSize(Number(e.target.value))}
+                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-accent-500"
               >
                 <option value={10}>10</option>
@@ -193,13 +213,13 @@ const MyInvoice = () => {
                       </td>
                     </tr>
                   ) : (
-                    filteredData.slice(0, pageSize).map((invoice, index) => (
+                    currentData.map((invoice, index) => (
                       <tr
                         key={index}
                         className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}
                       >
                         <td className="px-6 py-3 text-sm text-gray-700 border-b border-gray-200">
-                          {invoice.srNo}
+                          {startIndex + index + 1}
                         </td>
                         <td className="px-6 py-3 text-sm text-gray-700 border-b border-gray-200">
                           {invoice.auctionNo}
@@ -227,6 +247,85 @@ const MyInvoice = () => {
                   )}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {!loading && filteredData.length > 0 && (
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                {/* Showing info */}
+                <div className="text-sm text-gray-600">
+                  Showing <span className="font-semibold">{startIndex + 1}</span> to{' '}
+                  <span className="font-semibold">{Math.min(endIndex, filteredData.length)}</span> of{' '}
+                  <span className="font-semibold">{filteredData.length}</span> invoices
+                </div>
+
+                {/* Pagination buttons */}
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    {/* Previous button */}
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Previous page"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+
+                    {/* Page numbers */}
+                    <div className="flex items-center gap-1">
+                      {[...Array(totalPages)].map((_, idx) => {
+                        const pageNum = idx + 1;
+                        // Show first page, last page, current page, and pages around current
+                        const showPage =
+                          pageNum === 1 ||
+                          pageNum === totalPages ||
+                          (pageNum >= currentPage - 1 && pageNum <= currentPage + 1);
+
+                        // Show ellipsis
+                        const showEllipsisBefore = pageNum === currentPage - 2 && currentPage > 3;
+                        const showEllipsisAfter = pageNum === currentPage + 2 && currentPage < totalPages - 2;
+
+                        if (showEllipsisBefore || showEllipsisAfter) {
+                          return (
+                            <span key={pageNum} className="px-2 text-gray-500">
+                              ...
+                            </span>
+                          );
+                        }
+
+                        if (!showPage) return null;
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`px-4 py-2 border rounded-md transition-colors ${
+                              currentPage === pageNum
+                                ? 'bg-accent-600 text-white border-accent-600 font-semibold'
+                                : 'border-gray-300 hover:bg-gray-100'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Next button */}
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Next page"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
