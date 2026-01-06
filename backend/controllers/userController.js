@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Order from '../models/Order.js';
+import CoinAllocation from '../models/CoinAllocation.js';
 import { sendAuctionLimitUpgradeEmail } from '../services/emailService.js';
 
 // @desc    Get all users/customers
@@ -423,6 +424,23 @@ export const updateAuctionCoins = async (req, res) => {
     await user.save();
 
     console.log('💰 Coins updated successfully');
+
+    // Create CoinAllocation record if coins were increased
+    if (newCoins > oldCoins) {
+      const allocationAmount = newCoins - oldCoins;
+      try {
+        await CoinAllocation.create({
+          userId: user._id,
+          amount: allocationAmount,
+          notes: `Bidding limit increased by admin from ${oldCoins} to ${newCoins}`,
+          allocationDate: new Date()
+        });
+        console.log('💰 CoinAllocation record created for:', allocationAmount);
+      } catch (allocationError) {
+        console.error('❌ Failed to create CoinAllocation record:', allocationError);
+        // Don't fail the update if allocation record fails
+      }
+    }
 
     // Send email notification if limit was upgraded
     if (newCoins > oldCoins && user.isAuctionVerified) {
