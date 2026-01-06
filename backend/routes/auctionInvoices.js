@@ -11,7 +11,7 @@ import {
 } from '../controllers/auctionInvoiceController.js';
 import { protect, admin } from '../middleware/auth.js';
 import AuctionInvoice from '../models/AuctionInvoice.js';
-import html_to_pdf from 'html-pdf-node';
+import pdf from 'html-pdf';
 
 const router = express.Router();
 
@@ -301,11 +301,21 @@ router.get('/:id/pdf', protect, async (req, res) => {
     // Convert HTML to PDF
     const options = {
       format: 'A4',
-      margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' }
+      border: {
+        top: '10mm',
+        right: '10mm',
+        bottom: '10mm',
+        left: '10mm'
+      }
     };
-    const file = { content: htmlContent };
 
-    const pdfBuffer = await html_to_pdf.generatePdf(file, options);
+    // Generate PDF using html-pdf (callback-based, wrapped in Promise)
+    const pdfBuffer = await new Promise((resolve, reject) => {
+      pdf.create(htmlContent, options).toBuffer((err, buffer) => {
+        if (err) reject(err);
+        else resolve(buffer);
+      });
+    });
 
     // Set response headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
