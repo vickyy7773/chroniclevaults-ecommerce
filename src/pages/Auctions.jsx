@@ -134,7 +134,14 @@ const AuctionsPage = () => {
             {auctions.map((auction) => (
               <div
                 key={auction._id}
-                onClick={() => navigate(`/auction/${auction._id}/catalog`)}
+                onClick={() => {
+                  // For ended auctions, go to auction-lots page
+                  if (auction.status === 'Ended') {
+                    navigate(`/auction-lots/${auction._id}`);
+                  } else {
+                    navigate(`/auction/${auction._id}/catalog`);
+                  }
+                }}
                 className="rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-1"
               >
                 {/* Auction Highlight Banner Image */}
