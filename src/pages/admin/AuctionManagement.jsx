@@ -159,6 +159,8 @@ const AuctionManagement = () => {
           image: '',
           vendorId: '',
           startingPrice: '',
+          estimatedPrice: '',
+          reservePrice: '',
           status: 'Upcoming'
         }
       ]
@@ -1066,13 +1068,13 @@ const AuctionManagement = () => {
                                   <p className="text-xs text-gray-500 mt-1">Specify the material of the item (e.g., Gold, Silver, Bronze, Copper)</p>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-3 gap-3">
                                   <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                       Starting Price (₹)
                                     </label>
                                     <input
-                                      type="number" 
+                                      type="number"
                                       value={lot.startingPrice || ''}
                                       onChange={(e) => handleLotChange(index, 'startingPrice', e.target.value)}
                                       required
@@ -1083,11 +1085,26 @@ const AuctionManagement = () => {
                                   </div>
 
                                   <div>
+                                    <label className="block text-sm font-medium text-blue-600 mb-1">
+                                      Estimated Price (₹)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={lot.estimatedPrice || ''}
+                                      onChange={(e) => handleLotChange(index, 'estimatedPrice', e.target.value)}
+                                      min="0"
+                                      className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                      placeholder="0 (optional)"
+                                    />
+                                    <p className="text-xs text-blue-500 mt-1">Expected value</p>
+                                  </div>
+
+                                  <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                       Reserve Price (₹)
                                     </label>
                                     <input
-                                      type="number" 
+                                      type="number"
                                       value={lot.reservePrice || ''}
                                       onChange={(e) => handleLotChange(index, 'reservePrice', e.target.value)}
                                       min="0"
