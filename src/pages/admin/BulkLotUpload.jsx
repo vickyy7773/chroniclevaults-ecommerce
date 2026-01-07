@@ -54,10 +54,10 @@ const BulkLotUpload = () => {
 
   // Download CSV template
   const downloadTemplate = () => {
-    const csvContent = 'Lot Number,Title,Description,Category,Material,Image URL 1,Image URL 2,Image URL 3,Video URL,Vendor ID,Starting Price,Reserve Price\n' +
-      '1,Ancient Roman Coin,Rare silver denarius from 100 AD,Ancient World,Silver,https://example.com/image1.jpg,https://example.com/image1-2.jpg,https://example.com/image1-3.jpg,https://youtube.com/embed/xyz,VEN001,5000,7000\n' +
-      '2,Gold British Sovereign,1885 Victoria gold sovereign,British India,Gold,https://example.com/image2.jpg,https://example.com/image2-2.jpg,,https://youtube.com/embed/abc,VEN002,15000,20000\n' +
-      '3,Indian Copper Coin,East India Company 1/4 Anna,East India Company,Copper,https://example.com/image3.jpg,,,https://youtube.com/embed/def,VEN001,2000,3000';
+    const csvContent = 'Lot Number,Title,Description,Category,Material,Image URL 1,Image URL 2,Image URL 3,Video URL,Vendor ID,Starting Price,Estimated Price,Reserve Price\n' +
+      '1,Ancient Roman Coin,Rare silver denarius from 100 AD,Ancient World,Silver,https://example.com/image1.jpg,https://example.com/image1-2.jpg,https://example.com/image1-3.jpg,https://youtube.com/embed/xyz,VEN001,5000,8000,7000\n' +
+      '2,Gold British Sovereign,1885 Victoria gold sovereign,British India,Gold,https://example.com/image2.jpg,https://example.com/image2-2.jpg,,https://youtube.com/embed/abc,VEN002,15000,25000,20000\n' +
+      '3,Indian Copper Coin,East India Company 1/4 Anna,East India Company,Copper,https://example.com/image3.jpg,,,https://youtube.com/embed/def,VEN001,2000,3500,3000';
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -101,7 +101,8 @@ const BulkLotUpload = () => {
         video: values[8]?.trim() || '',
         vendorId: values[9]?.trim() || null,
         startingPrice: parseFloat(values[10]) || 0,
-        reservePrice: parseFloat(values[11]) || 0,
+        estimatedPrice: parseFloat(values[11]) || null,
+        reservePrice: parseFloat(values[12]) || 0,
         currentBid: parseFloat(values[10]) || 0, // Initialize with starting price
         status: 'Upcoming'
       };
@@ -413,7 +414,7 @@ const BulkLotUpload = () => {
                   Click to upload CSV file
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  CSV file with lot details (Lot Number, Title, Description, Image URL, Starting Price, Reserve Price)
+                  CSV file with lot details (Lot Number, Title, Description, Image URL, Starting Price, Estimated Price, Reserve Price)
                 </p>
               </div>
             )}
@@ -475,6 +476,9 @@ const BulkLotUpload = () => {
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
                     Starting Price
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
+                    Estimated Price
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
                     Reserve Price
@@ -564,6 +568,9 @@ const BulkLotUpload = () => {
                     </td>
                     <td className="px-4 py-3 text-gray-900 dark:text-white font-semibold">
                       ₹{lot.startingPrice?.toLocaleString() || 0}
+                    </td>
+                    <td className="px-4 py-3 text-blue-600 dark:text-blue-400 font-semibold">
+                      {lot.estimatedPrice ? `₹${lot.estimatedPrice.toLocaleString()}` : '-'}
                     </td>
                     <td className="px-4 py-3 text-gray-900 dark:text-white font-semibold">
                       ₹{lot.reservePrice?.toLocaleString() || 0}

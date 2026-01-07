@@ -2838,6 +2838,7 @@ export const addBulkLots = async (req, res) => {
       video: lot.video || null,
       vendorId: lot.vendorId || null, // Vendor ID for admin tracking
       startingPrice: lot.startingPrice,
+      estimatedPrice: lot.estimatedPrice || null, // Estimated/expected price
       currentBid: lot.startingPrice, // Initialize with starting price
       reservePrice: lot.reservePrice || 0,
       productId: lot.productId || null,
