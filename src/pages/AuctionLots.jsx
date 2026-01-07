@@ -681,7 +681,7 @@ const AuctionLots = () => {
       minBid = lot.currentBid + increment;
     } else {
       // No bids yet: minimum = starting price
-      minBid = lot.startingPrice || lot.estimatedPrice?.min || 0;
+      minBid = lot.startingPrice || 0;
     }
 
     // Validation 1: Minimum bid check
@@ -993,7 +993,6 @@ const AuctionLots = () => {
           {filteredLots && filteredLots.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredLots.map((lot, index) => {
-                const estimatedPrice = lot.startingPrice || lot.estimatedPrice?.min || 0;
                 const soldPrice = lot.currentBid || lot.hammerPrice || 0;
                 const isSold = lot.bids && lot.bids.length > 0;
 
@@ -1083,9 +1082,17 @@ const AuctionLots = () => {
                         <div>
                           <p className="text-xs text-gray-500 font-medium">Estimated Price</p>
                           <p className="text-base font-bold text-gray-900">
-                            {estimatedPrice > 0
-                              ? `₹${estimatedPrice.toLocaleString('en-IN')}`
-                              : 'Price on request'}
+                            {(() => {
+                              if (lot.startingPrice > 0 && lot.estimatedPrice > 0) {
+                                return `₹${lot.startingPrice.toLocaleString('en-IN')} - ₹${lot.estimatedPrice.toLocaleString('en-IN')}`;
+                              } else if (lot.startingPrice > 0) {
+                                return `₹${lot.startingPrice.toLocaleString('en-IN')}`;
+                              } else if (lot.estimatedPrice > 0) {
+                                return `₹${lot.estimatedPrice.toLocaleString('en-IN')}`;
+                              } else {
+                                return 'Price on request';
+                              }
+                            })()}
                           </p>
                         </div>
 
@@ -1220,7 +1227,17 @@ const AuctionLots = () => {
                     <div>
                       <p className="text-gray-300 mb-1">Estimated Price</p>
                       <p className="text-lg font-bold">
-                        ₹{(lightboxLot.startingPrice || lightboxLot.estimatedPrice?.min || 0).toLocaleString('en-IN')}
+                        {(() => {
+                          if (lightboxLot.startingPrice > 0 && lightboxLot.estimatedPrice > 0) {
+                            return `₹${lightboxLot.startingPrice.toLocaleString('en-IN')} - ₹${lightboxLot.estimatedPrice.toLocaleString('en-IN')}`;
+                          } else if (lightboxLot.startingPrice > 0) {
+                            return `₹${lightboxLot.startingPrice.toLocaleString('en-IN')}`;
+                          } else if (lightboxLot.estimatedPrice > 0) {
+                            return `₹${lightboxLot.estimatedPrice.toLocaleString('en-IN')}`;
+                          } else {
+                            return 'N/A';
+                          }
+                        })()}
                       </p>
                     </div>
                     <div>
@@ -1538,13 +1555,17 @@ const AuctionLots = () => {
                         <p className="text-xs font-semibold text-black uppercase mb-1">Estimated Price</p>
                         <p className="text-lg font-bold text-black">
                           {(() => {
-                            // Show starting price if available
-                            if (lot.startingPrice > 0) {
+                            // Show starting price - estimated price range
+                            if (lot.startingPrice > 0 && lot.estimatedPrice > 0) {
+                              return `₹${lot.startingPrice.toLocaleString('en-IN')} - ₹${lot.estimatedPrice.toLocaleString('en-IN')}`;
+                            }
+                            // Show only starting price if no estimated price
+                            else if (lot.startingPrice > 0) {
                               return `₹${lot.startingPrice.toLocaleString('en-IN')}`;
                             }
-                            // Fallback to estimated price
-                            else if (lot.estimatedPrice?.min && lot.estimatedPrice?.max) {
-                              return `₹${lot.estimatedPrice.min.toLocaleString('en-IN')} - ₹${lot.estimatedPrice.max.toLocaleString('en-IN')}`;
+                            // Show only estimated price if no starting price
+                            else if (lot.estimatedPrice > 0) {
+                              return `₹${lot.estimatedPrice.toLocaleString('en-IN')}`;
                             }
                             // Final fallback
                             else {
@@ -1566,7 +1587,7 @@ const AuctionLots = () => {
                         ) : (
                           <>
                             <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Opening Bid</p>
-                            <p className="text-xl font-bold text-gray-900">₹{(lot.startingPrice || lot.estimatedPrice?.min || 0).toLocaleString('en-IN')}</p>
+                            <p className="text-xl font-bold text-gray-900">₹{(lot.startingPrice || 0).toLocaleString('en-IN')}</p>
                           </>
                         )}
                       </div>
