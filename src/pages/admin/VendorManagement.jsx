@@ -564,7 +564,7 @@ const VendorManagement = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Aadhar Card <span className="text-red-500">*</span>
+                        Aadhar Card <span className="text-gray-400">(Optional)</span>
                       </label>
                       <input
                         type="file"
@@ -587,7 +587,7 @@ const VendorManagement = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        PAN Card <span className="text-red-500">*</span>
+                        PAN Card <span className="text-gray-400">(Optional)</span>
                       </label>
                       <input
                         type="file"
@@ -616,14 +616,13 @@ const VendorManagement = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Account Holder Name <span className="text-red-500">*</span>
+                        Account Holder Name <span className="text-gray-400">(Optional)</span>
                       </label>
                       <input
                         type="text"
                         name="bankDetails.accountHolderName"
                         value={formData.bankDetails.accountHolderName}
                         onChange={handleInputChange}
-                        required
                         pattern="[a-zA-Z\s.-]{2,}"
                         placeholder="As per bank account"
                         title="Name should contain only letters, spaces, dots and hyphens"
@@ -634,14 +633,13 @@ const VendorManagement = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Account Number <span className="text-red-500">*</span>
+                        Account Number <span className="text-gray-400">(Optional)</span>
                       </label>
                       <input
                         type="text"
                         name="bankDetails.accountNumber"
                         value={formData.bankDetails.accountNumber}
                         onChange={handleInputChange}
-                        required
                         pattern="[0-9]{9,18}"
                         placeholder="9 to 18 digit account number"
                         title="Account number must be 9-18 digits"
@@ -652,14 +650,13 @@ const VendorManagement = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        IFSC Code <span className="text-red-500">*</span>
+                        IFSC Code <span className="text-gray-400">(Optional)</span>
                       </label>
                       <input
                         type="text"
                         name="bankDetails.ifscCode"
                         value={formData.bankDetails.ifscCode}
                         onChange={handleInputChange}
-                        required
                         pattern="[A-Z]{4}0[A-Z0-9]{6}"
                         placeholder="e.g., SBIN0001234"
                         maxLength="11"
@@ -671,14 +668,13 @@ const VendorManagement = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Bank Name <span className="text-red-500">*</span>
+                        Bank Name <span className="text-gray-400">(Optional)</span>
                       </label>
                       <input
                         type="text"
                         name="bankDetails.bankName"
                         value={formData.bankDetails.bankName}
                         onChange={handleInputChange}
-                        required
                         pattern="[a-zA-Z\s.-]{2,}"
                         placeholder="Enter bank name"
                         title="Bank name should contain only letters, spaces, dots and hyphens"
