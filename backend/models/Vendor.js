@@ -37,11 +37,11 @@ const vendorSchema = new mongoose.Schema({
   kycDocuments: {
     aadharCard: {
       type: String,
-      required: [true, 'Please upload Aadhar Card']
+      default: ''
     },
     panCard: {
       type: String,
-      required: [true, 'Please upload PAN Card']
+      default: ''
     }
   },
   commissionPercentage: {
@@ -54,28 +54,29 @@ const vendorSchema = new mongoose.Schema({
   bankDetails: {
     accountHolderName: {
       type: String,
-      required: [true, 'Please provide account holder name'],
-      trim: true
+      trim: true,
+      default: ''
     },
     accountNumber: {
       type: String,
-      required: [true, 'Please provide account number'],
-      trim: true
+      trim: true,
+      default: ''
     },
     ifscCode: {
       type: String,
-      required: [true, 'Please provide IFSC code'],
       trim: true,
-      uppercase: true
+      uppercase: true,
+      default: ''
     },
     bankName: {
       type: String,
-      required: [true, 'Please provide bank name'],
-      trim: true
+      trim: true,
+      default: ''
     },
     branchName: {
       type: String,
-      trim: true
+      trim: true,
+      default: ''
     }
   },
   registrationDate: {
