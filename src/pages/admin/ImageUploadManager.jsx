@@ -229,9 +229,9 @@ const ImageUploadManager = () => {
 
   // Download URLs as CSV
   const handleDownloadCSV = () => {
-    const csvContent = 'Filename,URL,Size (KB),Uploaded At\n' +
+    const csvContent = 'Original Name,Server Filename,URL,Size (KB),Uploaded At\n' +
       uploadedImages.map(img =>
-        `"${img.filename}","${img.url}","${img.size}","${new Date(img.uploadedAt).toLocaleString()}"`
+        `"${img.originalName || img.filename}","${img.filename}","${img.url}","${img.size}","${new Date(img.uploadedAt).toLocaleString()}"`
       ).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -412,8 +412,13 @@ const ImageUploadManager = () => {
                       />
                     </td>
                     <td className="px-6 py-4">
-                      <div className="max-w-xs truncate text-gray-900 dark:text-white font-medium">
-                        {image.filename}
+                      <div className="max-w-xs">
+                        <div className="truncate text-gray-900 dark:text-white font-medium">
+                          {image.originalName || image.filename}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate mt-1">
+                          {image.filename}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
