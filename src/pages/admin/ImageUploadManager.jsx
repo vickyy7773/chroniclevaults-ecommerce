@@ -7,6 +7,7 @@ const ImageUploadManager = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedImages, setSelectedImages] = useState([]);
 
   // API URL
   const API_URL = import.meta.env.PROD
@@ -167,6 +168,58 @@ const ImageUploadManager = () => {
     }
   };
 
+  // Toggle individual image selection
+  const handleToggleImage = (filename) => {
+    setSelectedImages(prev =>
+      prev.includes(filename)
+        ? prev.filter(f => f !== filename)
+        : [...prev, filename]
+    );
+  };
+
+  // Toggle all images selection
+  const handleToggleAll = () => {
+    if (selectedImages.length === uploadedImages.length) {
+      setSelectedImages([]);
+    } else {
+      setSelectedImages(uploadedImages.map(img => img.filename));
+    }
+  };
+
+  // Bulk delete selected images
+  const handleBulkDelete = async () => {
+    if (selectedImages.length === 0) {
+      toast.warning('Please select images to delete');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedImages.length} selected images? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      toast.info(`Deleting ${selectedImages.length} images...`);
+
+      const deletePromises = selectedImages.map(filename =>
+        fetch(`${API_URL}/upload/${filename}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        })
+      );
+
+      await Promise.all(deletePromises);
+
+      toast.success(`${selectedImages.length} images deleted successfully!`);
+      setSelectedImages([]);
+      await fetchImages();
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      toast.error('Failed to delete some images');
+    }
+  };
+
   // Refresh images list
   const handleRefresh = async () => {
     toast.info('Refreshing image list...');
@@ -213,6 +266,15 @@ const ImageUploadManager = () => {
           <div className="flex gap-2">
             {uploadedImages.length > 0 && (
               <>
+                {selectedImages.length > 0 && (
+                  <button
+                    onClick={handleBulkDelete}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Selected ({selectedImages.length})
+                  </button>
+                )}
                 <button
                   onClick={handleCopyAllURLs}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
@@ -300,6 +362,14 @@ const ImageUploadManager = () => {
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
                 <tr>
+                  <th className="px-6 py-4 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectedImages.length === uploadedImages.length && uploadedImages.length > 0}
+                      onChange={handleToggleAll}
+                      className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 dark:focus:ring-amber-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+                    />
+                  </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     #
                   </th>
@@ -323,6 +393,14 @@ const ImageUploadManager = () => {
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {uploadedImages.map((image, index) => (
                   <tr key={image.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedImages.includes(image.filename)}
+                        onChange={() => handleToggleImage(image.filename)}
+                        className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 dark:focus:ring-amber-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+                      />
+                    </td>
                     <td className="px-6 py-4 text-gray-900 dark:text-white font-semibold">
                       {index + 1}
                     </td>
