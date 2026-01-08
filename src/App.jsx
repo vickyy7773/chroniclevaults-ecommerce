@@ -85,6 +85,7 @@ const AuctionRegistration = lazy(() => import('./pages/AuctionRegistration'));
 const NoAuction = lazy(() => import('./pages/NoAuction'));
 const PriceRealization = lazy(() => import('./pages/PriceRealization'));
 const ComingSoon = lazy(() => import('./pages/ComingSoon'));
+const AuctionEnded = lazy(() => import('./pages/AuctionEnded'));
 
 // Loading component
 const PageLoader = () => (
@@ -114,7 +115,8 @@ const AppContent = () => {
                           location.pathname === '/profile' ||
                           location.pathname.startsWith('/admin') ||
                           location.pathname.startsWith('/auction/') ||
-                          location.pathname.startsWith('/auction-lots/');
+                          location.pathname.startsWith('/auction-lots/') ||
+                          location.pathname.startsWith('/auction-ended/');
 
   // Show shopping features (search, cart, wishlist) on all pages
   const hideShoppingFeatures = false;
@@ -665,6 +667,7 @@ const AppContent = () => {
             <Route path="/price-realization" element={<PriceRealization />} />
             <Route path="/price-realization/:auctionId" element={<PriceRealization />} />
             <Route path="/coming-soon" element={<ComingSoon />} />
+            <Route path="/auction-ended/:id" element={<AuctionEnded />} />
 
             {/* Policy Pages */}
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />

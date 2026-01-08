@@ -77,6 +77,14 @@ const AuctionPage = () => {
     return () => clearInterval(interval);
   }, [auction]);
 
+  // Redirect to auction-ended page when auction ends
+  useEffect(() => {
+    if (auctionPhase === 'ended' && id) {
+      console.log('🏁 Auction has ended, redirecting to thank you page...');
+      navigate(`/auction-ended/${id}`);
+    }
+  }, [auctionPhase, id, navigate]);
+
   useEffect(() => {
     const fetchUserData = async () => {
       const savedUser = localStorage.getItem('user');
