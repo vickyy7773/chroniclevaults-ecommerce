@@ -1,12 +1,12 @@
 import express from 'express';
 import AdminNotification from '../models/AdminNotification.js';
 import User from '../models/User.js';
-import { authMiddleware } from '../middleware/auth.js';
+import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Request coin limit increase
-router.post('/request-coin-limit', authMiddleware, async (req, res) => {
+router.post('/request-coin-limit', protect, async (req, res) => {
   try {
     const { auctionId, auctionTitle, remainingCoins } = req.body;
     const userId = req.user._id;
@@ -46,7 +46,7 @@ router.post('/request-coin-limit', authMiddleware, async (req, res) => {
 });
 
 // Get all notifications (Admin only)
-router.get('/all', authMiddleware, async (req, res) => {
+router.get('/all', protect, async (req, res) => {
   try {
     const { isRead, limit = 50 } = req.query;
 
@@ -78,7 +78,7 @@ router.get('/all', authMiddleware, async (req, res) => {
 });
 
 // Mark notification as read
-router.patch('/:id/read', authMiddleware, async (req, res) => {
+router.patch('/:id/read', protect, async (req, res) => {
   try {
     const notification = await AdminNotification.findByIdAndUpdate(
       req.params.id,
@@ -105,7 +105,7 @@ router.patch('/:id/read', authMiddleware, async (req, res) => {
 });
 
 // Mark all as read
-router.patch('/mark-all-read', authMiddleware, async (req, res) => {
+router.patch('/mark-all-read', protect, async (req, res) => {
   try {
     await AdminNotification.updateMany(
       { isRead: false },
