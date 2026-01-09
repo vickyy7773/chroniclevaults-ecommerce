@@ -158,7 +158,6 @@ const TaxInvoice = ({ orderData, companyInfo }) => {
             <p className="text-xs mb-1"><strong>Transport Mode:</strong> {orderData.transportMode || 'N/A'}</p>
             <p className="text-xs mb-1"><strong>Date of Supply:</strong> {orderData.dateOfSupply || orderData.date}</p>
             <p className="text-xs mb-1"><strong>Place of Supply:</strong> {orderData.placeOfSupply}</p>
-            <p className="text-xs mb-1"><strong>Invoice No.:</strong> {orderData.invoiceNo}</p>
             <p className="text-xs mb-1"><strong>Vehicle No.:</strong> {orderData.vehicleNo || 'N/A'}</p>
           </div>
         </div>
