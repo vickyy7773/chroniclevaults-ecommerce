@@ -263,7 +263,7 @@ export const getAllAuctionInvoices = async (req, res) => {
   try {
     const invoices = await AuctionInvoice.find({})
       .populate('buyer', 'name email phone')
-      .populate('auction', 'title startDate')
+      .populate('auction', 'title startDate endDate')
       .sort({ createdAt: -1 });
 
     res.status(200).json({

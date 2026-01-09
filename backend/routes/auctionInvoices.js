@@ -47,7 +47,7 @@ const numberToWords = (num) => {
 router.get('/:id/pdf', protect, async (req, res) => {
   try {
     const invoice = await AuctionInvoice.findById(req.params.id)
-      .populate('auction', 'title auctionNumber startDate')
+      .populate('auction', 'title auctionNumber startDate endDate')
       .populate('buyer', 'name email phone');
 
     if (!invoice) {
@@ -168,11 +168,10 @@ router.get('/:id/pdf', protect, async (req, res) => {
               <div class="info-row">GST NO: ${invoice.buyerDetails?.gstin || 'N/A'}</div>
             </div>
             <div class="col-right">
-              <div class="info-row"><span class="label">Auction No.:</span> ${invoice.auction?._id ? `AUC-${invoice.auction._id.toString().slice(-6).toUpperCase()}` : 'N/A'}</div>
-              <div class="info-row"><span class="label">Auction Date:</span> ${invoice.auction?.startDate ? new Date(invoice.auction.startDate).toLocaleDateString() : 'N/A'}</div>
+              <div class="info-row"><span class="label">Auction No.:</span> ${invoice.auction?.title || 'N/A'}</div>
+              <div class="info-row"><span class="label">Auction Date:</span> ${invoice.auction?.endDate ? new Date(invoice.auction.endDate).toLocaleDateString() : 'N/A'}</div>
               <div class="info-row"><span class="label">Invoice No.:</span> ${invoice.invoiceNumber || 'N/A'}</div>
               <div class="info-row"><span class="label">Invoice Date:</span> ${invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : 'N/A'}</div>
-              <div class="info-row"><span class="label">Bidder No.:</span> ${invoice.buyerDetails?.buyerNumber || 'N/A'}</div>
               <div class="info-row"><span class="label">GST No:</span> ${invoice.buyerDetails?.gstin || 'N/A'}</div>
             </div>
           </div>
