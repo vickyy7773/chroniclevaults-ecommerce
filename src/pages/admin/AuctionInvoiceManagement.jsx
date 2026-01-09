@@ -844,8 +844,14 @@ const AuctionInvoiceManagement = () => {
 
       if (response.success) {
         // Each buyer has: buyer (user object), auctionReg (registration), lots (array of lots)
-        // Filter out any entries where buyer is null to prevent errors
-        const validBuyers = (response.data || []).filter(buyerData => buyerData && buyerData.buyer);
+        // CRITICAL: Filter out any entries where buyer is null/invalid
+        const validBuyers = (response.data || []).filter(buyerData => {
+          return buyerData &&
+                 buyerData.buyer &&
+                 buyerData.buyer._id &&
+                 buyerData.buyer.name;
+        });
+        console.log('✅ Valid buyers loaded:', validBuyers.length);
         setAuctionBuyers(validBuyers);
       }
     } catch (error) {
@@ -868,8 +874,16 @@ const AuctionInvoiceManagement = () => {
   };
 
   const handleTransferLots = async () => {
+    // Validation checks
     if (!transferSourceInvoice || !selectedTargetBuyer) {
       toast.error('Please select target buyer');
+      return;
+    }
+
+    // CRITICAL: Validate selectedTargetBuyer has valid buyer object
+    if (!selectedTargetBuyer.buyer || !selectedTargetBuyer.buyer._id) {
+      toast.error('Invalid buyer selected. Please refresh and try again.');
+      console.error('❌ Invalid target buyer:', selectedTargetBuyer);
       return;
     }
 
@@ -886,14 +900,7 @@ const AuctionInvoiceManagement = () => {
 
       // Safely extract buyer IDs
       const fromBuyerId = transferSourceInvoice.buyer?._id || transferSourceInvoice.buyer;
-
-      // Fix: Properly handle null buyer object
-      let toBuyerId;
-      if (selectedTargetBuyer.buyer && typeof selectedTargetBuyer.buyer === 'object') {
-        toBuyerId = selectedTargetBuyer.buyer._id;
-      } else {
-        toBuyerId = selectedTargetBuyer.buyer;
-      }
+      const toBuyerId = selectedTargetBuyer.buyer._id;
 
       if (!fromBuyerId || !toBuyerId) {
         toast.error('Invalid buyer information. Please try again.');
@@ -975,8 +982,14 @@ const AuctionInvoiceManagement = () => {
     try {
       const response = await api.get('/lot-transfer/all-buyers');
       if (response.success) {
-        // Filter out any entries where buyer is null to prevent errors
-        const validBuyers = (response.data || []).filter(buyerData => buyerData && buyerData.buyer);
+        // CRITICAL: Filter out any entries where buyer is null/invalid
+        const validBuyers = (response.data || []).filter(buyerData => {
+          return buyerData &&
+                 buyerData.buyer &&
+                 buyerData.buyer._id &&
+                 buyerData.buyer.name;
+        });
+        console.log('✅ Valid buyers loaded for unsold:', validBuyers.length);
         setAuctionBuyers(validBuyers);
       }
     } catch (error) {
