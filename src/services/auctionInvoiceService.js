@@ -4,8 +4,7 @@ const INVOICE_ENDPOINTS = {
   BASE: '/auction-invoices',
   BY_ID: (id) => `/auction-invoices/${id}`,
   BY_AUCTION: (auctionId) => `/auction-invoices/auction/${auctionId}`,
-  MARK_PAID: (id) => `/auction-invoices/${id}/pay`,
-  AVAILABLE_NUMBERS: '/auction-invoices/available-numbers'
+  MARK_PAID: (id) => `/auction-invoices/${id}/pay`
 };
 
 export const auctionInvoiceService = {
@@ -48,12 +47,6 @@ export const auctionInvoiceService = {
   // Mark invoice as paid
   markAsPaid: async (id, paymentMode) => {
     const response = await api.put(INVOICE_ENDPOINTS.MARK_PAID(id), { paymentMode });
-    return response;
-  },
-
-  // Get available invoice numbers for reassignment
-  getAvailableNumbers: async () => {
-    const response = await api.get(INVOICE_ENDPOINTS.AVAILABLE_NUMBERS);
     return response;
   }
 };

@@ -11,7 +11,6 @@ import {
 } from '../controllers/auctionInvoiceController.js';
 import { protect, admin } from '../middleware/auth.js';
 import AuctionInvoice from '../models/AuctionInvoice.js';
-import InvoiceNumberTracker from '../models/InvoiceNumberTracker.js';
 
 const router = express.Router();
 
@@ -324,27 +323,6 @@ router.get('/:id/pdf', protect, async (req, res) => {
 
 // All other routes require authentication and admin access
 router.use(protect, admin);
-
-// Invoice number management routes (must be before /:id routes)
-router.get('/available-numbers', async (req, res) => {
-  try {
-    const availableNumbers = await InvoiceNumberTracker.getAvailableNumbers();
-    const nextNumber = await InvoiceNumberTracker.getNextNumber();
-
-    res.json({
-      success: true,
-      availableNumbers,
-      nextNumber
-    });
-  } catch (error) {
-    console.error('Error fetching available invoice numbers:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch available invoice numbers',
-      error: error.message
-    });
-  }
-});
 
 // Invoice CRUD routes
 router.route('/')

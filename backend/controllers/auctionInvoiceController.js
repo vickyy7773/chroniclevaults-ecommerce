@@ -2,7 +2,6 @@ import AuctionInvoice from '../models/AuctionInvoice.js';
 import Auction from '../models/Auction.js';
 import User from '../models/User.js';
 import AuctionRegistration from '../models/AuctionRegistration.js';
-import InvoiceNumberTracker from '../models/InvoiceNumberTracker.js';
 import { logActivity } from '../middleware/activityLogger.js';
 
 // Indian state codes mapping
@@ -56,8 +55,7 @@ export const createAuctionInvoice = async (req, res) => {
       buyerId,
       packingForwardingCharges,
       insuranceCharges,
-      companyDetails,
-      manualInvoiceNumber // Optional: for manual reassignment of deleted numbers
+      companyDetails
     } = req.body;
 
     // Get auction and lot details
@@ -221,14 +219,15 @@ export const createAuctionInvoice = async (req, res) => {
       status: 'Generated'
     });
 
-    // Assign invoice number using tracker
-    const assignedNumber = await InvoiceNumberTracker.assignNumber(
-      invoice._id,
-      manualInvoiceNumber
-    );
+    // Get next sequential number
+    const highestInvoice = await AuctionInvoice.findOne()
+      .sort({ saleNumber: -1 })
+      .select('saleNumber');
 
-    invoice.invoiceNumber = assignedNumber.invoiceNumber;
-    invoice.saleNumber = assignedNumber.number;
+    const nextNumber = highestInvoice ? (highestInvoice.saleNumber + 1) : 1;
+
+    invoice.saleNumber = nextNumber;
+    invoice.invoiceNumber = `B/SALE${nextNumber}`;
 
     // Save the invoice with assigned number
     await invoice.save();
@@ -384,27 +383,43 @@ export const deleteAuctionInvoice = async (req, res) => {
     }
 
     const invoiceNumber = invoice.invoiceNumber;
-    const invoiceId = invoice._id;
+    const deletedSaleNumber = invoice.saleNumber;
 
     // Delete the invoice
     await invoice.deleteOne();
 
-    // Mark invoice number as available for reassignment
-    await InvoiceNumberTracker.markNumberAvailable(invoiceNumber, invoiceId);
+    // Renumber all subsequent invoices automatically (cascade renumbering)
+    let renumberedCount = 0;
+    if (deletedSaleNumber) {
+      const subsequentInvoices = await AuctionInvoice.find({
+        saleNumber: { $gt: deletedSaleNumber }
+      }).sort({ saleNumber: 1 });
+
+      // Update each subsequent invoice to fill the gap
+      for (const inv of subsequentInvoices) {
+        const newSaleNumber = inv.saleNumber - 1;
+        inv.saleNumber = newSaleNumber;
+        inv.invoiceNumber = `B/SALE${newSaleNumber}`;
+        await inv.save();
+      }
+
+      renumberedCount = subsequentInvoices.length;
+      console.log(`✅ Renumbered ${renumberedCount} invoices after deletion`);
+    }
 
     // Log activity
     await logActivity(
       req,
       'delete',
       'auction-invoices',
-      `Deleted invoice ${invoiceNumber} - Number available for reassignment`,
+      `Deleted invoice ${invoiceNumber} and renumbered ${renumberedCount} subsequent invoices`,
       req.params.id,
       `Invoice ${invoiceNumber}`
     );
 
     res.status(200).json({
       success: true,
-      message: 'Invoice deleted successfully. Invoice number is now available for reassignment.'
+      message: `Invoice deleted successfully. ${renumberedCount} subsequent invoices were automatically renumbered.`
     });
   } catch (error) {
     res.status(500).json({

@@ -185,8 +185,8 @@ const auctionInvoiceSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Note: Invoice number is now assigned by InvoiceNumberTracker
-// This ensures sequential numbering and proper tracking of deleted numbers
+// Note: Invoice numbers are assigned sequentially by the controller
+// Deleted invoices trigger automatic cascade renumbering of subsequent invoices
 
 // Calculate GST and amounts before saving
 auctionInvoiceSchema.pre('save', function(next) {
