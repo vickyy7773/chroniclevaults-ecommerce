@@ -324,7 +324,7 @@ const AuctionInvoiceManagement = () => {
           <!-- Header -->
           <div class="header">
             <div class="company-info">
-              <div class="company-name">CHRONICLE VAULTS</div>
+              <div class="company-name">CHRONICLE VAULTS - A Brand of Urhistory</div>
               <div class="tagline">Buy, Sell, Auction • Vintage Coins | Stamps | Collectibles</div>
               <div class="contact-info">
                 16/189, Netajinagar, Meghaninagar, Ahmedabad-380016, Gujarat, India<br>
@@ -351,11 +351,10 @@ const AuctionInvoiceManagement = () => {
               <div class="info-row">GST NO: ${invoice.buyerDetails.gstin || 'N/A'}</div>
             </div>
             <div class="col-right">
-              <div class="info-row"><span class="label">Auction No.:</span> ${invoice.auction?._id ? `AUC-${invoice.auction._id.toString().slice(-6).toUpperCase()}` : 'N/A'}</div>
-              <div class="info-row"><span class="label">Auction Date:</span> ${invoice.auction?.startDate ? new Date(invoice.auction.startDate).toLocaleDateString() : 'N/A'}</div>
+              <div class="info-row"><span class="label">Auction No.:</span> ${invoice.auction?.title || 'N/A'}</div>
+              <div class="info-row"><span class="label">Auction Date:</span> ${invoice.auction?.endDate ? new Date(invoice.auction.endDate).toLocaleDateString() : 'N/A'}</div>
               <div class="info-row"><span class="label">Invoice No.:</span> ${invoice.invoiceNumber}</div>
               <div class="info-row"><span class="label">Invoice Date:</span> ${new Date(invoice.invoiceDate).toLocaleDateString()}</div>
-              <div class="info-row"><span class="label">Bidder No.:</span> ${invoice.buyerDetails.buyerNumber || 'N/A'}</div>
               <div class="info-row"><span class="label">GST No:</span> ${invoice.buyerDetails.gstin || 'N/A'}</div>
             </div>
           </div>
@@ -448,7 +447,7 @@ const AuctionInvoiceManagement = () => {
 
           <!-- Amount in Words -->
           <div class="amount-words">
-            <strong>Amount in words:</strong> Rs. ${numberToWords(invoice.amounts.totalPayable)} Only
+            Rs. ${numberToWords(invoice.amounts.totalPayable)} Only
           </div>
 
           <!-- Remittance Instruction -->
@@ -463,11 +462,12 @@ const AuctionInvoiceManagement = () => {
               <div><strong>A/C Name:</strong> urhistory</div>
               <div><strong>Bank:</strong> Saraswat Bank, cgroad, Ahmedabad</div>
               <div><strong>A/c No:</strong> 610000000016716</div>
+              <div><strong>Account Type:</strong> Current</div>
               <div><strong>RTGS/NEFT IFSC code:</strong> SRCB000362</div>
             </div>
             <div class="bank-box">
               <div style="text-align: right; margin-top: 20px;">
-                <strong>For, Chronicle Vaults</strong>
+                <strong>For, Chronicle Vaults - A Brand of Urhistory</strong>
               </div>
             </div>
           </div>
