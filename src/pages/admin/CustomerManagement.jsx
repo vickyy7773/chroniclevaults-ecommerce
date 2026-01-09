@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, Edit, Trash2, Eye, UserPlus, Mail, Phone, MapPin, ShoppingBag, Users, X, Coins } from 'lucide-react';
 import { customerService } from '../../services';
 import { toast } from 'react-toastify';
 import api from '../../utils/api';
 
 const CustomerManagement = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all'); // all, active, inactive, blocked
@@ -18,6 +20,22 @@ const CustomerManagement = () => {
   useEffect(() => {
     fetchCustomers();
   }, []);
+
+  // Auto-open coins modal if userId in URL
+  useEffect(() => {
+    const userId = searchParams.get('userId');
+    if (userId && customers.length > 0) {
+      const customer = customers.find(c => c._id === userId);
+      if (customer) {
+        // Auto-open coins modal for this customer
+        setSelectedCustomer(customer);
+        setEditingCoins(customer.auctionCoins || 0);
+        setShowCoinsModal(true);
+        // Clear the URL parameter
+        setSearchParams({});
+      }
+    }
+  }, [customers, searchParams, setSearchParams]);
 
   const fetchCustomers = async () => {
     setLoading(true);

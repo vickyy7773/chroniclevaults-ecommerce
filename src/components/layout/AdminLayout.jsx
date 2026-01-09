@@ -772,6 +772,10 @@ const AdminLayout = () => {
                                 if (!notification.isRead) {
                                   markAsRead(notification._id);
                                 }
+                                // Navigate to customer management with user filter
+                                setShowNotifications(false);
+                                const userId = notification.user?._id || notification.user;
+                                navigate(`/admin/customer-management?userId=${userId}`);
                               }}
                               className={`w-full text-left p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
                                 !notification.isRead ? 'bg-amber-50 dark:bg-amber-900/10' : ''
