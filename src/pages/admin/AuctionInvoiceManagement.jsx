@@ -1860,7 +1860,7 @@ const AuctionInvoiceManagement = () => {
                 />
               </div>
 
-              {selectedTargetBuyer && (
+              {selectedTargetBuyer && selectedTargetBuyer.buyer && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
                   <div className="flex justify-between items-center">
                     <div>
@@ -1892,7 +1892,12 @@ const AuctionInvoiceManagement = () => {
                     filteredTargetBuyers.map((buyerData) => (
                       <div
                         key={buyerData.buyer._id}
-                        onClick={() => setSelectedTargetBuyer(buyerData)}
+                        onClick={() => {
+                          // Extra safety check before setting
+                          if (buyerData && buyerData.buyer) {
+                            setSelectedTargetBuyer(buyerData);
+                          }
+                        }}
                         className="p-3 hover:bg-purple-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                       >
                         <div className="font-medium">{buyerData.buyer.name}</div>
@@ -1926,7 +1931,7 @@ const AuctionInvoiceManagement = () => {
             </div>
 
             {/* Transfer Summary */}
-            {selectedLotsForTransfer.length > 0 && selectedTargetBuyer && (
+            {selectedLotsForTransfer.length > 0 && selectedTargetBuyer && selectedTargetBuyer.buyer && (
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
                 <h3 className="font-semibold text-purple-900 mb-2">Transfer Summary</h3>
                 <div className="text-sm space-y-1">
@@ -2096,7 +2101,7 @@ const AuctionInvoiceManagement = () => {
                   />
                 </div>
 
-                {selectedUnsoldBuyer && (
+                {selectedUnsoldBuyer && selectedUnsoldBuyer.buyer && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
                     <div className="flex justify-between items-center">
                       <div>
@@ -2124,7 +2129,12 @@ const AuctionInvoiceManagement = () => {
                       filteredUnsoldBuyers.map((buyerData) => (
                         <div
                           key={buyerData.buyer._id}
-                          onClick={() => setSelectedUnsoldBuyer(buyerData)}
+                          onClick={() => {
+                            // Extra safety check before setting
+                            if (buyerData && buyerData.buyer) {
+                              setSelectedUnsoldBuyer(buyerData);
+                            }
+                          }}
                           className="p-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                         >
                           <div className="font-medium">{buyerData.buyer.name}</div>
