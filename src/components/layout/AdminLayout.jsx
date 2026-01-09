@@ -260,11 +260,11 @@ const AdminLayout = () => {
       resource: 'users'
     },
     {
-      path: '/admin/vendors',
-      icon: Building2,
-      label: 'Vendors',
-      color: 'from-amber-500 to-orange-600',
-      resource: 'users' // Tied to users permission
+      path: '/admin/ecom-reports',
+      icon: FileText,
+      label: 'E-Commerce Reports',
+      color: 'from-green-500 to-green-600',
+      resource: 'products' // Tied to products permission
     },
     {
       path: '/admin/sliders',
@@ -299,10 +299,10 @@ const AdminLayout = () => {
         { path: '/admin/auctions', label: 'Auction Management' },
         { path: '/admin/auction-registrations', label: 'Registrations' },
         { path: '/admin/auction-invoices', label: 'Customer Invoices' },
+        { path: '/admin/vendors', label: 'Vendors' },
         { path: '/admin/bid-tracking', label: 'Bid Tracking' },
         { path: '/admin/sales-dashboard', label: 'Sales Dashboard' },
         { path: '/admin/auction-report', label: 'Auction Report' },
-        { path: '/admin/ecom-reports', label: 'E-Commerce Reports' },
         { path: '/admin/vendor-invoices', label: 'Vendor Invoices' },
         { path: '/admin/lot-transfer', label: 'Lot Transfer' },
         { path: '/admin/image-upload', label: 'Image Upload' },
