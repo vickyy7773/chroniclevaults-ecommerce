@@ -456,9 +456,12 @@ export const getAllRegisteredBuyers = async () => {
     .populate('userId', 'name email phone')
     .sort({ approvedAt: -1 });
 
+  // Filter out registrations where populate failed (user was deleted)
+  const validRegistrations = registrations.filter(reg => reg.userId && reg.userId._id);
+
   // For each registration, get their lots/invoices if any
   const buyersWithData = await Promise.all(
-    registrations.map(async (reg) => {
+    validRegistrations.map(async (reg) => {
       const invoices = await AuctionInvoice.find({ buyer: reg.userId._id })
         .select('lots amounts.totalPayable');
 
