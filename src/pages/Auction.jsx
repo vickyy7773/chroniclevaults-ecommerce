@@ -31,6 +31,10 @@ const AuctionPage = () => {
   const [auctionPhase, setAuctionPhase] = useState('catalog'); // 'catalog', 'live', or 'ended'
   const [catalogTimeRemaining, setCatalogTimeRemaining] = useState(''); // Time until live auction starts
 
+  // COIN LIMIT WARNING SYSTEM
+  const [showCoinLimitPopup, setShowCoinLimitPopup] = useState(false);
+  const [coinLimitRequested, setCoinLimitRequested] = useState(false);
+
   // Phase Detection: Determine if auction is in Catalog or Live phase
   useEffect(() => {
     if (!auction) return;
@@ -84,6 +88,19 @@ const AuctionPage = () => {
       navigate(`/auction-ended/${id}`);
     }
   }, [auctionPhase, id, navigate]);
+
+  // Monitor coin balance - Show popup when remaining coins <= 5000
+  useEffect(() => {
+    if (user && user.auctionCoins !== undefined) {
+      const remainingCoins = user.auctionCoins || 0;
+
+      // Show popup if coins <= 5000 and popup not already shown
+      if (remainingCoins <= 5000 && !showCoinLimitPopup && !coinLimitRequested) {
+        setShowCoinLimitPopup(true);
+        console.log('⚠️ Coin limit warning: Only', remainingCoins, 'coins remaining');
+      }
+    }
+  }, [user?.auctionCoins]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -811,6 +828,26 @@ const AuctionPage = () => {
       toast.error(error.response?.data?.message || 'Failed to place bid');
     } finally {
       setSubmittingBid(false);
+    }
+  };
+
+  // Request coin limit increase from admin
+  const handleRequestCoinLimit = async () => {
+    try {
+      const response = await api.post('/admin-notifications/request-coin-limit', {
+        auctionId: id,
+        auctionTitle: auction?.title || 'Unknown Auction',
+        remainingCoins: user?.auctionCoins || 0
+      });
+
+      if (response.data.success) {
+        toast.success('✅ Request sent to admin successfully! You will be notified once approved.');
+        setCoinLimitRequested(true);
+        setShowCoinLimitPopup(false);
+      }
+    } catch (error) {
+      console.error('Request coin limit error:', error);
+      toast.error('Failed to send request. Please try again.');
     }
   };
 
@@ -1592,6 +1629,63 @@ const AuctionPage = () => {
                 );
                 })}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Coin Limit Warning Popup */}
+        {showCoinLimitPopup && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in">
+              {/* Header */}
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                  <AlertCircle className="w-10 h-10 text-red-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Coin Limit Almost Complete!
+                </h3>
+                <p className="text-gray-600">
+                  Aapke coins khatam hone wale hain
+                </p>
+              </div>
+
+              {/* Remaining Coins Display */}
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 font-medium">Remaining Coins:</span>
+                  <span className="text-2xl font-bold text-red-600">
+                    ₹{user?.auctionCoins?.toLocaleString() || 0}
+                  </span>
+                </div>
+              </div>
+
+              {/* Message */}
+              <p className="text-gray-700 text-center mb-6 leading-relaxed">
+                Aapki limit almost complete ho gayi hai. Nayi limit ki request karne ke liye niche button click karein.
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleRequestCoinLimit}
+                  className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                >
+                  <Coins className="w-5 h-5" />
+                  Request Nayi Limit
+                </button>
+                <button
+                  onClick={() => setShowCoinLimitPopup(false)}
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all"
+                >
+                  Baad Mein
+                </button>
+              </div>
+
+              {/* Note */}
+              <p className="text-xs text-gray-500 text-center mt-4">
+                Admin ko notification send ho jayegi aur wo jaldi approve karenge
+              </p>
             </div>
           </div>
         )}
