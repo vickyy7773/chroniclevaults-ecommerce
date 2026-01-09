@@ -26,6 +26,11 @@ const AuctionInvoiceManagement = () => {
   const [showSplitModal, setShowSplitModal] = useState(false);
   const [selectedLots, setSelectedLots] = useState([]);
 
+  // Invoice number management states
+  const [availableNumbers, setAvailableNumbers] = useState([]);
+  const [nextNumber, setNextNumber] = useState(null);
+  const [selectedManualNumber, setSelectedManualNumber] = useState('');
+
   // Lot Transfer states
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferSourceInvoice, setTransferSourceInvoice] = useState(null);
@@ -103,10 +108,21 @@ const AuctionInvoiceManagement = () => {
     }
   };
 
+  const fetchAvailableNumbers = async () => {
+    try {
+      const response = await auctionInvoiceService.getAvailableNumbers();
+      setAvailableNumbers(response.availableNumbers || []);
+      setNextNumber(response.nextNumber);
+    } catch (error) {
+      console.error('Failed to fetch available numbers:', error);
+    }
+  };
+
   useEffect(() => {
     console.log('🚀 Component mounted - calling fetchInvoices...');
     fetchInvoices();
     fetchAuctions();
+    fetchAvailableNumbers();
   }, []);
 
   const handleUpdateInvoice = async (e) => {
@@ -124,12 +140,13 @@ const AuctionInvoiceManagement = () => {
   };
 
   const handleDeleteInvoice = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this invoice?')) return;
+    if (!window.confirm('Are you sure you want to delete this invoice? The invoice number will become available for reassignment.')) return;
 
     try {
-      await auctionInvoiceService.deleteInvoice(id);
-      toast.success('Invoice deleted successfully');
+      const response = await auctionInvoiceService.deleteInvoice(id);
+      toast.success(response.message || 'Invoice deleted successfully. Number available for reassignment.');
       fetchInvoices();
+      fetchAvailableNumbers(); // Refresh available numbers
     } catch (error) {
       toast.error('Failed to delete invoice');
     }
@@ -163,6 +180,11 @@ const AuctionInvoiceManagement = () => {
       delete newInvoiceData.invoiceNumber;
       delete newInvoiceData.saleNumber;
 
+      // Add manual invoice number if selected
+      if (selectedManualNumber) {
+        newInvoiceData.manualInvoiceNumber = parseInt(selectedManualNumber);
+      }
+
       await auctionInvoiceService.createInvoice(newInvoiceData);
 
       // Update original invoice to remove split lots
@@ -179,7 +201,9 @@ const AuctionInvoiceManagement = () => {
       toast.success('Invoice split successfully!');
       setShowSplitModal(false);
       setSelectedLots([]);
+      setSelectedManualNumber('');
       fetchInvoices();
+      fetchAvailableNumbers();
     } catch (error) {
       console.error('Split invoice error:', error);
       toast.error('Failed to split invoice');
@@ -1132,6 +1156,43 @@ const AuctionInvoiceManagement = () => {
         </div>
       </div>
 
+      {/* Invoice Number Info Banner */}
+      <div className="mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-gray-800 mb-2">📋 Invoice Numbering System</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="bg-white rounded-lg p-3 border border-blue-100">
+                <p className="text-xs text-gray-600 mb-1">Next Invoice Number</p>
+                <p className="text-lg font-bold text-blue-600">
+                  {nextNumber?.invoiceNumber || 'Loading...'}
+                </p>
+                {nextNumber?.isReassigned && (
+                  <span className="inline-block mt-1 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                    ♻️ Reassigned Number
+                  </span>
+                )}
+              </div>
+              <div className="bg-white rounded-lg p-3 border border-blue-100">
+                <p className="text-xs text-gray-600 mb-1">Available for Reassignment</p>
+                <p className="text-lg font-bold text-green-600">
+                  {availableNumbers.length} {availableNumbers.length === 1 ? 'Number' : 'Numbers'}
+                </p>
+                {availableNumbers.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {availableNumbers.slice(0, 3).map(n => n.invoiceNumber).join(', ')}
+                    {availableNumbers.length > 3 && ` +${availableNumbers.length - 3} more`}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        <p className="text-xs text-gray-600 mt-2">
+          💡 When creating new invoices, you can choose to use the next sequential number or manually reassign a deleted invoice number.
+        </p>
+      </div>
+
       {/* Filters Section */}
       <div className="mb-6 bg-white p-4 rounded-lg border">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -1664,6 +1725,58 @@ const AuctionInvoiceManagement = () => {
                   <strong>Total Lots:</strong> {selectedInvoice.lots?.length || 0}<br />
                   <strong>Selected for Split:</strong> {selectedLots.length}
                 </p>
+              </div>
+
+              {/* Invoice Number Selection */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">📋 Invoice Number for New Invoice</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="invoiceNumberOption"
+                        checked={!selectedManualNumber}
+                        onChange={() => setSelectedManualNumber('')}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <span className="text-sm">
+                        <strong>Auto-assign next available:</strong> {nextNumber?.invoiceNumber || 'Loading...'}
+                        {nextNumber?.isReassigned && (
+                          <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                            Reassigned Number
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  </div>
+
+                  {availableNumbers.length > 0 && (
+                    <div className="border-t border-green-200 pt-3">
+                      <p className="text-xs text-gray-600 mb-2">
+                        <strong>Or select a deleted invoice number to reassign:</strong>
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-32 overflow-y-auto">
+                        {availableNumbers.map((item) => (
+                          <label
+                            key={item.number}
+                            className="flex items-center space-x-2 cursor-pointer hover:bg-green-100 p-2 rounded"
+                          >
+                            <input
+                              type="radio"
+                              name="invoiceNumberOption"
+                              value={item.number}
+                              checked={selectedManualNumber === item.number.toString()}
+                              onChange={(e) => setSelectedManualNumber(e.target.value)}
+                              className="w-4 h-4 text-green-600"
+                            />
+                            <span className="text-sm font-medium">{item.invoiceNumber}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">

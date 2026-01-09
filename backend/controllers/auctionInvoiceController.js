@@ -2,6 +2,7 @@ import AuctionInvoice from '../models/AuctionInvoice.js';
 import Auction from '../models/Auction.js';
 import User from '../models/User.js';
 import AuctionRegistration from '../models/AuctionRegistration.js';
+import InvoiceNumberTracker from '../models/InvoiceNumberTracker.js';
 import { logActivity } from '../middleware/activityLogger.js';
 
 // Indian state codes mapping
@@ -55,7 +56,8 @@ export const createAuctionInvoice = async (req, res) => {
       buyerId,
       packingForwardingCharges,
       insuranceCharges,
-      companyDetails
+      companyDetails,
+      manualInvoiceNumber // Optional: for manual reassignment of deleted numbers
     } = req.body;
 
     // Get auction and lot details
@@ -162,8 +164,8 @@ export const createAuctionInvoice = async (req, res) => {
     const isInterstate = buyerStateCode !== defaultCompanyDetails.stateCode;
     const gstType = isInterstate ? 'IGST' : 'CGST+SGST';
 
-    // Create invoice
-    const invoice = await AuctionInvoice.create({
+    // Create invoice without saving first (to get _id)
+    const invoice = new AuctionInvoice({
       auction: auctionId,
       lotNumber,
       buyer: buyer._id,
@@ -218,6 +220,18 @@ export const createAuctionInvoice = async (req, res) => {
       companyDetails: defaultCompanyDetails,
       status: 'Generated'
     });
+
+    // Assign invoice number using tracker
+    const assignedNumber = await InvoiceNumberTracker.assignNumber(
+      invoice._id,
+      manualInvoiceNumber
+    );
+
+    invoice.invoiceNumber = assignedNumber.invoiceNumber;
+    invoice.saleNumber = assignedNumber.number;
+
+    // Save the invoice with assigned number
+    await invoice.save();
 
     // Log activity
     await logActivity(
@@ -370,21 +384,27 @@ export const deleteAuctionInvoice = async (req, res) => {
     }
 
     const invoiceNumber = invoice.invoiceNumber;
+    const invoiceId = invoice._id;
+
+    // Delete the invoice
     await invoice.deleteOne();
+
+    // Mark invoice number as available for reassignment
+    await InvoiceNumberTracker.markNumberAvailable(invoiceNumber, invoiceId);
 
     // Log activity
     await logActivity(
       req,
       'delete',
       'auction-invoices',
-      `Deleted invoice ${invoiceNumber}`,
+      `Deleted invoice ${invoiceNumber} - Number available for reassignment`,
       req.params.id,
       `Invoice ${invoiceNumber}`
     );
 
     res.status(200).json({
       success: true,
-      message: 'Invoice deleted successfully'
+      message: 'Invoice deleted successfully. Invoice number is now available for reassignment.'
     });
   } catch (error) {
     res.status(500).json({

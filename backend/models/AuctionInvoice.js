@@ -185,16 +185,8 @@ const auctionInvoiceSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Auto-generate invoice number
-auctionInvoiceSchema.pre('save', async function(next) {
-  if (!this.invoiceNumber) {
-    const count = await mongoose.model('AuctionInvoice').countDocuments();
-    const saleNum = this.saleNumber || (count + 1);
-    this.saleNumber = saleNum;
-    this.invoiceNumber = `B/SALE${saleNum}/${Math.floor(Math.random() * 1000)}`;
-  }
-  next();
-});
+// Note: Invoice number is now assigned by InvoiceNumberTracker
+// This ensures sequential numbering and proper tracking of deleted numbers
 
 // Calculate GST and amounts before saving
 auctionInvoiceSchema.pre('save', function(next) {
