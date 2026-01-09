@@ -926,12 +926,13 @@ const AuctionInvoiceManagement = () => {
   };
 
   const filteredTargetBuyers = auctionBuyers.filter(buyerData => {
-    // Skip if buyer data is invalid
-    if (!buyerData || !buyerData.buyer) return false;
+    // Skip if buyer data is invalid - CRITICAL SAFETY CHECK
+    if (!buyerData || !buyerData.buyer || !buyerData.buyer._id) return false;
 
     // Exclude current invoice buyer
     const currentBuyerId = transferSourceInvoice?.buyer?._id || transferSourceInvoice?.buyer;
-    if (buyerData.buyer._id === currentBuyerId) return false;
+    const buyerDataId = buyerData.buyer._id;
+    if (buyerDataId === currentBuyerId) return false;
 
     // Filter by search - search in name, email, phone, and auction registration ID
     if (!targetBuyerSearch) return true;
@@ -1063,8 +1064,8 @@ const AuctionInvoiceManagement = () => {
 
 
   const filteredUnsoldBuyers = auctionBuyers.filter(buyerData => {
-    // Skip if buyer data is invalid
-    if (!buyerData || !buyerData.buyer) return false;
+    // Skip if buyer data is invalid - CRITICAL SAFETY CHECK
+    if (!buyerData || !buyerData.buyer || !buyerData.buyer._id) return false;
 
     if (!unsoldBuyerSearch) return true;
     const searchLower = unsoldBuyerSearch.toLowerCase();
