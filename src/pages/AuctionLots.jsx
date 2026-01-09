@@ -120,7 +120,7 @@ const AuctionLots = () => {
         console.log('⚠️ Coin limit warning (LOT BIDDING): Only', remainingCoins, 'coins remaining');
       }
     }
-  }, [currentUser?.auctionCoins, showCoinLimitPopup, coinLimitRequested]);
+  }, [currentUser?.auctionCoins]); // Simplified dependencies - only watch coin changes
 
   // Save bidStatus to localStorage whenever it changes
   useEffect(() => {
@@ -878,7 +878,8 @@ const AuctionLots = () => {
         remainingCoins: currentUser?.auctionCoins || 0
       });
 
-      if (response.data.success) {
+      // Response interceptor extracts data, so check response.success not response.data.success
+      if (response.success) {
         toast.success('✅ Request sent to admin successfully! You will be notified once approved.');
         setCoinLimitRequested(true);
         setShowCoinLimitPopup(false);

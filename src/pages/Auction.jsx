@@ -97,10 +97,10 @@ const AuctionPage = () => {
       // Show popup if coins <= 5000 and popup not already shown
       if (remainingCoins <= 5000 && !showCoinLimitPopup && !coinLimitRequested) {
         setShowCoinLimitPopup(true);
-        console.log('⚠️ Coin limit warning: Only', remainingCoins, 'coins remaining');
+        console.log('⚠️ Coin limit warning (LIVE BIDDING): Only', remainingCoins, 'coins remaining');
       }
     }
-  }, [user?.auctionCoins]);
+  }, [user?.auctionCoins]); // Simplified dependencies - only watch coin changes
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -840,7 +840,8 @@ const AuctionPage = () => {
         remainingCoins: user?.auctionCoins || 0
       });
 
-      if (response.data.success) {
+      // Response interceptor extracts data, so check response.success not response.data.success
+      if (response.success) {
         toast.success('✅ Request sent to admin successfully! You will be notified once approved.');
         setCoinLimitRequested(true);
         setShowCoinLimitPopup(false);
