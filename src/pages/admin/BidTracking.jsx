@@ -384,18 +384,18 @@ const BidTracking = () => {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {event.eventType === 'bid_placed' && (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
-                            Bid Placed
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400">
+                            ✅ Bid Placed
                           </span>
                         )}
                         {event.eventType === 'auto_bid' && (
                           <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400">
-                            Auto-Bid
+                            🤖 Auto-Bid
                           </span>
                         )}
                         {event.eventType === 'outbid' && (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400">
-                            Outbid
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400">
+                            ❌ Outbid
                           </span>
                         )}
                         {event.eventType === 'winner' && (
@@ -449,18 +449,18 @@ const BidTracking = () => {
                           {event.bidder.name}
                         </p>
                         {event.eventType === 'bid_placed' && (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
-                            Bid Placed
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400">
+                            ✅ Bid Placed
                           </span>
                         )}
                         {event.eventType === 'auto_bid' && (
                           <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400">
-                            Auto-Bid
+                            🤖 Auto-Bid
                           </span>
                         )}
                         {event.eventType === 'outbid' && (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400">
-                            Outbid
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400">
+                            ❌ Outbid
                           </span>
                         )}
                         {event.eventType === 'winner' && (
