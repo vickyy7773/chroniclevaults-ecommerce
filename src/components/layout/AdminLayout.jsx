@@ -48,8 +48,20 @@ const AdminLayout = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
 
+  // Navigation mode toggle (e-commerce or auction)
+  const [navMode, setNavMode] = useState(() => {
+    return localStorage.getItem('adminNavMode') || 'ecommerce';
+  });
+
   // Get user permissions
   const { user, permissions, hasPermission, canAccessMenu, isSuperAdmin } = usePermissions();
+
+  // Toggle navigation mode
+  const toggleNavMode = () => {
+    const newMode = navMode === 'ecommerce' ? 'auction' : 'ecommerce';
+    setNavMode(newMode);
+    localStorage.setItem('adminNavMode', newMode);
+  };
 
   // Search function
   const handleSearch = async (query) => {
@@ -204,13 +216,16 @@ const AdminLayout = () => {
       icon: LayoutDashboard,
       label: 'Dashboard',
       color: 'from-primary-600 to-primary-700',
-      resource: 'dashboard'
+      resource: 'dashboard',
+      category: 'common' // Show in both modes
     },
+    // E-COMMERCE MENU ITEMS
     {
       label: 'Categories',
       icon: FolderTree,
       color: 'from-accent-500 to-accent-600',
       resource: 'categories',
+      category: 'ecommerce',
       submenu: [
         { path: '/admin/categories', label: 'All Categories' },
         { path: '/admin/categories/add', label: 'Add Category', requiresCreate: true }
@@ -221,7 +236,8 @@ const AdminLayout = () => {
       icon: Filter,
       label: 'Filter Options',
       color: 'from-purple-500 to-purple-600',
-      resource: 'products', // Tied to products permission
+      resource: 'products',
+      category: 'ecommerce',
       superAdminOnly: false
     },
     {
@@ -229,6 +245,7 @@ const AdminLayout = () => {
       icon: Package,
       color: 'from-primary-500 to-primary-600',
       resource: 'products',
+      category: 'ecommerce',
       submenu: [
         { path: '/admin/products', label: 'All Products' },
         { path: '/admin/products/add', label: 'Add Product', requiresCreate: true }
@@ -239,6 +256,7 @@ const AdminLayout = () => {
       icon: ShoppingCart,
       color: 'from-accent-400 to-accent-500',
       resource: 'orders',
+      category: 'ecommerce',
       submenu: [
         { path: '/admin/orders/new', label: 'New Orders' },
         { path: '/admin/orders/history', label: 'Order History' },
@@ -250,72 +268,157 @@ const AdminLayout = () => {
       icon: ChevronRight,
       label: 'Reviews',
       color: 'from-primary-400 to-accent-400',
-      resource: 'products' // Reviews tied to products
+      resource: 'products',
+      category: 'ecommerce'
     },
     {
       path: '/admin/customers',
       icon: Users,
       label: 'Customers',
       color: 'from-accent-500 to-accent-600',
-      resource: 'users'
+      resource: 'users',
+      category: 'common' // Show in both modes
     },
     {
       path: '/admin/ecom-reports',
       icon: FileText,
       label: 'E-Commerce Reports',
       color: 'from-green-500 to-green-600',
-      resource: 'products' // Tied to products permission
+      resource: 'products',
+      category: 'ecommerce'
     },
     {
       path: '/admin/sliders',
       icon: Image,
       label: 'Sliders',
       color: 'from-primary-500 to-accent-500',
-      resource: 'sliders' // Slider management permission
+      resource: 'sliders',
+      category: 'ecommerce'
     },
     {
       path: '/admin/banners',
       icon: Image,
       label: 'Today in History',
       color: 'from-amber-500 to-amber-600',
-      resource: 'sliders' // Using sliders permission for banners too
+      resource: 'sliders',
+      category: 'ecommerce'
     },
     {
       label: 'Blog',
       icon: ChevronRight,
       color: 'from-primary-600 to-accent-600',
       resource: 'blogs',
+      category: 'ecommerce',
       submenu: [
         { path: '/admin/blog', label: 'All Posts' },
         { path: '/admin/blog/add', label: 'Add Post', requiresCreate: true }
       ]
     },
+    // AUCTION MENU ITEMS
     {
-      label: 'Auctions',
+      path: '/admin/auctions',
       icon: Gavel,
+      label: 'Auction Management',
       color: 'from-orange-500 to-red-600',
-      resource: 'products', // Tied to products permission
-      submenu: [
-        { path: '/admin/auctions', label: 'Auction Management' },
-        { path: '/admin/auction-registrations', label: 'Registrations' },
-        { path: '/admin/auction-invoices', label: 'Customer Invoices' },
-        { path: '/admin/vendors', label: 'Vendors' },
-        { path: '/admin/bid-tracking', label: 'Bid Tracking' },
-        { path: '/admin/sales-dashboard', label: 'Sales Dashboard' },
-        { path: '/admin/auction-report', label: 'Auction Report' },
-        { path: '/admin/vendor-invoices', label: 'Vendor Invoices' },
-        { path: '/admin/lot-transfer', label: 'Lot Transfer' },
-        { path: '/admin/image-upload', label: 'Image Upload' },
-        { path: '/admin/video-upload', label: 'Video Upload' },
-        { path: '/admin/bulk-lot-upload', label: 'Bulk Lot Upload' }
-      ]
+      resource: 'products',
+      category: 'auction'
     },
+    {
+      path: '/admin/auction-registrations',
+      icon: Users,
+      label: 'Registrations',
+      color: 'from-blue-500 to-blue-600',
+      resource: 'products',
+      category: 'auction'
+    },
+    {
+      path: '/admin/auction-invoices',
+      icon: FileText,
+      label: 'Customer Invoices',
+      color: 'from-green-500 to-green-600',
+      resource: 'products',
+      category: 'auction'
+    },
+    {
+      path: '/admin/vendors',
+      icon: Building2,
+      label: 'Vendors',
+      color: 'from-amber-500 to-orange-600',
+      resource: 'users',
+      category: 'auction'
+    },
+    {
+      path: '/admin/bid-tracking',
+      icon: Activity,
+      label: 'Bid Tracking',
+      color: 'from-purple-500 to-purple-600',
+      resource: 'products',
+      category: 'auction'
+    },
+    {
+      path: '/admin/sales-dashboard',
+      icon: LayoutDashboard,
+      label: 'Sales Dashboard',
+      color: 'from-indigo-500 to-indigo-600',
+      resource: 'products',
+      category: 'auction'
+    },
+    {
+      path: '/admin/auction-report',
+      icon: FileText,
+      label: 'Auction Report',
+      color: 'from-red-500 to-red-600',
+      resource: 'products',
+      category: 'auction'
+    },
+    {
+      path: '/admin/vendor-invoices',
+      icon: FileText,
+      label: 'Vendor Invoices',
+      color: 'from-orange-500 to-orange-600',
+      resource: 'products',
+      category: 'auction'
+    },
+    {
+      path: '/admin/lot-transfer',
+      icon: Upload,
+      label: 'Lot Transfer',
+      color: 'from-cyan-500 to-cyan-600',
+      resource: 'products',
+      category: 'auction'
+    },
+    {
+      path: '/admin/image-upload',
+      icon: Image,
+      label: 'Image Upload',
+      color: 'from-pink-500 to-pink-600',
+      resource: 'products',
+      category: 'auction'
+    },
+    {
+      path: '/admin/video-upload',
+      icon: Image,
+      label: 'Video Upload',
+      color: 'from-violet-500 to-violet-600',
+      resource: 'products',
+      category: 'auction'
+    },
+    {
+      path: '/admin/bulk-lot-upload',
+      icon: Upload,
+      label: 'Bulk Lot Upload',
+      color: 'from-teal-500 to-teal-600',
+      resource: 'products',
+      category: 'auction'
+    },
+    // COMMON ITEMS (Show in both)
     {
       path: '/admin/profile',
       icon: Users,
       label: 'Profile',
       color: 'from-neutral-600 to-charcoal-700',
-      resource: null, // Everyone can access profile
+      resource: null,
+      category: 'common',
       alwaysShow: true
     },
     {
@@ -323,8 +426,9 @@ const AdminLayout = () => {
       icon: UserCog,
       label: 'Users & Roles',
       color: 'from-purple-500 to-purple-600',
-      resource: 'roles', // Only if has role permissions
-      superAdminOnly: true // Only super admin
+      resource: 'roles',
+      category: 'common',
+      superAdminOnly: true
     },
     {
       path: '/admin/admin-activities',
@@ -332,15 +436,9 @@ const AdminLayout = () => {
       label: 'Admin Activities',
       color: 'from-indigo-500 to-indigo-600',
       resource: null,
-      superAdminOnly: true // Only super admin can see activity logs
+      category: 'common',
+      superAdminOnly: true
     },
-    // Settings - Hidden
-    // {
-    //   path: '/admin/settings',
-    //   icon: Settings,
-    //   label: 'Settings',
-    //   color: 'from-neutral-600 to-charcoal-700'
-    // },
   ];
 
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
@@ -371,8 +469,14 @@ const AdminLayout = () => {
     return canAccessMenu(item.resource);
   };
 
-  // Filter menu items based on permissions
-  const visibleMenuItems = menuItems.filter(canShowMenuItem);
+  // Filter menu items based on permissions and navigation mode
+  const visibleMenuItems = menuItems.filter(item => {
+    if (!canShowMenuItem(item)) return false;
+    // Show common items in both modes
+    if (item.category === 'common') return true;
+    // Filter based on current navigation mode
+    return item.category === navMode;
+  });
 
   const handleLogout = async () => {
     try {
@@ -493,6 +597,34 @@ const AdminLayout = () => {
               )}
             </button>
           </div>
+
+          {/* Navigation Mode Toggle */}
+          {sidebarOpen && (
+            <div className="px-4 pt-4 pb-2">
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-800 rounded-xl p-1 flex gap-1">
+                <button
+                  onClick={toggleNavMode}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    navMode === 'ecommerce'
+                      ? 'bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 shadow-md'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  🛒 E-Commerce
+                </button>
+                <button
+                  onClick={toggleNavMode}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    navMode === 'auction'
+                      ? 'bg-white dark:bg-gray-700 text-orange-600 dark:text-orange-400 shadow-md'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  🔨 Auction
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
