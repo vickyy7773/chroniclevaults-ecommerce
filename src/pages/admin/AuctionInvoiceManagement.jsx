@@ -884,7 +884,14 @@ const AuctionInvoiceManagement = () => {
 
       // Safely extract buyer IDs
       const fromBuyerId = transferSourceInvoice.buyer?._id || transferSourceInvoice.buyer;
-      const toBuyerId = selectedTargetBuyer.buyer?._id || selectedTargetBuyer.buyer;
+
+      // Fix: Properly handle null buyer object
+      let toBuyerId;
+      if (selectedTargetBuyer.buyer && typeof selectedTargetBuyer.buyer === 'object') {
+        toBuyerId = selectedTargetBuyer.buyer._id;
+      } else {
+        toBuyerId = selectedTargetBuyer.buyer;
+      }
 
       if (!fromBuyerId || !toBuyerId) {
         toast.error('Invalid buyer information. Please try again.');
