@@ -1889,19 +1889,18 @@ const AuctionInvoiceManagement = () => {
                       Loading registered buyers...
                     </div>
                   ) : filteredTargetBuyers.length > 0 ? (
-                    filteredTargetBuyers.map((buyerData) => (
-                      <div
-                        key={buyerData.buyer._id}
-                        onClick={() => {
-                          // Extra safety check before setting
-                          if (buyerData && buyerData.buyer) {
-                            setSelectedTargetBuyer(buyerData);
-                          }
-                        }}
-                        className="p-3 hover:bg-purple-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                      >
-                        <div className="font-medium">{buyerData.buyer.name}</div>
-                        <div className="text-sm text-gray-600">{buyerData.buyer.email}</div>
+                    filteredTargetBuyers.map((buyerData) => {
+                      // Safety check - skip if buyer is null
+                      if (!buyerData || !buyerData.buyer) return null;
+
+                      return (
+                        <div
+                          key={buyerData.buyer._id}
+                          onClick={() => setSelectedTargetBuyer(buyerData)}
+                          className="p-3 hover:bg-purple-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="font-medium">{buyerData.buyer.name}</div>
+                          <div className="text-sm text-gray-600">{buyerData.buyer.email}</div>
                         <div className="text-xs text-gray-500 mt-1 flex items-center gap-3">
                           {buyerData.auctionReg?.registrationId && (
                             <span className="font-mono bg-purple-100 px-2 py-0.5 rounded">
@@ -1918,7 +1917,8 @@ const AuctionInvoiceManagement = () => {
                           )}
                         </div>
                       </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div className="p-4 text-center text-gray-500">
                       {targetBuyerSearch
@@ -2126,31 +2126,31 @@ const AuctionInvoiceManagement = () => {
                 {!selectedUnsoldBuyer && (
                   <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
                     {filteredUnsoldBuyers.length > 0 ? (
-                      filteredUnsoldBuyers.map((buyerData) => (
-                        <div
-                          key={buyerData.buyer._id}
-                          onClick={() => {
-                            // Extra safety check before setting
-                            if (buyerData && buyerData.buyer) {
-                              setSelectedUnsoldBuyer(buyerData);
-                            }
-                          }}
-                          className="p-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                        >
-                          <div className="font-medium">{buyerData.buyer.name}</div>
-                          <div className="text-sm text-gray-600">{buyerData.buyer.email}</div>
-                          <div className="text-xs text-gray-500 mt-1 flex items-center gap-3">
-                            {buyerData.auctionReg?.registrationId && (
-                              <span className="font-mono bg-green-100 px-2 py-0.5 rounded">
-                                ID: {buyerData.auctionReg.registrationId}
-                              </span>
-                            )}
-                            {buyerData.buyer.phone && (
-                              <span>📱 {buyerData.buyer.phone}</span>
-                            )}
+                      filteredUnsoldBuyers.map((buyerData) => {
+                        // Safety check - skip if buyer is null
+                        if (!buyerData || !buyerData.buyer) return null;
+
+                        return (
+                          <div
+                            key={buyerData.buyer._id}
+                            onClick={() => setSelectedUnsoldBuyer(buyerData)}
+                            className="p-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="font-medium">{buyerData.buyer.name}</div>
+                            <div className="text-sm text-gray-600">{buyerData.buyer.email}</div>
+                            <div className="text-xs text-gray-500 mt-1 flex items-center gap-3">
+                              {buyerData.auctionReg?.registrationId && (
+                                <span className="font-mono bg-green-100 px-2 py-0.5 rounded">
+                                  ID: {buyerData.auctionReg.registrationId}
+                                </span>
+                              )}
+                              {buyerData.buyer.phone && (
+                                <span>📱 {buyerData.buyer.phone}</span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))
+                        );
+                      })
                     ) : (
                       <div className="p-4 text-center text-gray-500">
                         {unsoldBuyerSearch
