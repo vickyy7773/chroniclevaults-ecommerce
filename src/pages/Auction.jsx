@@ -1647,7 +1647,7 @@ const AuctionPage = () => {
                   Coin Limit Almost Complete!
                 </h3>
                 <p className="text-gray-600">
-                  Aapke coins khatam hone wale hain
+                  Your coins are running low
                 </p>
               </div>
 
@@ -1663,7 +1663,7 @@ const AuctionPage = () => {
 
               {/* Message */}
               <p className="text-gray-700 text-center mb-6 leading-relaxed">
-                Aapki limit almost complete ho gayi hai. Nayi limit ki request karne ke liye niche button click karein.
+                Your coin limit is almost complete. Click the button below to request a new limit.
               </p>
 
               {/* Action Buttons */}
@@ -1673,19 +1673,19 @@ const AuctionPage = () => {
                   className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                 >
                   <Coins className="w-5 h-5" />
-                  Request Nayi Limit
+                  Request New Limit
                 </button>
                 <button
                   onClick={() => setShowCoinLimitPopup(false)}
                   className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all"
                 >
-                  Baad Mein
+                  Later
                 </button>
               </div>
 
               {/* Note */}
               <p className="text-xs text-gray-500 text-center mt-4">
-                Admin ko notification send ho jayegi aur wo jaldi approve karenge
+                Your request will be sent to admin for approval
               </p>
             </div>
           </div>
