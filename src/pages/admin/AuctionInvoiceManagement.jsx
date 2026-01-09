@@ -906,10 +906,19 @@ const AuctionInvoiceManagement = () => {
         ? transferSourceInvoice.auction._id
         : transferSourceInvoice.auction;
 
+      // Safely extract buyer IDs
+      const fromBuyerId = transferSourceInvoice.buyer?._id || transferSourceInvoice.buyer;
+      const toBuyerId = selectedTargetBuyer.buyer?._id || selectedTargetBuyer.buyer;
+
+      if (!fromBuyerId || !toBuyerId) {
+        toast.error('Invalid buyer information. Please try again.');
+        return;
+      }
+
       const response = await api.post('/lot-transfer/transfer', {
         auctionId: auctionId,
-        fromBuyerId: transferSourceInvoice.buyer._id || transferSourceInvoice.buyer,
-        toBuyerId: selectedTargetBuyer.buyer._id, // Updated to use buyerData structure
+        fromBuyerId: fromBuyerId,
+        toBuyerId: toBuyerId,
         lotNumbers: selectedLotsForTransfer
       });
 
@@ -932,6 +941,9 @@ const AuctionInvoiceManagement = () => {
   };
 
   const filteredTargetBuyers = auctionBuyers.filter(buyerData => {
+    // Skip if buyer data is invalid
+    if (!buyerData || !buyerData.buyer) return false;
+
     // Exclude current invoice buyer
     const currentBuyerId = transferSourceInvoice?.buyer?._id || transferSourceInvoice?.buyer;
     if (buyerData.buyer._id === currentBuyerId) return false;
@@ -1029,9 +1041,18 @@ const AuctionInvoiceManagement = () => {
 
     try {
       setAssigningUnsold(true);
+
+      // Safely extract buyer ID
+      const buyerId = selectedUnsoldBuyer.buyer?._id || selectedUnsoldBuyer.buyer;
+
+      if (!buyerId) {
+        toast.error('Invalid buyer information. Please try again.');
+        return;
+      }
+
       const response = await api.post('/lot-transfer/assign-unsold', {
         auctionId: currentAuctionForUnsold,
-        buyerId: selectedUnsoldBuyer.buyer._id,
+        buyerId: buyerId,
         lotNumbers,
         hammerPrices: selectedUnsoldLots  // Send as object {lotNumber: price}
       });
@@ -1055,6 +1076,9 @@ const AuctionInvoiceManagement = () => {
 
 
   const filteredUnsoldBuyers = auctionBuyers.filter(buyerData => {
+    // Skip if buyer data is invalid
+    if (!buyerData || !buyerData.buyer) return false;
+
     if (!unsoldBuyerSearch) return true;
     const searchLower = unsoldBuyerSearch.toLowerCase();
     const buyer = buyerData.buyer;
