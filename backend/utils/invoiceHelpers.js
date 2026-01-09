@@ -199,6 +199,15 @@ export const transferLotsBetweenBuyers = async (auctionId, fromBuyerId, toBuyerI
       companyDetails: sourceInvoice.companyDetails, // Use same company details
       status: 'Generated'
     });
+
+    // Assign sequential invoice number for new invoice
+    const highestInvoice = await AuctionInvoice.findOne()
+      .sort({ saleNumber: -1 })
+      .select('saleNumber');
+
+    const nextNumber = highestInvoice ? (highestInvoice.saleNumber + 1) : 1;
+    targetInvoice.saleNumber = nextNumber;
+    targetInvoice.invoiceNumber = `B/SALE${nextNumber}`;
   }
 
   // 7. Add transferred lots to target invoice
@@ -388,6 +397,15 @@ export const assignUnsoldLotsToBuyer = async (auctionId, buyerId, lotNumbers, ha
       },
       status: 'Generated'
     });
+
+    // Assign sequential invoice number for new invoice
+    const highestInvoice = await AuctionInvoice.findOne()
+      .sort({ saleNumber: -1 })
+      .select('saleNumber');
+
+    const nextNumber = highestInvoice ? (highestInvoice.saleNumber + 1) : 1;
+    invoice.saleNumber = nextNumber;
+    invoice.invoiceNumber = `B/SALE${nextNumber}`;
   }
 
   // 5. Add lots to invoice
