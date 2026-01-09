@@ -22,6 +22,7 @@ import {
   Activity,
   Gavel,
   FileText,
+  FileSpreadsheet,
   Upload,
   Building2
 } from 'lucide-react';
@@ -376,6 +377,14 @@ const AdminLayout = () => {
       icon: FileText,
       label: 'Vendor Invoices',
       color: 'from-orange-500 to-orange-600',
+      resource: 'products',
+      category: 'auction'
+    },
+    {
+      path: '/admin/vendor-advise',
+      icon: FileSpreadsheet,
+      label: 'Vendor Advise',
+      color: 'from-green-500 to-green-600',
       resource: 'products',
       category: 'auction'
     },
