@@ -11,6 +11,9 @@ const VendorManagement = () => {
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showPreSaleModal, setShowPreSaleModal] = useState(false);
+  const [auctions, setAuctions] = useState([]);
+  const [selectedAuction, setSelectedAuction] = useState('');
   const [formData, setFormData] = useState({
     vendorCode: '',
     name: '',
@@ -34,7 +37,17 @@ const VendorManagement = () => {
 
   useEffect(() => {
     fetchVendors();
+    fetchAuctions();
   }, []);
+
+  const fetchAuctions = async () => {
+    try {
+      const response = await api.get('/auctions');
+      setAuctions(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch auctions:', error);
+    }
+  };
 
   const fetchVendors = async () => {
     setLoading(true);
@@ -185,6 +198,25 @@ const VendorManagement = () => {
   const handleView = (vendor) => {
     setSelectedVendor(vendor);
     setShowViewModal(true);
+  };
+
+  const handleOpenPreSaleModal = (vendor) => {
+    setSelectedVendor(vendor);
+    setSelectedAuction('');
+    setShowPreSaleModal(true);
+  };
+
+  const handleGeneratePreSalePDF = () => {
+    if (!selectedAuction) {
+      toast.error('Please select an auction');
+      return;
+    }
+
+    const url = `/api/vendor-invoices/vendor/${selectedVendor._id}/auction/${selectedAuction}/pre-sale-pdf`;
+    window.open(url, '_blank');
+    setShowPreSaleModal(false);
+    setSelectedVendor(null);
+    setSelectedAuction('');
   };
 
   const handleDelete = async (vendorId) => {
@@ -402,6 +434,13 @@ const VendorManagement = () => {
                           title="View Details"
                         >
                           <Eye className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleOpenPreSaleModal(vendor)}
+                          className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
+                          title="Pre-Sale Vendor Advise"
+                        >
+                          <FileText className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleEdit(vendor)}
@@ -722,6 +761,77 @@ const VendorManagement = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pre-Sale Vendor Advise Modal */}
+      {showPreSaleModal && selectedVendor && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg max-w-lg w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Pre-Sale Vendor Advise</h2>
+              <button
+                onClick={() => {
+                  setShowPreSaleModal(false);
+                  setSelectedVendor(null);
+                  setSelectedAuction('');
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                Vendor: <span className="font-semibold text-gray-900 dark:text-white">{selectedVendor.name}</span>
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Code: <span className="font-semibold text-gray-900 dark:text-white">{selectedVendor.vendorCode}</span>
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Select Auction <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedAuction}
+                onChange={(e) => setSelectedAuction(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+              >
+                <option value="">Select an auction</option>
+                {auctions.map((auction) => (
+                  <option key={auction._id} value={auction._id}>
+                    {auction.auctionCode || auction.auctionNumber} - {auction.title}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                This will generate a pre-sale advise showing estimates and reserve prices for this vendor's lots in the selected auction.
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowPreSaleModal(false);
+                  setSelectedVendor(null);
+                  setSelectedAuction('');
+                }}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleGeneratePreSalePDF}
+                disabled={!selectedAuction}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Generate PDF
+              </button>
             </div>
           </div>
         </div>

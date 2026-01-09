@@ -752,6 +752,13 @@ const VendorInvoiceManagement = () => {
                         >
                           <Download className="w-5 h-5" />
                         </button>
+                        <button
+                          onClick={() => window.open(`/api/vendor-invoices/${invoice._id}/post-sale-pdf`, '_blank')}
+                          className="text-orange-600 hover:text-orange-900"
+                          title="Post-Sale Vendor Advise"
+                        >
+                          <FileText className="w-5 h-5" />
+                        </button>
                         {invoice.status !== 'Paid' && (
                           <>
                             <button
