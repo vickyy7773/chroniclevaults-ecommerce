@@ -844,7 +844,9 @@ const AuctionInvoiceManagement = () => {
 
       if (response.success) {
         // Each buyer has: buyer (user object), auctionReg (registration), lots (array of lots)
-        setAuctionBuyers(response.data || []);
+        // Filter out any entries where buyer is null to prevent errors
+        const validBuyers = (response.data || []).filter(buyerData => buyerData && buyerData.buyer);
+        setAuctionBuyers(validBuyers);
       }
     } catch (error) {
       console.error('Error fetching buyers:', error);
@@ -972,7 +974,9 @@ const AuctionInvoiceManagement = () => {
     try {
       const response = await api.get('/lot-transfer/all-buyers');
       if (response.success) {
-        setAuctionBuyers(response.data || []);
+        // Filter out any entries where buyer is null to prevent errors
+        const validBuyers = (response.data || []).filter(buyerData => buyerData && buyerData.buyer);
+        setAuctionBuyers(validBuyers);
       }
     } catch (error) {
       console.error('Error fetching buyers:', error);
