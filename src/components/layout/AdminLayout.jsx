@@ -42,6 +42,12 @@ const AdminLayout = () => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
 
+  // Notifications functionality
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
   // Get user permissions
   const { user, permissions, hasPermission, canAccessMenu, isSuperAdmin } = usePermissions();
 
@@ -380,6 +386,50 @@ const AdminLayout = () => {
     }
   };
 
+  // Fetch notifications
+  const fetchNotifications = async () => {
+    try {
+      setNotificationsLoading(true);
+      const { default: api } = await import('../../utils/api');
+      const response = await api.get('/admin-notifications/all?limit=10');
+
+      if (response.success) {
+        setNotifications(response.notifications || []);
+        setUnreadCount(response.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error('Fetch notifications error:', error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
+
+  // Mark notification as read
+  const markAsRead = async (notificationId) => {
+    try {
+      const { default: api } = await import('../../utils/api');
+      await api.patch(`/admin-notifications/${notificationId}/read`);
+
+      // Update local state
+      setNotifications(prev =>
+        prev.map(n => n._id === notificationId ? { ...n, isRead: true } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Mark as read error:', error);
+    }
+  };
+
+  // Load notifications on mount
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+      // Refresh every 30 seconds
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
@@ -658,10 +708,124 @@ const AdminLayout = () => {
               `}</style>
 
               {/* Notifications - Hidden on small mobile */}
-              <button className="hidden sm:block p-2 lg:p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative">
-                <Bell size={20} className="text-gray-600 dark:text-gray-400" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900"></span>
-              </button>
+              <div className="hidden sm:block relative">
+                <button
+                  onClick={() => {
+                    setShowNotifications(!showNotifications);
+                    if (!showNotifications) {
+                      fetchNotifications();
+                    }
+                  }}
+                  className="p-2 lg:p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
+                >
+                  <Bell size={20} className="text-gray-600 dark:text-gray-400" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notifications Dropdown */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-[500px] overflow-hidden flex flex-col">
+                    {/* Header */}
+                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                          <Bell size={18} />
+                          Notifications
+                          {unreadCount > 0 && (
+                            <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">
+                              {unreadCount}
+                            </span>
+                          )}
+                        </h3>
+                        <button
+                          onClick={() => setShowNotifications(false)}
+                          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Notifications List */}
+                    <div className="overflow-y-auto flex-1">
+                      {notificationsLoading ? (
+                        <div className="p-8 text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto"></div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading...</p>
+                        </div>
+                      ) : notifications.length === 0 ? (
+                        <div className="p-8 text-center">
+                          <Bell size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                          <p className="text-gray-500 dark:text-gray-400 font-medium">No notifications</p>
+                          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">You're all caught up!</p>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                          {notifications.map((notification) => (
+                            <button
+                              key={notification._id}
+                              onClick={() => {
+                                if (!notification.isRead) {
+                                  markAsRead(notification._id);
+                                }
+                              }}
+                              className={`w-full text-left p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
+                                !notification.isRead ? 'bg-amber-50 dark:bg-amber-900/10' : ''
+                              }`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
+                                  !notification.isRead ? 'bg-amber-500' : 'bg-gray-300 dark:bg-gray-600'
+                                }`}></div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                                    {notification.type === 'coin_limit_request' ? '💰 Coin Limit Request' : 'Notification'}
+                                  </p>
+                                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                                    {notification.message}
+                                  </p>
+                                  {notification.auctionTitle && (
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                      Auction: {notification.auctionTitle}
+                                    </p>
+                                  )}
+                                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                                    {new Date(notification.createdAt).toLocaleString('en-IN', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    {notifications.length > 0 && (
+                      <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                        <button
+                          onClick={() => {
+                            fetchNotifications();
+                          }}
+                          className="text-sm text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium w-full text-center"
+                        >
+                          Refresh Notifications
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* User Profile */}
               <div className="flex items-center gap-2 lg:gap-3 pl-2 lg:pl-3 ml-2 lg:ml-3 border-l border-gray-200 dark:border-gray-800">

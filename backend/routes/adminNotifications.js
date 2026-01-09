@@ -23,7 +23,7 @@ router.post('/request-coin-limit', protect, async (req, res) => {
       user: userId,
       userName: user.name,
       userEmail: user.email,
-      message: `${user.name} (${user.email}) ke coins khatam ho gaye hain. Remaining: ${remainingCoins} coins. User ne nayi limit ki request ki hai.`,
+      message: `${user.name} (${user.email}) has requested a coin limit increase. Current balance: ₹${remainingCoins.toLocaleString()} coins remaining.`,
       remainingCoins: remainingCoins,
       auction: auctionId || null,
       auctionTitle: auctionTitle || 'Unknown Auction',
