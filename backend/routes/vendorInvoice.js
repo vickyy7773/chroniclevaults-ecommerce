@@ -21,37 +21,21 @@ const router = express.Router();
 router.get('/vendor/:vendorId/auction/:auctionId/pre-sale-pdf', protect, async (req, res) => {
   try {
     const { vendorId, auctionId } = req.params;
-    console.log('📄 Pre-Sale PDF requested for Vendor:', vendorId, 'Auction:', auctionId);
 
     const vendor = await Vendor.findById(vendorId);
     const auction = await Auction.findById(auctionId);
 
     if (!vendor || !auction) {
-      console.log('❌ Vendor or Auction not found');
       return res.status(404).json({
         success: false,
         message: 'Vendor or Auction not found'
       });
     }
 
-    console.log('✅ Found vendor:', vendor.vendorCode, 'auction:', auction.auctionNumber);
-    console.log('📦 Total lots in auction:', auction.lots?.length || 0);
-
-    // Debug: Check first lot structure
-    if (auction.lots && auction.lots.length > 0) {
-      const firstLot = auction.lots[0];
-      console.log('🔍 First lot vendor field:', firstLot.vendor);
-      console.log('🔍 First lot vendorId field:', firstLot.vendorId);
-      console.log('🔍 Vendor code to match:', vendor.vendorCode);
-      console.log('🔍 First lot complete data:', JSON.stringify(firstLot, null, 2));
-    }
-
     // Get vendor's lots from auction - compare vendorId with vendorCode
     const vendorLots = auction.lots.filter(lot => {
       return lot.vendorId && lot.vendorId === vendor.vendorCode;
     });
-
-    console.log('📋 Vendor lots found:', vendorLots.length);
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -144,8 +128,8 @@ router.get('/vendor/:vendorId/auction/:auctionId/pre-sale-pdf', protect, async (
                 <td>${index + 1}</td>
                 <td>${lot.lotNumber}</td>
                 <td>${lot.title}</td>
-                <td>${lot.estimateLow || 0}-${lot.estimateHigh || 0}</td>
-                <td>${lot.reservePrice || ''}</td>
+                <td>₹${(lot.startingPrice || 0).toLocaleString()} - ₹${(lot.reservePrice || lot.estimatedPrice || 0).toLocaleString()}</td>
+                <td>₹${(lot.reservePrice || 0).toLocaleString()}</td>
               </tr>
             `).join('') : `
               <tr>
