@@ -125,36 +125,9 @@ const AuctionCatalog = () => {
         return;
       }
 
-      // TWO-PHASE SYSTEM: Check which phase the auction is in
-      const now = new Date();
-      const startTime = new Date(auction.startTime);
-      const endTime = auction.endTime ? new Date(auction.endTime) : null;
-
-      // DEBUG LOGGING
-      console.log('🔍 AUCTION CATALOG BUTTON CLICK - Phase Detection:', {
-        now: now.toISOString(),
-        startTime: startTime.toISOString(),
-        endTime: endTime ? endTime.toISOString() : 'NULL',
-        'now >= startTime': now >= startTime,
-        'now < endTime': endTime ? now < endTime : 'N/A',
-        'auction.status': auction.status,
-        'catalogBiddingEnabled': auction.catalogBiddingEnabled
-      });
-
-      // Determine auction phase
-      if (endTime && now >= startTime && now < endTime) {
-        // CATALOG PHASE: Navigate to catalog lots view
-        console.log('📦 Catalog phase detected - navigating to /auction/' + id);
-        navigate(`/auction/${id}`);
-      } else if (endTime && now >= endTime) {
-        // LIVE PHASE: Navigate to live bidding
-        console.log('🔴 Live phase detected - navigating to /auction-lots/' + id);
-        navigate(`/auction-lots/${id}`);
-      } else {
-        // Default: Navigate to catalog view
-        console.log('📚 Default - navigating to /auction/' + id);
-        navigate(`/auction/${id}`);
-      }
+      // Navigate to lot bidding page
+      console.log('📦 Navigating to lot bidding - /auction-lots/' + id);
+      navigate(`/auction-lots/${id}`);
     } catch (error) {
       console.error('Error checking authentication:', error);
       toast.error('Failed to verify authentication. Please try again.');
