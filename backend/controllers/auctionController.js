@@ -1250,6 +1250,7 @@ export const createAuction = async (req, res) => {
       reservePrice,
       reserveBidder,
       incrementSlabs,
+      posterDisplayUntil,
       startTime,
       endTime,
       isLotBidding,
@@ -1321,8 +1322,9 @@ export const createAuction = async (req, res) => {
       reservePrice,
       reserveBidder: reserveBidder && reserveBidder.trim() !== '' ? reserveBidder : null,
       incrementSlabs: defaultSlabs,
+      posterDisplayUntil: posterDisplayUntil ? new Date(posterDisplayUntil) : null,
       startTime: new Date(startTime),
-      // endTime removed - auction duration is now based on bidding activity via 3-phase timer
+      endTime: endTime ? new Date(endTime) : null,
       isThreePhaseTimerEnabled: isThreePhaseTimerEnabled !== undefined ? isThreePhaseTimerEnabled : true
     };
 
@@ -1432,6 +1434,7 @@ export const updateAuction = async (req, res) => {
       'startingPrice',
       'reservePrice',
       'incrementSlabs',
+      'posterDisplayUntil',
       'startTime',
       'endTime',
       'status',
