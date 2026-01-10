@@ -43,6 +43,7 @@ router.get('/vendor/:vendorId/auction/:auctionId/pre-sale-pdf', protect, async (
       console.log('🔍 First lot vendor field:', firstLot.vendor);
       console.log('🔍 First lot vendorId field:', firstLot.vendorId);
       console.log('🔍 Vendor code to match:', vendor.vendorCode);
+      console.log('🔍 First lot complete data:', JSON.stringify(firstLot, null, 2));
     }
 
     // Get vendor's lots from auction - compare vendorId with vendorCode
