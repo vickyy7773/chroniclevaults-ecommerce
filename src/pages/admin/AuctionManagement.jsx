@@ -220,6 +220,16 @@ const AuctionManagement = () => {
     try {
       let submitData = { ...formData };
 
+      // Validate that endTime is after startTime
+      if (submitData.startTime && submitData.endTime) {
+        const start = new Date(submitData.startTime);
+        const end = new Date(submitData.endTime);
+        if (end <= start) {
+          toast.error('Live Bidding Start Time must be after Lot Bidding Start Time');
+          return;
+        }
+      }
+
       // Convert datetime-local values to ISO strings
       if (submitData.startTime) {
         submitData.startTime = new Date(submitData.startTime).toISOString();
@@ -1298,7 +1308,7 @@ const AuctionManagement = () => {
                     </>
                   )}
 
-                  {/* Common Fields */}
+                  {/* Time Fields - Simple */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1312,9 +1322,7 @@ const AuctionManagement = () => {
                         required
                         className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
-                      <p className="text-xs text-blue-600 mt-1 font-medium">
-                        📦 Catalog/Online bidding starts from this time
-                      </p>
+                      <p className="text-xs text-blue-600 mt-1">Online catalog bidding starts</p>
                     </div>
 
                     <div>
@@ -1329,60 +1337,8 @@ const AuctionManagement = () => {
                         required
                         className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                       />
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (formData.startTime) {
-                              const startDate = new Date(formData.startTime);
-                              const endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-                              const endTimeString = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
-                              setFormData(prev => ({ ...prev, endTime: endTimeString }));
-                            }
-                          }}
-                          className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                        >
-                          +7 Days
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (formData.startTime) {
-                              const startDate = new Date(formData.startTime);
-                              const endDate = new Date(startDate.getTime() + 15 * 24 * 60 * 60 * 1000);
-                              const endTimeString = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
-                              setFormData(prev => ({ ...prev, endTime: endTimeString }));
-                            }
-                          }}
-                          className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
-                        >
-                          +15 Days
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (formData.startTime) {
-                              const startDate = new Date(formData.startTime);
-                              const endDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
-                              const endTimeString = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
-                              setFormData(prev => ({ ...prev, endTime: endTimeString }));
-                            }
-                          }}
-                          className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
-                        >
-                          +30 Days
-                        </button>
-                      </div>
-                      <p className="text-xs text-green-600 mt-1 font-medium">
-                        🔴 Physical/Live bidding starts from this time
-                      </p>
+                      <p className="text-xs text-green-600 mt-1">Physical live auction starts</p>
                     </div>
-                  </div>
-
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                    <p className="text-sm text-amber-800">
-                      <strong>ℹ️ Two-Phase Bidding:</strong> From <strong>Lot Bidding Start</strong> to <strong>Live Bidding Start</strong>: Online catalog bidding. After <strong>Live Bidding Start</strong>: Physical live auction begins.
-                    </p>
                   </div>
                 </div>
 
