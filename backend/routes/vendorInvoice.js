@@ -60,6 +60,19 @@ router.get('/vendor/:vendorId/auction/:auctionId/pre-sale-pdf', protect, async (
           .sign-box { text-align: center; }
           .sign-line { border-top: 1px solid #000; width: 200px; margin-top: 50px; padding-top: 5px; }
           .footer { margin-top: 20px; border-top: 1px solid #000; padding-top: 10px; font-size: 9px; }
+
+          /* Print-specific styles */
+          @media print {
+            body { padding: 10px; }
+            .header { page-break-after: avoid; }
+            .logo { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .company-name { color: #d35400 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .title { color: red !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            th { background-color: #f0f0f0 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .totals { background-color: #f0f0f0 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            table { page-break-inside: avoid; }
+            .signature-section { page-break-before: avoid; margin-top: 30px; }
+          }
         </style>
       </head>
       <body>
@@ -194,6 +207,19 @@ router.get('/:id/post-sale-pdf', protect, async (req, res) => {
           .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
           .sign-box { text-align: center; }
           .sign-line { border-top: 1px solid #000; width: 200px; margin-top: 50px; padding-top: 5px; }
+
+          /* Print-specific styles */
+          @media print {
+            body { padding: 10px; }
+            .header { page-break-after: avoid; }
+            .logo { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .company-name { color: #d35400 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .title { color: red !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            th { background-color: #f0f0f0 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .totals { background-color: #f0f0f0 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            table { page-break-inside: avoid; }
+            .signature-section { page-break-before: avoid; margin-top: 30px; }
+          }
         </style>
       </head>
       <body>
