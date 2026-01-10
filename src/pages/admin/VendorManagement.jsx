@@ -212,7 +212,8 @@ const VendorManagement = () => {
       return;
     }
 
-    const url = `/api/vendor-invoices/vendor/${selectedVendor._id}/auction/${selectedAuction}/pre-sale-pdf`;
+    const token = localStorage.getItem('token');
+    const url = `/api/vendor-invoices/vendor/${selectedVendor._id}/auction/${selectedAuction}/pre-sale-pdf${token ? `?token=${token}` : ''}`;
     window.open(url, '_blank');
     setShowPreSaleModal(false);
     setSelectedVendor(null);
