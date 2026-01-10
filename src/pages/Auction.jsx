@@ -50,8 +50,20 @@ const AuctionPage = () => {
       // Check if catalog bidding is enabled
       const isCatalogEnabled = auction.catalogBiddingEnabled === true;
 
+      // DEBUG LOGGING
+      console.log('🔍 PHASE DETECTION DEBUG:', {
+        now: now.toISOString(),
+        startTime: startTime.toISOString(),
+        endTime: endTime ? endTime.toISOString() : 'NULL',
+        isCatalogEnabled,
+        'now >= startTime': now >= startTime,
+        'now < endTime': endTime ? now < endTime : 'N/A',
+        'auction.status': auction.status
+      });
+
       if (now >= startTime && endTime && now < endTime && isCatalogEnabled) {
         // Catalog Phase: Between startTime and endTime (catalog bidding period)
+        console.log('📦 CATALOG PHASE DETECTED');
         setAuctionPhase('catalog');
 
         // Calculate time remaining until live auction starts
@@ -69,12 +81,15 @@ const AuctionPage = () => {
         }
       } else if (endTime && now >= endTime) {
         // Live Phase: After endTime (live/physical auction in progress)
+        console.log('🔴 LIVE PHASE DETECTED');
         setAuctionPhase('live');
       } else if (auction.status === 'Ended') {
         // Ended Phase
+        console.log('🏁 ENDED PHASE DETECTED');
         setAuctionPhase('ended');
       } else {
         // Default to catalog if before startTime or no endTime set
+        console.log('📚 DEFAULT TO CATALOG PHASE');
         setAuctionPhase('catalog');
       }
     };
