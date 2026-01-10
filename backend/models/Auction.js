@@ -61,6 +61,10 @@ const auctionSchema = new mongoose.Schema({
       required: true
     }
   }],
+  posterDisplayUntil: {
+    type: Date,
+    required: false // Time until auction shows as "Upcoming" (poster only)
+  },
   startTime: {
     type: Date,
     required: true
@@ -72,7 +76,7 @@ const auctionSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['Upcoming', 'Active', 'Ended', 'Cancelled'],
-    default: 'Active'
+    default: 'Upcoming'
   },
   bids: [{
     user: {
@@ -392,10 +396,15 @@ auctionSchema.methods.updateStatus = async function() {
   const now = new Date();
   const previousStatus = this.status;
 
-  // Auction is always Active until it ends (no Upcoming status)
-  if (now >= this.endTime) {
+  // Check posterDisplayUntil first (if set)
+  if (this.posterDisplayUntil && now < this.posterDisplayUntil) {
+    // Before posterDisplayUntil: Show as Upcoming (poster only)
+    this.status = 'Upcoming';
+  } else if (now >= this.endTime) {
+    // After endTime: Auction ended
     this.status = 'Ended';
   } else {
+    // Between posterDisplayUntil and endTime: Active (lot bidding available)
     this.status = 'Active';
 
     // FOR LOT BIDDING: Activate first lot when auction becomes active

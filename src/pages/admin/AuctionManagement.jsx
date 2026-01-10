@@ -20,6 +20,7 @@ const AuctionManagement = () => {
     highlightImage: '',
     startingPrice: '',
     reservePrice: '',
+    posterDisplayUntil: '',
     startTime: '',
     endTime: '',
     isLotBidding: false,
@@ -221,6 +222,9 @@ const AuctionManagement = () => {
       let submitData = { ...formData };
 
       // Convert datetime-local values to ISO strings
+      if (submitData.posterDisplayUntil) {
+        submitData.posterDisplayUntil = new Date(submitData.posterDisplayUntil).toISOString();
+      }
       if (submitData.startTime) {
         submitData.startTime = new Date(submitData.startTime).toISOString();
       }
@@ -333,6 +337,8 @@ const AuctionManagement = () => {
       category: lot.category || 'Miscellaneous' // Add category if missing
     }));
 
+    const posterDisplayUntilIST = auction.posterDisplayUntil ? new Date(auction.posterDisplayUntil) : null;
+
     setFormData({
       productId: auction.product?._id || '',
       title: auction.title,
@@ -341,6 +347,7 @@ const AuctionManagement = () => {
       highlightImage: auction.highlightImage || '',
       startingPrice: auction.startingPrice,
       reservePrice: auction.reservePrice || '',
+      posterDisplayUntil: posterDisplayUntilIST ? formatDateTimeLocal(posterDisplayUntilIST) : '',
       startTime: formatDateTimeLocal(startTimeIST),
       endTime: endTimeIST ? formatDateTimeLocal(endTimeIST) : '',
       isLotBidding: auction.isLotBidding || false,
@@ -378,6 +385,7 @@ const AuctionManagement = () => {
       startingPrice: '',
       reservePrice: '',
       reserveBidder: '',
+      posterDisplayUntil: '',
       startTime: '',
       endTime: '',
       isLotBidding: false,
@@ -1296,10 +1304,28 @@ const AuctionManagement = () => {
                     </>
                   )}
 
-                  {/* Start Time */}
+                  {/* Poster Display Until (Upcoming Period) */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Start Time <span className="text-red-500">*</span>
+                      Poster Display Until <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="posterDisplayUntil"
+                      value={formData.posterDisplayUntil}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Auction will show as "Upcoming" (poster only) until this time
+                    </p>
+                  </div>
+
+                  {/* Start Time (Lot Bidding Starts) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Lot Bidding Start Time <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="datetime-local"
@@ -1309,6 +1335,9 @@ const AuctionManagement = () => {
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Auction will become "Active" and lot bidding will start at this time
+                    </p>
                   </div>
                 </div>
 
