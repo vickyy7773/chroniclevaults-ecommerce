@@ -216,8 +216,6 @@ router.get('/:id/post-sale-pdf', protect, async (req, res) => {
               <th>Lot No.</th>
               <th>Description</th>
               <th>Hammer Price (₹)</th>
-              <th>Commission ${invoice.vendorDetails.commissionPercentage}% (₹)</th>
-              <th>Net Payable (₹)</th>
             </tr>
           </thead>
           <tbody>
@@ -227,19 +225,11 @@ router.get('/:id/post-sale-pdf', protect, async (req, res) => {
                 <td>${lot.lotNumber}</td>
                 <td>${lot.description}</td>
                 <td>₹${lot.hammerPrice.toLocaleString()}</td>
-                <td>₹${lot.commissionAmount.toLocaleString()}</td>
-                <td>₹${lot.netPayable.toLocaleString()}</td>
               </tr>
             `).join('')}
             <tr class="totals">
-              <td colspan="3">Total</td>
+              <td colspan="3">Total Hammer Price</td>
               <td>₹${invoice.amounts.totalHammerPrice.toLocaleString()}</td>
-              <td>₹${invoice.amounts.totalCommission.toLocaleString()}</td>
-              <td>₹${invoice.amounts.totalNetPayable.toLocaleString()}</td>
-            </tr>
-            <tr class="totals">
-              <td colspan="5">Final Payable to Vendor</td>
-              <td>₹${invoice.amounts.finalPayable.toLocaleString()}</td>
             </tr>
           </tbody>
         </table>
