@@ -65,51 +65,85 @@ const VendorAdvise = () => {
         return;
       }
 
-      // Prepare Excel data
-      const excelData = vendorLots.map((lot, index) => ({
-        'Sr.No.': index + 1,
-        'Lot No.': lot.lotNumber,
-        'Description': lot.title,
-        'Estimate Low': lot.estimateLow || 0,
-        'Estimate High': lot.estimateHigh || 0,
-        'Reserve Price': lot.reservePrice || ''
-      }));
+      // Create data array for Excel
+      const data = [];
+
+      // Header Section
+      data.push(['Chronicle Vaults - A Brand Of Urhistory', '', '', '', '']);
+      data.push(['16/189, Netajinagar, Meghaninagar,', '', '', '', '']);
+      data.push(['Ahmedabad - 380016,', '', '', '', '']);
+      data.push(['Gujarat.', '', '', '', '']);
+      data.push(['M:- 8460849878, E-mail:- chroniclevaults@gmail.com', '', '', '', '']);
+      data.push(['', '', '', '', '']);
+
+      // Title
+      data.push(['Pre-Sale Vendor Advise', '', '', '', '']);
+      data.push(['', '', '', '', '']);
+
+      // Vendor Details - Left side and Right side
+      data.push([`Vendor Code: ${vendor.vendorCode}`, '', '', `Auction No: ${auction.auctionNumber || auction.auctionCode || 'N/A'}`, '']);
+      data.push([`Name: ${vendor.name}`, '', '', `Date: ${new Date().toLocaleDateString('en-IN')}`, '']);
+      data.push([`Address: ${vendor.address || 'N/A'}`, '', '', `Vendor: ${auction.title}`, '']);
+      data.push([`${vendor.city || ''}, ${vendor.state || 'Gujarat'}`, '', '', '', '']);
+      data.push([`State: ${vendor.state || 'Gujarat'} pincode: ${vendor.pincode || ''}`, '', '', '', '']);
+      data.push([`Email: ${vendor.email || 'N/A'} M:- ${vendor.mobile || 'N/A'}`, '', '', '', '']);
+      data.push(['', '', '', '', '']);
+
+      // Table Header
+      data.push(['Sr.NO.', 'Lot No.', 'Description', 'Estimate', 'Reserve Price']);
+
+      // Lot Data
+      vendorLots.forEach((lot, index) => {
+        data.push([
+          index + 1,
+          lot.lotNumber,
+          lot.title,
+          `${lot.estimateLow || 0}-${lot.estimateHigh || 0}`,
+          lot.reservePrice || ''
+        ]);
+      });
+
+      // Add empty rows for spacing (at least 10 more rows for printing)
+      for (let i = 0; i < (15 - vendorLots.length); i++) {
+        data.push(['', '', '', '', '']);
+      }
+
+      // Total row
+      data.push(['Total', '', '', '', '']);
+      data.push(['', '', '', '', '']);
+
+      // Signature Section
+      data.push(["Receiver's Sign :", '', '', 'For,Chornicle Vaults', '']);
+      data.push(['Date :', '', '', '', '']);
+      data.push(['', '', '', 'Auth. Signatory', '']);
+      data.push(['', '', '', '', '']);
+
+      // Footer
+      data.push(['Thank You for your Participation in our Auction Subject To Ahmedabad Jurisdiction', '', '', '', '']);
+      data.push(['', '', '', '', '']);
+      data.push(['GST No: Chornicle Vaults', '', '', 'Antiqes Trading Licence No', '']);
+      data.push(['Statutory Warning:', '', '', '', '']);
+      data.push(['Antiques over 100 years old cannot be taken out of India without the permission of the', '', '', '', '']);
+      data.push(['Director General, Archaeological Survey of India, Janpath, New Delhi 110011.', '', '', '', '']);
 
       // Create worksheet
-      const ws = XLSX.utils.json_to_sheet(excelData);
+      const ws = XLSX.utils.aoa_to_sheet(data);
 
       // Set column widths
       ws['!cols'] = [
-        { wch: 8 },  // Sr.No.
-        { wch: 10 }, // Lot No.
-        { wch: 50 }, // Description
-        { wch: 15 }, // Estimate Low
-        { wch: 15 }, // Estimate High
-        { wch: 15 }  // Reserve Price
+        { wch: 12 },  // Sr.NO.
+        { wch: 12 },  // Lot No.
+        { wch: 45 },  // Description
+        { wch: 18 },  // Estimate
+        { wch: 15 }   // Reserve Price
       ];
 
-      // Create workbook
+      // Create workbook and add worksheet
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Pre-Sale Advise');
-
-      // Add vendor info sheet
-      const infoData = [
-        { Field: 'Vendor Code', Value: vendor.vendorCode },
-        { Field: 'Vendor Name', Value: vendor.name },
-        { Field: 'Email', Value: vendor.email || 'N/A' },
-        { Field: 'Mobile', Value: vendor.mobile || 'N/A' },
-        { Field: 'Auction', Value: auction.title },
-        { Field: 'Auction Code', Value: auction.auctionCode || 'N/A' },
-        { Field: 'Total Lots', Value: vendorLots.length },
-        { Field: 'Date', Value: new Date().toLocaleDateString('en-IN') }
-      ];
-
-      const infoWs = XLSX.utils.json_to_sheet(infoData);
-      infoWs['!cols'] = [{ wch: 20 }, { wch: 40 }];
-      XLSX.utils.book_append_sheet(wb, infoWs, 'Vendor Info');
+      XLSX.utils.book_append_sheet(wb, ws, 'Pre-Sale Vendor Advise');
 
       // Download file
-      const fileName = `PreSale_${vendor.vendorCode}_${auction.auctionCode}_${new Date().getTime()}.xlsx`;
+      const fileName = `PreSale_Vendor_Advise_${vendor.vendorCode}_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.xlsx`;
       XLSX.writeFile(wb, fileName);
 
       toast.success('Pre-Sale Vendor Advise downloaded successfully!');
@@ -145,87 +179,96 @@ const VendorAdvise = () => {
 
       const invoice = response.data[0];
 
-      // Prepare Excel data
-      const excelData = invoice.lots.map((lot, index) => ({
-        'Sr.No.': index + 1,
-        'Lot No.': lot.lotNumber,
-        'Description': lot.description,
-        'Hammer Price': lot.hammerPrice,
-        'Commission %': lot.commissionRate,
-        'Commission Amount': lot.commissionAmount,
-        'Net Payable': lot.netPayable
-      }));
+      // Create data array for Excel
+      const data = [];
 
-      // Add totals row
-      excelData.push({
-        'Sr.No.': '',
-        'Lot No.': '',
-        'Description': 'TOTAL',
-        'Hammer Price': invoice.amounts.totalHammerPrice,
-        'Commission %': '',
-        'Commission Amount': invoice.amounts.totalCommission,
-        'Net Payable': invoice.amounts.totalNetPayable
+      // Header Section
+      data.push(['Chronicle Vaults - A Brand Of Urhistory', '', '', '', '', '', '']);
+      data.push(['16/189, Netajinagar, Meghaninagar, Ahmedabad - 380016, Gujarat', '', '', '', '', '', '']);
+      data.push(['M:- 8460849878, E-mail:- chroniclevaults@gmail.com', '', '', '', '', '', '']);
+      data.push(['', '', '', '', '', '', '']);
+
+      // Title
+      data.push(['Post-Sale Vendor Advise', '', '', '', '', '', '']);
+      data.push(['', '', '', '', '', '', '']);
+
+      // Invoice Details
+      data.push([`Invoice No: ${invoice.invoiceNumber || 'N/A'}`, '', '', `Date: ${new Date(invoice.invoiceDate).toLocaleDateString('en-IN')}`, '', '', '']);
+      data.push([`Vendor Code: ${invoice.vendorDetails?.vendorCode || 'N/A'}`, '', '', `Commission: ${invoice.vendorDetails?.commissionPercentage || 0}%`, '', '', '']);
+      data.push([`Vendor Name: ${invoice.vendorDetails?.name || 'N/A'}`, '', '', `Payment Status: ${invoice.isPaid ? 'PAID' : 'PENDING'}`, '', '', '']);
+      data.push([`Email: ${invoice.vendorDetails?.email || 'N/A'}`, '', '', `Mobile: ${invoice.vendorDetails?.mobile || 'N/A'}`, '', '', '']);
+      data.push(['', '', '', '', '', '', '']);
+
+      // Table Header
+      data.push(['Sr.No.', 'Lot No.', 'Description', 'Hammer Price', 'Commission %', 'Commission Amt', 'Net Payable']);
+
+      // Lot Data
+      invoice.lots.forEach((lot, index) => {
+        data.push([
+          index + 1,
+          lot.lotNumber,
+          lot.description,
+          lot.hammerPrice,
+          lot.commissionRate,
+          lot.commissionAmount,
+          lot.netPayable
+        ]);
       });
 
-      excelData.push({
-        'Sr.No.': '',
-        'Lot No.': '',
-        'Description': 'FINAL PAYABLE',
-        'Hammer Price': '',
-        'Commission %': '',
-        'Commission Amount': '',
-        'Net Payable': invoice.amounts.finalPayable
-      });
+      // Add empty rows for spacing
+      for (let i = 0; i < (10 - invoice.lots.length); i++) {
+        data.push(['', '', '', '', '', '', '']);
+      }
+
+      // Totals
+      data.push(['', '', 'TOTAL', invoice.amounts.totalHammerPrice, '', invoice.amounts.totalCommission, invoice.amounts.totalNetPayable]);
+      data.push(['', '', '', '', '', '', '']);
+      data.push(['', '', 'FINAL PAYABLE', '', '', '', invoice.amounts.finalPayable]);
+      data.push(['', '', '', '', '', '', '']);
+
+      // Bank Details (if available)
+      if (invoice.bankDetails?.accountNumber) {
+        data.push(['BANK PAYMENT DETAILS:', '', '', '', '', '', '']);
+        data.push([`Account Holder: ${invoice.bankDetails.accountHolderName || 'N/A'}`, '', '', '', '', '', '']);
+        data.push([`Account Number: ${invoice.bankDetails.accountNumber}`, '', '', '', '', '', '']);
+        data.push([`IFSC Code: ${invoice.bankDetails.ifscCode || 'N/A'}`, '', '', `Bank: ${invoice.bankDetails.bankName || 'N/A'}`, '', '', '']);
+        data.push([`Branch: ${invoice.bankDetails.branchName || 'N/A'}`, '', '', '', '', '', '']);
+        data.push(['', '', '', '', '', '', '']);
+      }
+
+      // Signature Section
+      data.push(["Receiver's Sign :", '', '', 'For, Chronicle Vaults - A Brand of Urhistory', '', '', '']);
+      data.push(['Date :', '', '', '', '', '', '']);
+      data.push(['', '', '', 'Auth. Signatory', '', '', '']);
+      data.push(['', '', '', '', '', '', '']);
+
+      // Footer
+      data.push(['Thank You for your Participation in our Auction Subject To Ahmedabad Jurisdiction', '', '', '', '', '', '']);
+      data.push(['GST No: Chronicle Vaults', '', '', 'Antiques Trading Licence No:', '', '', '']);
+      data.push(['Statutory Warning:', '', '', '', '', '', '']);
+      data.push(['Antiques over 100 years old cannot be taken out of India without the permission of the', '', '', '', '', '', '']);
+      data.push(['Director General, Archaeological Survey of India, Janpath, New Delhi 110011.', '', '', '', '', '', '']);
 
       // Create worksheet
-      const ws = XLSX.utils.json_to_sheet(excelData);
+      const ws = XLSX.utils.aoa_to_sheet(data);
 
       // Set column widths
       ws['!cols'] = [
-        { wch: 8 },  // Sr.No.
-        { wch: 10 }, // Lot No.
-        { wch: 50 }, // Description
-        { wch: 15 }, // Hammer Price
-        { wch: 12 }, // Commission %
-        { wch: 18 }, // Commission Amount
-        { wch: 15 }  // Net Payable
+        { wch: 10 },  // Sr.No.
+        { wch: 12 },  // Lot No.
+        { wch: 40 },  // Description
+        { wch: 15 },  // Hammer Price
+        { wch: 12 },  // Commission %
+        { wch: 15 },  // Commission Amount
+        { wch: 15 }   // Net Payable
       ];
 
-      // Create workbook
+      // Create workbook and add worksheet
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Post-Sale Advise');
-
-      // Add vendor info sheet
-      const infoData = [
-        { Field: 'Invoice Number', Value: invoice.invoiceNumber },
-        { Field: 'Invoice Date', Value: new Date(invoice.invoiceDate).toLocaleDateString('en-IN') },
-        { Field: 'Vendor Code', Value: invoice.vendorDetails.vendorCode },
-        { Field: 'Vendor Name', Value: invoice.vendorDetails.name },
-        { Field: 'Email', Value: invoice.vendorDetails.email || 'N/A' },
-        { Field: 'Mobile', Value: invoice.vendorDetails.mobile || 'N/A' },
-        { Field: 'Commission %', Value: invoice.vendorDetails.commissionPercentage + '%' },
-        { Field: 'Total Lots', Value: invoice.lots.length },
-        { Field: 'Payment Status', Value: invoice.isPaid ? 'PAID' : 'PENDING' }
-      ];
-
-      if (invoice.bankDetails?.accountNumber) {
-        infoData.push(
-          { Field: '', Value: '' },
-          { Field: 'BANK DETAILS', Value: '' },
-          { Field: 'Account Holder', Value: invoice.bankDetails.accountHolderName || 'N/A' },
-          { Field: 'Account Number', Value: invoice.bankDetails.accountNumber },
-          { Field: 'IFSC Code', Value: invoice.bankDetails.ifscCode || 'N/A' },
-          { Field: 'Bank Name', Value: invoice.bankDetails.bankName || 'N/A' },
-          { Field: 'Branch', Value: invoice.bankDetails.branchName || 'N/A' }
-        );
-      }
-
-      const infoWs = XLSX.utils.json_to_sheet(infoData);
-      infoWs['!cols'] = [{ wch: 25 }, { wch: 40 }];
-      XLSX.utils.book_append_sheet(wb, infoWs, 'Invoice Info');
+      XLSX.utils.book_append_sheet(wb, ws, 'Post-Sale Vendor Advise');
 
       // Download file
-      const fileName = `PostSale_${invoice.vendorDetails.vendorCode}_${invoice.invoiceNumber}_${new Date().getTime()}.xlsx`;
+      const fileName = `PostSale_Vendor_Advise_${invoice.vendorDetails.vendorCode}_${new Date().toLocaleDateString('en-IN').replace(/\//g, '-')}.xlsx`;
       XLSX.writeFile(wb, fileName);
 
       toast.success('Post-Sale Vendor Advise downloaded successfully!');
