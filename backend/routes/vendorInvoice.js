@@ -37,10 +37,19 @@ router.get('/vendor/:vendorId/auction/:auctionId/pre-sale-pdf', protect, async (
     console.log('✅ Found vendor:', vendor.vendorCode, 'auction:', auction.auctionNumber);
     console.log('📦 Total lots in auction:', auction.lots?.length || 0);
 
-    // Get vendor's lots from auction
-    const vendorLots = auction.lots.filter(lot =>
-      lot.vendor && lot.vendor.toString() === vendorId
-    );
+    // Debug: Check first lot structure
+    if (auction.lots && auction.lots.length > 0) {
+      const firstLot = auction.lots[0];
+      console.log('🔍 First lot vendor field:', firstLot.vendor);
+      console.log('🔍 First lot vendorId field:', firstLot.vendorId);
+      console.log('🔍 First lot all fields:', Object.keys(firstLot));
+    }
+
+    // Get vendor's lots from auction - try both vendor and vendorId fields
+    const vendorLots = auction.lots.filter(lot => {
+      const lotVendorId = lot.vendor?.toString() || lot.vendorId?.toString();
+      return lotVendorId && lotVendorId === vendorId;
+    });
 
     console.log('📋 Vendor lots found:', vendorLots.length);
 
