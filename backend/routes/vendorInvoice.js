@@ -21,21 +21,28 @@ const router = express.Router();
 router.get('/vendor/:vendorId/auction/:auctionId/pre-sale-pdf', protect, async (req, res) => {
   try {
     const { vendorId, auctionId } = req.params;
+    console.log('📄 Pre-Sale PDF requested for Vendor:', vendorId, 'Auction:', auctionId);
 
     const vendor = await Vendor.findById(vendorId);
     const auction = await Auction.findById(auctionId);
 
     if (!vendor || !auction) {
+      console.log('❌ Vendor or Auction not found');
       return res.status(404).json({
         success: false,
         message: 'Vendor or Auction not found'
       });
     }
 
+    console.log('✅ Found vendor:', vendor.vendorCode, 'auction:', auction.auctionNumber);
+    console.log('📦 Total lots in auction:', auction.lots?.length || 0);
+
     // Get vendor's lots from auction
     const vendorLots = auction.lots.filter(lot =>
       lot.vendor && lot.vendor.toString() === vendorId
     );
+
+    console.log('📋 Vendor lots found:', vendorLots.length);
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -123,7 +130,7 @@ router.get('/vendor/:vendorId/auction/:auctionId/pre-sale-pdf', protect, async (
             </tr>
           </thead>
           <tbody>
-            ${vendorLots.map((lot, index) => `
+            ${vendorLots.length > 0 ? vendorLots.map((lot, index) => `
               <tr>
                 <td>${index + 1}</td>
                 <td>${lot.lotNumber}</td>
@@ -131,11 +138,19 @@ router.get('/vendor/:vendorId/auction/:auctionId/pre-sale-pdf', protect, async (
                 <td>${lot.estimateLow || 0}-${lot.estimateHigh || 0}</td>
                 <td>${lot.reservePrice || ''}</td>
               </tr>
-            `).join('')}
+            `).join('') : `
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
+                  No lots found for this vendor in this auction
+                </td>
+              </tr>
+            `}
+            ${vendorLots.length > 0 ? `
             <tr>
               <td colspan="3"><strong>Total</strong></td>
               <td colspan="2"></td>
             </tr>
+            ` : ''}
           </tbody>
         </table>
 
