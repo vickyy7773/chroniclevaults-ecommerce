@@ -46,6 +46,9 @@ router.get('/vendor/:vendorId/auction/:auctionId/pre-sale-pdf', protect, async (
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; font-size: 11px; padding: 15px; }
           .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+          .header-content { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
+          .logo { height: 60px; width: auto; }
+          .company-info { text-align: left; }
           .company-name { font-size: 16px; font-weight: bold; color: #d35400; }
           .tagline { font-size: 10px; margin: 5px 0; }
           .title { text-align: center; font-size: 14px; font-weight: bold; color: red; margin: 15px 0; }
@@ -61,9 +64,14 @@ router.get('/vendor/:vendorId/auction/:auctionId/pre-sale-pdf', protect, async (
       </head>
       <body>
         <div class="header">
-          <div class="company-name">Chronicle Vaults - A Brand of Urhistory</div>
-          <div class="tagline">16/189, Netajinagar, Meghaninagar, Ahmedabad - 380016, Gujarat</div>
-          <div class="tagline">M:- 8460849878, E-mail:- chroniclevaults@gmail.com</div>
+          <div class="header-content">
+            <img src="https://chroniclevaults.com/assets/new%20logo-5e7e59a2.png" alt="Chronicle Vaults Logo" class="logo" />
+            <div class="company-info">
+              <div class="company-name">Chronicle Vaults - A Brand of Urhistory</div>
+              <div class="tagline">16/189, Netajinagar, Meghaninagar, Ahmedabad - 380016, Gujarat</div>
+              <div class="tagline">M:- 8460849878, E-mail:- chroniclevaults@gmail.com</div>
+            </div>
+          </div>
         </div>
 
         <div class="title">Pre-Sale Vendor Advise</div>
@@ -172,6 +180,9 @@ router.get('/:id/post-sale-pdf', protect, async (req, res) => {
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; font-size: 11px; padding: 15px; }
           .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+          .header-content { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
+          .logo { height: 60px; width: auto; }
+          .company-info { text-align: left; }
           .company-name { font-size: 16px; font-weight: bold; color: #d35400; }
           .tagline { font-size: 10px; margin: 5px 0; }
           .title { text-align: center; font-size: 14px; font-weight: bold; color: red; margin: 15px 0; }
@@ -187,9 +198,14 @@ router.get('/:id/post-sale-pdf', protect, async (req, res) => {
       </head>
       <body>
         <div class="header">
-          <div class="company-name">Chronicle Vaults - A Brand of Urhistory</div>
-          <div class="tagline">16/189, Netajinagar, Meghaninagar, Ahmedabad - 380016, Gujarat</div>
-          <div class="tagline">M:- 8460849878, E-mail:- chroniclevaults@gmail.com</div>
+          <div class="header-content">
+            <img src="https://chroniclevaults.com/assets/new%20logo-5e7e59a2.png" alt="Chronicle Vaults Logo" class="logo" />
+            <div class="company-info">
+              <div class="company-name">Chronicle Vaults - A Brand of Urhistory</div>
+              <div class="tagline">16/189, Netajinagar, Meghaninagar, Ahmedabad - 380016, Gujarat</div>
+              <div class="tagline">M:- 8460849878, E-mail:- chroniclevaults@gmail.com</div>
+            </div>
+          </div>
         </div>
 
         <div class="title">Post-Sale Vendor Advise</div>
