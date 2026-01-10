@@ -125,8 +125,24 @@ const AuctionCatalog = () => {
         return;
       }
 
-      // User is verified, proceed to bidding
-      navigate(`/auction-lots/${id}`);
+      // TWO-PHASE SYSTEM: Check which phase the auction is in
+      const now = new Date();
+      const startTime = new Date(auction.startTime);
+      const endTime = auction.endTime ? new Date(auction.endTime) : null;
+
+      // Determine auction phase
+      if (endTime && now >= startTime && now < endTime) {
+        // CATALOG PHASE: Navigate to catalog lots view
+        console.log('📦 Catalog phase - navigating to catalog view');
+        navigate(`/auction/${id}`);
+      } else if (endTime && now >= endTime) {
+        // LIVE PHASE: Navigate to live bidding
+        console.log('🔴 Live phase - navigating to live bidding');
+        navigate(`/auction-lots/${id}`);
+      } else {
+        // Default: Navigate to catalog view
+        navigate(`/auction/${id}`);
+      }
     } catch (error) {
       console.error('Error checking authentication:', error);
       toast.error('Failed to verify authentication. Please try again.');
@@ -498,13 +514,27 @@ const AuctionCatalog = () => {
                 <p className="text-gray-500 text-center py-8">No lots available</p>
               )}
 
-              {/* View Auction Button */}
+              {/* View Auction Button - Phase Aware */}
               <button
                 onClick={handleStartBidding}
                 className="w-full mt-6 px-4 py-3 bg-accent-600 text-white rounded-lg hover:bg-accent-700 transition-colors flex items-center justify-center gap-2 font-semibold"
               >
                 <Gavel className="w-5 h-5" />
-                <span>Start Bidding</span>
+                <span>
+                  {(() => {
+                    const now = new Date();
+                    const startTime = new Date(auction.startTime);
+                    const endTime = auction.endTime ? new Date(auction.endTime) : null;
+
+                    if (endTime && now >= startTime && now < endTime) {
+                      return 'Browse Lots (Catalog)';
+                    } else if (endTime && now >= endTime) {
+                      return 'Start Live Bidding';
+                    } else {
+                      return 'View Lots';
+                    }
+                  })()}
+                </span>
               </button>
             </div>
           </div>

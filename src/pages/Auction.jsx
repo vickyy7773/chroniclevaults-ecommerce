@@ -36,6 +36,9 @@ const AuctionPage = () => {
   const [coinLimitRequested, setCoinLimitRequested] = useState(false);
 
   // Phase Detection: Determine if auction is in Catalog or Live phase
+  // TWO-PHASE SYSTEM:
+  // - startTime = Catalog/Online bidding start time
+  // - endTime = Live/Physical bidding start time
   useEffect(() => {
     if (!auction) return;
 
@@ -47,29 +50,32 @@ const AuctionPage = () => {
       // Check if catalog bidding is enabled
       const isCatalogEnabled = auction.catalogBiddingEnabled === true;
 
-      if (now < startTime && isCatalogEnabled) {
-        // Catalog Phase: Before start time with catalog enabled
+      if (now >= startTime && endTime && now < endTime && isCatalogEnabled) {
+        // Catalog Phase: Between startTime and endTime (catalog bidding period)
         setAuctionPhase('catalog');
 
-        // Calculate time remaining until live auction
-        const diff = startTime - now;
+        // Calculate time remaining until live auction starts
+        const diff = endTime - now;
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
         if (days > 0) {
-          setCatalogTimeRemaining(`${days}d ${hours}h ${minutes}m`);
+          setCatalogTimeRemaining(`${days}d ${hours}h ${minutes}m until live bidding`);
         } else if (hours > 0) {
-          setCatalogTimeRemaining(`${hours}h ${minutes}m`);
+          setCatalogTimeRemaining(`${hours}h ${minutes}m until live bidding`);
         } else {
-          setCatalogTimeRemaining(`${minutes}m`);
+          setCatalogTimeRemaining(`${minutes}m until live bidding`);
         }
-      } else if (now >= startTime && (!endTime || now < endTime)) {
-        // Live Phase: After start time
+      } else if (endTime && now >= endTime) {
+        // Live Phase: After endTime (live/physical auction in progress)
         setAuctionPhase('live');
-      } else {
+      } else if (auction.status === 'Ended') {
         // Ended Phase
         setAuctionPhase('ended');
+      } else {
+        // Default to catalog if before startTime or no endTime set
+        setAuctionPhase('catalog');
       }
     };
 
