@@ -60,9 +60,12 @@ router.get('/vendor/:vendorId/auction/:auctionId/pre-sale-pdf', protect, async (
           .sign-box { text-align: center; }
           .sign-line { border-top: 1px solid #000; width: 200px; margin-top: 50px; padding-top: 5px; }
           .footer { margin-top: 20px; border-top: 1px solid #000; padding-top: 10px; font-size: 9px; }
+          .print-button { position: fixed; top: 20px; right: 20px; padding: 12px 24px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 1000; }
+          .print-button:hover { background-color: #45a049; }
 
           /* Print-specific styles */
           @media print {
+            .print-button { display: none; }
             body { padding: 10px; }
             .header { page-break-after: avoid; }
             .logo { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
@@ -76,6 +79,8 @@ router.get('/vendor/:vendorId/auction/:auctionId/pre-sale-pdf', protect, async (
         </style>
       </head>
       <body>
+        <button class="print-button" onclick="window.print()">🖨️ Print PDF</button>
+
         <div class="header">
           <div class="header-content">
             <img src="https://chroniclevaults.com/assets/new%20logo-5e7e59a2.png" alt="Chronicle Vaults Logo" class="logo" />
@@ -215,9 +220,12 @@ router.get('/:id/post-sale-pdf', protect, async (req, res) => {
           .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
           .sign-box { text-align: center; }
           .sign-line { border-top: 1px solid #000; width: 200px; margin-top: 50px; padding-top: 5px; }
+          .print-button { position: fixed; top: 20px; right: 20px; padding: 12px 24px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 1000; }
+          .print-button:hover { background-color: #45a049; }
 
           /* Print-specific styles */
           @media print {
+            .print-button { display: none; }
             body { padding: 10px; }
             .header { page-break-after: avoid; }
             .logo { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
@@ -231,6 +239,8 @@ router.get('/:id/post-sale-pdf', protect, async (req, res) => {
         </style>
       </head>
       <body>
+        <button class="print-button" onclick="window.print()">🖨️ Print PDF</button>
+
         <div class="header">
           <div class="header-content">
             <img src="https://chroniclevaults.com/assets/new%20logo-5e7e59a2.png" alt="Chronicle Vaults Logo" class="logo" />
