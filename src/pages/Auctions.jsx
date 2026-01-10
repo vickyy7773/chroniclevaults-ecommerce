@@ -135,14 +135,23 @@ const AuctionsPage = () => {
               <div
                 key={auction._id}
                 onClick={() => {
+                  // Upcoming auctions are not clickable - only show poster
+                  if (auction.status === 'Upcoming') {
+                    return;
+                  }
                   // For ended auctions, go to auction-lots page
                   if (auction.status === 'Ended') {
                     navigate(`/auction-lots/${auction._id}`);
                   } else {
+                    // For active auctions, go to catalog
                     navigate(`/auction/${auction._id}/catalog`);
                   }
                 }}
-                className="rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-1"
+                className={`rounded-lg shadow-md overflow-hidden transition-all ${
+                  auction.status === 'Upcoming'
+                    ? 'cursor-default'
+                    : 'cursor-pointer hover:shadow-xl transform hover:-translate-y-1'
+                }`}
               >
                 {/* Auction Highlight Banner Image */}
                 <div className="relative w-full h-[500px] bg-gray-200">
@@ -159,6 +168,22 @@ const AuctionsPage = () => {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100">
                       <Gavel className="w-16 h-16 text-gray-400" />
+                    </div>
+                  )}
+
+                  {/* Upcoming Badge Overlay */}
+                  {auction.status === 'Upcoming' && (
+                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="bg-blue-600 text-white px-6 py-3 rounded-lg text-xl font-bold mb-2">
+                          COMING SOON
+                        </div>
+                        {auction.startTime && (
+                          <div className="bg-white text-gray-900 px-4 py-2 rounded-lg text-sm font-medium">
+                            Starts: {formatDate(auction.startTime)}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -1299,21 +1299,53 @@ const AuctionManagement = () => {
                   )}
 
                   {/* Common Fields */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Start Date & Time
-                    </label>
-                    <input
-                      type="datetime-local" 
-                      name="startTime"
-                      value={formData.startTime}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
-                    />
-                    <p className="text-sm text-gray-500 mt-1">
-                      Auction will end based on bidding activity via Going Gone timer
-                    </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Start Date & Time <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="datetime-local"
+                        name="startTime"
+                        value={formData.startTime}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          // Auto-set end time to 7 days after start time if end time is empty
+                          if (!formData.endTime && e.target.value) {
+                            const startDate = new Date(e.target.value);
+                            const endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days later
+                            const year = endDate.getFullYear();
+                            const month = String(endDate.getMonth() + 1).padStart(2, '0');
+                            const day = String(endDate.getDate()).padStart(2, '0');
+                            const hours = String(endDate.getHours()).padStart(2, '0');
+                            const minutes = String(endDate.getMinutes()).padStart(2, '0');
+                            const endTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+                            setFormData(prev => ({ ...prev, endTime: endTimeString }));
+                          }
+                        }}
+                        required
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        When auction starts
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        End Date & Time (Optional)
+                      </label>
+                      <input
+                        type="datetime-local"
+                        name="endTime"
+                        value={formData.endTime}
+                        onChange={handleInputChange}
+                        className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Leave empty for Going Gone timer
+                      </p>
+                    </div>
                   </div>
                 </div>
 
