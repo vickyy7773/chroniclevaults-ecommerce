@@ -220,30 +220,6 @@ const AuctionManagement = () => {
     try {
       let submitData = { ...formData };
 
-      // DEBUG: Check if both times are present
-      console.log('🔍 FORM DATA BEFORE SUBMIT:', {
-        startTime: submitData.startTime,
-        endTime: submitData.endTime,
-        startTimeExists: !!submitData.startTime,
-        endTimeExists: !!submitData.endTime
-      });
-
-      // Check if endTime is missing
-      if (!submitData.endTime) {
-        toast.error('⚠️ Live Bidding Start Time is required!');
-        return;
-      }
-
-      // Validate that endTime is after startTime
-      if (submitData.startTime && submitData.endTime) {
-        const start = new Date(submitData.startTime);
-        const end = new Date(submitData.endTime);
-        if (end <= start) {
-          toast.error('Live Bidding Start Time must be after Lot Bidding Start Time');
-          return;
-        }
-      }
-
       // Convert datetime-local values to ISO strings
       if (submitData.startTime) {
         submitData.startTime = new Date(submitData.startTime).toISOString();
@@ -251,10 +227,6 @@ const AuctionManagement = () => {
       if (submitData.endTime) {
         submitData.endTime = new Date(submitData.endTime).toISOString();
       }
-
-      console.log('✅ Submitting auction data:', submitData);
-      console.log('✅ Start Time (ISO):', submitData.startTime);
-      console.log('✅ End Time (ISO):', submitData.endTime);
 
       // If image is base64, upload it first
       if (formData.image && formData.image.startsWith('data:image/')) {
@@ -1324,45 +1296,19 @@ const AuctionManagement = () => {
                     </>
                   )}
 
-                  {/* Time Fields - TWO PHASE SYSTEM */}
-                  <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 mb-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3">⏰ TWO-PHASE BIDDING TIMES (REQUIRED)</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-bold text-blue-700 mb-2">
-                          1️⃣ Lot Bidding Start Time <span className="text-red-600">*</span>
-                        </label>
-                        <input
-                          type="datetime-local"
-                          name="startTime"
-                          value={formData.startTime}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full px-4 py-3 border-2 border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-semibold"
-                        />
-                        <p className="text-sm text-blue-700 mt-2 font-medium">📦 Online catalog bidding phase starts</p>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-bold text-green-700 mb-2">
-                          2️⃣ Live Bidding Start Time <span className="text-red-600">*</span>
-                        </label>
-                        <input
-                          type="datetime-local"
-                          name="endTime"
-                          value={formData.endTime}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full px-4 py-3 border-2 border-green-400 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-lg font-semibold"
-                        />
-                        <p className="text-sm text-green-700 mt-2 font-medium">🔴 Physical live auction phase starts</p>
-                      </div>
-                    </div>
-                    <div className="mt-3 bg-amber-100 border border-amber-300 rounded p-3">
-                      <p className="text-sm text-amber-900 font-medium">
-                        ⚠️ <strong>IMPORTANT:</strong> BOTH times must be filled! First time = Online bidding starts. Second time = Live bidding starts (must be AFTER first time).
-                      </p>
-                    </div>
+                  {/* Start Time */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Time <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="startTime"
+                      value={formData.startTime}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                    />
                   </div>
                 </div>
 
