@@ -42,7 +42,8 @@ const VendorAdvise = () => {
       return;
     }
 
-    const url = `/api/vendor-invoices/vendor/${selectedVendor}/auction/${selectedAuction}/pre-sale-pdf`;
+    const token = localStorage.getItem('token');
+    const url = `/api/vendor-invoices/vendor/${selectedVendor}/auction/${selectedAuction}/pre-sale-pdf${token ? `?token=${token}` : ''}`;
     window.open(url, '_blank');
     toast.success('Opening Pre-Sale Vendor Advise PDF...');
   };
@@ -70,7 +71,8 @@ const VendorAdvise = () => {
       }
 
       const invoice = response.data[0];
-      const url = `/api/vendor-invoices/${invoice._id}/post-sale-pdf`;
+      const token = localStorage.getItem('token');
+      const url = `/api/vendor-invoices/${invoice._id}/post-sale-pdf${token ? `?token=${token}` : ''}`;
       window.open(url, '_blank');
       toast.success('Opening Post-Sale Vendor Advise PDF...');
     } catch (error) {
