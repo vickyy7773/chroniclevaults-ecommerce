@@ -72,7 +72,7 @@ const auctionSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['Upcoming', 'Active', 'Ended', 'Cancelled'],
-    default: 'Upcoming'
+    default: 'Active'
   },
   bids: [{
     user: {
@@ -392,9 +392,10 @@ auctionSchema.methods.updateStatus = async function() {
   const now = new Date();
   const previousStatus = this.status;
 
-  if (now < this.startTime) {
-    this.status = 'Upcoming';
-  } else if (now >= this.startTime && now < this.endTime) {
+  // Auction is always Active until it ends (no Upcoming status)
+  if (now >= this.endTime) {
+    this.status = 'Ended';
+  } else {
     this.status = 'Active';
 
     // FOR LOT BIDDING: Activate first lot when auction becomes active
@@ -413,8 +414,6 @@ auctionSchema.methods.updateStatus = async function() {
         console.log(`🎯 Lot 1 activated for auction ${this._id}`);
       }
     }
-  } else if (now >= this.endTime) {
-    this.status = 'Ended';
   }
 
   return this.status;
