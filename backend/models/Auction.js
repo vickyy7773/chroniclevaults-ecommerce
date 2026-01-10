@@ -388,13 +388,17 @@ auctionSchema.methods.validateBid = function(bidAmount) {
 };
 
 // Update auction status based on time
+// Note: endTime is now "Live Bidding Start Time", not auction end time
+// Auction ends via Going Gone timer, not based on endTime
 auctionSchema.methods.updateStatus = async function() {
   const now = new Date();
   const previousStatus = this.status;
 
   if (now < this.startTime) {
     this.status = 'Upcoming';
-  } else if (now >= this.startTime && (!this.endTime || now < this.endTime)) {
+  } else if (now >= this.startTime) {
+    // Auction is Active from startTime onwards (catalog + live bidding phases)
+    // endTime marks transition from catalog to live bidding, but auction stays Active
     this.status = 'Active';
 
     // FOR LOT BIDDING: Activate first lot when auction becomes active
@@ -413,22 +417,25 @@ auctionSchema.methods.updateStatus = async function() {
         console.log(`🎯 Lot 1 activated for auction ${this._id}`);
       }
     }
-  } else if (this.endTime && now >= this.endTime) {
-    this.status = 'Ended';
-
-    // Set winner if auction ended and has bids
-    if (this.bids.length > 0 && !this.winner) {
-      const highestBid = this.bids[this.bids.length - 1];
-      this.winner = highestBid.user;
-
-      // Handle frozen coins when auction ends (first time only)
-      if (previousStatus !== 'Ended') {
-        await this.settleFrozenCoins();
-      }
-    }
   }
+  // Note: Auction only goes to 'Ended' status when explicitly set by Going Gone timer
+  // or admin action, NOT automatically based on endTime
 
   return this.status;
+};
+
+// Check if auction is in live bidding phase (after endTime)
+auctionSchema.methods.isLiveBiddingPhase = function() {
+  const now = new Date();
+  // If endTime exists and current time is after endTime, we're in live phase
+  return this.endTime && now >= this.endTime;
+};
+
+// Check if auction is in catalog bidding phase (between startTime and endTime)
+auctionSchema.methods.isCatalogBiddingPhase = function() {
+  const now = new Date();
+  // If we're active and before endTime, we're in catalog phase
+  return this.status === 'Active' && (!this.endTime || now < this.endTime);
 };
 
 // Settle frozen coins when auction ends
