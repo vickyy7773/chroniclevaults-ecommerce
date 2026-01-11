@@ -166,7 +166,6 @@ const AuctionCatalog = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold mb-2">{auction.title}</h1>
-              <p className="text-accent-100">{auction.auctionCode || 'Auction Catalog'}</p>
             </div>
             <div className="flex gap-3">
               {auction.catalogPDF && (
@@ -358,7 +357,7 @@ const AuctionCatalog = () => {
                   <p className="text-lg font-semibold text-gray-900">
                     {formatDate(auction.startTime)}
                   </p>
-                  <p className="text-sm text-gray-600">{auction.venue?.city}, {auction.venue?.state}</p>
+                  <p className="text-sm text-gray-600">{auction.venue?.city} {auction.venue?.state}</p>
                 </div>
 
                 {/* Venue */}
@@ -444,9 +443,6 @@ const AuctionCatalog = () => {
                     </div>
                     <p className="text-base text-gray-900 font-medium leading-relaxed">
                       {auction.buyersPremium.percentage}% Buyers Premium plus {auction.buyersPremium.gstOnPremium}% GST on Buyers Premium plus {auction.buyersPremium.gstOnHammer}% GST on Hammer, {auction.buyersPremium.totalPremium}% Total Buyers Premium
-                    </p>
-                    <p className="text-base text-gray-700 mt-2 font-medium">
-                      HSN Code: {auction.buyersPremium.hsnCode}
                     </p>
                     {auction.buyersPremium.notes && (
                       <p className="text-base text-gray-600 mt-2">{auction.buyersPremium.notes}</p>
