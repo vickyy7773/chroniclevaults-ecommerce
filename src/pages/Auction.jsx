@@ -35,20 +35,25 @@ const AuctionPage = () => {
   const [showCoinLimitPopup, setShowCoinLimitPopup] = useState(false);
   const [coinLimitRequested, setCoinLimitRequested] = useState(false);
 
-  // Phase Detection: Determine if auction is in Catalog or Live phase
+  // Phase Detection: Three-phase system (Upcoming → Lot Bidding → Live Bidding)
   useEffect(() => {
     if (!auction) return;
 
     const detectPhase = () => {
       const now = new Date();
+      const posterDisplayUntil = auction.posterDisplayUntil ? new Date(auction.posterDisplayUntil) : null;
       const startTime = new Date(auction.startTime);
-      const endTime = auction.endTime ? new Date(auction.endTime) : null;
 
-      // Check if catalog bidding is enabled
-      const isCatalogEnabled = auction.catalogBiddingEnabled === true;
+      // Three-phase system:
+      // 1. Before posterDisplayUntil: Upcoming (poster only)
+      // 2. After posterDisplayUntil, Before startTime: Lot Bidding (catalog)
+      // 3. After startTime: Live Bidding
 
-      if (now < startTime && isCatalogEnabled) {
-        // Catalog Phase: Before start time with catalog enabled
+      if (posterDisplayUntil && now < posterDisplayUntil) {
+        // Phase 1: Upcoming - show poster only
+        setAuctionPhase('ended'); // Treat as ended to prevent access
+      } else if (now < startTime) {
+        // Phase 2: Lot Bidding (Catalog Phase)
         setAuctionPhase('catalog');
 
         // Calculate time remaining until live auction
@@ -64,12 +69,9 @@ const AuctionPage = () => {
         } else {
           setCatalogTimeRemaining(`${minutes}m`);
         }
-      } else if (now >= startTime && (!endTime || now < endTime)) {
-        // Live Phase: After start time
-        setAuctionPhase('live');
       } else {
-        // Ended Phase
-        setAuctionPhase('ended');
+        // Phase 3: Live Bidding - after startTime, auction stays live
+        setAuctionPhase('live');
       }
     };
 
