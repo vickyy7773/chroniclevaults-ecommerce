@@ -125,6 +125,12 @@ const BulkLotUpload = () => {
       lot.errors = errors;
       lot.isValid = errors.length === 0;
 
+      // Debug: Log first lot after parsing
+      if (i === 1) {
+        console.log('📝 CSV Parsed - First lot:', JSON.stringify(lot, null, 2));
+        console.log('💰 estimatedPrice after parsing:', lot.estimatedPrice);
+      }
+
       lots.push(lot);
     }
 
@@ -291,6 +297,10 @@ const BulkLotUpload = () => {
         }, 1000);
       } else {
         // Add lots to existing auction
+        // Debug: Log first lot being sent to backend
+        console.log('🚀 Sending to backend - First lot:', JSON.stringify(validLots[0], null, 2));
+        console.log('🔍 estimatedPrice value:', validLots[0]?.estimatedPrice);
+
         const response = await api.post(`/auctions/${selectedAuctionId}/bulk-lots`, {
           lots: validLots
         });
