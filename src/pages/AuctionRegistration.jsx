@@ -116,42 +116,12 @@ const AuctionRegistration = () => {
         }
       }));
     } else if (name === 'panNumber') {
-      // Strict PAN validation: first 5 letters, next 4 numbers, last 1 letter
+      // Soft validation: just convert to uppercase, allow any input
       const upperValue = value.toUpperCase();
-      let isValid = true;
-
-      // Check each character based on position
-      for (let i = 0; i < upperValue.length; i++) {
-        const char = upperValue[i];
-
-        if (i < 5) {
-          // First 5 must be letters only
-          if (!/[A-Z]/.test(char)) {
-            isValid = false;
-            break;
-          }
-        } else if (i < 9) {
-          // Next 4 must be numbers only
-          if (!/[0-9]/.test(char)) {
-            isValid = false;
-            break;
-          }
-        } else if (i === 9) {
-          // Last 1 must be letter only
-          if (!/[A-Z]/.test(char)) {
-            isValid = false;
-            break;
-          }
-        }
-      }
-
-      // Only update if valid and length <= 10
-      if (isValid && upperValue.length <= 10) {
-        setFormData(prev => ({
-          ...prev,
-          panNumber: upperValue
-        }));
-      }
+      setFormData(prev => ({
+        ...prev,
+        panNumber: upperValue
+      }));
     } else {
       setFormData(prev => ({
         ...prev,
@@ -196,33 +166,7 @@ const AuctionRegistration = () => {
     setMessage('');
 
     try {
-      // Custom validation for file uploads and PAN number
-      if (!formData.panCard) {
-        setError('Please upload PAN Card');
-        setLoading(false);
-        return;
-      }
-
-      if (!formData.panNumber || formData.panNumber.length !== 10) {
-        setError('Please enter a valid 10-character PAN number');
-        setLoading(false);
-        return;
-      }
-
-      // Validate PAN format
-      const panPattern = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-      if (!panPattern.test(formData.panNumber)) {
-        setError('Invalid PAN format. Must be 5 letters, 4 numbers, 1 letter (e.g., ABCDE1234F)');
-        setLoading(false);
-        return;
-      }
-
-      if (!formData.idProof.file) {
-        setError('Please upload ID Proof');
-        setLoading(false);
-        return;
-      }
-
+      // Soft validation - allow submission even if fields are incomplete
       const submitData = {
         ...formData,
         idProof: {
@@ -777,18 +721,14 @@ const AuctionRegistration = () => {
                     name="panNumber"
                     value={formData.panNumber}
                     onChange={handleChange}
-                    required
-                    pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
-                    maxLength="10"
                     placeholder="ABCDE1234F"
                     className="w-full md:w-1/2 border-2 border-amber-300 rounded-xl px-4 py-3 font-bold text-lg uppercase focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all tracking-wider"
                     style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}
                   />
                   <div className="mt-2 flex items-center gap-2">
                     <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded border border-gray-300">AAAAA-9999-A</span>
-                    <span className="text-xs text-gray-600">Format: 5 letters, 4 numbers, 1 letter</span>
+                    <span className="text-xs text-gray-600">Format: 5 letters, 4 numbers, 1 letter (optional)</span>
                   </div>
-                  <p className="text-xs text-amber-700 mt-1 font-medium">⚠️ Only letters allowed in first 5 & last position, only numbers in middle 4</p>
                 </div>
               </div>
 
