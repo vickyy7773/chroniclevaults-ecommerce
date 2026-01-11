@@ -852,6 +852,19 @@ export const startThreePhaseTimer = async (auctionId, io) => {
     return;
   }
 
+  // Check if we're in live bidding phase (after startTime)
+  const now = new Date();
+  const liveTime = new Date(auction.startTime);
+  const isInLivePhase = now >= liveTime;
+
+  // Only start Going-Gone timer in LIVE phase, not in lot bidding phase
+  if (!isInLivePhase) {
+    console.log(`⏸️  Lot bidding phase - Going-Gone timer DISABLED. Timer will start when live phase begins.`);
+    return;
+  }
+
+  console.log(`🔴 LIVE PHASE - Going-Gone timer ENABLED`);
+
   const lotNumber = auction.lotNumber || 1;
   const timerKey = getTimerKey(auctionId, lotNumber);
 
