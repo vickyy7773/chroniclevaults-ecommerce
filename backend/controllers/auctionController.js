@@ -1369,6 +1369,7 @@ export const createAuction = async (req, res) => {
         video: lot.video || null, // Include video field
         vendorId: lot.vendorId || null, // Include vendor ID
         startingPrice: lot.startingPrice,
+        estimatedPrice: lot.estimatedPrice || null, // Include estimated price
         currentBid: lot.startingPrice,
         reservePrice: lot.reservePrice || 0,
         productId: lot.productId || null,
@@ -2825,9 +2826,6 @@ export const addBulkLots = async (req, res) => {
       });
     }
 
-    // Debug: Log first lot to see what data we're receiving
-    console.log('📦 Bulk upload - First lot data:', JSON.stringify(lots[0], null, 2));
-
     const auction = await Auction.findById(req.params.id);
 
     if (!auction) {
@@ -2873,9 +2871,6 @@ export const addBulkLots = async (req, res) => {
       startTime: null,
       endTime: null
     }));
-
-    // Debug: Log first processed lot
-    console.log('✅ After processing - First lot:', JSON.stringify(newLots[0], null, 2));
 
     // Add new lots to auction
     if (!auction.lots) {
