@@ -90,6 +90,14 @@ const BulkLotUpload = () => {
         values[7]?.trim()
       ].filter(url => url && url.length > 0);
 
+      // Parse numeric values properly
+      const startingPrice = parseFloat(values[10]);
+      const estimatedPriceValue = values[11]?.trim();
+      const estimatedPrice = estimatedPriceValue && !isNaN(parseFloat(estimatedPriceValue))
+        ? parseFloat(estimatedPriceValue)
+        : null;
+      const reservePrice = parseFloat(values[12]);
+
       const lot = {
         lotNumber: parseInt(values[0]) || i,
         title: values[1]?.trim() || '',
@@ -100,10 +108,10 @@ const BulkLotUpload = () => {
         images: imageUrls, // Array of all images
         video: values[8]?.trim() || '',
         vendorId: values[9]?.trim() || null,
-        startingPrice: parseFloat(values[10]) || 0,
-        estimatedPrice: parseFloat(values[11]) || null,
-        reservePrice: parseFloat(values[12]) || 0,
-        currentBid: parseFloat(values[10]) || 0, // Initialize with starting price
+        startingPrice: !isNaN(startingPrice) ? startingPrice : 0,
+        estimatedPrice: estimatedPrice,
+        reservePrice: !isNaN(reservePrice) ? reservePrice : 0,
+        currentBid: !isNaN(startingPrice) ? startingPrice : 0, // Initialize with starting price
         status: 'Upcoming'
       };
 
