@@ -400,11 +400,11 @@ auctionSchema.methods.updateStatus = async function() {
   if (this.posterDisplayUntil && now < this.posterDisplayUntil) {
     // Before posterDisplayUntil: Show as Upcoming (poster only)
     this.status = 'Upcoming';
-  } else if (now >= this.endTime) {
-    // After endTime: Auction ended
+  } else if (this.endTime && now >= this.endTime) {
+    // After endTime: Auction ended (only if endTime is set)
     this.status = 'Ended';
   } else {
-    // Between posterDisplayUntil and endTime: Active (lot bidding available)
+    // After posterDisplayUntil: Active (lot bidding available)
     this.status = 'Active';
 
     // FOR LOT BIDDING: Activate first lot when auction becomes active
