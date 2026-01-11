@@ -414,11 +414,11 @@ auctionSchema.methods.updateStatus = async function() {
       if (firstLot.status === 'Upcoming') {
         firstLot.status = 'Active';
         firstLot.startTime = now;
-        firstLot.endTime = this.startTime; // Lot bidding ends when live starts
+        // Don't set endTime - lot will end via Going-Gone timer only
 
         // Set current lot times
         this.currentLotStartTime = now;
-        this.currentLotEndTime = this.startTime;
+        this.currentLotEndTime = null; // No fixed end time
         this.lotNumber = 1;
 
         console.log(`🎯 Lot 1 activated for auction ${this._id}`);
