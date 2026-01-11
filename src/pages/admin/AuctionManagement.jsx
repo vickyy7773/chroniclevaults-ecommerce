@@ -1318,14 +1318,14 @@ const AuctionManagement = () => {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Auction will show as "Upcoming" (poster only) until this time
+                      Show as "Upcoming" with poster only until this time
                     </p>
                   </div>
 
-                  {/* Start Time (Lot Bidding Starts) */}
+                  {/* Live Bidding Start Time */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Lot Bidding Start Time <span className="text-red-500">*</span>
+                      Live Bidding Start Time <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="datetime-local"
@@ -1336,7 +1336,7 @@ const AuctionManagement = () => {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Auction will become "Active" and lot bidding will start at this time
+                      Lot bidding available between poster end and this time. Live bidding starts at this time.
                     </p>
                   </div>
                 </div>

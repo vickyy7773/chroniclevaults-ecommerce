@@ -396,28 +396,29 @@ auctionSchema.methods.updateStatus = async function() {
   const now = new Date();
   const previousStatus = this.status;
 
-  // Check posterDisplayUntil first (if set)
+  // Three-phase system:
+  // 1. Before posterDisplayUntil: Upcoming (poster only)
+  // 2. After posterDisplayUntil, Before startTime: Active (lot bidding)
+  // 3. After startTime: Active (live bidding - physical auction)
+
   if (this.posterDisplayUntil && now < this.posterDisplayUntil) {
-    // Before posterDisplayUntil: Show as Upcoming (poster only)
+    // Phase 1: Before posterDisplayUntil - Show as Upcoming (poster only)
     this.status = 'Upcoming';
-  } else if (this.endTime && now >= this.endTime) {
-    // After endTime: Auction ended (only if endTime is set)
-    this.status = 'Ended';
   } else {
-    // After posterDisplayUntil: Active (lot bidding available)
+    // Phase 2 & 3: After posterDisplayUntil - Always Active
     this.status = 'Active';
 
-    // FOR LOT BIDDING: Activate first lot when auction becomes active
-    if (this.isLotBidding && this.lots && this.lots.length > 0) {
+    // FOR LOT BIDDING: Activate first lot when poster time ends (before live starts)
+    if (this.isLotBidding && this.lots && this.lots.length > 0 && now < this.startTime) {
       const firstLot = this.lots[0];
       if (firstLot.status === 'Upcoming') {
         firstLot.status = 'Active';
         firstLot.startTime = now;
-        firstLot.endTime = this.endTime;
+        firstLot.endTime = this.startTime; // Lot bidding ends when live starts
 
         // Set current lot times
         this.currentLotStartTime = now;
-        this.currentLotEndTime = this.endTime;
+        this.currentLotEndTime = this.startTime;
         this.lotNumber = 1;
 
         console.log(`🎯 Lot 1 activated for auction ${this._id}`);
