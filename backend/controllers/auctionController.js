@@ -1335,10 +1335,15 @@ export const createAuction = async (req, res) => {
       auctionData.lotNumber = 1; // Start with first lot
       auctionData.lotDuration = lotDuration || 10; // Default 10 minutes per lot
 
-      // Process lots - set first lot as Active/Upcoming based on startTime
+      // Process lots - set first lot based on phase (Upcoming/Lot Bidding/Live)
       const now = new Date();
-      const auctionStart = new Date(startTime);
-      const isAuctionStarted = now >= auctionStart;
+      const posterTime = posterDisplayUntil ? new Date(posterDisplayUntil) : null;
+      const liveTime = new Date(startTime);
+
+      // Check which phase we're in
+      const isInUpcomingPhase = posterTime && now < posterTime;
+      const isInLotBiddingPhase = (!posterTime || now >= posterTime) && now < liveTime;
+      const isInLivePhase = now >= liveTime;
 
       auctionData.lots = lots.map((lot, index) => ({
         lotNumber: index + 1,
@@ -1355,16 +1360,16 @@ export const createAuction = async (req, res) => {
         reservePrice: lot.reservePrice || 0,
         productId: lot.productId || null,
         bids: [],
-        status: index === 0 && isAuctionStarted ? 'Active' : 'Upcoming',
-        startTime: index === 0 ? auctionStart : null
+        status: index === 0 && (isInLotBiddingPhase || isInLivePhase) ? 'Active' : 'Upcoming',
+        startTime: index === 0 && (isInLotBiddingPhase || isInLivePhase) ? now : null
         // endTime removed - lot duration is now based on bidding activity
       }));
 
-      // Set current lot times if auction is starting
-      if (isAuctionStarted) {
-        auctionData.currentLotStartTime = auctionStart;
+      // Set current lot times if in lot bidding or live phase
+      if (isInLotBiddingPhase || isInLivePhase) {
+        auctionData.currentLotStartTime = now;
         // currentLotEndTime removed - lot ends based on bidding activity via Going Gone timer
-        auctionData.lotNumber = 1; // Set current lot number
+        auctionData.lotNumber = 1; // Always start from lot 1
       }
 
       // Override main auction prices with first lot's prices
