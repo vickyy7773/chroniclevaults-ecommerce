@@ -48,8 +48,16 @@ const AuctionPage = () => {
       // 1. Before posterDisplayUntil: Upcoming (poster only)
       // 2. After posterDisplayUntil, Before startTime: Lot Bidding (catalog)
       // 3. After startTime: Live Bidding
+      // 4. After endTime or status='Ended': Ended (thank you page)
 
-      if (posterDisplayUntil && now < posterDisplayUntil) {
+      // Check if auction has ended
+      const endTime = auction.endTime ? new Date(auction.endTime) : null;
+      const isEnded = auction.status === 'Ended' || (endTime && now >= endTime);
+
+      if (isEnded) {
+        // Auction has ended - redirect to thank you page
+        setAuctionPhase('ended');
+      } else if (posterDisplayUntil && now < posterDisplayUntil) {
         // Phase 1: Upcoming - show poster only
         setAuctionPhase('ended'); // Treat as ended to prevent access
       } else if (now < startTime) {
@@ -70,7 +78,7 @@ const AuctionPage = () => {
           setCatalogTimeRemaining(`${minutes}m`);
         }
       } else {
-        // Phase 3: Live Bidding - after startTime, auction stays live
+        // Phase 3: Live Bidding - after startTime, before endTime
         setAuctionPhase('live');
       }
     };
