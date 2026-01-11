@@ -386,13 +386,7 @@ const AuctionCatalog = () => {
                     <Gavel className="w-6 h-6 text-green-600" />
                     <p className="text-base text-gray-700 font-semibold">Bidding Information</p>
                   </div>
-                  <div className="text-base text-gray-600 space-y-3">
-                    <p className="font-semibold text-gray-900">
-                      Join us for Live Bidding starting at {new Date(auction.startTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} on auction day.
-                    </p>
-                    <p className="leading-relaxed">
-                      Bid from anywhere using our online platform, or experience the excitement live at the venue. Both online and floor bids are accepted simultaneously in real-time.
-                    </p>
+                  <div className="text-base text-gray-600">
                     <p className="text-sm italic text-gray-500">
                       View lots during the preview period and register in advance for a seamless bidding experience.
                     </p>
