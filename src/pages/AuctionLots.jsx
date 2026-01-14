@@ -1435,7 +1435,6 @@ const AuctionLots = () => {
                 {/* Lot Header */}
                 <div className="flex items-center gap-3 mb-3 pb-2 border-b border-gray-200">
                   <span className="px-3 py-1 bg-accent-600 text-white text-sm font-semibold rounded">Lot #{lot.lotNumber}</span>
-                  <span className="px-3 py-1 bg-amber-600 text-white text-sm font-semibold rounded">{auction.auctionCode || 'AUC50'}</span>
                   <span className="px-3 py-1 bg-amber-100 text-amber-900 text-sm font-semibold rounded">{lot.category || 'Ancient India'}</span>
                   {lot.material && (
                     <span className="ml-auto px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded">{lot.material}</span>
