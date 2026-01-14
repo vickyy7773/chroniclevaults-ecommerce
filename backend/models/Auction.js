@@ -399,13 +399,20 @@ auctionSchema.methods.updateStatus = async function() {
   // Three-phase system:
   // 1. Before posterDisplayUntil: Upcoming (poster only)
   // 2. After posterDisplayUntil, Before startTime: Active (lot bidding)
-  // 3. After startTime: Active (live bidding - physical auction)
+  // 3. After startTime, Before endTime: Active (live bidding - physical auction)
+  // 4. After endTime: Ended
+
+  // Check if auction has ended
+  if (this.endTime && now >= this.endTime) {
+    this.status = 'Ended';
+    return this.status;
+  }
 
   if (this.posterDisplayUntil && now < this.posterDisplayUntil) {
     // Phase 1: Before posterDisplayUntil - Show as Upcoming (poster only)
     this.status = 'Upcoming';
   } else {
-    // Phase 2 & 3: After posterDisplayUntil - Always Active
+    // Phase 2 & 3: After posterDisplayUntil - Always Active (until endTime)
     this.status = 'Active';
 
     // FOR LOT BIDDING: Activate first lot when poster time ends (before live starts)
