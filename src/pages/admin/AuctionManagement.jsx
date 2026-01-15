@@ -551,15 +551,6 @@ const AuctionManagement = () => {
                   )}
                 </div>
 
-                {auction.reserveBidder && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-2 mb-2">
-                    <p className="text-xs text-orange-800 font-semibold flex items-center">
-                      <User className="w-3 h-3 mr-1" />
-                      Reserve Bidder: {auction.reserveBidder.name}
-                    </p>
-                  </div>
-                )}
-
                 {auction.winner && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-2 mb-3">
                     <p className="text-xs text-green-800 font-semibold flex items-center">
