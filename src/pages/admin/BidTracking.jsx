@@ -100,7 +100,9 @@ const BidTracking = () => {
       const response = await bidTrackingService.getAllBids(filters);
       console.log('Events Response:', response);
 
-      setEvents(response.data?.events || []);
+      // Sort events by seq number in ascending order
+      const sortedEvents = (response.data?.events || []).sort((a, b) => a.seq - b.seq);
+      setEvents(sortedEvents);
       setPagination(response.data?.pagination || {});
       setNewEventCount(0); // Reset counter when refreshing
     } catch (error) {
