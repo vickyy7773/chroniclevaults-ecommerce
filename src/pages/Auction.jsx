@@ -340,9 +340,6 @@ const AuctionPage = () => {
       });
 
       if (data.latestBid.user._id?.toString() === currentUser?._id?.toString()) {
-        if (data.autoBidTriggered && data.latestBid.isAutoBid) {
-          toast.success(`Auto-bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
-        }
         // Check if someone has higher reserve
         if (someoneElseHasHigherReserveBid) {
           console.log('⚠️ MY BID BUT SOMEONE HAS HIGHER RESERVE - Setting outbid');
@@ -354,13 +351,8 @@ const AuctionPage = () => {
       } else {
         if (userHasParticipated && !isStillWinning) {
           console.log('⚠️ OUTBID DETECTED - Setting button to red');
-          toast.warning(`⚠️ You are outbid! New bid placed: ₹${data.latestBid.amount.toLocaleString()}`, {
-            autoClose: 5000
-          });
           // Set button status to 'outbid' (red) when someone outbids you
           setBidButtonStatus('outbid');
-        } else if (!userHasParticipated) {
-          toast.info(`New bid placed: ₹${data.latestBid.amount.toLocaleString()}`);
         }
       }
     };
@@ -405,12 +397,6 @@ const AuctionPage = () => {
         localStorage.setItem('user', JSON.stringify(updatedUser));
 
         // Show toast notification
-        if (data.reason.includes('refunded') || data.reason.includes('Outbid')) {
-          toast.success(`💰 ${data.reason} - Balance: ₹${data.auctionCoins.toLocaleString()}`, {
-            autoClose: 3000
-          });
-        }
-
         console.log(`✅ Updated coin balance: ₹${data.auctionCoins.toLocaleString()} (Frozen: ₹${data.frozenCoins.toLocaleString()})`);
       }
     };
@@ -827,15 +813,9 @@ const AuctionPage = () => {
         const updatedUser = { ...user, auctionCoins: response.data.remainingCoins };
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        if (maxBid) {
-          toast.success(`Bid placed with reserve of ₹${maxBid.toLocaleString()}! Remaining coins: ${response.data.remainingCoins.toLocaleString()}`);
-        } else {
-          toast.success(`Bid placed! Remaining coins: ${response.data.remainingCoins.toLocaleString()}`);
-        }
       }
     } catch (error) {
       console.error('Place bid error:', error);
-      toast.error(error.response?.data?.message || 'Failed to place bid');
     } finally {
       setSubmittingBid(false);
     }
@@ -900,7 +880,6 @@ const AuctionPage = () => {
         const updatedUser = { ...user, auctionCoins: response.data.remainingCoins };
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        toast.success(`Bid placed! Remaining coins: ${response.data.remainingCoins.toLocaleString()}`);
 
         // Check if user is actually winning after this bid
         const auctionData = response.data.auction;
