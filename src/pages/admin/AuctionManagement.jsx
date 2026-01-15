@@ -508,27 +508,12 @@ const AuctionManagement = () => {
                 <p className="text-sm text-gray-600 mb-3 line-clamp-2">{auction.description}</p>
 
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Current Bid:</span>
-                    <span className="font-bold text-accent-600">₹{auction.currentBid?.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Starting Price:</span>
-                    <span className="font-semibold">₹{auction.startingPrice?.toLocaleString()}</span>
-                  </div>
                   {auction.reservePrice && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">Reserve Price:</span>
                       <span className="font-semibold text-orange-600">₹{auction.reservePrice?.toLocaleString()}</span>
                     </div>
                   )}
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 flex items-center">
-                      <Users className="w-4 h-4 mr-1" />
-                      Total Bids:
-                    </span>
-                    <span className="font-semibold">{auction.totalBids || 0}</span>
-                  </div>
                   {auction.isLotBidding && auction.lots && auction.lots.length > 0 && (
                     <div className="flex items-start justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">Vendors:</span>
