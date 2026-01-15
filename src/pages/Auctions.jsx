@@ -171,21 +171,6 @@ const AuctionsPage = () => {
                     </div>
                   )}
 
-                  {/* Upcoming Badge Overlay */}
-                  {auction.status === 'Upcoming' && (
-                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="bg-blue-600 text-white px-6 py-3 rounded-lg text-xl font-bold mb-2">
-                          COMING SOON
-                        </div>
-                        {auction.posterDisplayUntil && (
-                          <div className="bg-white text-gray-900 px-4 py-2 rounded-lg text-sm font-medium">
-                            Available: {formatDate(auction.posterDisplayUntil)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
