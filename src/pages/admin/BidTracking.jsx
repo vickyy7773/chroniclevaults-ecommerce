@@ -100,8 +100,8 @@ const BidTracking = () => {
       const response = await bidTrackingService.getAllBids(filters);
       console.log('Events Response:', response);
 
-      // Sort events by seq number in ascending order
-      const sortedEvents = (response.data?.events || []).sort((a, b) => a.seq - b.seq);
+      // Sort events by seq number in descending order (newest first)
+      const sortedEvents = (response.data?.events || []).sort((a, b) => b.seq - a.seq);
       setEvents(sortedEvents);
       setPagination(response.data?.pagination || {});
       setNewEventCount(0); // Reset counter when refreshing
@@ -344,6 +344,9 @@ const BidTracking = () => {
                       Amount
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Reserve Bid
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Trigger
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -417,6 +420,15 @@ const BidTracking = () => {
                         )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
+                        {event.maxBid ? (
+                          <p className="text-xs font-bold text-orange-600 dark:text-orange-400">
+                            ₹{event.maxBid.toLocaleString('en-IN')}
+                          </p>
+                        ) : (
+                          <span className="text-xs text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <span className="text-xs text-gray-700 dark:text-gray-300">
                           {event.trigger}
                         </span>
@@ -482,6 +494,11 @@ const BidTracking = () => {
                       <p className="text-lg font-bold text-accent-600 dark:text-accent-400 mt-1">
                         ₹{event.amount.toLocaleString('en-IN')}
                       </p>
+                      {event.maxBid && (
+                        <p className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                          Reserve Bid: ₹{event.maxBid.toLocaleString('en-IN')}
+                        </p>
+                      )}
 
                       <div className="mt-2 space-y-1">
                         <p className="text-xs text-gray-600 dark:text-gray-400">
