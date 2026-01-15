@@ -344,7 +344,7 @@ const BidTracking = () => {
                       Amount
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Reserve Bid
+                      Max Bid (Auto)
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Trigger
@@ -359,9 +359,10 @@ const BidTracking = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {events.map((event) => (
-                    <tr key={event._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <tr key={event._id} className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${event.eventType === 'winner' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500' : ''}`}>
                       <td className="px-3 py-3 whitespace-nowrap text-gray-900 dark:text-white font-medium">
                         {event.seq}
+                        {event.eventType === 'winner' && <span className="ml-1">🏆</span>}
                       </td>
                       <td className="px-4 py-3">
                         <p className="text-xs text-gray-900 dark:text-white font-mono font-semibold">
@@ -383,7 +384,8 @@ const BidTracking = () => {
                         </p>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-xs font-medium text-gray-900 dark:text-white truncate max-w-[120px]" title={event.bidder.name}>
+                        <p className={`text-xs font-medium truncate max-w-[120px] ${event.eventType === 'winner' ? 'text-yellow-700 dark:text-yellow-400 font-bold' : 'text-gray-900 dark:text-white'}`} title={event.bidder.name}>
+                          {event.eventType === 'winner' && '🏆 '}
                           {event.bidder.name}
                         </p>
                       </td>
@@ -404,8 +406,8 @@ const BidTracking = () => {
                           </span>
                         )}
                         {event.eventType === 'winner' && (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400">
-                            🏆 Winner
+                          <span className="px-3 py-1.5 rounded-full text-sm font-bold bg-yellow-400 text-yellow-900 animate-pulse">
+                            🏆 WINNER
                           </span>
                         )}
                       </td>
@@ -452,14 +454,15 @@ const BidTracking = () => {
             {/* Mobile View - Cards */}
             <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
               {events.map((event) => (
-                <div key={event._id} className="p-4">
+                <div key={event._id} className={`p-4 ${event.eventType === 'winner' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500' : ''}`}>
                   <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-full bg-accent-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-                      #{event.seq}
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${event.eventType === 'winner' ? 'bg-yellow-500' : 'bg-accent-500'}`}>
+                      {event.eventType === 'winner' ? '🏆' : `#${event.seq}`}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        <p className={`text-sm font-medium ${event.eventType === 'winner' ? 'text-yellow-700 dark:text-yellow-400 font-bold' : 'text-gray-900 dark:text-white'}`}>
+                          {event.eventType === 'winner' && '🏆 '}
                           {event.bidder.name}
                         </p>
                         {event.eventType === 'bid_placed' && (
@@ -478,8 +481,8 @@ const BidTracking = () => {
                           </span>
                         )}
                         {event.eventType === 'winner' && (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400">
-                            🏆 Winner
+                          <span className="px-3 py-1.5 rounded-full text-sm font-bold bg-yellow-400 text-yellow-900 animate-pulse">
+                            🏆 WINNER
                           </span>
                         )}
                       </div>
@@ -496,7 +499,7 @@ const BidTracking = () => {
                       </p>
                       {event.maxBid && (
                         <p className="text-sm font-bold text-orange-600 dark:text-orange-400">
-                          Reserve Bid: ₹{event.maxBid.toLocaleString('en-IN')}
+                          Max Bid (Auto): ₹{event.maxBid.toLocaleString('en-IN')}
                         </p>
                       )}
 
