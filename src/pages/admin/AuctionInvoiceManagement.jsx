@@ -97,7 +97,11 @@ const AuctionInvoiceManagement = () => {
   const fetchAuctions = async () => {
     try {
       const response = await api.get('/auctions');
-      setAuctions(response.data || []);
+      console.log('📦 Auctions API Response:', response);
+      const auctionsData = response.data || response || [];
+      console.log('📋 Auctions Data:', auctionsData);
+      console.log('✅ Ended Auctions:', auctionsData.filter(a => a.status === 'Ended'));
+      setAuctions(auctionsData);
     } catch (error) {
       console.error('Failed to fetch auctions:', error);
     }
