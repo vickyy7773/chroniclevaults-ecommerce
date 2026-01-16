@@ -26,6 +26,7 @@
   /* Premium Card Styles */
   .card-modern {
     @apply bg-white rounded-lg shadow-sm
+    
            hover:shadow-md transition-all duration-200
            border border-slate-200;
   }

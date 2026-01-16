@@ -97,13 +97,23 @@ const AuctionInvoiceManagement = () => {
   const fetchAuctions = async () => {
     try {
       const response = await api.get('/auctions');
-      console.log('📦 Auctions API Response:', response);
-      const auctionsData = response.data || response || [];
-      console.log('📋 Auctions Data:', auctionsData);
-      console.log('✅ Ended Auctions:', auctionsData.filter(a => a.status === 'Ended'));
+      console.log('📦 RAW Auctions Response:', response);
+
+      // Handle different response structures
+      let auctionsData = [];
+      if (Array.isArray(response)) {
+        auctionsData = response;
+      } else if (Array.isArray(response?.data)) {
+        auctionsData = response.data;
+      } else if (response?.data?.data && Array.isArray(response.data.data)) {
+        auctionsData = response.data.data;
+      }
+
+      console.log('📋 Parsed Auctions:', auctionsData.length, 'auctions');
+      console.log('✅ Ended Auctions:', auctionsData.filter(a => a.status === 'Ended').map(a => a.title));
       setAuctions(auctionsData);
     } catch (error) {
-      console.error('Failed to fetch auctions:', error);
+      console.error('❌ Failed to fetch auctions:', error);
     }
   };
 
