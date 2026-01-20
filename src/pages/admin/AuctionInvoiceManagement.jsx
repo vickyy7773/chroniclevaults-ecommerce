@@ -979,11 +979,22 @@ const AuctionInvoiceManagement = () => {
     // Fetch unsold lots for this auction
     try {
       setLoadingUnsoldLots(true);
+      console.log('📡 Fetching unsold lots for auction:', auctionId);
       const response = await api.get(`/lot-transfer/unsold/${auctionId}`);
+      console.log('📦 Unsold lots response:', response);
 
-      if (response.success) {
-        setUnsoldLots(response.data || []);
+      // Handle different response structures
+      let lotsData = [];
+      if (Array.isArray(response)) {
+        lotsData = response;
+      } else if (response.success && Array.isArray(response.data)) {
+        lotsData = response.data;
+      } else if (Array.isArray(response?.data)) {
+        lotsData = response.data;
       }
+
+      console.log('✅ Unsold lots found:', lotsData.length);
+      setUnsoldLots(lotsData);
     } catch (error) {
       console.error('Error fetching unsold lots:', error);
       toast.error('Failed to load unsold lots');

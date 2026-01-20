@@ -185,7 +185,7 @@ const AuctionEnded = () => {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
-                onClick={() => navigate('/user-dashboard')}
+                onClick={() => navigate('/my-bidding')}
                 className="flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
               >
                 <Trophy className="w-5 h-5" />
@@ -199,7 +199,7 @@ const AuctionEnded = () => {
                 Browse Auctions
               </button>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/auctions')}
                 className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
               >
                 <Home className="w-5 h-5" />

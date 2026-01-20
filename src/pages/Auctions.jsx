@@ -31,7 +31,26 @@ const AuctionsPage = () => {
       setLoading(true);
       const queryParam = filter !== 'All' ? `?status=${filter}` : '';
       const response = await api.get(`/auctions${queryParam}`);
-      setAuctions(response.data || []); // Response interceptor already returns data
+      console.log('📦 RAW Auctions Response:', response);
+
+      // Handle different response structures
+      let auctionsData = [];
+      if (Array.isArray(response)) {
+        auctionsData = response;
+      } else if (Array.isArray(response?.data)) {
+        auctionsData = response.data;
+      } else if (response?.data?.data && Array.isArray(response.data.data)) {
+        auctionsData = response.data.data;
+      }
+
+      console.log('📋 Parsed Auctions:', auctionsData.length, 'auctions');
+      console.log('🔍 Filter:', filter, '| Auctions by status:', {
+        Active: auctionsData.filter(a => a.status === 'Active').length,
+        Ended: auctionsData.filter(a => a.status === 'Ended').length,
+        Upcoming: auctionsData.filter(a => a.status === 'Upcoming').length
+      });
+
+      setAuctions(auctionsData);
     } catch (error) {
       console.error('Fetch auctions error:', error);
       toast.error('Failed to load auctions');

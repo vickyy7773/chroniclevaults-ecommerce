@@ -166,6 +166,17 @@ const AuctionRegistration = () => {
     setMessage('');
 
     try {
+      // Check at least 1 reference is filled
+      const hasAtLeastOneReference = formData.references.some(ref =>
+        ref.name.trim() !== '' || ref.city.trim() !== '' || ref.mobile.trim() !== ''
+      );
+
+      if (!hasAtLeastOneReference) {
+        setError('Please provide at least 1 reference (or write "NA" if no references)');
+        setLoading(false);
+        return;
+      }
+
       // Soft validation - allow submission even if fields are incomplete
       const submitData = {
         ...formData,
@@ -690,7 +701,7 @@ const AuctionRegistration = () => {
               <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border-2 border-amber-200">
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-4">
                   <FileText className="w-5 h-5 text-amber-600" />
-                  PAN Card Photo <span className="text-red-600">*</span>
+                  PAN Card Photo
                 </label>
                 <div className="flex items-center gap-4">
                   <label className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl cursor-pointer hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl">
@@ -714,7 +725,7 @@ const AuctionRegistration = () => {
                 <div className="mt-4">
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-2">
                     <FileText className="w-4 h-4 text-amber-600" />
-                    PAN Number <span className="text-red-600">*</span>
+                    PAN Number
                   </label>
                   <input
                     type="text"
@@ -805,8 +816,8 @@ const AuctionRegistration = () => {
                 <Users className="w-6 h-6 text-amber-700" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">References</h2>
-                <p className="text-sm text-gray-600 mt-1">2-3 Dealer/Collector References (If no references, write "NA")</p>
+                <h2 className="text-2xl font-bold text-gray-900">References <span className="text-red-600">*</span></h2>
+                <p className="text-sm text-gray-600 mt-1">At least 1 reference required (write "NA" if no references)</p>
               </div>
             </div>
 

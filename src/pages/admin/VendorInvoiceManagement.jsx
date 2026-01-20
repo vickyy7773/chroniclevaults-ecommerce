@@ -199,8 +199,52 @@ const VendorInvoiceManagement = () => {
   };
 
   const numberToWords = (num) => {
-    // Simple number to words conversion
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(num);
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+
+    if (num === 0) return 'Zero Rupees';
+
+    const crores = Math.floor(num / 10000000);
+    const lakhs = Math.floor((num % 10000000) / 100000);
+    const thousands = Math.floor((num % 100000) / 1000);
+    const hundreds = Math.floor((num % 1000) / 100);
+    const remainder = num % 100;
+
+    let words = '';
+
+    if (crores > 0) {
+      words += convertTwoDigit(crores, ones, tens, teens) + ' Crore ';
+    }
+    if (lakhs > 0) {
+      words += convertTwoDigit(lakhs, ones, tens, teens) + ' Lakh ';
+    }
+    if (thousands > 0) {
+      words += convertTwoDigit(thousands, ones, tens, teens) + ' Thousand ';
+    }
+    if (hundreds > 0) {
+      words += ones[hundreds] + ' Hundred ';
+    }
+    if (remainder > 0) {
+      if (remainder < 10) {
+        words += ones[remainder];
+      } else if (remainder < 20) {
+        words += teens[remainder - 10];
+      } else {
+        words += tens[Math.floor(remainder / 10)];
+        if (remainder % 10 > 0) {
+          words += ' ' + ones[remainder % 10];
+        }
+      }
+    }
+
+    return words.trim() + ' Rupees';
+
+    function convertTwoDigit(n, ones, tens, teens) {
+      if (n < 10) return ones[n];
+      if (n < 20) return teens[n - 10];
+      return tens[Math.floor(n / 10)] + (n % 10 > 0 ? ' ' + ones[n % 10] : '');
+    }
   };
 
   // Lot Transfer Functions
@@ -319,175 +363,139 @@ const VendorInvoiceManagement = () => {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Vendor Invoice ${invoice.invoiceNumber}</title>
+        <title> </title>
         <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #8B5CF6; padding-bottom: 15px; }
-          .invoice-type { background-color: #8B5CF6; color: white; padding: 8px 20px; display: inline-block; border-radius: 5px; font-size: 18px; font-weight: bold; }
-          .section { margin: 25px 0; }
-          .section-title { font-weight: bold; font-size: 16px; margin-bottom: 15px; color: #333; border-bottom: 2px solid #8B5CF6; padding-bottom: 8px; }
-          .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
-          .detail-item { padding: 8px; background-color: #f9f9f9; border-left: 3px solid #8B5CF6; }
-          .detail-label { font-weight: bold; color: #555; display: block; margin-bottom: 3px; }
-          .detail-value { color: #000; }
-          .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          .table th, .table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-          .table th { background-color: #8B5CF6; color: white; font-weight: bold; }
-          .table tr:nth-child(even) { background-color: #f9f9f9; }
-          .summary { float: right; width: 450px; margin: 30px 0; border: 2px solid #8B5CF6; }
-          .summary-row { display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid #ddd; }
-          .summary-row.total { background-color: #8B5CF6; color: white; font-weight: bold; font-size: 20px; border: none; }
-          .summary-row.commission { background-color: #FEE; }
-          .bank-details { background-color: #f0f0f0; border: 2px solid #8B5CF6; padding: 20px; margin: 20px 0; border-radius: 5px; }
-          .bank-details h3 { margin-top: 0; color: #8B5CF6; }
-          .bank-row { display: flex; padding: 5px 0; }
-          .bank-label { font-weight: bold; width: 180px; }
-          .signature { margin-top: 80px; text-align: right; }
-          .signature-line { border-top: 2px solid #333; width: 200px; margin-left: auto; margin-top: 60px; padding-top: 5px; }
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; font-size: 11px; padding: 15px; }
+          .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+          .header-content { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; }
+          .logo { height: 60px; width: auto; }
+          .company-info { text-align: left; }
+          .company-name { font-size: 16px; font-weight: bold; color: #d35400; }
+          .tagline { font-size: 10px; margin: 5px 0; }
+          .title { text-align: center; font-size: 14px; font-weight: bold; color: red; margin: 15px 0; }
+          table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+          td, th { border: 1px solid #000; padding: 8px; }
+          th { background-color: #f0f0f0; font-weight: bold; text-align: left; }
+          .vendor-info td { padding: 5px 8px; }
+          .totals { font-weight: bold; background-color: #f0f0f0; }
+          .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
+          .sign-box { text-align: center; }
+          .sign-line { border-top: 1px solid #000; width: 200px; margin-top: 50px; padding-top: 5px; }
+          .print-button { position: fixed; top: 20px; right: 20px; padding: 12px 24px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 1000; }
+          .print-button:hover { background-color: #45a049; }
+
+          /* Print-specific styles */
           @media print {
-            body { margin: 0; }
-            @page { size: A4; margin: 15mm; }
+            .print-button { display: none; }
+            body { padding: 10px; }
+            .header { page-break-after: avoid; }
+            .logo { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .company-name { color: #d35400 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .title { color: red !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            th { background-color: #f0f0f0 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .totals { background-color: #f0f0f0 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            table { page-break-inside: avoid; }
+            .signature-section { page-break-before: avoid; margin-top: 30px; }
           }
         </style>
       </head>
       <body>
+        <button class="print-button" onclick="window.print()">🖨️ Print PDF</button>
         <div class="header">
-          <h1 style="margin: 10px 0; color: #8B5CF6;">Chronicle Vaults</h1>
-          <p style="margin: 5px 0;">GSTIN: ${invoice.companyDetails?.gstin || 'N/A'} | PAN: ${invoice.companyDetails?.pan || 'N/A'}</p>
-          <p style="margin: 5px 0;">${invoice.companyDetails?.address || ''}, ${invoice.companyDetails?.city || ''}, ${invoice.companyDetails?.state || ''}</p>
-          <p style="margin: 5px 0;">Phone: ${invoice.companyDetails?.phone || ''} | Email: ${invoice.companyDetails?.email || ''}</p>
-          <div style="margin-top: 15px;">
-            <span class="invoice-type">VENDOR SETTLEMENT INVOICE</span>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="details-grid">
-            <div>
-              <div class="detail-item">
-                <span class="detail-label">Invoice Number:</span>
-                <span class="detail-value">${invoice.invoiceNumber}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Invoice Date:</span>
-                <span class="detail-value">${new Date(invoice.invoiceDate).toLocaleDateString('en-IN')}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Auction:</span>
-                <span class="detail-value">${invoice.auction?.auctionCode || 'N/A'} - ${invoice.auction?.title || 'N/A'}</span>
-              </div>
-            </div>
-            <div>
-              <div class="detail-item">
-                <span class="detail-label">Vendor Code:</span>
-                <span class="detail-value">${invoice.vendorDetails?.vendorCode || 'N/A'}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Vendor Name:</span>
-                <span class="detail-value">${invoice.vendorDetails?.name || 'N/A'}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Contact:</span>
-                <span class="detail-value">${invoice.vendorDetails?.email || ''} | ${invoice.vendorDetails?.mobile || ''}</span>
-              </div>
+          <div class="header-content">
+            <img src="https://chroniclevaults.com/assets/new%20logo-5e7e59a2.png" alt="Chronicle Vaults Logo" class="logo" />
+            <div class="company-info">
+              <div class="company-name">Chronicle Vaults - A Brand of Urhistory</div>
+              <div class="tagline">16/189, Netajinagar, Meghaninagar, Ahmedabad - 380016, Gujarat</div>
+              <div class="tagline">M:- 8460849878, E-mail:- chroniclevaults@gmail.com</div>
             </div>
           </div>
         </div>
 
-        <div class="section">
-          <div class="section-title">Lots Sold</div>
-          <table class="table">
-            <thead>
+        <div class="title">Vendor Settlement Invoice</div>
+
+        <table class="vendor-info">
+          <tr>
+            <td><strong>Vendor Code:</strong> ${invoice.vendorDetails?.vendorCode || 'N/A'}</td>
+            <td><strong>Invoice No:</strong> ${invoice.invoiceNumber}</td>
+          </tr>
+          <tr>
+            <td><strong>Name:</strong> ${invoice.vendorDetails?.name || 'N/A'}</td>
+            <td><strong>Date:</strong> ${new Date(invoice.invoiceDate).toLocaleDateString('en-GB')}</td>
+          </tr>
+          <tr>
+            <td><strong>Auction:</strong> ${invoice.auction?.auctionCode || 'N/A'} - ${invoice.auction?.title || 'N/A'}</td>
+            <td><strong>Commission:</strong> ${commissionRate}%</td>
+          </tr>
+          <tr>
+            <td><strong>Email:</strong> ${invoice.vendorDetails?.email || 'N/A'}</td>
+            <td><strong>Mobile:</strong> ${invoice.vendorDetails?.mobile || 'N/A'}</td>
+          </tr>
+        </table>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Sr.NO.</th>
+              <th>Lot No.</th>
+              <th>Description</th>
+              <th>Hammer Price (₹)</th>
+              <th>Commission (${commissionRate}%)</th>
+              <th>Net Payable (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(invoice.lots || []).map((lot, index) => `
               <tr>
-                <th style="width: 80px;">Lot #</th>
-                <th>Description</th>
-                <th style="width: 120px;">Hammer Price</th>
-                <th style="width: 100px;">Commission</th>
-                <th style="width: 120px;">Net Payable</th>
+                <td>${index + 1}</td>
+                <td>${lot.lotNumber || 'N/A'}</td>
+                <td>${lot.description || 'N/A'}</td>
+                <td>₹${(lot.hammerPrice || 0).toLocaleString('en-IN')}</td>
+                <td>₹${(lot.commissionAmount || 0).toLocaleString('en-IN')}</td>
+                <td>₹${(lot.netPayable || 0).toLocaleString('en-IN')}</td>
               </tr>
-            </thead>
-            <tbody>
-              ${(invoice.lots || []).map(lot => `
-                <tr>
-                  <td><strong>${lot.lotNumber || 'N/A'}</strong></td>
-                  <td>${lot.description || 'N/A'}</td>
-                  <td style="text-align: right;">₹${(lot.hammerPrice || 0).toLocaleString('en-IN')}</td>
-                  <td style="text-align: right;">${lot.commissionRate}%</td>
-                  <td style="text-align: right;"><strong>₹${(lot.netPayable || 0).toLocaleString('en-IN')}</strong></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
+            `).join('')}
+            <tr class="totals">
+              <td colspan="3">Total Hammer Price</td>
+              <td>₹${totalHammerPrice.toLocaleString('en-IN')}</td>
+              <td>₹${totalCommission.toLocaleString('en-IN')}</td>
+              <td>₹${finalPayable.toLocaleString('en-IN')}</td>
+            </tr>
+          </tbody>
+        </table>
 
-        <div class="summary">
-          <div class="summary-row">
-            <span>Total Hammer Price:</span>
-            <span><strong>₹${totalHammerPrice.toLocaleString('en-IN')}</strong></span>
-          </div>
-          <div class="summary-row commission">
-            <span>Commission (${commissionRate}%):</span>
-            <span><strong>- ₹${totalCommission.toLocaleString('en-IN')}</strong></span>
-          </div>
-          <div class="summary-row total">
-            <span>Net Payable to Vendor:</span>
-            <span>₹${finalPayable.toLocaleString('en-IN')}</span>
-          </div>
-        </div>
+        <table class="vendor-info">
+          <tr>
+            <td colspan="2"><strong>Amount in Words:</strong> ${numberToWords(finalPayable)} Only</td>
+          </tr>
+        </table>
 
-        <div style="clear: both; margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-left: 4px solid #8B5CF6;">
-          <p style="margin: 5px 0;"><strong>Amount in Words:</strong></p>
-          <p style="margin: 5px 0; font-size: 16px; color: #333;">${numberToWords(finalPayable)} Only</p>
-        </div>
-
-        ${invoice.bankDetails ? `
-        <div class="bank-details">
-          <h3>Vendor Bank Details for Payment</h3>
-          <div class="bank-row">
-            <span class="bank-label">Account Holder Name:</span>
-            <span>${invoice.bankDetails.accountHolderName || 'N/A'}</span>
-          </div>
-          <div class="bank-row">
-            <span class="bank-label">Account Number:</span>
-            <span>${invoice.bankDetails.accountNumber || 'N/A'}</span>
-          </div>
-          <div class="bank-row">
-            <span class="bank-label">IFSC Code:</span>
-            <span>${invoice.bankDetails.ifscCode || 'N/A'}</span>
-          </div>
-          <div class="bank-row">
-            <span class="bank-label">Bank Name:</span>
-            <span>${invoice.bankDetails.bankName || 'N/A'}</span>
-          </div>
-          <div class="bank-row">
-            <span class="bank-label">Branch:</span>
-            <span>${invoice.bankDetails.branchName || 'N/A'}</span>
-          </div>
-        </div>
+        ${invoice.bankDetails?.accountNumber ? `
+        <table class="vendor-info">
+          <tr>
+            <td colspan="2"><strong>Payment Details:</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Account Holder:</strong> ${invoice.bankDetails.accountHolderName || 'N/A'}</td>
+            <td><strong>Bank:</strong> ${invoice.bankDetails.bankName || 'N/A'}</td>
+          </tr>
+          <tr>
+            <td><strong>Account No:</strong> ${invoice.bankDetails.accountNumber || 'N/A'}</td>
+            <td><strong>IFSC:</strong> ${invoice.bankDetails.ifscCode || 'N/A'}</td>
+          </tr>
+        </table>
         ` : ''}
 
-        ${invoice.notes ? `
-        <div style="margin: 20px 0; padding: 15px; background-color: #FFF9E6; border-left: 4px solid #FFC107;">
-          <p style="margin: 0;"><strong>Notes:</strong></p>
-          <p style="margin: 5px 0;">${invoice.notes}</p>
-        </div>
-        ` : ''}
-
-        <div class="signature">
-          <p style="margin-bottom: 5px;">For Chronicle Vaults</p>
-          <div class="signature-line"></div>
-          <p style="margin-top: 5px;"><strong>Authorised Signatory</strong></p>
-        </div>
-
-        <div style="margin-top: 30px; padding: 15px; background-color: #f0f0f0; border: 1px solid #ddd; border-radius: 5px;">
-          <p style="margin: 0; font-size: 11px; color: #555;">
-            <strong>Terms & Conditions:</strong><br>
-            1. This is a computer-generated vendor settlement invoice.<br>
-            2. Payment will be processed as per the terms and conditions of the consignment agreement.<br>
-            3. Commission has been deducted as per the agreed rate of ${commissionRate}%.<br>
-            4. For any queries, please contact: ${invoice.companyDetails?.email || 'info@chroniclevaults.com'}<br>
-            ${invoice.isPaid ? `<br><strong style="color: green;">✓ PAID on ${new Date(invoice.paidAt).toLocaleDateString('en-IN')}</strong>` : ''}
-          </p>
+        <div class="signature-section">
+          <div class="sign-box">
+            <div>Vendor's Sign :</div>
+            <div>Date :</div>
+          </div>
+          <div class="sign-box">
+            <div>For, Chronicle Vaults - A Brand of Urhistory</div>
+            <div class="sign-line">Auth. Signatory</div>
+          </div>
         </div>
       </body>
       </html>

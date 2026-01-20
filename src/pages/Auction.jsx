@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Gavel, Clock, TrendingUp, Users, AlertCircle, CheckCircle,
-  Coins, User, Hash, Shield, ArrowLeft
+  Coins, User, Hash, Shield, ArrowLeft, Lock
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
@@ -1313,10 +1313,12 @@ const AuctionPage = () => {
                   user && user.isAuctionVerified ? (
                     <button
                       onClick={handleQuickBid}
-                      disabled={submittingBid || bidButtonStatus === 'mybid'}
+                      disabled={submittingBid || bidButtonStatus === 'mybid' || (auction.isLotBidding && selectedLotIndex !== null && selectedLotIndex !== (auction.lotNumber - 1))}
                       className={`w-full font-black py-6 px-6 rounded-2xl transition-all flex items-center justify-center gap-3 text-2xl shadow-2xl ${
                         submittingBid
                           ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed'
+                          : (auction.isLotBidding && selectedLotIndex !== null && selectedLotIndex !== (auction.lotNumber - 1))
+                          ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed opacity-60'
                           : bidButtonStatus === 'mybid'
                           ? 'bg-gradient-to-r from-green-600 to-green-700 text-white cursor-not-allowed opacity-90'
                           : bidButtonStatus === 'outbid'
@@ -1328,6 +1330,11 @@ const AuctionPage = () => {
                         <>
                           <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
                           <span>Placing Bid...</span>
+                        </>
+                      ) : (auction.isLotBidding && selectedLotIndex !== null && selectedLotIndex !== (auction.lotNumber - 1)) ? (
+                        <>
+                          <Lock className="w-8 h-8" />
+                          <span>This Lot is Not Active</span>
                         </>
                       ) : bidButtonStatus === 'mybid' ? (
                         <>
