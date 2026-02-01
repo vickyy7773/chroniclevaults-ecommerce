@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Upload, CheckCircle, User, Building2, Calendar, FileText, MapPin, Phone, Mail, Globe, Image, Shield, Users, AlertCircle, Info } from 'lucide-react';
 import api from '../utils/api';
 
 const AuctionRegistration = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [isAdminMode, setIsAdminMode] = useState(false);
+  const [adminCustomerId, setAdminCustomerId] = useState(null);
 
   const [formData, setFormData] = useState({
     title: 'Mr.',
@@ -53,33 +56,53 @@ const AuctionRegistration = () => {
     ]
   });
 
-  // Pre-fill user data from localStorage and check if already verified
+  // Check for admin mode and pre-fill from URL parameters
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser);
+    const adminMode = searchParams.get('adminMode');
+    const customerId = searchParams.get('customerId');
+    const name = searchParams.get('name');
+    const email = searchParams.get('email');
+    const phone = searchParams.get('phone');
 
-        // If user is already auction verified, redirect to auctions
-        if (user.isAuctionVerified) {
-          setError('You are already registered for auctions!');
-          setTimeout(() => {
-            navigate('/auctions?status=Active');
-          }, 2000);
-          return;
+    if (adminMode === 'true' && customerId) {
+      // Admin mode - pre-fill with customer data from URL
+      setIsAdminMode(true);
+      setAdminCustomerId(customerId);
+
+      setFormData(prev => ({
+        ...prev,
+        fullName: name || '',
+        email: email || '',
+        mobile: phone || ''
+      }));
+    } else {
+      // Normal mode - pre-fill from localStorage
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        try {
+          const user = JSON.parse(savedUser);
+
+          // If user is already auction verified, redirect to auctions
+          if (user.isAuctionVerified) {
+            setError('You are already registered for auctions!');
+            setTimeout(() => {
+              navigate('/auctions?status=Active');
+            }, 2000);
+            return;
+          }
+
+          setFormData(prev => ({
+            ...prev,
+            fullName: user.name || '',
+            email: user.email || '',
+            mobile: user.phone || ''
+          }));
+        } catch (error) {
+          console.error('Error parsing user data:', error);
         }
-
-        setFormData(prev => ({
-          ...prev,
-          fullName: user.name || '',
-          email: user.email || '',
-          mobile: user.phone || ''
-        }));
-      } catch (error) {
-        console.error('Error parsing user data:', error);
       }
     }
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -184,17 +207,29 @@ const AuctionRegistration = () => {
           proofType: formData.idProof.proofType,
           url: formData.idProof.file
         },
-        panCard: formData.panCard
+        panCard: formData.panCard,
+        // Include customer ID if admin mode
+        ...(isAdminMode && adminCustomerId ? { customerId: adminCustomerId } : {})
       };
 
       console.log('📤 Submitting auction registration:', submitData);
+      console.log('Admin Mode:', isAdminMode, 'Customer ID:', adminCustomerId);
+
       const response = await api.post('/auction-registration', submitData);
       console.log('✅ Response:', response);
 
       setMessage(response.message);
-      setTimeout(() => {
-        navigate('/');
-      }, 3000);
+
+      // In admin mode, show success and close window
+      if (isAdminMode) {
+        setTimeout(() => {
+          window.close();
+        }, 2000);
+      } else {
+        setTimeout(() => {
+          navigate('/');
+        }, 3000);
+      }
 
     } catch (err) {
       console.error('❌ Auction registration error:', err);
@@ -226,6 +261,21 @@ const AuctionRegistration = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Auction Registration</h1>
           <p className="text-lg text-gray-600">Join Chronicle Vaults Exclusive Auction Platform</p>
         </div>
+
+        {/* Admin Mode Banner */}
+        {isAdminMode && (
+          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 mb-6 rounded-2xl shadow-xl border-4 border-purple-400">
+            <div className="flex items-center gap-4">
+              <div className="bg-white p-3 rounded-full">
+                <Shield className="w-8 h-8 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-1">Admin Mode - Customer Registration</h3>
+                <p className="text-purple-100">You are registering customer: <span className="font-bold text-white">{formData.fullName || 'N/A'}</span></p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Important Notices */}
         <div className="bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg shadow-md">

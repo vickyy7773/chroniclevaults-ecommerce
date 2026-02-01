@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Edit, Trash2, Eye, UserPlus, Mail, Phone, MapPin, ShoppingBag, Users, X, Coins } from 'lucide-react';
+import { Search, Edit, Trash2, Eye, UserPlus, Mail, Phone, MapPin, ShoppingBag, Users, X, Coins, Gavel } from 'lucide-react';
 import { customerService } from '../../services';
 import { toast } from 'react-toastify';
 import api from '../../utils/api';
@@ -16,9 +16,13 @@ const CustomerManagement = () => {
   const [showCoinsModal, setShowCoinsModal] = useState(false);
   const [editingCoins, setEditingCoins] = useState(0);
   const [updatingCoins, setUpdatingCoins] = useState(false);
+  const [auctions, setAuctions] = useState([]);
+  const [selectedAuction, setSelectedAuction] = useState('');
+  const [registeringForAuction, setRegisteringForAuction] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
+    fetchAuctions();
   }, []);
 
   // Auto-open coins modal if userId in URL
@@ -164,6 +168,47 @@ const CustomerManagement = () => {
       toast.error(error.response?.data?.message || 'Failed to update coins');
     } finally {
       setUpdatingCoins(false);
+    }
+  };
+
+  const fetchAuctions = async () => {
+    try {
+      const response = await api.get('/auctions');
+      const auctionsData = response?.data || [];
+      // Filter for active/upcoming auctions only
+      const activeAuctions = auctionsData.filter(a =>
+        a.status === 'Active' || a.status === 'Upcoming' || a.status === 'Scheduled'
+      );
+      setAuctions(activeAuctions);
+    } catch (error) {
+      console.error('Error fetching auctions:', error);
+    }
+  };
+
+  const handleRegisterForAuction = async () => {
+    if (!selectedAuction) {
+      toast.error('Please select an auction');
+      return;
+    }
+
+    try {
+      setRegisteringForAuction(true);
+      const response = await api.post('/auction-registrations/admin-register', {
+        userId: selectedCustomer._id,
+        auctionId: selectedAuction
+      });
+
+      if (response.success) {
+        toast.success('Customer registered for auction successfully!');
+        setSelectedAuction('');
+      } else {
+        toast.error(response.message || 'Failed to register');
+      }
+    } catch (error) {
+      console.error('Error registering for auction:', error);
+      toast.error(error.response?.data?.message || 'Failed to register customer');
+    } finally {
+      setRegisteringForAuction(false);
     }
   };
 
@@ -570,6 +615,28 @@ const CustomerManagement = () => {
                           ? selectedCustomer.address
                           : `${selectedCustomer.address.street || ''}, ${selectedCustomer.address.city || ''}, ${selectedCustomer.address.state || ''} ${selectedCustomer.address.zipCode || ''}, ${selectedCustomer.address.country || ''}`
                       ) : 'No address provided'}
+                    </p>
+                  </div>
+
+                  {/* Auction Registration Section */}
+                  <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-850 rounded-2xl border-2 border-blue-200 dark:border-blue-900">
+                    <p className="text-xs font-black text-blue-700 dark:text-blue-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                      <Gavel size={16} className="text-blue-600" />
+                      Auction Registration
+                    </p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                      Register this customer for auction by filling the complete registration form
+                    </p>
+                    <a
+                      href={`/auction-registration?adminMode=true&customerId=${selectedCustomer._id}&name=${encodeURIComponent(selectedCustomer.name)}&email=${encodeURIComponent(selectedCustomer.email)}&phone=${encodeURIComponent(selectedCustomer.phone || '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-center rounded-xl hover:shadow-xl transition-all font-bold transform hover:-translate-y-0.5"
+                    >
+                      📋 Fill Registration Form
+                    </a>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-3">
+                      Opens registration form in new tab with customer details pre-filled
                     </p>
                   </div>
 

@@ -28,30 +28,49 @@ export const submitRegistration = async (req, res) => {
       panCard,
       idProof,
       collectingInterests,
-      references
+      references,
+      customerId // Admin mode: customer ID from URL params
     } = req.body;
 
     console.log('📧 Email:', email);
     console.log('📄 idProof type:', typeof idProof, idProof);
+    console.log('👤 CustomerId (admin mode):', customerId);
 
-    // Check if user already exists with this email (from e-commerce signup)
-    const existingUser = await User.findOne({ email });
+    // Check if user already exists
+    // If customerId provided (admin mode), use that directly. Otherwise lookup by email
+    let existingUser;
+    if (customerId) {
+      console.log('🔧 Admin mode: Using provided customerId');
+      existingUser = await User.findById(customerId);
+      if (!existingUser) {
+        return res.status(404).json({
+          message: 'Customer not found with provided ID'
+        });
+      }
+    } else {
+      console.log('👤 Normal mode: Looking up user by email');
+      existingUser = await User.findOne({ email });
+    }
 
     // If user is already auction verified, don't allow re-registration
     if (existingUser && existingUser.isAuctionVerified) {
       console.log('❌ User already verified for auctions');
       return res.status(400).json({
-        message: 'You are already registered and verified for auctions! Please login to participate.',
+        message: 'This customer is already registered and verified for auctions!',
         alreadyVerified: true
       });
     }
 
-    // Check if email already registered for auction (not in User model)
-    const existingRegistration = await AuctionRegistration.findOne({ email });
+    // Check if registration already exists
+    // In admin mode, check by userId. In normal mode, check by email
+    const existingRegistration = customerId
+      ? await AuctionRegistration.findOne({ userId: customerId })
+      : await AuctionRegistration.findOne({ email });
+
     if (existingRegistration) {
-      console.log('❌ Email already registered for auction');
+      console.log('❌ Registration already exists');
       return res.status(400).json({
-        message: `Auction registration already exists with status: ${existingRegistration.status}. Please contact admin if you need assistance.`,
+        message: `Auction registration already exists with status: ${existingRegistration.status}. ${customerId ? 'This customer is already registered.' : 'Please contact admin if you need assistance.'}`,
         status: existingRegistration.status
       });
     }
