@@ -445,6 +445,7 @@ const CustomerManagement = () => {
                           <Eye size={18} />
                         </button>
                         <button
+                          onClick={() => viewCustomerDetails(customer)}
                           className="p-2.5 bg-gradient-to-br from-accent-400 to-accent-500 text-white hover:shadow-lg rounded-xl transition-all transform hover:-translate-y-0.5"
                           title="Edit"
                         >
