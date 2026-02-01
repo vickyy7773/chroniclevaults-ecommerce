@@ -16,13 +16,9 @@ const CustomerManagement = () => {
   const [showCoinsModal, setShowCoinsModal] = useState(false);
   const [editingCoins, setEditingCoins] = useState(0);
   const [updatingCoins, setUpdatingCoins] = useState(false);
-  const [auctions, setAuctions] = useState([]);
-  const [selectedAuction, setSelectedAuction] = useState('');
-  const [registeringForAuction, setRegisteringForAuction] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
-    fetchAuctions();
   }, []);
 
   // Auto-open coins modal if userId in URL
@@ -171,46 +167,7 @@ const CustomerManagement = () => {
     }
   };
 
-  const fetchAuctions = async () => {
-    try {
-      const response = await api.get('/auctions');
-      const auctionsData = response?.data || [];
-      // Filter for active/upcoming auctions only
-      const activeAuctions = auctionsData.filter(a =>
-        a.status === 'Active' || a.status === 'Upcoming' || a.status === 'Scheduled'
-      );
-      setAuctions(activeAuctions);
-    } catch (error) {
-      console.error('Error fetching auctions:', error);
-    }
-  };
-
-  const handleRegisterForAuction = async () => {
-    if (!selectedAuction) {
-      toast.error('Please select an auction');
-      return;
-    }
-
-    try {
-      setRegisteringForAuction(true);
-      const response = await api.post('/auction-registrations/admin-register', {
-        userId: selectedCustomer._id,
-        auctionId: selectedAuction
-      });
-
-      if (response.success) {
-        toast.success('Customer registered for auction successfully!');
-        setSelectedAuction('');
-      } else {
-        toast.error(response.message || 'Failed to register');
-      }
-    } catch (error) {
-      console.error('Error registering for auction:', error);
-      toast.error(error.response?.data?.message || 'Failed to register customer');
-    } finally {
-      setRegisteringForAuction(false);
-    }
-  };
+  // Removed fetchAuctions and handleRegisterForAuction - now using link-based approach to open registration form
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch =
