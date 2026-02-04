@@ -2227,9 +2227,21 @@ export const placeBid = async (req, res) => {
             });
             currentLot.currentBid = newCurrentBid;
 
-            // STEP 2: Update lot reserve to new bidder (HIDDEN)
+            // STEP 2: Update lot reserve to new bidder (HIDDEN) and add to bids array
             currentLot.highestReserveBid = maxBid;
             currentLot.reserveBidder = userId;
+            // Add new reserve bidder's bid to array
+            currentLot.bids.push({
+              user: userId,
+              amount: maxBid,
+              maxBid: maxBid,
+              isReserveBidder: true,
+              isAutoBid: true,
+              isCatalogBid: isInCatalogPhase,
+              timestamp: new Date(),
+              ipAddress,
+              userAgent
+            });
           } else {
             auction.bids.push({
               user: existingReserveBidder,
@@ -2242,9 +2254,20 @@ export const placeBid = async (req, res) => {
               userAgent
             });
 
-            // STEP 2: Update auction reserve to new bidder (HIDDEN)
+            // STEP 2: Update auction reserve to new bidder (HIDDEN) and add to bids array
             auction.highestReserveBid = maxBid;
             auction.reserveBidder = userId;
+            // Add new reserve bidder's bid to array
+            auction.bids.push({
+              user: userId,
+              amount: maxBid,
+              maxBid: maxBid,
+              isReserveBidder: true,
+              isAutoBid: true,
+              isCatalogBid: isInCatalogPhase,
+              ipAddress,
+              userAgent
+            });
           }
 
           auction.currentBid = newCurrentBid;
