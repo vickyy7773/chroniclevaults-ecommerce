@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Gavel, Clock, TrendingUp, Users, Filter, BookOpen, LayoutDashboard, FileText, User } from 'lucide-react';
+import { Gavel, Clock, TrendingUp, Users, Filter, BookOpen, LayoutDashboard, FileText, User, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
 
@@ -8,6 +8,7 @@ const AuctionsPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [auctions, setAuctions] = useState([]);
+  const [thankYouAuction, setThankYouAuction] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Get initial filter from URL query params or default to 'Active'
@@ -26,33 +27,49 @@ const AuctionsPage = () => {
     fetchAuctions();
   }, [filter]);
 
+  // Map LotAuction to filter tabs — same rule as Live Auction
+  const lotAuctionFilterStatus = (a) => {
+    const now = new Date();
+    const posterUntil = a.posterDisplayUntil ? new Date(a.posterDisplayUntil) : null;
+    const biddingEnd = a.lotBiddingEndTime ? new Date(a.lotBiddingEndTime) : null;
+    // posterDisplayUntil in future → Upcoming
+    if (posterUntil && now < posterUntil) return 'Upcoming';
+    // lotBiddingEndTime passed OR status Paused/Completed → Ended
+    if ((biddingEnd && now >= biddingEnd) || a.status === 'Paused' || a.status === 'Completed') return 'Ended';
+    return 'Active';
+  };
+
   const fetchAuctions = async () => {
     try {
       setLoading(true);
       const queryParam = filter !== 'All' ? `?status=${filter}` : '';
-      const response = await api.get(`/auctions${queryParam}`);
-      console.log('📦 RAW Auctions Response:', response);
+      const [liveRes, lotRes] = await Promise.allSettled([
+        api.get(`/auctions${queryParam}`),
+        api.get('/lot-auction/public'),
+      ]);
 
-      // Handle different response structures
-      let auctionsData = [];
-      if (Array.isArray(response)) {
-        auctionsData = response;
-      } else if (Array.isArray(response?.data)) {
-        auctionsData = response.data;
-      } else if (response?.data?.data && Array.isArray(response.data.data)) {
-        auctionsData = response.data.data;
+      let liveData = [];
+      if (liveRes.status === 'fulfilled') {
+        const r = liveRes.value;
+        if (Array.isArray(r)) liveData = r;
+        else if (Array.isArray(r?.data)) liveData = r.data;
+        else if (Array.isArray(r?.data?.data)) liveData = r.data.data;
       }
+      liveData = liveData.map(a => ({ ...a, _auctionType: 'live' }));
 
-      console.log('📋 Parsed Auctions:', auctionsData.length, 'auctions');
-      console.log('🔍 Filter:', filter, '| Auctions by status:', {
-        Active: auctionsData.filter(a => a.status === 'Active').length,
-        Ended: auctionsData.filter(a => a.status === 'Ended').length,
-        Upcoming: auctionsData.filter(a => a.status === 'Upcoming').length
-      });
+      let lotData = [];
+      if (lotRes.status === 'fulfilled') {
+        const r = lotRes.value;
+        if (Array.isArray(r?.data)) lotData = r.data;
+        else if (Array.isArray(r?.data?.data)) lotData = r.data.data;
+      }
+      // Filter lot auctions by the selected tab
+      lotData = lotData
+        .map(a => ({ ...a, _auctionType: 'lot' }))
+        .filter(a => filter === 'All' || lotAuctionFilterStatus(a) === filter);
 
-      setAuctions(auctionsData);
+      setAuctions([...liveData, ...lotData]);
     } catch (error) {
-      console.error('Fetch auctions error:', error);
       toast.error('Failed to load auctions');
     } finally {
       setLoading(false);
@@ -102,7 +119,7 @@ const AuctionsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-accent-600 to-accent-700 text-white py-12">
+      <div className="bg-gradient-to-r from-accent-600 to-accent-700 text-white py-12 relative">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-center mb-4">
             <Gavel className="w-12 h-12 mr-4" />
@@ -111,6 +128,25 @@ const AuctionsPage = () => {
           <p className="text-center text-lg text-white/90 max-w-2xl mx-auto">
             Discover rare collectibles and bid on exclusive items in real-time auctions
           </p>
+          {/* iCollector.com badge */}
+          <div className="flex justify-center mt-5">
+            <a
+              href="https://www.icollector.com/"
+              title="View Online Auctions"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white rounded-xl px-4 py-2 shadow-lg hover:shadow-xl transition-all flex items-center gap-3 group"
+            >
+              <img
+                src="https://www.icollector.com/graphics/logos/link_logo.png"
+                alt="iCollector.com"
+                className="h-7 w-auto"
+              />
+              <span className="text-sm font-semibold text-gray-700 group-hover:text-accent-600 transition-colors whitespace-nowrap">
+                Register &amp; Bid on iCollector
+              </span>
+            </a>
+          </div>
         </div>
       </div>
 
@@ -150,29 +186,41 @@ const AuctionsPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {auctions.map((auction) => (
-              <div
-                key={auction._id}
-                onClick={() => {
-                  // Upcoming auctions are not clickable - only show poster
-                  if (auction.status === 'Upcoming') {
-                    return;
-                  }
-                  // For ended auctions, go to auction-lots page
-                  if (auction.status === 'Ended') {
+            {auctions.map((auction) => {
+              const now = new Date();
+              const posterUntil = auction.posterDisplayUntil ? new Date(auction.posterDisplayUntil) : null;
+              const isLotType = auction._auctionType === 'lot';
+              // Non-clickable: Live Upcoming OR Lot Auction with posterDisplayUntil in future
+              const isUpcoming = isLotType
+                ? (!!posterUntil && now < posterUntil)
+                : auction.status === 'Upcoming';
+              const isClickable = !isUpcoming;
+
+              const handleClick = () => {
+                if (!isClickable) return;
+                if (isLotType) {
+                  navigate(`/lot-auction/${auction._id}`);
+                } else if (auction.status === 'Ended') {
+                  if (auction.isEndedPublic) {
                     navigate(`/auction-lots/${auction._id}`);
                   } else {
-                    // For active auctions, go to catalog
-                    navigate(`/auction/${auction._id}/catalog`);
+                    setThankYouAuction(auction);
                   }
-                }}
+                } else {
+                  navigate(`/auction/${auction._id}/catalog`);
+                }
+              };
+
+              return (
+              <div
+                key={auction._id}
+                onClick={handleClick}
                 className={`rounded-lg shadow-md overflow-hidden transition-all ${
-                  auction.status === 'Upcoming'
-                    ? 'cursor-default'
-                    : 'cursor-pointer hover:shadow-xl transform hover:-translate-y-1'
+                  isClickable
+                    ? 'cursor-pointer hover:shadow-xl transform hover:-translate-y-1'
+                    : 'cursor-default'
                 }`}
               >
-                {/* Auction Highlight Banner Image */}
                 <div className="relative w-full h-[500px] bg-gray-200">
                   {auction.highlightImage || auction.image ? (
                     <img
@@ -189,12 +237,78 @@ const AuctionsPage = () => {
                       <Gavel className="w-16 h-16 text-gray-400" />
                     </div>
                   )}
-
+                  {isLotType && (
+                    <span className="absolute top-3 left-3 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow">
+                      Lot Bidding
+                    </span>
+                  )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
+
         )}
+
+        {/* Thank You Modal for Ended Auctions */}
+        {thankYouAuction && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
+              onClick={() => setThankYouAuction(null)}
+            >
+              <div
+                className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden"
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Top banner image */}
+                {(thankYouAuction.highlightImage || thankYouAuction.image) && (
+                  <div className="w-full h-52 overflow-hidden">
+                    <img
+                      src={thankYouAuction.highlightImage || thankYouAuction.image}
+                      alt={thankYouAuction.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Close button */}
+                <button
+                  onClick={() => setThankYouAuction(null)}
+                  className="absolute top-3 right-3 bg-white bg-opacity-90 rounded-full p-1 shadow hover:bg-opacity-100 transition"
+                >
+                  <X className="w-5 h-5 text-gray-700" />
+                </button>
+
+                {/* Message */}
+                <div className="px-8 py-8 text-center">
+                  <div className="flex justify-center mb-4">
+                    <div className="bg-accent-100 rounded-full p-4">
+                      <Gavel className="w-10 h-10 text-accent-600" />
+                    </div>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    Thank You for Your Participation!
+                  </h2>
+                  <p className="text-gray-500 text-sm mb-4">{thankYouAuction.title}</p>
+                  <p className="text-gray-700 text-base leading-relaxed">
+                    We sincerely appreciate your enthusiasm and participation in this auction.
+                    The results will be announced shortly. Please stay tuned for updates.
+                  </p>
+                  <div className="mt-6 border-t border-gray-100 pt-5">
+                    <p className="text-xs text-gray-400">
+                      — Chronicle Vaults Auction House
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setThankYouAuction(null)}
+                    className="mt-5 px-8 py-2 bg-accent-600 hover:bg-accent-700 text-white rounded-full font-semibold transition-colors text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );
