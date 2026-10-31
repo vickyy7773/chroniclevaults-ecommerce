@@ -1,6 +1,8 @@
 import User from '../models/User.js';
 import Order from '../models/Order.js';
 import CoinAllocation from '../models/CoinAllocation.js';
+import Auction from '../models/Auction.js';
+import AuctionRegistration from '../models/AuctionRegistration.js';
 import { sendAuctionLimitUpgradeEmail } from '../services/emailService.js';
 
 // @desc    Get all users/customers
@@ -8,9 +10,23 @@ import { sendAuctionLimitUpgradeEmail } from '../services/emailService.js';
 // @access  Private/Admin
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({ legacyRole: 'user' })
+    const { type } = req.query; // 'auction' | 'ecommerce' | undefined (all)
+
+    // Build set of userIds who have any auction registration
+    const auctionRegs = await AuctionRegistration.find({}).select('userId').lean();
+    const auctionUserIds = new Set(auctionRegs.map(r => r.userId?.toString()).filter(Boolean));
+
+    let users = await User.find({ legacyRole: 'user' })
       .select('-password')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Server-side filter by type
+    if (type === 'auction') {
+      users = users.filter(u => auctionUserIds.has(u._id.toString()));
+    } else if (type === 'ecommerce') {
+      users = users.filter(u => !auctionUserIds.has(u._id.toString()));
+    }
 
     // For each user, get their order statistics
     const usersWithStats = await Promise.all(
@@ -24,17 +40,19 @@ export const getAllUsers = async (req, res) => {
         const lastOrder = orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
         const lastOrderDate = lastOrder ? lastOrder.createdAt : user.createdAt;
 
-        // Determine status based on last order
+        // Use saved status if set, otherwise compute from order history
         const daysSinceLastOrder = (Date.now() - new Date(lastOrderDate)) / (1000 * 60 * 60 * 24);
-        const status = daysSinceLastOrder > 90 ? 'inactive' : 'active';
+        const computedStatus = daysSinceLastOrder > 90 ? 'inactive' : 'active';
+        const status = user.status || computedStatus;
 
         return {
-          ...user.toObject(),
+          ...user,
           totalOrders,
           totalSpent,
           lastOrderDate,
           status,
-          registeredDate: user.createdAt
+          registeredDate: user.createdAt,
+          hasAuctionRegistration: auctionUserIds.has(user._id.toString())
         };
       })
     );
@@ -116,9 +134,8 @@ export const updateUserStatus = async (req, res) => {
       });
     }
 
-    // Store status in user object (you might want to add a status field to User model)
-    // For now, we'll just return success
-    // In production, you should add a status field to the User schema
+    user.status = status;
+    await user.save();
 
     res.status(200).json({
       success: true,
@@ -425,6 +442,23 @@ export const updateAuctionCoins = async (req, res) => {
 
     console.log('💰 Coins updated successfully');
 
+    // Save coin allocation to current Active/Upcoming auction
+    try {
+      const currentAuction = await Auction.findOne({ status: { $in: ['Active', 'Upcoming'] } }).sort({ createdAt: -1 });
+      if (currentAuction) {
+        const existingIdx = currentAuction.coinAllocations.findIndex(a => a.userId.toString() === user._id.toString());
+        if (existingIdx >= 0) {
+          currentAuction.coinAllocations[existingIdx].allocatedCoins = newCoins;
+        } else {
+          currentAuction.coinAllocations.push({ userId: user._id, allocatedCoins: newCoins });
+        }
+        await currentAuction.save();
+        console.log(`💾 Saved coin allocation (${newCoins}) for user ${user.email} in auction ${currentAuction.title}`);
+      }
+    } catch (allocErr) {
+      console.error('❌ Failed to save coin allocation to auction:', allocErr);
+    }
+
     // Create CoinAllocation record if coins were increased
     if (newCoins > oldCoins) {
       const allocationAmount = newCoins - oldCoins;
@@ -473,5 +507,101 @@ export const updateAuctionCoins = async (req, res) => {
       message: 'Server error while updating auction coins',
       error: error.message
     });
+  }
+};
+
+// @desc    Admin: search customers (lightweight, for dropdowns)
+// @route   GET /api/users/customers
+// @access  Private/Admin
+export const searchCustomersList = async (req, res) => {
+  try {
+    const { search = '', limit = 50 } = req.query;
+    const query = { legacyRole: 'user' };
+    if (search.trim()) {
+      const rx = new RegExp(search.trim(), 'i');
+      query.$or = [{ name: rx }, { email: rx }, { phone: rx }];
+    }
+    const users = await User.find(query)
+      .select('name email phone')
+      .sort({ name: 1 })
+      .limit(Number(limit))
+      .lean();
+    return res.json({ success: true, customers: users });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Admin: quick-create a customer account
+// @route   POST /api/users/admin-create
+// @access  Private/Admin
+export const adminCreateCustomer = async (req, res) => {
+  try {
+    const { name, email, phone } = req.body;
+    if (!name || !email) return res.status(400).json({ success: false, message: 'Name and email are required' });
+
+    const exists = await User.findOne({ email: email.toLowerCase() });
+    if (exists) {
+      return res.json({ success: true, existing: true, data: { _id: exists._id, name: exists.name, email: exists.email } });
+    }
+
+    // Random 10-char temp password
+    const tempPassword = Math.random().toString(36).slice(-6) + Math.random().toString(36).slice(-4).toUpperCase();
+    const user = await User.create({
+      name,
+      email: email.toLowerCase(),
+      phone: phone || '',
+      password: tempPassword,
+      legacyRole: 'user',
+      isEmailVerified: true,
+      status: 'active',
+    });
+
+    return res.status(201).json({ success: true, data: { _id: user._id, name: user.name, email: user.email } });
+  } catch (error) {
+    if (error.code === 11000) {
+      const exists = await User.findOne({ email: req.body.email?.toLowerCase() }).select('_id name email');
+      return res.json({ success: true, existing: true, data: exists });
+    }
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get active/live users (seen in last 15 min + today's count)
+// @route   GET /api/users/active
+// @access  Private/Admin
+export const getActiveUsers = async (req, res) => {
+  try {
+    const now = new Date();
+    const fifteenMinAgo = new Date(now - 15 * 60 * 1000);
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    // Users active in last 15 minutes
+    const liveUsers = await User.find({
+      lastSeenAt: { $gte: fifteenMinAgo },
+      legacyRole: 'user'
+    })
+      .select('name email phone lastSeenAt')
+      .sort({ lastSeenAt: -1 })
+      .limit(50);
+
+    // Count of users active today
+    const todayCount = await User.countDocuments({
+      lastSeenAt: { $gte: startOfDay },
+      legacyRole: 'user'
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        liveUsers,
+        liveCount: liveUsers.length,
+        todayCount
+      }
+    });
+  } catch (error) {
+    console.error('Get active users error:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };

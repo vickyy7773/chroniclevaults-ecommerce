@@ -9,7 +9,10 @@ import {
   addAddress,
   setDefaultAddress,
   deleteAddress,
-  updateAuctionCoins
+  updateAuctionCoins,
+  getActiveUsers,
+  adminCreateCustomer,
+  searchCustomersList
 } from '../controllers/userController.js';
 import { protect, admin } from '../middleware/auth.js';
 
@@ -25,6 +28,15 @@ router.delete('/me/addresses/:addressId', protect, deleteAddress);
 // Temporarily disabled for testing
 // router.use(protect);
 // router.use(admin);
+
+// Get active/live users (admin)
+router.get('/active', protect, admin, getActiveUsers);
+
+// Search customers for dropdowns (lightweight)
+router.get('/customers', protect, admin, searchCustomersList);
+
+// Admin: quick-create a customer account
+router.post('/admin-create', protect, admin, adminCreateCustomer);
 
 // Get all users
 router.get('/', getAllUsers);

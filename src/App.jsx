@@ -1,5 +1,66 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
+import api from './utils/api';
+
+// Auto-redirect: if /auction/:id/catalog was migrated to LotAuction, redirect there
+const AuctionCatalogOrRedirect = () => {
+  const { id } = useParams();
+  const [redirectTo, setRedirectTo] = useState(null);
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    api.get(`/lot-auction/public/${id}`)
+      .then(data => {
+        const auction = data?.data || data;
+        if (auction?._id && auction.originalAuctionId) {
+          setRedirectTo(`/lot-auction/${auction._id}/catalog`);
+        } else {
+          setChecked(true);
+        }
+      })
+      .catch(() => setChecked(true));
+  }, [id]);
+
+  if (redirectTo) return <Navigate to={redirectTo} replace />;
+  if (!checked) return null;
+  const AuctionCatalogPage = lazy(() => import('./pages/AuctionCatalog'));
+  return (
+    <Suspense fallback={null}>
+      <AuctionCatalogPage />
+    </Suspense>
+  );
+};
+
+// Dynamic short link redirect — /e4, /e5/11, etc.
+const ShortAuctionRedirect = () => {
+  const { code, lotNum } = useParams();
+  const [target, setTarget] = useState(null);
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    // Only handle codes like e4, e5, e10 etc. — reject everything else immediately
+    if (!code || !/^[a-z]+\d+$/.test(code)) { setNotFound(true); return; }
+    fetch(`/api/auctions/shortlink/${code}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) setTarget(`/auction-lots/${data.data.auctionId}${lotNum ? '/' + lotNum : ''}`);
+        else setNotFound(true);
+      })
+      .catch(() => setNotFound(true));
+  }, [code, lotNum]);
+
+  if (notFound) return <Navigate to="/" replace />;
+  if (!target) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fffbeb' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ width: 48, height: 48, border: '4px solid #d97706', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto' }} />
+        <p style={{ marginTop: 16, color: '#92400e', fontFamily: 'sans-serif' }}>Loading auction...</p>
+      </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+  return <Navigate to={target} replace />;
+};
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from './components/common/Header';
@@ -48,6 +109,7 @@ const CancellationRefund = lazy(() => import('./pages/policies/CancellationRefun
 // Admin Pages
 const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
+const AuctionDashboard = lazy(() => import('./pages/admin/AuctionDashboard'));
 const ProductManagement = lazy(() => import('./pages/admin/ProductManagement'));
 const AddEditProduct = lazy(() => import('./pages/admin/AddEditProduct'));
 const OrderManagement = lazy(() => import('./pages/admin/OrderManagement'));
@@ -57,8 +119,10 @@ const CategoryManagement = lazy(() => import('./pages/admin/CategoryManagement')
 const AddEditCategory = lazy(() => import('./pages/admin/AddEditCategory'));
 const ReviewManagement = lazy(() => import('./pages/admin/ReviewManagement'));
 const CustomerManagement = lazy(() => import('./pages/admin/CustomerManagement'));
+const AuctionCustomerManagement = lazy(() => import('./pages/admin/AuctionCustomerManagement'));
 const VendorManagement = lazy(() => import('./pages/admin/VendorManagement'));
 const SliderManagement = lazy(() => import('./pages/admin/SliderManagement'));
+const FeaturedLotsManagement = lazy(() => import('./pages/admin/FeaturedLotsManagement'));
 const BannerManagement = lazy(() => import('./pages/admin/BannerManagement'));
 const CouponManagement = lazy(() => import('./pages/admin/CouponManagement'));
 const FilterOptionsManagement = lazy(() => import('./pages/admin/FilterOptionsManagement'));
@@ -67,15 +131,19 @@ const AuctionManagement = lazy(() => import('./pages/admin/AuctionManagement'));
 const AuctionRegistrationManagement = lazy(() => import('./pages/admin/AuctionRegistrationManagement'));
 const AuctionInvoiceManagement = lazy(() => import('./pages/admin/AuctionInvoiceManagement'));
 const BidTracking = lazy(() => import('./pages/admin/BidTracking'));
+const CoinHistory = lazy(() => import('./pages/admin/CoinHistory'));
 const Reports = lazy(() => import('./pages/admin/Reports'));
 const AuctionReport = lazy(() => import('./pages/admin/AuctionReport'));
 const EcomReports = lazy(() => import('./pages/admin/EcomReports'));
 const VendorInvoiceManagement = lazy(() => import('./pages/admin/VendorInvoiceManagement'));
 const VendorAdvise = lazy(() => import('./pages/admin/VendorAdvise'));
+const ContraInvoice = lazy(() => import('./pages/admin/ContraInvoice'));
 const ImageUploadManager = lazy(() => import('./pages/admin/ImageUploadManager'));
 const VideoUploadManager = lazy(() => import('./pages/admin/VideoUploadManager'));
 const BulkLotUpload = lazy(() => import('./pages/admin/BulkLotUpload'));
-const LotTransferManagement = lazy(() => import('./pages/admin/LotTransferManagement'));
+const LotAuctionManagement = lazy(() => import('./pages/admin/LotAuctionManagement'));
+const LotAuctionDetail = lazy(() => import('./pages/admin/LotAuctionDetail'));
+
 
 // Auction Pages
 const Auctions = lazy(() => import('./pages/Auctions'));
@@ -85,8 +153,11 @@ const AuctionLots = lazy(() => import('./pages/AuctionLots'));
 const AuctionRegistration = lazy(() => import('./pages/AuctionRegistration'));
 const NoAuction = lazy(() => import('./pages/NoAuction'));
 const PriceRealization = lazy(() => import('./pages/PriceRealization'));
+const BidIncrementSlab = lazy(() => import('./pages/BidIncrementSlab'));
 const ComingSoon = lazy(() => import('./pages/ComingSoon'));
 const AuctionEnded = lazy(() => import('./pages/AuctionEnded'));
+const LotAuctionPage = lazy(() => import('./pages/LotAuctionPage'));
+const LotAuctionCatalog = lazy(() => import('./pages/LotAuctionCatalog'));
 
 // Loading component
 const PageLoader = () => (
@@ -105,6 +176,7 @@ import InitialSetup from './pages/admin/InitialSetup';
 import PagePosters from './pages/admin/PagePosters';
 import InvoicePreview from './pages/admin/InvoicePreview';
 import AdminActivities from './pages/admin/AdminActivities';
+import NotificationManagement from './pages/admin/NotificationManagement';
 
 const AppContent = () => {
   const location = useLocation();
@@ -117,6 +189,7 @@ const AppContent = () => {
                           location.pathname.startsWith('/admin') ||
                           location.pathname.startsWith('/auction/') ||
                           location.pathname.startsWith('/auction-lots/') ||
+                          /^\/[a-z]+\d+(\/|$)/.test(location.pathname) ||
                           location.pathname.startsWith('/auction-ended/');
 
   // Show shopping features (search, cart, wishlist) on all pages
@@ -151,39 +224,31 @@ const AppContent = () => {
       if (savedUser && token) {
         try {
           const userData = JSON.parse(savedUser);
-          console.log('📦 Loaded user from localStorage:', userData._id);
           setUser(userData);
         } catch (error) {
-          console.error('Error parsing saved user:', error);
         }
       }
 
       // Then fetch fresh user data from backend in background
       if (token) {
         try {
-          console.log('🔄 Fetching fresh user data from backend...');
           const response = await authService.getCurrentUser();
           if (response.success && response.data) {
-            console.log('✅ Fresh user data loaded:', response.data._id);
             setUser(response.data);
             localStorage.setItem('user', JSON.stringify(response.data));
           } else {
             // Only logout if we got a response but it's invalid (actual auth failure)
-            console.warn('⚠️ Invalid user data from backend, logging out');
             localStorage.removeItem('user');
             localStorage.removeItem('token');
             setUser(null);
           }
         } catch (error) {
-          console.error('Error fetching user data:', error);
           // Token is invalid or expired - clear everything and force re-login
           if (error.response?.status === 401) {
-            console.warn('⚠️ Token expired or invalid - clearing session');
             localStorage.removeItem('user');
             localStorage.removeItem('token');
             setUser(null);
           } else {
-            console.log('📡 Network error, keeping cached user data');
             // Keep the user data from localStorage that we loaded earlier
           }
         }
@@ -215,7 +280,6 @@ const AppContent = () => {
   // Listen for cart cleared event from Checkout page
   useEffect(() => {
     const handleCartCleared = () => {
-      console.log('🗑️ Cart cleared event received in App.jsx');
       setCart([]);
     };
 
@@ -234,12 +298,10 @@ const AppContent = () => {
     const validItems = cart.filter(item => {
       const stock = item.inStock || 0;
       if (stock <= 0) {
-        console.log(`🗑️ Removing out-of-stock item from cart: ${item.name} (stock: ${stock})`);
         return false;
       }
       // Also adjust quantity if it exceeds available stock
       if (item.quantity > stock) {
-        console.log(`⚠️ Adjusting quantity for ${item.name} from ${item.quantity} to ${stock}`);
         item.quantity = stock;
       }
       return true;
@@ -247,84 +309,60 @@ const AppContent = () => {
 
     // Update cart if any items were filtered out
     if (validItems.length !== cart.length) {
-      console.log(`🗑️ Removed ${cart.length - validItems.length} out-of-stock items from cart`);
       setCart(validItems);
     }
   }, [cart]);
 
-  // Sync cart and wishlist with backend when user logs in
+  // Load cart and wishlist from backend when user logs in
+  // NOTE: We do NOT merge localStorage data to prevent data leakage between users
   useEffect(() => {
-    const syncWithBackend = async () => {
+    const loadFromBackend = async () => {
       if (user && user._id) {
         try {
-          console.log('🔄 Syncing cart and wishlist with backend...');
 
-          // First, fetch current data from backend
+          // Clear localStorage first to prevent data leakage between users
+          localStorage.removeItem('cart');
+          localStorage.removeItem('wishlist');
+
+          // Fetch user's data from backend
           const [cartResponse, wishlistResponse] = await Promise.all([
             userSyncService.getCart().catch(() => ({ success: false, cart: [] })),
             userSyncService.getWishlist().catch(() => ({ success: false, wishlist: [] }))
           ]);
 
-          // Get local data
-          const localCart = cart;
-          const localWishlist = wishlist;
-
-          // Only sync if local data exists (user added items while logged out)
-          if (localCart.length > 0 || localWishlist.length > 0) {
-            console.log('📤 Syncing local data to backend...');
-            const result = await userSyncService.syncCartAndWishlist(localCart, localWishlist);
-
-            if (result.success) {
-              console.log('✅ Local data synced to backend');
-
-              // Update state with merged data from backend
-              if (result.cart) {
-                const formattedCart = result.cart.map(item => ({
-                  ...item.product,
-                  quantity: item.quantity
-                }));
-                setCart(formattedCart);
-                localStorage.setItem('cart', JSON.stringify(formattedCart));
-              }
-
-              if (result.wishlist) {
-                setWishlist(result.wishlist);
-                localStorage.setItem('wishlist', JSON.stringify(result.wishlist));
-              }
-            }
+          // Load cart from backend
+          if (cartResponse.success && cartResponse.cart) {
+            const formattedCart = cartResponse.cart.map(item => ({
+              ...item.product,
+              quantity: item.quantity
+            }));
+            setCart(formattedCart);
+            localStorage.setItem('cart', JSON.stringify(formattedCart));
           } else {
-            // No local data, just load from backend
-            console.log('📥 Loading data from backend...');
-
-            if (cartResponse.success && cartResponse.cart) {
-              const formattedCart = cartResponse.cart.map(item => ({
-                ...item.product,
-                quantity: item.quantity
-              }));
-              setCart(formattedCart);
-              localStorage.setItem('cart', JSON.stringify(formattedCart));
-            }
-
-            if (wishlistResponse.success && wishlistResponse.wishlist) {
-              setWishlist(wishlistResponse.wishlist);
-              localStorage.setItem('wishlist', JSON.stringify(wishlistResponse.wishlist));
-            }
-
-            console.log('✅ Data loaded from backend');
+            setCart([]);
           }
+
+          // Load wishlist from backend
+          if (wishlistResponse.success && wishlistResponse.wishlist) {
+            setWishlist(wishlistResponse.wishlist);
+            localStorage.setItem('wishlist', JSON.stringify(wishlistResponse.wishlist));
+          } else {
+            setWishlist([]);
+          }
+
         } catch (error) {
-          console.error('❌ Error syncing with backend:', error);
-          // Continue with localStorage data if backend sync fails
+          // Clear state on error to prevent showing wrong data
+          setCart([]);
+          setWishlist([]);
         }
       }
     };
 
-    syncWithBackend();
+    loadFromBackend();
   }, [user?._id]); // Only run when user ID changes (login/logout)
 
   // Logout function
   const handleLogout = () => {
-    console.log('🚪 Logging out - Clearing all data...');
 
     // Clear all user data and states
     setUser(null);
@@ -345,7 +383,6 @@ const AppContent = () => {
         .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
     });
 
-    console.log('✅ All data cleared. Redirecting to home...');
 
     // Show logout message
     setToastMessage('Logged out successfully! All data cleared.');
@@ -393,7 +430,6 @@ const AppContent = () => {
       try {
         await userSyncService.addToCart(productId, 1);
       } catch (error) {
-        console.error('Error syncing cart with backend:', error);
       }
     }
   };
@@ -410,7 +446,6 @@ const AppContent = () => {
       try {
         await userSyncService.removeFromCart(coinId);
       } catch (error) {
-        console.error('Error syncing cart with backend:', error);
       }
     }
   };
@@ -438,7 +473,6 @@ const AppContent = () => {
       try {
         await userSyncService.updateCartItem(coinId, Math.min(newQuantity, maxQuantity));
       } catch (error) {
-        console.error('Error syncing cart with backend:', error);
       }
     }
   };
@@ -472,7 +506,6 @@ const AppContent = () => {
           await userSyncService.removeFromWishlist(coinId);
         }
       } catch (error) {
-        console.error('Error syncing wishlist with backend:', error);
       }
     }
   };
@@ -511,7 +544,6 @@ const AppContent = () => {
 
   const handleComparisonClick = () => {
     // Handle comparison modal
-    console.log('Comparison clicked');
   };
 
   return (
@@ -660,15 +692,22 @@ const AppContent = () => {
 
             {/* Auction Pages */}
             <Route path="/auctions" element={<Auctions />} />
-            <Route path="/auction/:id/catalog" element={<AuctionCatalog />} />
+            <Route path="/auction/:id/catalog" element={<AuctionCatalogOrRedirect />} />
             <Route path="/auction-lots/:id" element={<AuctionLots />} />
+            <Route path="/auction-lots/:id/:lotNum" element={<AuctionLots />} />
+            {/* Short links — /e4, /e5, /e4/11, /e5/147 etc. */}
+            <Route path="/:code" element={<ShortAuctionRedirect />} />
+            <Route path="/:code/:lotNum" element={<ShortAuctionRedirect />} />
             <Route path="/auction/:id" element={<Auction />} />
             <Route path="/auction-registration" element={<AuctionRegistration />} />
             <Route path="/no-auction" element={<NoAuction />} />
             <Route path="/price-realization" element={<PriceRealization />} />
             <Route path="/price-realization/:auctionId" element={<PriceRealization />} />
+            <Route path="/bid-increment-slab" element={<BidIncrementSlab />} />
             <Route path="/coming-soon" element={<ComingSoon />} />
             <Route path="/auction-ended/:id" element={<AuctionEnded />} />
+            <Route path="/lot-auction/:id/catalog" element={<LotAuctionCatalog />} />
+            <Route path="/lot-auction/:id" element={<LotAuctionPage />} />
 
             {/* Policy Pages */}
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -680,6 +719,7 @@ const AppContent = () => {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="auction-dashboard" element={<AuctionDashboard />} />
               <Route path="page-posters" element={<PagePosters />} />
               <Route path="products" element={<ProductManagement />} />
               <Route path="products/add" element={<AddEditProduct />} />
@@ -695,8 +735,10 @@ const AppContent = () => {
               <Route path="filter-options" element={<FilterOptionsManagement />} />
               <Route path="reviews" element={<ReviewManagement />} />
               <Route path="customers" element={<CustomerManagement />} />
+              <Route path="auction-customers" element={<AuctionCustomerManagement />} />
               <Route path="vendors" element={<VendorManagement />} />
               <Route path="sliders" element={<SliderManagement />} />
+              <Route path="featured-lots" element={<FeaturedLotsManagement />} />
               <Route path="banners" element={<BannerManagement />} />
               <Route path="coupons" element={<CouponManagement />} />
               <Route path="blog" element={<BlogManagement />} />
@@ -706,21 +748,25 @@ const AppContent = () => {
               <Route path="auction-registrations" element={<AuctionRegistrationManagement />} />
               <Route path="auction-invoices" element={<AuctionInvoiceManagement />} />
               <Route path="bid-tracking" element={<BidTracking />} />
+              <Route path="coin-history" element={<CoinHistory />} />
               <Route path="sales-dashboard" element={<Reports />} />
               <Route path="auction-report" element={<AuctionReport />} />
               <Route path="ecom-reports" element={<EcomReports />} />
               <Route path="vendor-invoices" element={<VendorInvoiceManagement />} />
               <Route path="vendor-advise" element={<VendorAdvise />} />
-              <Route path="lot-transfer" element={<LotTransferManagement />} />
+              <Route path="contra-invoice" element={<ContraInvoice />} />
               <Route path="image-upload" element={<ImageUploadManager />} />
               <Route path="video-upload" element={<VideoUploadManager />} />
               <Route path="bulk-lot-upload" element={<BulkLotUpload />} />
+              <Route path="lot-auctions" element={<LotAuctionManagement />} />
+              <Route path="lot-auctions/:id" element={<LotAuctionDetail />} />
               <Route path="profile" element={<ProfileManagement />} />
               <Route path="users-roles" element={<UserRoleManagement />} />
               {/* Keep old routes for backward compatibility */}
               <Route path="roles" element={<UserRoleManagement />} />
               <Route path="admins" element={<UserRoleManagement />} />
               <Route path="admin-activities" element={<AdminActivities />} />
+              <Route path="notifications" element={<NotificationManagement />} />
             </Route>
           </Routes>
         </Suspense>

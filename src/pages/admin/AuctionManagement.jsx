@@ -1,16 +1,276 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Clock, Gavel, Users, TrendingUp, Eye, User, Package, X, FileText } from 'lucide-react';
+﻿import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Edit2, Trash2, Clock, Gavel, Users, TrendingUp, Eye, User, Package, X, FileText, ChevronUp, ChevronDown, BookOpen, Upload, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../utils/api';
+import RichEditor from '../../components/common/RichEditor';
+import LotAuctionManagement from './LotAuctionManagement';
+import lotAuctionService from '../../services/lotAuctionService';
+
+// ── Quick Create Modal for Lot+Live auctions from BulkLotUpload ──────────────
+const QuickCreateLotLiveModal = ({ lots, onClose, onCreated }) => {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ title: '', description: '', posterDisplayUntil: '', startTime: '', endTime: '' });
+  const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.title.trim()) { toast.error('Title zaroori hai'); return; }
+    if (!form.startTime) { toast.error('Live Bidding Start Time zaroori hai'); return; }
+    setSaving(true);
+    try {
+      const processedLots = lots.map((lot, i) => ({
+        lotNumber: lot.lotNumber || i + 1, title: lot.title || '',
+        description: lot.description || '', image: lot.image || '',
+        images: lot.images || (lot.image ? [lot.image] : []),
+        startingPrice: Number(lot.startingPrice) || 0, reservePrice: Number(lot.reservePrice) || 0,
+        estimatedPrice: lot.estimatedPrice ? Number(lot.estimatedPrice) : null,
+        category: lot.category || 'Miscellaneous', material: lot.material || null, vendorId: lot.vendorId || null,
+      }));
+      await api.post('/auctions', {
+        title: form.title, description: form.description || 'Lot+Live Auction',
+        startingPrice: processedLots[0]?.startingPrice || 0,
+        startTime: new Date(form.startTime).toISOString(),
+        endTime: form.endTime ? new Date(form.endTime).toISOString() : null,
+        posterDisplayUntil: form.posterDisplayUntil ? new Date(form.posterDisplayUntil).toISOString() : null,
+        isLotBidding: true, catalogBiddingEnabled: true,
+        lots: processedLots, totalLots: processedLots.length, lotNumber: 1,
+      });
+      toast.success(`Auction "${form.title}" created with ${processedLots.length} lots!`);
+      onCreated(); onClose();
+    } catch (err) { toast.error(err?.response?.data?.message || 'Failed to create auction'); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg">
+        <div className="flex items-center justify-between px-6 py-4 border-b dark:border-gray-700">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Create Lot+Live Auction</h2>
+            <p className="text-sm text-green-600 font-medium mt-0.5 flex items-center gap-1"><CheckCircle size={14} /> {lots.length} lots ready</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Auction Title <span className="text-red-500">*</span></label>
+            <input className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. E-Auction VI" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+            <textarea rows={2} className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={form.description} onChange={e => set('description', e.target.value)} placeholder="Optional" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Poster Display Until</label>
+            <input type="datetime-local" className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={form.posterDisplayUntil} onChange={e => set('posterDisplayUntil', e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Live Bidding Start Time <span className="text-red-500">*</span></label>
+              <input type="datetime-local" className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={form.startTime} onChange={e => set('startTime', e.target.value)} required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Time</label>
+              <input type="datetime-local" className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={form.endTime} onChange={e => set('endTime', e.target.value)} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50">Cancel</button>
+            <button type="submit" disabled={saving} className="px-5 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60">
+              {saving ? 'Creating...' : 'Create Auction'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ── Quick Create Modal for Lot Bidding auctions from BulkLotUpload ───────────
+const QuickCreateLotBiddingModal = ({ lots, onClose, onCreated }) => {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    title: '', description: '', externalPlatformName: '', externalPlatformLink: '', lotBiddingEndTime: '', posterDisplayUntil: '', image: ''
+  });
+  const [imageInputType, setImageInputType] = useState('file');
+  const [imagePreview, setImagePreview] = useState('');
+  const [isReadingFile, setIsReadingFile] = useState(false);
+  const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsReadingFile(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+      set('image', reader.result);
+      setIsReadingFile(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.title.trim()) { toast.error('Title zaroori hai'); return; }
+    setSaving(true);
+    try {
+      let imageUrl = form.image;
+      if (imageUrl && imageUrl.startsWith('data:image/')) {
+        try {
+          const res = await api.post('/upload/base64', { image: imageUrl });
+          imageUrl = res.imageUrl;
+        } catch { toast.error('Failed to upload image'); setSaving(false); return; }
+      }
+      const lotBiddingEndTime = form.lotBiddingEndTime
+        ? new Date(form.lotBiddingEndTime).toISOString()
+        : null;
+      const posterDisplayUntil = form.posterDisplayUntil
+        ? new Date(form.posterDisplayUntil).toISOString()
+        : null;
+      const created = await lotAuctionService.create({
+        title: form.title,
+        description: form.description,
+        externalPlatformName: form.externalPlatformName,
+        externalPlatformLink: form.externalPlatformLink,
+        lotBiddingEndTime,
+        posterDisplayUntil,
+        image: imageUrl || undefined,
+      });
+      const newId = created?.data?._id || created?._id;
+      if (newId) {
+        let added = 0;
+        for (const lot of lots) {
+          try {
+            await lotAuctionService.addLot(newId, {
+              lotNumber: lot.lotNumber || (added + 1),
+              title: lot.title || '',
+              description: lot.description || '',
+              images: lot.images && lot.images.length > 0 ? lot.images : (lot.image ? [lot.image] : []),
+              startingPrice: lot.startingPrice ? Number(lot.startingPrice) : undefined,
+              reservePrice: lot.reservePrice ? Number(lot.reservePrice) : undefined,
+              estimatedPrice: lot.estimatedPrice ? Number(lot.estimatedPrice) : undefined,
+              hsn: lot.hsn || '',
+            });
+            added++;
+          } catch {}
+        }
+        toast.success(`Auction "${form.title}" created with ${added} lots!`);
+      }
+      onCreated();
+      onClose();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to create auction');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputCls = 'w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b dark:border-gray-700 flex-shrink-0">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Create Lot Bidding Auction</h2>
+            <p className="text-sm text-green-600 font-medium mt-0.5 flex items-center gap-1">
+              <CheckCircle size={14} /> {lots.length} lots loaded from CSV
+            </p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title <span className="text-red-500">*</span></label>
+            <input className={inputCls} value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. E-Auction VI" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+            <RichEditor value={form.description} onChange={val => set('description', val)} placeholder="Optional" minHeight={80} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Auction Image (Optional)</label>
+            <div className="flex gap-4 mb-2">
+              <label className="flex items-center cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+                <input type="radio" name="qcImgType" checked={imageInputType === 'file'} onChange={() => setImageInputType('file')} className="mr-2" />
+                File Upload
+              </label>
+              <label className="flex items-center cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+                <input type="radio" name="qcImgType" checked={imageInputType === 'url'} onChange={() => setImageInputType('url')} className="mr-2" />
+                Image URL
+              </label>
+            </div>
+            {imageInputType === 'file' ? (
+              <>
+                <input type="file" accept="image/*" onChange={handleImageChange} className={inputCls} />
+                <p className="text-xs text-gray-500 mt-1">Upload an image file directly</p>
+              </>
+            ) : (
+              <>
+                <input type="text" className={inputCls} value={form.image} onChange={e => { set('image', e.target.value); setImagePreview(''); }} placeholder="https://..." />
+                <p className="text-xs text-blue-600 mt-1">💡 Use Image Upload Manager to upload and paste URL here</p>
+              </>
+            )}
+            {(imagePreview || (imageInputType === 'url' && form.image)) && (
+              <div className="mt-2">
+                <img src={imageInputType === 'file' ? imagePreview : form.image} alt="Preview"
+                  className="w-full h-40 object-cover rounded-lg border border-gray-300"
+                  onError={e => { e.target.style.display = 'none'; }} />
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">External Platform Name</label>
+              <input className={inputCls} value={form.externalPlatformName} onChange={e => set('externalPlatformName', e.target.value)} placeholder="e.g. AstaGuru" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">External Platform Link</label>
+              <input type="text" className={inputCls} value={form.externalPlatformLink} onChange={e => set('externalPlatformLink', e.target.value)} placeholder="https://..." />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Poster Display Until (optional)</label>
+            <input type="datetime-local" className={inputCls} value={form.posterDisplayUntil} onChange={e => set('posterDisplayUntil', e.target.value)} />
+            <p className="text-xs text-gray-500 mt-1">Until this time, users see only the poster — bidding is not accessible</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lot Bidding End Time</label>
+            <input type="datetime-local" className={inputCls} value={form.lotBiddingEndTime} onChange={e => set('lotBiddingEndTime', e.target.value)} />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50">Cancel</button>
+            <button type="submit" disabled={saving || isReadingFile} className="px-5 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-60">
+              {saving ? 'Creating...' : isReadingFile ? 'Loading image...' : 'Create Auction'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 
 const AuctionManagement = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [auctions, setAuctions] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [quickCreateLots, setQuickCreateLots] = useState(null); // Lot+Live lots from BulkLotUpload
+  const [quickCreateLotBiddingLots, setQuickCreateLotBiddingLots] = useState(null); // Lot Bidding lots from BulkLotUpload
   const [selectedAuction, setSelectedAuction] = useState(null);
+  const [mainTab, setMainTab] = useState(
+    searchParams.get('tab') === 'lotBidding' ? 'lotBidding' : 'liveAuctions'
+  );
   const [viewMode, setViewMode] = useState('all'); // all, active, upcoming, ended
   const [formData, setFormData] = useState({
     productId: '',
@@ -27,71 +287,55 @@ const AuctionManagement = () => {
     catalogBiddingEnabled: false,
     totalLots: 1,
     lotDuration: 10,
-    lots: []
+    lots: [],
+    catalogPdf: '',
+    shortCode: ''
   });
   const [imageFile, setImageFile] = useState(null);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [pdfUploadProgress, setPdfUploadProgress] = useState(0);
   const [imagePreview, setImagePreview] = useState('');
   const [imageInputType, setImageInputType] = useState('file'); // 'file' or 'url'
   const [highlightImageFile, setHighlightImageFile] = useState(null);
   const [highlightImagePreview, setHighlightImagePreview] = useState('');
   const [highlightImageInputType, setHighlightImageInputType] = useState('url'); // 'file' or 'url'
   const [customers, setCustomers] = useState([]);
+  const [lotMoveInputs, setLotMoveInputs] = useState({});
+  const lastLotRef = useRef(null);
+
 
   useEffect(() => {
     fetchAuctions();
-    fetchCustomers();
-    fetchProducts();
   }, [viewMode]);
 
-  // Check for pre-filled lots from Bulk Upload
+  // Check for pre-filled lots from Bulk Upload (only for Lot+Live type, not Lot Bidding Only)
   useEffect(() => {
     const savedLots = localStorage.getItem('newAuctionLots');
     if (savedLots) {
       try {
         const { lots, timestamp } = JSON.parse(savedLots);
-
-        // Check if data is not too old (within 10 minutes)
         const age = Date.now() - new Date(timestamp).getTime();
-        if (age < 10 * 60 * 1000) {
-          // Process lots to set imageInputType to 'url' for lots with image URLs
-          const processedLots = lots.map(lot => ({
-            ...lot,
-            // If lot has an image URL (from CSV), set imageInputType to 'url'
-            imageInputType: lot.image ? 'url' : 'file'
-          }));
-
-          // Set form data with pre-filled lots
-          setFormData(prev => ({
-            ...prev,
-            isLotBidding: true, // Auto-enable lot bidding
-            lots: processedLots,
-            totalLots: processedLots.length
-          }));
-
-          // Open the create auction modal
-          setShowModal(true);
-          setSelectedAuction(null);
-
-          toast.success(`${lots.length} lots loaded from bulk upload! Review and create auction.`, {
-            autoClose: 5000
-          });
+        if (age < 10 * 60 * 1000 && Array.isArray(lots) && lots.length > 0) {
+          if (mainTab === 'lotBidding') {
+            // Lot Bidding → simple quick create modal
+            setQuickCreateLotBiddingLots(lots);
+          } else {
+            // Lot+Live → simple quick create modal
+            setQuickCreateLots(lots);
+          }
         }
-
-        // Clear the saved lots data
         localStorage.removeItem('newAuctionLots');
-      } catch (error) {
-        console.error('Error loading pre-filled lots:', error);
+      } catch {
         localStorage.removeItem('newAuctionLots');
       }
     }
-  }, []);
+  }, [mainTab]);
 
   const fetchProducts = async () => {
     try {
       const response = await api.get('/products');
       setProducts(response.data || []);
     } catch (error) {
-      console.error('Fetch products error:', error);
     }
   };
 
@@ -100,7 +344,6 @@ const AuctionManagement = () => {
       const response = await api.get('/users');
       setCustomers(response.data || []);
     } catch (error) {
-      console.error('Fetch customers error:', error);
     }
   };
 
@@ -111,7 +354,6 @@ const AuctionManagement = () => {
       const response = await api.get(`/auctions${queryParam}`);
       setAuctions(response.data || []);
     } catch (error) {
-      console.error('Fetch auctions error:', error);
       toast.error('Failed to load auctions');
     } finally {
       setLoading(false);
@@ -137,12 +379,20 @@ const AuctionManagement = () => {
   };
 
   const handleLotChange = (index, field, value) => {
-    const updatedLots = [...formData.lots];
-    updatedLots[index] = {
-      ...updatedLots[index],
-      [field]: value
-    };
-    setFormData(prev => ({ ...prev, lots: updatedLots }));
+    setFormData(prev => {
+      const updatedLots = [...prev.lots];
+      updatedLots[index] = { ...updatedLots[index], [field]: value };
+      return { ...prev, lots: updatedLots };
+    });
+  };
+
+  // Update multiple lot fields atomically (avoids race condition with consecutive handleLotChange calls)
+  const handleLotChangeMulti = (index, updates) => {
+    setFormData(prev => {
+      const updatedLots = [...prev.lots];
+      updatedLots[index] = { ...updatedLots[index], ...updates };
+      return { ...prev, lots: updatedLots };
+    });
   };
 
   const addLot = () => {
@@ -158,14 +408,51 @@ const AuctionManagement = () => {
           material: '',
           productId: '',
           image: '',
+          images: [],
           vendorId: '',
           startingPrice: '',
+          estimatedPriceMin: '',
           estimatedPrice: '',
           reservePrice: '',
-          status: 'Upcoming'
+          status: 'Upcoming',
+          _uid: Math.random().toString(36).slice(2)
         }
       ]
     }));
+    setTimeout(() => {
+      lastLotRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+    toast.success('New lot added at the bottom!', { autoClose: 2000 });
+  };
+
+  const moveLotUp = (index) => {
+    if (index === 0) return;
+    setFormData(prev => {
+      const lots = [...prev.lots];
+      [lots[index - 1], lots[index]] = [lots[index], lots[index - 1]];
+      return { ...prev, lots: lots.map((l, i) => ({ ...l, lotNumber: i + 1 })) };
+    });
+  };
+
+  const moveLotDown = (index) => {
+    setFormData(prev => {
+      if (index === prev.lots.length - 1) return prev;
+      const lots = [...prev.lots];
+      [lots[index], lots[index + 1]] = [lots[index + 1], lots[index]];
+      return { ...prev, lots: lots.map((l, i) => ({ ...l, lotNumber: i + 1 })) };
+    });
+  };
+
+  const moveLotToPosition = (fromIndex, toPosition) => {
+    const to = parseInt(toPosition, 10) - 1; // convert to 0-based
+    setFormData(prev => {
+      const total = prev.lots.length;
+      if (isNaN(to) || to < 0 || to >= total || to === fromIndex) return prev;
+      const lots = [...prev.lots];
+      const [moved] = lots.splice(fromIndex, 1);
+      lots.splice(to, 0, moved);
+      return { ...prev, lots: lots.map((l, i) => ({ ...l, lotNumber: i + 1 })) };
+    });
   };
 
   const removeLot = (index) => {
@@ -215,11 +502,42 @@ const AuctionManagement = () => {
     }
   };
 
+  const handlePdfUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') { toast.error('Please select a PDF file'); return; }
+    setUploadingPdf(true);
+    setPdfUploadProgress(0);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('pdf', file);
+      const res = await api.post('/upload/pdf', formDataUpload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setPdfUploadProgress(pct);
+          }
+        }
+      });
+      setFormData(prev => ({ ...prev, catalogPdf: res.pdfUrl }));
+      toast.success('Catalog PDF uploaded successfully');
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to upload PDF';
+      toast.error(msg);
+    } finally {
+      setUploadingPdf(false);
+      setPdfUploadProgress(0);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       let submitData = { ...formData };
+      if (!submitData.shortCode) submitData.shortCode = null;
+      if (submitData.shortCode) submitData.shortCode = submitData.shortCode.toLowerCase().replace(/[^a-z0-9]/g, '');
 
       // Convert datetime-local values to ISO strings
       if (submitData.posterDisplayUntil) {
@@ -238,7 +556,6 @@ const AuctionManagement = () => {
           const uploadResponse = await api.post('/upload/base64', { image: formData.image });
           submitData.image = uploadResponse.imageUrl;
         } catch (uploadError) {
-          console.error('Image upload error:', uploadError);
           toast.error('Failed to upload image');
           return;
         }
@@ -250,7 +567,6 @@ const AuctionManagement = () => {
           const uploadResponse = await api.post('/upload/base64', { image: formData.highlightImage });
           submitData.highlightImage = uploadResponse.imageUrl;
         } catch (uploadError) {
-          console.error('Highlight image upload error:', uploadError);
           toast.error('Failed to upload highlight image');
           return;
         }
@@ -274,26 +590,51 @@ const AuctionManagement = () => {
             }
           }
 
-          // Upload lot image if it's base64
-          if (lotData.image && lotData.image.startsWith('data:image/')) {
+          // Upload lot images (images array) if any are base64
+          if (lotData.images && lotData.images.length > 0) {
+            const uploadedImages = await Promise.all(lotData.images.map(async (img) => {
+              if (img && img.startsWith('data:image/')) {
+                try {
+                  const uploadResponse = await api.post('/upload/base64', { image: img });
+                  return uploadResponse.imageUrl;
+                } catch (err) {
+                  return img;
+                }
+              }
+              return img;
+            }));
+            lotData.images = uploadedImages;
+            // Keep lot.image in sync with first image
+            lotData.image = uploadedImages[0] || lotData.image;
+          } else if (lotData.image && lotData.image.startsWith('data:image/')) {
+            // Fallback: upload single image if images array is empty
             try {
               const uploadResponse = await api.post('/upload/base64', { image: lotData.image });
               lotData.image = uploadResponse.imageUrl;
+              lotData.images = [lotData.image];
             } catch (error) {
-              console.error('Lot image upload error:', error);
             }
           }
 
+          // When editing, preserve existing bids and currentBid; when creating, start fresh
+          const isEditing = Boolean(selectedAuction);
+          const sanitizeBids = (bids) => (bids || []).map(bid => ({
+            ...bid,
+            user: bid.user && typeof bid.user === 'object' ? (bid.user._id || bid.user) : bid.user
+          }));
+
           return {
             ...lotData,
-            currentBid: lotData.startingPrice,
-            bids: []
+            currentBid: isEditing
+              ? (lotData.currentBid ?? lotData.startingPrice)
+              : lotData.startingPrice,
+            bids: isEditing ? sanitizeBids(lotData.bids) : []
           };
         }));
 
         submitData.lots = processedLots;
-        // Set main auction fields from first lot
-        if (processedLots.length > 0) {
+        // Set main auction fields from first lot (only when creating, not editing)
+        if (!selectedAuction && processedLots.length > 0) {
           submitData.startingPrice = processedLots[0].startingPrice;
           submitData.currentBid = processedLots[0].startingPrice;
         }
@@ -311,12 +652,13 @@ const AuctionManagement = () => {
       resetForm();
       fetchAuctions();
     } catch (error) {
-      console.error('Submit auction error:', error);
       toast.error(error.response?.data?.message || 'Failed to save auction');
     }
   };
 
   const handleEdit = (auction) => {
+    if (!customers.length) fetchCustomers();
+    if (!products.length) fetchProducts();
     setSelectedAuction(auction);
 
     const startTimeIST = new Date(auction.startTime);
@@ -331,10 +673,11 @@ const AuctionManagement = () => {
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     };
 
-    // Ensure all lots have a category field (for backward compatibility with old lots)
+    // Ensure all lots have a category field and stable _uid for React key
     const lotsWithCategory = (auction.lots || []).map(lot => ({
       ...lot,
-      category: lot.category || 'Miscellaneous' // Add category if missing
+      category: lot.category || 'Miscellaneous',
+      _uid: lot._uid || lot._id?.toString() || Math.random().toString(36).slice(2)
     }));
 
     const posterDisplayUntilIST = auction.posterDisplayUntil ? new Date(auction.posterDisplayUntil) : null;
@@ -353,7 +696,9 @@ const AuctionManagement = () => {
       isLotBidding: auction.isLotBidding || false,
       totalLots: auction.totalLots || 1,
       lotDuration: auction.lotDuration || 10,
-      lots: lotsWithCategory
+      lots: lotsWithCategory,
+      catalogPdf: auction.catalogPdf || '',
+      shortCode: auction.shortCode || ''
     });
     setImagePreview(auction.image);
     setHighlightImagePreview(auction.highlightImage || '');
@@ -370,7 +715,6 @@ const AuctionManagement = () => {
       toast.success('Auction deleted successfully');
       fetchAuctions();
     } catch (error) {
-      console.error('Delete auction error:', error);
       toast.error(error.response?.data?.message || 'Failed to delete auction');
     }
   };
@@ -391,7 +735,9 @@ const AuctionManagement = () => {
       isLotBidding: false,
       totalLots: 1,
       lotDuration: 10,
-      lots: []
+      lots: [],
+      catalogPdf: '',
+      shortCode: ''
     });
     setImageFile(null);
     setImagePreview('');
@@ -431,24 +777,80 @@ const AuctionManagement = () => {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Auction Management</h1>
-          <p className="text-gray-600 mt-1">Manage live and upcoming auctions</p>
+          <p className="text-gray-600 mt-1">Manage live auctions and lot bidding</p>
         </div>
+        {mainTab === 'liveAuctions' && (
+          <button
+            onClick={() => {
+              resetForm();
+              if (!customers.length) fetchCustomers();
+              if (!products.length) fetchProducts();
+              setShowModal(true);
+            }}
+            className="flex items-center space-x-2 bg-accent-600 hover:bg-accent-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Create Auction</span>
+          </button>
+        )}
+      </div>
+
+      {/* Main Tabs */}
+      <div className="flex space-x-1 mb-6 border-b border-gray-200">
         <button
-          onClick={() => {
-            resetForm();
-            setShowModal(true);
-          }}
-          className="flex items-center space-x-2 bg-accent-600 hover:bg-accent-700 text-white px-4 py-2 rounded-lg transition-colors"
+          onClick={() => setMainTab('liveAuctions')}
+          className={`px-5 py-2.5 text-sm font-medium rounded-t-lg transition-colors -mb-px border-b-2 ${
+            mainTab === 'liveAuctions'
+              ? 'border-accent-600 text-accent-600 bg-white'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
         >
-          <Plus className="w-5 h-5" />
-          <span>Create Auction</span>
+          <span className="flex items-center gap-2">
+            <Gavel className="w-4 h-4" />
+            Live Auctions
+          </span>
+        </button>
+        <button
+          onClick={() => setMainTab('lotBidding')}
+          className={`px-5 py-2.5 text-sm font-medium rounded-t-lg transition-colors -mb-px border-b-2 ${
+            mainTab === 'lotBidding'
+              ? 'border-orange-500 text-orange-600 bg-white'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          <span className="flex items-center gap-2">
+            <Package className="w-4 h-4" />
+            Lot Bidding
+          </span>
         </button>
       </div>
 
-      {/* View Filters */}
+      {/* Lot Bidding Tab */}
+      {mainTab === 'lotBidding' && <LotAuctionManagement embedded />}
+
+      {/* Quick Create — Lot+Live from BulkLotUpload */}
+      {quickCreateLots && (
+        <QuickCreateLotLiveModal
+          lots={quickCreateLots}
+          onClose={() => setQuickCreateLots(null)}
+          onCreated={() => { setQuickCreateLots(null); fetchAuctions(); }}
+        />
+      )}
+
+      {/* Quick Create — Lot Bidding from BulkLotUpload */}
+      {quickCreateLotBiddingLots && (
+        <QuickCreateLotBiddingModal
+          lots={quickCreateLotBiddingLots}
+          onClose={() => setQuickCreateLotBiddingLots(null)}
+          onCreated={() => setQuickCreateLotBiddingLots(null)}
+        />
+      )}
+
+      {/* Live Auctions Tab — View Filters */}
+      {mainTab === 'liveAuctions' && (
       <div className="flex space-x-2 mb-6">
         {['all', 'active', 'upcoming', 'ended'].map((mode) => (
           <button
@@ -464,9 +866,10 @@ const AuctionManagement = () => {
           </button>
         ))}
       </div>
+      )}
 
-      {/* Auctions Grid */}
-      {loading ? (
+      {/* Auctions Grid — only in Live Auctions tab */}
+      {mainTab === 'liveAuctions' && (loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-600"></div>
         </div>
@@ -479,28 +882,70 @@ const AuctionManagement = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {auctions.map((auction) => (
             <div key={auction._id} className="bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              {/* Auction Image */}
-              <div className="relative h-48 bg-gray-200">
-                {auction.image ? (
-                  <img
-                    src={auction.image}
-                    alt={auction.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Gavel className="w-16 h-16 text-gray-400" />
+              {/* Auction Images */}
+              {auction.highlightImage ? (
+                <div className="flex flex-col">
+                  {/* Catalog Banner - top */}
+                  <div className="relative w-full overflow-hidden" style={{ height: '260px' }}>
+                    <img
+                      src={auction.highlightImage}
+                      alt="Catalog Banner"
+                      className="w-full h-full object-contain bg-white"
+                    />
+                    <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(auction.status)}`}>
+                      {auction.status}
+                    </div>
+                    {auction.isLotBidding && (
+                      <div className="absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-bold border bg-purple-100 text-purple-800 border-purple-300">
+                        {auction.totalLots} Lots
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-2 py-1">
+                      <span className="text-white text-xs font-medium">📌 Catalog Banner</span>
+                    </div>
                   </div>
-                )}
-                <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(auction.status)}`}>
-                  {auction.status}
+                  {/* Auction Poster - bottom strip */}
+                  <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 border-t border-gray-200" style={{ height: '72px' }}>
+                    {auction.image ? (
+                      <img
+                        src={auction.image}
+                        alt={auction.title}
+                        className="h-12 w-16 object-cover rounded shadow-sm border border-gray-200 flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="h-12 w-16 flex items-center justify-center bg-gray-200 rounded flex-shrink-0">
+                        <Gavel className="w-6 h-6 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-500 leading-snug">
+                      <p className="font-semibold text-gray-700">Auction Poster</p>
+                      <p className="text-gray-400">Used inside auction page</p>
+                    </div>
+                  </div>
                 </div>
-                {auction.isLotBidding && (
-                  <div className="absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-bold border bg-purple-100 text-purple-800 border-purple-300">
-                    {auction.totalLots} Lots
+              ) : (
+                <div className="relative h-48 bg-gray-200">
+                  {auction.image ? (
+                    <img
+                      src={auction.image}
+                      alt={auction.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Gavel className="w-16 h-16 text-gray-400" />
+                    </div>
+                  )}
+                  <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(auction.status)}`}>
+                    {auction.status}
                   </div>
-                )}
-              </div>
+                  {auction.isLotBidding && (
+                    <div className="absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-bold border bg-purple-100 text-purple-800 border-purple-300">
+                      {auction.totalLots} Lots
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Auction Details */}
               <div className="p-4">
@@ -577,22 +1022,73 @@ const AuctionManagement = () => {
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  {/* Show "View Invoices" button for ended lot bidding auctions */}
+                  {/* Migrate to Lot Auction */}
+                  <button
+                    onClick={async () => {
+                      if (!window.confirm(`"${auction.title}" ko Lot Bidding system mein migrate karein?`)) return;
+                      try {
+                        const res = await api.post(`/lot-auction/migrate/${auction._id}`);
+                        if (res?.success) {
+                          const newId = res.data?._id;
+                          toast.success(res.alreadyMigrated ? 'Already migrated!' : `Migration complete! ${res.data?.lotsCount} lots migrated.`);
+                          if (newId) navigate(`/admin/lot-auctions/${newId}`);
+                        }
+                      } catch (err) { toast.error(err?.response?.data?.message || 'Migration failed'); }
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg transition-colors text-sm font-semibold"
+                  >
+                    <Package className="w-4 h-4" /> Migrate → Lot Bidding
+                  </button>
+
+                  {/* Buttons for ended lot bidding auctions */}
                   {auction.isLotBidding && auction.status === 'Ended' && (
-                    <button
-                      onClick={() => navigate(`/admin/auction-invoices?auction=${auction._id}`)}
-                      className="w-full flex items-center justify-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
-                    >
-                      <FileText className="w-4 h-4" />
-                      <span>View Invoices</span>
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      {/* Publish / Unpublish toggle */}
+                      <button
+                        onClick={async () => {
+                          try {
+                            const res = await api.patch(`/auctions/${auction._id}/toggle-ended-public`);
+                            if (res?.success) {
+                              setAuctions(prev => prev.map(a =>
+                                a._id === auction._id ? { ...a, isEndedPublic: res.isEndedPublic } : a
+                              ));
+                              toast.success(res.isEndedPublic ? 'Auction published on public page!' : 'Auction hidden from public page!');
+                            }
+                          } catch { toast.error('Failed to update visibility'); }
+                        }}
+                        className={`w-full flex items-center justify-center space-x-1 px-3 py-2 rounded-lg transition-colors text-sm font-semibold ${
+                          auction.isEndedPublic
+                            ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                            : 'bg-gray-700 hover:bg-gray-800 text-white'
+                        }`}
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>{auction.isEndedPublic ? 'Public: Visible — Click to Hide' : 'Public: Hidden — Click to Publish'}</span>
+                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => navigate(`/auction-lots/${auction._id}`)}
+                          className="flex-1 flex items-center justify-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                        >
+                          <BookOpen className="w-4 h-4" />
+                          <span>View Catalog</span>
+                        </button>
+                        <button
+                          onClick={() => navigate(`/admin/auction-invoices?auction=${auction._id}`)}
+                          className="flex-1 flex items-center justify-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
+                        >
+                          <FileText className="w-4 h-4" />
+                          <span>View Invoices</span>
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
             </div>
           ))}
         </div>
-      )}
+      ))}
 
       {/* Create/Edit Modal */}
       {showModal && (
@@ -663,14 +1159,11 @@ const AuctionManagement = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Description
                         </label>
-                        <textarea
-                          name="description"
+                        <RichEditor
                           value={formData.description}
-                          onChange={handleInputChange}
-                          required
-                          rows={3}
-                          className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
                           placeholder="Auction description"
+                          minHeight={90}
                         />
                       </div>
 
@@ -878,14 +1371,11 @@ const AuctionManagement = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Auction Description
                         </label>
-                        <textarea
-                          name="description"
+                        <RichEditor
                           value={formData.description}
-                          onChange={handleInputChange}
-                          required
-                          rows={2}
-                          className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-accent-500"
+                          onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
                           placeholder="Overall auction description"
+                          minHeight={70}
                         />
                       </div>
 
@@ -952,10 +1442,61 @@ const AuctionManagement = () => {
 
                         <div className="space-y-4">
                           {formData.lots.map((lot, index) => (
-                            <div key={index} className="border-2 border-purple-200 rounded-lg p-4 bg-purple-50">
+                            <div key={lot._uid || index} ref={index === formData.lots.length - 1 ? lastLotRef : null} className="border-2 border-purple-200 rounded-lg p-4 bg-purple-50">
                               <div className="flex items-center justify-between mb-3">
                                 <h4 className="font-bold text-purple-900">Lot {index + 1}</h4>
-                                {formData.lots.length > 1 && (
+                                <div className="flex items-center gap-2">
+                                  {/* Up / Down */}
+                                  <button
+                                    type="button"
+                                    onClick={() => moveLotUp(index)}
+                                    disabled={index === 0}
+                                    title="Move up"
+                                    className="p-1 rounded bg-purple-100 hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                                  >
+                                    <ChevronUp className="w-4 h-4 text-purple-700" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => moveLotDown(index)}
+                                    disabled={index === formData.lots.length - 1}
+                                    title="Move down"
+                                    className="p-1 rounded bg-purple-100 hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                                  >
+                                    <ChevronDown className="w-4 h-4 text-purple-700" />
+                                  </button>
+                                  {/* Jump to position */}
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs text-purple-600 font-semibold">→</span>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      max={formData.lots.length}
+                                      value={lotMoveInputs[index] ?? ''}
+                                      placeholder={index + 1}
+                                      onChange={(e) => setLotMoveInputs(prev => ({ ...prev, [index]: e.target.value }))}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && lotMoveInputs[index]) {
+                                          moveLotToPosition(index, lotMoveInputs[index]);
+                                          setLotMoveInputs(prev => ({ ...prev, [index]: '' }));
+                                        }
+                                      }}
+                                      className="w-14 px-2 py-1 text-xs border border-purple-300 rounded text-center font-bold focus:outline-none focus:border-purple-500"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (lotMoveInputs[index]) {
+                                          moveLotToPosition(index, lotMoveInputs[index]);
+                                          setLotMoveInputs(prev => ({ ...prev, [index]: '' }));
+                                        }
+                                      }}
+                                      className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 font-bold"
+                                    >
+                                      Go
+                                    </button>
+                                  </div>
+                                  {formData.lots.length > 1 && (
                                   <button
                                     type="button"
                                     onClick={() => removeLot(index)}
@@ -963,7 +1504,8 @@ const AuctionManagement = () => {
                                   >
                                     <X className="w-5 h-5" />
                                   </button>
-                                )}
+                                  )}
+                                </div>
                               </div>
 
                               <div className="grid grid-cols-1 gap-3">
@@ -974,15 +1516,15 @@ const AuctionManagement = () => {
                                   <select
                                     value={lot.productId || ''}
                                     onChange={(e) => {
-                                      handleLotChange(index, 'productId', e.target.value);
-                                      // Auto-fill from product
                                       const product = products.find(p => p._id === e.target.value);
-                                      if (product) {
-                                        handleLotChange(index, 'title', `Lot ${index + 1}: ${product.name}`);
-                                        handleLotChange(index, 'description', product.description);
-                                        handleLotChange(index, 'image', product.images[0]);
-                                        handleLotChange(index, 'startingPrice', Math.floor(product.price * 0.7));
-                                      }
+                                      handleLotChangeMulti(index, product ? {
+                                        productId: e.target.value,
+                                        title: `Lot ${index + 1}: ${product.name}`,
+                                        description: product.description,
+                                        image: product.images[0],
+                                        images: product.images || [product.images[0]],
+                                        startingPrice: Math.floor(product.price * 0.7)
+                                      } : { productId: e.target.value });
                                     }}
                                     className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
                                   >
@@ -1013,12 +1555,11 @@ const AuctionManagement = () => {
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Lot Description
                                   </label>
-                                  <textarea
+                                  <RichEditor
                                     value={lot.description || ''}
-                                    onChange={(e) => handleLotChange(index, 'description', e.target.value)}
-                                    rows={2}
-                                    className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                    onChange={(value) => handleLotChange(index, 'description', value)}
                                     placeholder={`Description for lot ${index + 1}`}
+                                    minHeight={60}
                                   />
                                 </div>
 
@@ -1068,7 +1609,22 @@ const AuctionManagement = () => {
 
                                   <div>
                                     <label className="block text-sm font-medium text-blue-600 mb-1">
-                                      Estimated Price (₹)
+                                      Min Estimate (₹)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={lot.estimatedPriceMin || ''}
+                                      onChange={(e) => handleLotChange(index, 'estimatedPriceMin', e.target.value)}
+                                      min="0"
+                                      className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                      placeholder="0 (optional)"
+                                    />
+                                    <p className="text-xs text-blue-500 mt-1">Min expected value</p>
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-sm font-medium text-blue-600 mb-1">
+                                      Max Estimate (₹)
                                     </label>
                                     <input
                                       type="number"
@@ -1078,7 +1634,7 @@ const AuctionManagement = () => {
                                       className="w-full dark:bg-gray-800 dark:text-white dark:border-gray-600 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                       placeholder="0 (optional)"
                                     />
-                                    <p className="text-xs text-blue-500 mt-1">Expected value</p>
+                                    <p className="text-xs text-blue-500 mt-1">Max expected value</p>
                                   </div>
 
                                   <div>
@@ -1153,8 +1709,11 @@ const AuctionManagement = () => {
                                             const reader = new FileReader();
                                             reader.onloadend = () => {
                                               const currentImages = lot.images || (lot.image ? [lot.image] : []);
-                                              handleLotChange(index, 'images', [...currentImages, reader.result]);
-                                              handleLotChange(index, 'image', currentImages[0] || reader.result); // Keep first image for backwards compatibility
+                                              const newImages = [...currentImages, reader.result];
+                                              handleLotChangeMulti(index, {
+                                                images: newImages,
+                                                image: currentImages[0] || reader.result
+                                              });
                                             };
                                             reader.readAsDataURL(file);
                                           }
@@ -1178,8 +1737,11 @@ const AuctionManagement = () => {
                                             const input = document.getElementById(`imageUrlInput-${index}`);
                                             if (input && input.value) {
                                               const currentImages = lot.images || (lot.image ? [lot.image] : []);
-                                              handleLotChange(index, 'images', [...currentImages, input.value]);
-                                              handleLotChange(index, 'image', currentImages[0] || input.value); // Keep first image for backwards compatibility
+                                              const newImages = [...currentImages, input.value];
+                                              handleLotChangeMulti(index, {
+                                                images: newImages,
+                                                image: currentImages[0] || input.value
+                                              });
                                               input.value = '';
                                             }
                                           }}
@@ -1197,35 +1759,65 @@ const AuctionManagement = () => {
                                   {/* Display Images */}
                                   {(lot.images && lot.images.length > 0) && (
                                     <div className="mt-3 space-y-2">
-                                      <p className="text-sm font-medium text-gray-700">Images ({lot.images.length}):</p>
+                                      <p className="text-sm font-medium text-gray-700">Images ({lot.images.length}) — hover to reorder or delete:</p>
                                       <div className="grid grid-cols-3 gap-2">
                                         {lot.images.map((img, imgIndex) => (
-                                          <div key={imgIndex} className="relative group">
+                                          <div key={imgIndex} className="relative group rounded overflow-hidden border border-gray-300">
                                             <img
                                               src={img}
                                               alt={`Lot ${index + 1} - Image ${imgIndex + 1}`}
-                                              className="w-full h-24 object-cover rounded border border-gray-300"
+                                              className="w-full h-24 object-cover"
                                               onError={(e) => {
                                                 e.target.onerror = null;
                                                 e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23f3f4f6" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-family="sans-serif" font-size="10"%3EInvalid%3C/text%3E%3C/svg%3E';
                                               }}
                                             />
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                const newImages = lot.images.filter((_, i) => i !== imgIndex);
-                                                handleLotChange(index, 'images', newImages);
-                                                handleLotChange(index, 'image', newImages[0] || ''); // Update first image
-                                              }}
-                                              className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                              <X className="w-3 h-3" />
-                                            </button>
+                                            {/* Hover controls: move up / delete / move down */}
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                              <button
+                                                type="button"
+                                                title="Move left"
+                                                disabled={imgIndex === 0}
+                                                onClick={() => {
+                                                  const imgs = [...lot.images];
+                                                  [imgs[imgIndex - 1], imgs[imgIndex]] = [imgs[imgIndex], imgs[imgIndex - 1]];
+                                                  handleLotChangeMulti(index, { images: imgs, image: imgs[0] || '' });
+                                                }}
+                                                className="bg-white/90 hover:bg-white p-1 rounded disabled:opacity-30"
+                                              >
+                                                <ChevronUp className="w-3 h-3 text-gray-800" />
+                                              </button>
+                                              <button
+                                                type="button"
+                                                title="Delete"
+                                                onClick={() => {
+                                                  const newImages = lot.images.filter((_, i) => i !== imgIndex);
+                                                  handleLotChangeMulti(index, { images: newImages, image: newImages[0] || '' });
+                                                }}
+                                                className="bg-red-600 hover:bg-red-700 p-1 rounded text-white"
+                                              >
+                                                <X className="w-3 h-3" />
+                                              </button>
+                                              <button
+                                                type="button"
+                                                title="Move right"
+                                                disabled={imgIndex === lot.images.length - 1}
+                                                onClick={() => {
+                                                  const imgs = [...lot.images];
+                                                  [imgs[imgIndex], imgs[imgIndex + 1]] = [imgs[imgIndex + 1], imgs[imgIndex]];
+                                                  handleLotChangeMulti(index, { images: imgs, image: imgs[0] || '' });
+                                                }}
+                                                className="bg-white/90 hover:bg-white p-1 rounded disabled:opacity-30"
+                                              >
+                                                <ChevronDown className="w-3 h-3 text-gray-800" />
+                                              </button>
+                                            </div>
                                             {imgIndex === 0 && (
                                               <span className="absolute bottom-1 left-1 bg-green-600 text-white px-2 py-0.5 rounded text-xs">
                                                 Main
                                               </span>
                                             )}
+                                            <div className="text-center text-xs text-gray-400 bg-gray-50 py-0.5">#{imgIndex + 1}</div>
                                           </div>
                                         ))}
                                       </div>
@@ -1279,6 +1871,78 @@ const AuctionManagement = () => {
                       </div>
                     </>
                   )}
+
+                  {/* Short Link */}
+                  <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg p-4">
+                    <label className="block text-sm font-semibold text-orange-900 dark:text-orange-300 mb-2">
+                      Short Link Code
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        className="flex-1 px-3 py-2 text-sm border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 dark:bg-gray-800 dark:text-white dark:border-orange-600"
+                        value={formData.shortCode || ''}
+                        onChange={e => setFormData(prev => ({ ...prev, shortCode: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') }))}
+                        placeholder="e.g. pa1, ea6, e5"
+                        maxLength={20}
+                      />
+                      {formData.shortCode && (
+                        <button
+                          type="button"
+                          onClick={() => { navigator.clipboard.writeText(`https://chroniclevaults.com/${formData.shortCode}`); toast.success('Short link copied!'); }}
+                          className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg bg-orange-100 border border-orange-300 text-orange-700 hover:bg-orange-200"
+                        >
+                          Copy
+                        </button>
+                      )}
+                    </div>
+                    {formData.shortCode && (
+                      <p className="text-xs text-orange-600 mt-1">chroniclevaults.com/{formData.shortCode}</p>
+                    )}
+                  </div>
+
+                  {/* Catalog PDF Upload */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                    <label className="block text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Auction Catalog PDF
+                    </label>
+                    {formData.catalogPdf ? (
+                      <div className="flex items-center gap-3 mb-3">
+                        <a href={formData.catalogPdf} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium underline truncate max-w-xs">
+                          <FileText className="w-4 h-4 flex-shrink-0" />
+                          View Current PDF
+                        </a>
+                        <button type="button" onClick={() => setFormData(prev => ({ ...prev, catalogPdf: '' }))}
+                          className="text-xs text-red-500 hover:text-red-700 font-semibold px-2 py-0.5 border border-red-300 rounded">
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500 mb-2">No PDF uploaded yet — "View Catalog" button will be disabled on catalog page.</p>
+                    )}
+                    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 border-dashed cursor-pointer transition-colors w-fit text-sm font-medium ${
+                      uploadingPdf ? 'border-gray-300 text-gray-400 cursor-not-allowed' : 'border-blue-400 text-blue-700 hover:bg-blue-100'
+                    }`}>
+                      <Upload className="w-4 h-4" />
+                      {uploadingPdf ? 'Uploading...' : formData.catalogPdf ? 'Replace PDF' : 'Upload PDF'}
+                      <input type="file" accept="application/pdf" onChange={handlePdfUpload} disabled={uploadingPdf} className="hidden" />
+                    </label>
+                    {uploadingPdf && (
+                      <div className="mt-2 w-full max-w-xs">
+                        <div className="flex justify-between text-xs text-blue-600 mb-1">
+                          <span>Uploading PDF...</span>
+                          <span>{pdfUploadProgress}%</span>
+                        </div>
+                        <div className="w-full bg-blue-100 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-200"
+                            style={{ width: `${pdfUploadProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Poster Display Until (Upcoming Period) */}
                   <div>

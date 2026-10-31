@@ -34,8 +34,8 @@ const AuctionsPage = () => {
     const biddingEnd = a.lotBiddingEndTime ? new Date(a.lotBiddingEndTime) : null;
     // posterDisplayUntil in future → Upcoming
     if (posterUntil && now < posterUntil) return 'Upcoming';
-    // lotBiddingEndTime passed OR status Paused/Completed → Ended
-    if ((biddingEnd && now >= biddingEnd) || a.status === 'Paused' || a.status === 'Completed') return 'Ended';
+    // Only admin-set status determines Ended — bidding time alone does NOT move to Ended
+    if (a.status === 'Paused' || a.status === 'Completed') return 'Ended';
     return 'Active';
   };
 
@@ -119,7 +119,7 @@ const AuctionsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-accent-600 to-accent-700 text-white py-12 relative">
+      <div className="bg-gradient-to-r from-accent-600 to-accent-700 text-white py-6 relative">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-center mb-4">
             <Gavel className="w-12 h-12 mr-4" />
@@ -129,23 +129,31 @@ const AuctionsPage = () => {
             Discover rare collectibles and bid on exclusive items in real-time auctions
           </p>
           {/* iCollector.com badge */}
-          <div className="flex justify-center mt-5">
-            <a
-              href="https://www.icollector.com/"
-              title="View Online Auctions"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white rounded-xl px-4 py-2 shadow-lg hover:shadow-xl transition-all flex items-center gap-3 group"
-            >
-              <img
-                src="https://www.icollector.com/graphics/logos/link_logo.png"
-                alt="iCollector.com"
-                className="h-7 w-auto"
-              />
-              <span className="text-sm font-semibold text-gray-700 group-hover:text-accent-600 transition-colors whitespace-nowrap">
-                Register &amp; Bid on iCollector
-              </span>
-            </a>
+          <div className="flex justify-center mt-3">
+            <div className="relative">
+              {/* Pulse ring */}
+              <span className="absolute inset-0 rounded-xl animate-ping bg-white opacity-30"></span>
+              <a
+                href="https://www.icollector.com/"
+                title="View Online Auctions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative bg-white rounded-xl px-4 py-2 shadow-lg hover:shadow-xl transition-all flex items-center gap-3 group ring-2 ring-white/60 animate-pulse-slow"
+              >
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                </span>
+                <img
+                  src="https://www.icollector.com/graphics/logos/link_logo.png"
+                  alt="iCollector.com"
+                  className="h-7 w-auto"
+                />
+                <span className="text-sm font-semibold text-gray-700 group-hover:text-accent-600 transition-colors whitespace-nowrap">
+                  Register &amp; Bid on iCollector
+                </span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -199,7 +207,7 @@ const AuctionsPage = () => {
               const handleClick = () => {
                 if (!isClickable) return;
                 if (isLotType) {
-                  navigate(`/lot-auction/${auction._id}`);
+                  navigate(`/lot-auction/${auction._id}/catalog`);
                 } else if (auction.status === 'Ended') {
                   if (auction.isEndedPublic) {
                     navigate(`/auction-lots/${auction._id}`);
@@ -221,7 +229,7 @@ const AuctionsPage = () => {
                     : 'cursor-default'
                 }`}
               >
-                <div className="relative w-full h-[500px] bg-gray-200">
+                <div className="relative w-full h-[340px] bg-gray-200">
                   {auction.highlightImage || auction.image ? (
                     <img
                       src={auction.highlightImage || auction.image}
@@ -242,6 +250,15 @@ const AuctionsPage = () => {
                       Lot Bidding
                     </span>
                   )}
+                  {/* Bottom overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-4 py-3">
+                    <p className="text-white font-semibold text-sm truncate mb-1">{auction.title}</p>
+                    {isClickable && (
+                      <span className="inline-block bg-accent-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        {auction.status === 'Ended' ? 'View Results' : 'Bid Now →'}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               );
